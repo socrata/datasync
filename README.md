@@ -2,7 +2,8 @@ Last updated: June 19, 2013
 
 Author: Adrian Laurenzi
 
-=== How to set up project from scratch ===
+How to set up project from scratch
+--------------------------------------
 
 1. Open Eclipse
 2. File -> New -> Java Project
@@ -11,15 +12,16 @@ Author: Adrian Laurenzi
 5. Enter a project name and click Finish.
 6. Right-click on the project in the explorer on the left -> Properties
 7. Java Build Path -> Libraries Tab -> Add External JARs and add both mail.jar and soda-api-java-0.9.3-standalone.jar in the ~/datasync/lib/ directory
-8. Please also add the following files to your .gitignore file (i.e. do not push these files/directories to the repo):
-bin/
-.checkstyle
-.classpath
-.project
-.gitignore
+8. Please also add the following files to your .gitignore file (i.e. do not push these files/directories to the repo):  
+    * bin/  
+    * .checkstyle  
+    * .classpath  
+    * .project  
+    * .gitignore  
 
 
-=== How to export the application as an executable JAR ===
+How to export the application as an executable JAR
+--------------------------------------
 
 1. Go to Run -> Run Configurations...
 2. Be sure the DataSync project is selected
@@ -30,3 +32,5 @@ bin/
 6. Select "DataSync-Main-..." for the Launch configuration
 7. Be sure "Extract required libraries into generated JAR" is selected under Library Handeling
 8. Click finish and you are done
+ 
+
