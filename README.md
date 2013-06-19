@@ -12,12 +12,6 @@ How to set up project from scratch
 5. Enter a project name and click Finish.
 6. Right-click on the project in the explorer on the left -> Properties
 7. Java Build Path -> Libraries Tab -> Add External JARs and add both mail.jar and soda-api-java-0.9.3-standalone.jar in the ~/datasync/lib/ directory
-8. Please also add the following files to your .gitignore file (i.e. do not push these files/directories to the repo):  
-    * bin/  
-    * .checkstyle  
-    * .classpath  
-    * .project  
-    * .gitignore  
 
 
 How to export the application as an executable JAR
