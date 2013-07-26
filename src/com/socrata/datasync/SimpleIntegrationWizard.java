@@ -2,6 +2,7 @@ package com.socrata.datasync;
 
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
@@ -27,11 +28,11 @@ public class SimpleIntegrationWizard {
 	 * GUI interface to DataSync
 	 */
 	
-	private final String TITLE = "Socrata DataSync Beta";
-	private final String LOGO_FILE_PATH = "/socrata_logo.png";
+	private final String TITLE = "Socrata DataSync Beta0.1";
+	private final String LOGO_FILE_PATH = "/datasync_logo.png";
 	private final int FRAME_WIDTH = 800;
-	private final int FRAME_HEIGHT = 325;
-	private final int JOB_PANEL_HEIGHT = 200;
+	private final int FRAME_HEIGHT = 340;
+	private final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 220);
 	private final int JOB_TEXTFIELD_WIDTH = 370;
 	private final int JOB_COMMAND_TEXTFIELD_WIDTH = 211;
 	private final int JOB_FILE_TEXTFIELD_WIDTH = 238;
@@ -39,8 +40,8 @@ public class SimpleIntegrationWizard {
 	private final int JOB_FIELD_VGAP = 8;
 	private final int DEFAULT_TEXTFIELD_COLS = 25;
 	private final Dimension AUTH_DETAILS_DIMENSION = new Dimension(470, 100);
-	private final int PREFERENCES_FRAME_WIDTH = 310;
-	private final int PREFERENCES_FRAME_HEIGHT = 190;
+	private final int PREFERENCES_FRAME_WIDTH = 475;
+	private final int PREFERENCES_FRAME_HEIGHT = 335;
 	
 	private static UserPreferences userPrefs;
 	
@@ -50,7 +51,10 @@ public class SimpleIntegrationWizard {
 	
 	private JTextField domainTextField, usernameTextField, apiKeyTextField;
 	private JPasswordField passwordField;
-	private JTextField adminEmailTextField, logDatasetIDTextField;
+	private JTextField logDatasetIDTextField, adminEmailTextField;
+	private JTextField outgoingMailServerTextField, smtpPortTextField, sslPortTextField, smtpUsernameTextField;
+	private JPasswordField smtpPasswordField;
+	private JCheckBox useSSLCheckBox;
 	private JCheckBox emailUponErrorCheckBox;
 	
 	/**
@@ -248,9 +252,9 @@ public class SimpleIntegrationWizard {
 	    // Create a JButton for the close tab button
 	    JButton closeTabButton = new JButton("[X]");
 	    
+	    // TODO make close button an icon rather than [X]
 	    //tabTitleLabel.setIcon(icon);
 	    //closeTabButton.setOpaque(false);
-	 
 	    // Configure icon and rollover icon for button
 	    //closeTabButton.setRolloverIcon(CLOSE_TAB_ICON);
 	    //closeTabButton.setRolloverEnabled(true);
@@ -516,7 +520,7 @@ public class SimpleIntegrationWizard {
 		
 		// Build empty job tabbed pane
 		JPanel jobTabsContainer = new JPanel(new GridLayout(1, 1));
-		jobTabsContainer.setPreferredSize(new Dimension(FRAME_WIDTH-20, JOB_PANEL_HEIGHT));
+		jobTabsContainer.setPreferredSize(JOB_PANEL_DIMENSION);
 		jobTabsPane = new JTabbedPane();
 		jobTabsContainer.add(jobTabsPane);
         mainContainer.add(jobTabsContainer);
@@ -542,27 +546,73 @@ public class SimpleIntegrationWizard {
 	}
 	
 	private JPanel generatePreferencesPanel() {
-		JPanel prefsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JPanel prefsPanel = new JPanel(new GridLayout(0,2));
 		
-		prefsPanel.add(new JLabel("Admin Email"));
-		adminEmailTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
-		prefsPanel.add(adminEmailTextField);
-		
-		prefsPanel.add(new JLabel("Log Dataset ID (i.e. n38h-y5wp)"));
+		prefsPanel.add(new JLabel(" Log Dataset ID (i.e. n38h-y5wp)"));
 		logDatasetIDTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
 		prefsPanel.add(logDatasetIDTextField);
 		
-		emailUponErrorCheckBox = new JCheckBox("Email admin upon error" +
-				"                ");
-		emailUponErrorCheckBox.setSelected(true);
-		prefsPanel.add(emailUponErrorCheckBox);
+		prefsPanel.add(new JLabel(" Admin Email"));
+		adminEmailTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+		prefsPanel.add(adminEmailTextField);
 		
+		emailUponErrorCheckBox = new JCheckBox(" Auto-email admin upon error");
+		prefsPanel.add(emailUponErrorCheckBox);
+		prefsPanel.add(new JLabel("*must fill in SMTP Settings below"));
+		
+		JLabel smtpSettingsLabel = new JLabel(" SMTP Settings");
+		Font boldFont = new Font(smtpSettingsLabel.getFont().getFontName(), 
+				Font.BOLD, smtpSettingsLabel.getFont().getSize());
+		smtpSettingsLabel.setFont(boldFont);
+		prefsPanel.add(smtpSettingsLabel);
+		prefsPanel.add(new JLabel(""));
+		prefsPanel.add(new JLabel(" Outgoing Mail Server"));
+		outgoingMailServerTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+		prefsPanel.add(outgoingMailServerTextField);
+		prefsPanel.add(new JLabel(" SMTP Port"));
+		smtpPortTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+		prefsPanel.add(smtpPortTextField);
+		final JPanel sslPortContainer = new JPanel(
+				new FlowLayout(FlowLayout.LEFT, 0, 0));
+		sslPortContainer.setVisible(false);
+		useSSLCheckBox = new JCheckBox("Use SSL");
+		prefsPanel.add(useSSLCheckBox);
+		sslPortContainer.add(new JLabel(" SSL Port  "));
+		sslPortTextField = new JTextField();
+		sslPortTextField.setPreferredSize(new Dimension(
+				50, JOB_TEXTFIELD_HEIGHT));
+		sslPortContainer.add(sslPortTextField);
+		useSSLCheckBox.addItemListener(new ItemListener() {
+		    public void itemStateChanged(ItemEvent e) {
+		    	if(useSSLCheckBox.isSelected()) {
+		    		sslPortContainer.setVisible(true);
+		    	} else {
+		    		sslPortContainer.setVisible(false);
+		    	}
+		    }
+		});
+		prefsPanel.add(sslPortContainer);
+		prefsPanel.add(new JLabel(" SMTP Username"));
+		smtpUsernameTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+		prefsPanel.add(smtpUsernameTextField);
+		prefsPanel.add(new JLabel(" SMTP Password"));
+		smtpPasswordField = new JPasswordField(DEFAULT_TEXTFIELD_COLS);
+		prefsPanel.add(smtpPasswordField);
+		
+		JPanel prefsButtonContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JButton cancelPrefsButton = new JButton("Cancel");
-		cancelPrefsButton.addActionListener(new CancelPreferencesListener()); 
-		prefsPanel.add(cancelPrefsButton);
+		cancelPrefsButton.addActionListener(new CancelPreferencesListener());
+		prefsButtonContainer.add(cancelPrefsButton);
 		JButton savePrefsButton = new JButton("Save");
 		savePrefsButton.addActionListener(new SavePreferencesListener());
-		prefsPanel.add(savePrefsButton);
+		prefsButtonContainer.add(savePrefsButton);
+		prefsPanel.add(prefsButtonContainer);
+		
+		JPanel testSMTPSettingsContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		JButton testSMTPSettingsButton = new JButton("Test SMTP Settings");
+		testSMTPSettingsButton.addActionListener(new TestSMTPSettingsListener());
+		testSMTPSettingsContainer.add(testSMTPSettingsButton);
+		prefsPanel.add(testSMTPSettingsContainer);
 		
 		loadPreferencesIntoForm();
 		
@@ -573,16 +623,41 @@ public class SimpleIntegrationWizard {
 		adminEmailTextField.setText(userPrefs.getAdminEmail());
 		logDatasetIDTextField.setText(userPrefs.getLogDatasetID());
 		emailUponErrorCheckBox.setSelected(userPrefs.emailUponError());
+		
+		outgoingMailServerTextField.setText(userPrefs.getOutgoingMailServer());
+		smtpPortTextField.setText(userPrefs.getSMTPPort());
+		String sslPort = userPrefs.getSSLPort();
+		sslPortTextField.setText(sslPort);
+		if(sslPort.equals("")) {
+			useSSLCheckBox.setSelected(false);
+		} else {
+			useSSLCheckBox.setSelected(true);
+		}
+		smtpUsernameTextField.setText(userPrefs.getSMTPUsername());
+		smtpPasswordField.setText(userPrefs.getSMTPPassword());
+	}
+	
+	private void savePreferences() {
+		userPrefs.saveAdminEmail(adminEmailTextField.getText());
+		userPrefs.saveLogDatasetID(logDatasetIDTextField.getText());
+		userPrefs.saveEmailUponError(emailUponErrorCheckBox.isSelected());
+		
+		userPrefs.saveOutgoingMailServer(outgoingMailServerTextField.getText());
+		userPrefs.saveSMTPPort(smtpPortTextField.getText());
+		if(useSSLCheckBox.isSelected()) {
+			userPrefs.saveSSLPort(sslPortTextField.getText());
+		} else {
+			userPrefs.saveSSLPort("");
+		}
+		userPrefs.saveSMTPUsername(smtpUsernameTextField.getText());
+		String smtpPassword = new String(smtpPasswordField.getPassword());
+    	userPrefs.saveSMTPPassword(smtpPassword);
 	}
 	
 	private class SavePreferencesListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			
-			// TODO validation of email and dataset ID
-			
-			userPrefs.saveAdminEmail(adminEmailTextField.getText());
-			userPrefs.saveLogDatasetID(logDatasetIDTextField.getText());
-			userPrefs.saveEmailUponError(emailUponErrorCheckBox.isSelected());
+			// TODO validation of email and log dataset ID
+			savePreferences();
 			prefsFrame.setVisible(false);
 		}
 	}
@@ -591,6 +666,23 @@ public class SimpleIntegrationWizard {
 		public void actionPerformed(ActionEvent e) {
 			loadPreferencesIntoForm();
 			prefsFrame.setVisible(false);
+		}
+	}
+	
+	private class TestSMTPSettingsListener implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			savePreferences();
+			String adminEmail = userPrefs.getAdminEmail();
+			String message;
+			try {
+				SMTPMailer.send(adminEmail, "Socrata DataSync Test Email", 
+						"This email confirms that your SMTP Settings are valid.");
+				message = "Sent test email to " + adminEmail + ". Please ensure the "
+						+ "email was delievered successfully (it may take a few minutes).";
+			} catch (Exception emailE) {
+				message = "Error sending email to " + adminEmail + ":\n" + emailE.getMessage();
+			}
+			JOptionPane.showMessageDialog(prefsFrame, message);
 		}
 	}
 	
@@ -675,13 +767,10 @@ public class SimpleIntegrationWizard {
      * Saves user authentication data input into form
      */
     private void saveAuthenticationInfoFromForm() {
-    	
-    	// TODO ensure this is not a security hazard...
-    	
+    	// TODO make this more secure...
     	userPrefs.saveDomain(domainTextField.getText()); 
     	userPrefs.saveUsername(usernameTextField.getText());
-    	char[] passwordChars = passwordField.getPassword();
-		String password = new String(passwordChars);
+		String password = new String(passwordField.getPassword());
     	userPrefs.savePassword(password);
     	userPrefs.saveAPIKey(apiKeyTextField.getText());
     }

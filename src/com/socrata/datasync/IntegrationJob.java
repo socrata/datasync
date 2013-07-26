@@ -17,6 +17,7 @@ import java.io.Serializable;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaImporter;
 import com.socrata.exceptions.SodaError;
+import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 
 public class IntegrationJob implements Serializable {
@@ -37,8 +38,8 @@ public class IntegrationJob implements Serializable {
      */
     private static final long serialVersionUID = 2L;
 
-    private final String DELETE_ZERO_ROWS = "";
-    private final int DATASET_ID_LENGTH = 9;
+    private static final String DELETE_ZERO_ROWS = "";
+    private static final int DATASET_ID_LENGTH = 9;
     
 	private String datasetID;
 	private String fileToPublish;
@@ -73,7 +74,7 @@ public class IntegrationJob implements Serializable {
 				setDatasetID(loadedJob.getDatasetID());
 				setFileToPublish(loadedJob.getFileToPublish());
 				setPublishMethod(loadedJob.getPublishMethod());
-				setFileRowsToDelete(loadedJob.getFileColsToDelete());
+				setFileRowsToDelete(loadedJob.getFileRowsToDelete());
 			}
 			finally{
 				input.close();
@@ -141,16 +142,23 @@ public class IntegrationJob implements Serializable {
 			}
 			
 			String errorMessage = "";
+			boolean noPublishExceptions = false;
 			try {
 				if(publishMethod.equals(PublishMethod.upsert)) {
 					result = IntegrationUtility.upsert(producer, importer, datasetID, deleteRowsFile, fileToPublishFile);
+					noPublishExceptions = true;
 				}
 				else if(publishMethod.equals(PublishMethod.append)) {
 					result = IntegrationUtility.append(producer, importer, datasetID, fileToPublishFile);
+					noPublishExceptions = true;
 				}
 				else if(publishMethod.equals(PublishMethod.replace)) {
 					IntegrationUtility.replaceOld(importer, datasetID, fileToPublishFile);
+					noPublishExceptions = true;
 					result = null; // No upsert result for 'replace'
+				} else {
+					errorMessage = JobStatus.INVALID_PUBLISH_METHOD.toString();
+					noPublishExceptions = false;
 				}
 			}
 			catch (IOException ioException) {
@@ -166,23 +174,35 @@ public class IntegrationJob implements Serializable {
 				errorMessage = other.getMessage();
 			}
 			finally {
-				if(errorMessage != "") {
+				if(noPublishExceptions) {
+					// Check for upsert errors (only for upsert and append publish methods)
+					if(result != null) {
+						if(result.errorCount() > 0) {
+							for (UpsertError upsertErr : result.getErrors()) {
+								errorMessage += upsertErr.getError() + " (line "
+										+ (upsertErr.getIndex() + 1) + " of file) \n";
+							}
+							runStatus = JobStatus.PUBLISH_ERROR;
+							runStatus.setMessage(errorMessage);
+						}
+					} else {
+						runStatus = JobStatus.SUCCESS;
+					}
+				} else {
 					runStatus = JobStatus.PUBLISH_ERROR;
 					runStatus.setMessage(errorMessage);
-				} else {
-					runStatus = JobStatus.SUCCESS;
 				}
 			}
 		}
 		
-		// TODO check if this may be a better way to check for errors
-		//List<UpsertError> upsertErrors = result.getErrors();
-		
 		String adminEmail = userPrefs.getAdminEmail();
 		String logDatasetID = userPrefs.getLogDatasetID();
-		JobStatus logStatus = IntegrationUtility.addLogEntry(logDatasetID, connectionInfo, this, runStatus, result);
+		JobStatus logStatus = JobStatus.SUCCESS;
+		if(!logDatasetID.equals("")) {
+			logStatus = IntegrationUtility.addLogEntry(logDatasetID, connectionInfo, this, runStatus, result);
+		}
 		// Send email if there was an error updating log or target dataset
-		if(userPrefs.emailUponError() && !adminEmail.equals("") && !logDatasetID.equals("")) {
+		if(userPrefs.emailUponError() && !adminEmail.equals("")) {
 			String errorEmailMessage = "";
 			String urlToLogDataset = connectionInfo.getUrl() + "/d/" + logDatasetID;
 			if(runStatus.isError()) {
@@ -200,11 +220,9 @@ public class IntegrationJob implements Serializable {
 						+ urlToLogDataset + "\n"
 						+ "Error message: " + logStatus.getMessage() + "\n\n";
 			}
-			if(!errorEmailMessage.equals("")) {
+			if(runStatus.isError() || logStatus.isError()) {
 				try {
-					// TODO do not hard-code email login...
-					GoogleMail.send("performancesocrata@gmail.com", "ASPEtmp#7",
-							adminEmail, "Socrata DataSync Error", errorEmailMessage);
+					SMTPMailer.send(adminEmail, "Socrata DataSync Error", errorEmailMessage);
 				} catch (Exception e) {
 					System.out.println("Error sending email to: " + adminEmail + "\n" + e.getMessage());
 				}
@@ -269,7 +287,7 @@ public class IntegrationJob implements Serializable {
 		fileRowsToDelete = newFileRowsToDelete;
 	}
 	
-	public String getFileColsToDelete() {
+	public String getFileRowsToDelete() {
 		return fileRowsToDelete;
 	}
 	

@@ -20,7 +20,16 @@ public class UserPreferences {
 	private static final String EMAIL_UPON_ERROR = "email_upon_error";
 	private static final String LOG_DATASET_ID = "log_dataset_id";
 	
+	private static final String OUTGOING_MAIL_SERVER = "outgoing_mail_server";
+	private static final String SMTP_PORT = "smtp_port";
+	
+	// NOTE: if SSL port is set to the empty string then do not use SSL
+	private static final String SSL_PORT = "ssl_port";
+	private static final String SMTP_USERNAME = "smtp_username";
+	private static final String SMTP_PASSWORD = "smtp_password";
+	
 	private final String DEFAULT_DOMAIN = "https://";
+	private final String DEFAULT_SSL_PORT = "465";
     
 	public UserPreferences() {
 		userPrefs = Preferences.userRoot().node("SocrataIntegrationPrefs");
@@ -58,6 +67,26 @@ public class UserPreferences {
 		userPrefs.put(LOG_DATASET_ID, datasetID);
 	}
 	
+	public void saveOutgoingMailServer(String mailServer) {
+		userPrefs.put(OUTGOING_MAIL_SERVER, mailServer);
+	}
+	
+	public void saveSMTPPort(String port) {
+		userPrefs.put(SMTP_PORT, port);
+	}
+	
+	public void saveSSLPort(String port) {
+		userPrefs.put(SSL_PORT, port);
+	}
+	
+	public void saveSMTPUsername(String username) {
+		userPrefs.put(SMTP_USERNAME, username);
+	}
+
+	public void saveSMTPPassword(String password) {
+		userPrefs.put(SMTP_PASSWORD, password);
+	}
+	
 	public String getDomain() {
 		return userPrefs.get(DOMAIN, DEFAULT_DOMAIN);
 	}
@@ -85,6 +114,26 @@ public class UserPreferences {
 	
 	public String getLogDatasetID() {
 		return userPrefs.get(LOG_DATASET_ID, "");
+	}
+	
+	public String getOutgoingMailServer() {
+		return userPrefs.get(OUTGOING_MAIL_SERVER, "");
+	}
+	
+	public String getSMTPPort() {
+		return userPrefs.get(SMTP_PORT, "");
+	}
+	
+	public String getSSLPort() {
+		return userPrefs.get(SSL_PORT, DEFAULT_SSL_PORT);
+	}
+	
+	public String getSMTPUsername() {
+		return userPrefs.get(SMTP_USERNAME, "");
+	}
+
+	public String getSMTPPassword() {
+		return userPrefs.get(SMTP_PASSWORD, "");
 	}
 	
 	public SocrataConnectionInfo getConnectionInfo()
