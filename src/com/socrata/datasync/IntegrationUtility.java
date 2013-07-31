@@ -1,9 +1,11 @@
 package com.socrata.datasync;
 
+import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -168,6 +170,21 @@ public class IntegrationUtility {
 			}
 		}
 		return logStatus;
+	}
+	
+	/**
+	 * Open given uri in local web browser
+	 * @param uri to open in browser
+	 */
+	public static void openWebpage(URI uri) {
+	    Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+	    if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+	        try {
+	            desktop.browse(uri);
+	        } catch (Exception e) {
+	            System.out.println("Error: cannot open web page");
+	        }
+	    }
 	}
 	
 }

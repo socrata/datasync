@@ -14,8 +14,24 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import com.socrata.api.HttpLowLevel;
+import com.socrata.api.Soda2Consumer;
+import com.socrata.builders.SoqlQueryBuilder;
+import com.socrata.exceptions.LongRunningQueryException;
+import com.socrata.exceptions.SodaError;
+import com.socrata.model.soql.SoqlQuery;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jndi.toolkit.url.Uri;
+
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -28,10 +44,14 @@ public class SimpleIntegrationWizard {
 	 * GUI interface to DataSync
 	 */
 	
-	private final String TITLE = "Socrata DataSync Beta0.1";
+	private final String VERSION = "0.1";
+	private final String METADATA_URL = "https://adrian.demo.socrata.com";
+	private final String METADATA_DATASET_ID = "7w7i-q9n6";
+	
+	private final String TITLE = "Socrata DataSync " + VERSION;
 	private final String LOGO_FILE_PATH = "/datasync_logo.png";
 	private final int FRAME_WIDTH = 800;
-	private final int FRAME_HEIGHT = 340;
+	private final int FRAME_HEIGHT = 360;
 	private final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 220);
 	private final int JOB_TEXTFIELD_WIDTH = 370;
 	private final int JOB_COMMAND_TEXTFIELD_WIDTH = 211;
@@ -39,7 +59,7 @@ public class SimpleIntegrationWizard {
 	private final int JOB_TEXTFIELD_HEIGHT = 26;
 	private final int JOB_FIELD_VGAP = 8;
 	private final int DEFAULT_TEXTFIELD_COLS = 25;
-	private final Dimension AUTH_DETAILS_DIMENSION = new Dimension(470, 100);
+	private final Dimension AUTH_DETAILS_DIMENSION = new Dimension(465, 100);
 	private final int PREFERENCES_FRAME_WIDTH = 475;
 	private final int PREFERENCES_FRAME_HEIGHT = 335;
 	
@@ -162,6 +182,53 @@ public class SimpleIntegrationWizard {
         // centers the window
      	frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
+		
+		// Alert user if new version is available
+		try {
+			checkVersion();
+		} catch (Exception e) {
+			// do nothing
+		}
+	}
+	
+	/** Queries special Socrata dataset with DataSync metadata to 
+	 *  determine if this is the most recent version. Alert user
+	 *  if a new version is available
+	 *   
+	 * @throws LongRunningQueryException 
+	 * @throws SodaError 
+	 * @throws MalformedURLException 
+	 * @throws URISyntaxException 
+	 * @throws JSONException 
+	 */
+	private void checkVersion() throws LongRunningQueryException, SodaError, JSONException, URISyntaxException {
+		final Soda2Consumer consumer = Soda2Consumer.newConsumer(METADATA_URL);
+		
+		ClientResponse response = consumer.query(METADATA_DATASET_ID, HttpLowLevel.JSON_TYPE, SoqlQuery.SELECT_ALL);
+		String payload = response.getEntity(String.class);
+    	
+    	JSONArray responseJSON = null;
+	    responseJSON = new JSONArray(payload);
+	    JSONObject allMetadata = responseJSON.getJSONObject(0);
+	    String currentVersion = allMetadata.get("current_version").toString();
+	    
+	    if(!currentVersion.equals(VERSION)) {
+	    	Object[] options = {"Download Now", "No Thanks"};
+            int n = JOptionPane.showOptionDialog(frame,
+            				"A new version of DataSync is available (version " 
+        	    	    	+ currentVersion + ").\nDo you want to download it now?\n",
+        	    	    	"Alert: New Version Available",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            options,
+                            options[0]);
+            if (n == JOptionPane.YES_OPTION) {
+            	URI currentVersionDownloadURI = new URI(
+    	    			allMetadata.get("current_version_download_url").toString());
+            	IntegrationUtility.openWebpage(currentVersionDownloadURI);
+            }
+	    }
 	}
 	
 	private void addJobTab(IntegrationJob job) {
