@@ -26,6 +26,5 @@ How to export the application as an executable JAR
 6. Select "DataSync-Main-..." for the Launch configuration
 7. Be sure "Extract required libraries into generated JAR" is selected under Library Handeling
 8. Click finish
-9. Finally, you must manually add the socrata_logo.png file to the root directory of the .jar archive
  
 
