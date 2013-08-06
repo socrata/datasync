@@ -1,6 +1,20 @@
-Last updated: June 19, 2013
+Last updated: August 6, 2013
 
 Author: Adrian Laurenzi
+
+General information
+--------------------------------------
+DataSync is a lightweight desktop client that makes automated publishing of data to 
+Socrata datasets simple. The simple, clean, graphical interface (GUI) can be used to 
+configure various jobs to publish your data. Each job can be set up to take a CSV data 
+file from a local machine or networked folder and publish it to a specific dataset. A job 
+can be automated easily using the Windows Task Scheduler or similar tool to run the job 
+at specified intervals (i.e. once per day). DataSync will run on any platform with Java 
+installed so it will work on Windows, Mac, and Linux.
+
+Here is a guide for how to use DataSync:
+http://support.socrata.com/entries/24241271-Setting-up-a-basic-DataSync-job
+
 
 How to set up project from scratch
 --------------------------------------
