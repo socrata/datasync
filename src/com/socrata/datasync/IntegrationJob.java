@@ -153,9 +153,8 @@ public class IntegrationJob implements Serializable {
 					noPublishExceptions = true;
 				}
 				else if(publishMethod.equals(PublishMethod.replace)) {
-					IntegrationUtility.replaceOld(importer, datasetID, fileToPublishFile);
+					result = IntegrationUtility.replaceNew(producer, datasetID, fileToPublishFile);
 					noPublishExceptions = true;
-					result = null; // No upsert result for 'replace'
 				} else {
 					errorMessage = JobStatus.INVALID_PUBLISH_METHOD.toString();
 					noPublishExceptions = false;

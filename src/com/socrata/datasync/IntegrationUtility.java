@@ -90,31 +90,9 @@ public class IntegrationUtility {
 
 
     /**
-     * This does the old style of replace, but uses the new library.  This still requires a working copy.
+     * This is a new replace function that does not need a working copy.
      */
-    public static void replaceOld(final SodaImporter importer, final String id, final File file) 
-    		throws SodaError, InterruptedException, IOException
-    {
-        //Currently the old publish way is the only way to do this
-        DatasetInfo workingCopy = importer.createWorkingCopy(id);
-        try {
-            importer.replace(workingCopy.getId(), file, 1, null);
-            importer.publish(workingCopy.getId());
-            workingCopy = null;
-
-        } finally {
-            if (workingCopy != null) {
-                importer.deleteDataset(workingCopy.getId());
-            }
-        }
-    }
-
-
-    /**
-     * This is a new replace function that does not need a working copy.  This is going to be added after looking at your
-     * use cases, so we need a day or two before it works.
-     */
-    public UpsertResult replaceNew(Soda2Producer producer, final String id, final File file) throws SodaError, InterruptedException, IOException {
+    public static UpsertResult replaceNew(Soda2Producer producer, final String id, final File file) throws SodaError, InterruptedException, IOException {
         return producer.replaceCsv(id, file);
     }
     
