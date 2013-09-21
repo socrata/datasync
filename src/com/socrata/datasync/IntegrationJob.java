@@ -20,7 +20,7 @@ import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 
-public class IntegrationJob implements Serializable {
+public class IntegrationJob implements Job, Serializable {
 	/**
 	 * @author Adrian Laurenzi
 	 *
@@ -33,12 +33,19 @@ public class IntegrationJob implements Serializable {
      * deserialized using this version of the class.
      * 
      * NOTE: Please add 1 to this number every time you change the readObject()
-     * or writeObject() methods, so we don't have old-version IntegrationJob 
+     * or writeObject() methods, so we don't have old-version IntegrationJob
      * objects being made into new-version IntegrationJob objects.
      */
     private static final long serialVersionUID = 2L;
 
     private static final String DELETE_ZERO_ROWS = "";
+
+    // When a file to be published is larger than this value (in bytes), file is chunked
+    private static final int FILESIZE_CHUNK_CUTOFF_BYTES = 78643200; // = 75 MB
+    // During chunking files are uploaded NUM_ROWS_PER_CHUNK rows per chunk
+    private static final int NUM_ROWS_PER_CHUNK = 10000;
+
+    // TODO move this somewhere else (or remove it)
     private static final int DATASET_ID_LENGTH = 9;
     
 	private String datasetID;
@@ -47,7 +54,7 @@ public class IntegrationJob implements Serializable {
 	private String fileRowsToDelete;
 	private String pathToSavedJobFile;
 	
-	private static final String DEFAULT_JOB_NAME = "Untitled Job";
+	private static final String DEFAULT_JOB_NAME = "Untitled Standard Job";
 	
 	public IntegrationJob() {
 		pathToSavedJobFile = "";
@@ -81,10 +88,10 @@ public class IntegrationJob implements Serializable {
 			}
 		}
 		catch(ClassNotFoundException ex){
-			System.out.println("Cannot perform input. Class not found.");
+			System.out.println("Error loading Standard Job: Cannot perform input. Class not found.");
 		}
 		catch(IOException ex){
-			System.out.println("Cannot perform input.");
+			System.out.println("Error loading Standard Job: Cannot perform input.");
 		}
 	}
 	
@@ -145,19 +152,28 @@ public class IntegrationJob implements Serializable {
 			boolean noPublishExceptions = false;
 			try {
 				if(publishMethod.equals(PublishMethod.upsert)) {
-					result = IntegrationUtility.upsert(producer, importer, datasetID, deleteRowsFile, fileToPublishFile);
-					noPublishExceptions = true;
+                    if(fileToPublishFile.length() > FILESIZE_CHUNK_CUTOFF_BYTES) {
+                        result = IntegrationUtility.upsertInChunks(
+                                NUM_ROWS_PER_CHUNK, producer, importer, datasetID, deleteRowsFile, fileToPublishFile);
+                    } else {
+					    result = IntegrationUtility.upsert(producer, importer, datasetID, deleteRowsFile, fileToPublishFile);
+                    }
+                    noPublishExceptions = true;
 				}
 				else if(publishMethod.equals(PublishMethod.append)) {
-					result = IntegrationUtility.append(producer, importer, datasetID, fileToPublishFile);
-					noPublishExceptions = true;
+                    if(fileToPublishFile.length() > FILESIZE_CHUNK_CUTOFF_BYTES) {
+                        result = IntegrationUtility.appendInChunks(
+                                NUM_ROWS_PER_CHUNK, producer, datasetID, fileToPublishFile);
+                    } else {
+                        result = IntegrationUtility.append(producer, datasetID, fileToPublishFile);
+                    }
+                    noPublishExceptions = true;
 				}
 				else if(publishMethod.equals(PublishMethod.replace)) {
 					result = IntegrationUtility.replaceNew(producer, datasetID, fileToPublishFile);
 					noPublishExceptions = true;
 				} else {
 					errorMessage = JobStatus.INVALID_PUBLISH_METHOD.toString();
-					noPublishExceptions = false;
 				}
 			}
 			catch (IOException ioException) {
@@ -170,7 +186,7 @@ public class IntegrationJob implements Serializable {
 				errorMessage = intrruptException.getMessage();
 			}
 			catch (Exception other) {
-				errorMessage = other.getMessage();
+				errorMessage = other.toString() + ": " + other.getMessage();
 			}
 			finally {
 				if(noPublishExceptions) {
@@ -235,7 +251,6 @@ public class IntegrationJob implements Serializable {
 	 */
 	public void writeToFile(String filepath) {
 		try{
-			//use buffering
 			OutputStream file = new FileOutputStream(filepath);
 			OutputStream buffer = new BufferedOutputStream(file);
 			ObjectOutput output = new ObjectOutputStream(buffer);
@@ -246,7 +261,7 @@ public class IntegrationJob implements Serializable {
 			}
 		}  
 		catch(IOException ex){
-			System.out.println("Cannot perform output.");
+			System.out.println("Error writing file: " + filepath);
 		}
 	}
 	
@@ -291,7 +306,7 @@ public class IntegrationJob implements Serializable {
 	}
 	
 	public String getJobFilename() {
-		if(pathToSavedJobFile == "") {
+		if(pathToSavedJobFile.equals("")) {
 			return DEFAULT_JOB_NAME;
 		}
 		return new File(pathToSavedJobFile).getName();

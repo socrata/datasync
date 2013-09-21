@@ -14,6 +14,12 @@ public enum JobStatus {
      * The error message varies so it is set with setMessage()
      */
     PUBLISH_ERROR("", true),
+
+    /**
+     * This is when an error is returned upon running a DataPort job.
+     * The error message varies so it is set with setMessage()
+     */
+    PORT_ERROR("", true),
     
     INVALID_DOMAIN("Invalid Domain", true),
     
@@ -23,8 +29,10 @@ public enum JobStatus {
 
     FILE_TO_PUBLISH_DOESNT_EXIST("File To Publish does not exist", true),
     
-    INVALID_PUBLISH_METHOD("Invalid publish method", true);
-    
+    INVALID_PUBLISH_METHOD("Invalid publish method", true),
+
+    INVALID_PORT_METHOD("Invalid DataPort method", true);
+
     /**
      * The human-readable message to store.
      */
@@ -38,9 +46,9 @@ public enum JobStatus {
     /**
      * Private constructor (to prevent re-construction).
      * 
-     * @param message
+     * @param newMessage
      *            the message associated with this enum value
-     * @param isError
+     * @param newIsError
      *            whether this enum represents an error condition
      */
     private JobStatus(final String newMessage, final boolean newIsError) {
