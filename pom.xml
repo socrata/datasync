@@ -3,72 +3,84 @@
   <groupId>DataSync</groupId>
   <artifactId>DataSync</artifactId>
   <version>0.2-SNAPSHOT</version>
+  <developers>
+    <developer>
+      <name>Adrian Laurenzi</name>
+      <email>adrian.laurenzi@socrata.com</email>
+      <organization>Socrata</organization>
+    </developer>
+    <developer>
+      <name>Louis Fettet</name>
+      <email>louis.fettet@socrata.com</email>
+      <organization>Socrata</organization>
+    </developer>
+  </developers>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <resources>
-          <resource>
-              <directory>images/</directory>
-          </resource>
+      <resource>
+	<directory>images/</directory>
+      </resource>
     </resources>
     <plugins>
-        <plugin>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.1</version>
-            <configuration>
-                <source/>
-                <target/>
-            </configuration>
-        </plugin>
-        <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <configuration>
-                <archive>
-                    <manifest>
-                        <mainClass>com.socrata.datasync.Main</mainClass>
-                    </manifest>
-                </archive>
-                <descriptorRefs>
-                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                </descriptorRefs>
-            </configuration>
-        </plugin>
+      <plugin>
+	<artifactId>maven-compiler-plugin</artifactId>
+	<version>3.1</version>
+	<configuration>
+	  <source/>
+	  <target/>
+	</configuration>
+      </plugin>
+      <plugin>
+	<artifactId>maven-assembly-plugin</artifactId>
+	<configuration>
+	  <archive>
+	    <manifest>
+	      <mainClass>com.socrata.datasync.Main</mainClass>
+	    </manifest>
+	  </archive>
+	  <descriptorRefs>
+	    <descriptorRef>jar-with-dependencies</descriptorRef>
+	  </descriptorRefs>
+	</configuration>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
-     <dependency>
+    <dependency>
       <groupId>com.socrata</groupId>
       <artifactId>soda-api-java</artifactId>
       <version>0.9.4</version>
-     </dependency>
-      <dependency>
-          <groupId>javax.mail</groupId>
-          <artifactId>mail</artifactId>
-          <version>1.4.7</version>
-      </dependency>
-  	<dependency>
-  		<groupId>org.codehaus.jackson</groupId>
-  		<artifactId>jackson-mrbean</artifactId>
-  		<version>1.9.13</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.codehaus.jackson</groupId>
-  		<artifactId>jackson-core-asl</artifactId>
-  		<version>1.9.13</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.codehaus.jackson</groupId>
-  		<artifactId>jackson-asl</artifactId>
-  		<version>0.9.5</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>com.fasterxml.jackson.core</groupId>
-  		<artifactId>jackson-annotations</artifactId>
-  		<version>2.2.2</version>
-  	</dependency>
-  	<dependency>
-  		<groupId>org.codehaus.jackson</groupId>
-  		<artifactId>jackson-mapper-asl</artifactId>
-  		<version>1.9.13</version>
-  	</dependency>
+    </dependency>
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mrbean</artifactId>
+      <version>1.9.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+      <version>1.9.13</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-asl</artifactId>
+      <version>0.9.5</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <version>1.9.13</version>
+    </dependency>
   </dependencies>
 </project>
