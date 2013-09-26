@@ -31,3 +31,7 @@ To compile the project into an executable JAR file (including all dependencies) 
 mvn clean compile assembly:single
 ```
 
+This puts the JAR file into the "target" directory inside the repo.  So to open DataSync, simply:
+```
+cd target && java -jar DataSync-0.2-SNAPSHOT-jar-with-dependencies.jar
+```
