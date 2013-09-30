@@ -1,13 +1,25 @@
 package com.socrata.datasync;
 
-import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * Authors: Adrian Laurenzi and Louis Fettet
@@ -30,11 +42,13 @@ public class PortJobTab implements JobTab {
     private String jobFileLocation;
     private JLabel jobTabTitleLabel;
 
+    private JComboBox portMethodComboBox;
+    private JCheckBox publishCheck;
     private JTextField sourceSiteDomainTextField;
     private JTextField sourceSetIDTextField;
     private JTextField sinkSiteDomainTextField;
     private JTextField sinkSetIDTextField;
-    private JComboBox portMethodComboBox;
+    
 
     // build Container with all tab components and load data into form
     public PortJobTab(PortJob job, JFrame containingFrame) {
@@ -42,7 +56,23 @@ public class PortJobTab implements JobTab {
 
         // build tab panel form
         jobPanel = new JPanel(new GridLayout(0,2));
+        
+        // Port Method and Publish
+        jobPanel.add(new JLabel("Port Method"));
+        JPanel portpubContainer = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 0, JOB_FIELD_VGAP));
+        portMethodComboBox = new JComboBox();
+        for (PortMethod method : PortMethod.values()) {
+            portMethodComboBox.addItem(method);
+        }
+        portMethodComboBox.addItemListener(new PortMethodItemListener());
+        portpubContainer.add(portMethodComboBox);
+        portpubContainer.add(new JLabel("   Publish?"));
+        publishCheck = new JCheckBox();
+        portpubContainer.add(publishCheck);
+        jobPanel.add(portpubContainer);
 
+        
         // Source Site
         jobPanel.add(new JLabel("Source Site (domain where dataset is located)"));
         JPanel sourceSiteTextFieldContainer = new JPanel(
@@ -72,17 +102,6 @@ public class PortJobTab implements JobTab {
                 JOB_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
         sinkSiteTextFieldContainer.add(sinkSiteDomainTextField);
         jobPanel.add(sinkSiteTextFieldContainer);
-
-        // Port Method
-        jobPanel.add(new JLabel("Port Method"));
-        JPanel portMethodTextFieldContainer = new JPanel(
-                new FlowLayout(FlowLayout.LEFT, 0, JOB_FIELD_VGAP));
-        portMethodComboBox = new JComboBox();
-        for (PortMethod method : PortMethod.values()) {
-            portMethodComboBox.addItem(method);
-        }
-        portMethodTextFieldContainer.add(portMethodComboBox);
-        jobPanel.add(portMethodTextFieldContainer);
 
         // Sink set dataset ID
         jobPanel.add(new JLabel("Destination Dataset ID"));
@@ -129,10 +148,11 @@ public class PortJobTab implements JobTab {
 
     public JobStatus runJobNow() {
         PortJob jobToRun = new PortJob();
+        jobToRun.setPortMethod((PortMethod) portMethodComboBox.getSelectedItem());
+        jobToRun.setPublishCheck(publishCheck.isSelected());
         jobToRun.setSourceSiteDomain(sourceSiteDomainTextField.getText());
         jobToRun.setSourceSetID(sourceSetIDTextField.getText());
         jobToRun.setSinkSiteDomain(sinkSiteDomainTextField.getText());
-        jobToRun.setPortMethod((PortMethod) portMethodComboBox.getSelectedItem());
 
         // TODO include source sink ID
         // jobToRun.setSinkSetID(...);
@@ -147,12 +167,14 @@ public class PortJobTab implements JobTab {
     public void saveJob() {
         // Save job data
         PortJob newPortJob = new PortJob();
+        newPortJob.setPortMethod(
+                (PortMethod) portMethodComboBox.getSelectedItem());
+        newPortJob.setPublishCheck(publishCheck.isSelected());
         newPortJob.setSourceSiteDomain(sourceSiteDomainTextField.getText());
         newPortJob.setSourceSetID(sourceSetIDTextField.getText());
         newPortJob.setSinkSiteDomain(sinkSiteDomainTextField.getText());
         newPortJob.setSinkSetID(sinkSetIDTextField.getText());
-        newPortJob.setPortMethod(
-                (PortMethod) portMethodComboBox.getSelectedItem());
+        
 
         newPortJob.setPathToSavedFile(jobFileLocation);
 
@@ -210,6 +232,28 @@ public class PortJobTab implements JobTab {
         return sinkDatasetURI;
     }
 
+    private class PortMethodItemListener implements ItemListener {
+    	public void itemStateChanged(ItemEvent e) {
+    		if(e.getStateChange() == ItemEvent.SELECTED) {
+    			PortMethod item = (PortMethod) e.getItem();
+    			switch(item) {
+    			case copy_data:
+    				sinkSetIDTextField.setText("");
+    		        sinkSetIDTextField.setEditable(true);
+    				break;
+    			case copy_schema:
+    				sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
+    		        sinkSetIDTextField.setEditable(false);
+    				break;
+    			case copy_all:
+    				sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
+    		        sinkSetIDTextField.setEditable(false);
+    				break;
+    			}
+    		}
+    	}
+    }   
+     
     private class OpenDatasetButtonListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             if(!sinkSetIDTextField.getText().equals(DEFAULT_DESTINATION_SET_ID)) {

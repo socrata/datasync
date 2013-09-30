@@ -9,11 +9,12 @@ import com.socrata.model.UpsertError;
 
 public class PortJob implements Job, Serializable {
 
+    private PortMethod portMethod;
+    private boolean publishCheck;
 	private String sourceSiteDomain;
 	private String sourceSetID;
     private String sinkSiteDomain;
     private String sinkSetID;
-    private PortMethod portMethod;
 	private String portResult;
     private String pathToSavedJobFile;
 
@@ -23,13 +24,14 @@ public class PortJob implements Job, Serializable {
 	private static final int DATASET_ID_LENGTH = 9;
 
     public PortJob() {
-        pathToSavedJobFile = "";
+        portMethod = PortMethod.copy_all;
+        publishCheck = false;
         sourceSiteDomain = "https://";
         sourceSetID = "";
         sinkSiteDomain = "https://";
         sinkSetID = "";
-        portMethod = PortMethod.copy_all;
         portResult = "";
+        pathToSavedJobFile = "";
     }
 
     /**
@@ -117,6 +119,14 @@ public class PortJob implements Job, Serializable {
 
     public void setPortMethod(PortMethod portMethod) {
         this.portMethod = portMethod;
+    }
+    
+    public boolean getPublishCheck() {
+    	return publishCheck;
+    }
+    
+    public void setPublishCheck(boolean publishCheck) {
+    	this.publishCheck = publishCheck;
     }
 
     public String getPortResult() {
