@@ -240,14 +240,15 @@ public class PortJobTab implements JobTab {
     			case copy_data:
     				sinkSetIDTextField.setText("");
     		        sinkSetIDTextField.setEditable(true);
+    		        publishCheck.setSelected(false);
+    		        publishCheck.setEnabled(false);
+    		        System.out.println(publishCheck.isSelected());
     				break;
     			case copy_schema:
-    				sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
-    		        sinkSetIDTextField.setEditable(false);
-    				break;
     			case copy_all:
     				sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
     		        sinkSetIDTextField.setEditable(false);
+    		        publishCheck.setEnabled(true);
     				break;
     			}
     		}

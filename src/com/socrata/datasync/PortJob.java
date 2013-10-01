@@ -10,7 +10,7 @@ import com.socrata.model.UpsertError;
 public class PortJob implements Job, Serializable {
 
     private PortMethod portMethod;
-    private boolean publishCheck;
+    private Boolean publishCheck;
 	private String sourceSiteDomain;
 	private String sourceSetID;
     private String sinkSiteDomain;
@@ -121,11 +121,11 @@ public class PortJob implements Job, Serializable {
         this.portMethod = portMethod;
     }
     
-    public boolean getPublishCheck() {
+    public Boolean getPublishCheck() {
     	return publishCheck;
     }
     
-    public void setPublishCheck(boolean publishCheck) {
+    public void setPublishCheck(Boolean publishCheck) {
     	this.publishCheck = publishCheck;
     }
 
@@ -145,6 +145,9 @@ public class PortJob implements Job, Serializable {
 		if (sourceSetID.length() != DATASET_ID_LENGTH) {
 			return JobStatus.INVALID_DATASET_ID;
 		}
+		if (portMethod.equals(PortMethod.copy_data) && sinkSetID.length() != DATASET_ID_LENGTH){
+			return JobStatus.INVALID_DATASET_ID;
+		}
 		if (sourceSiteDomain.equals("") || sourceSiteDomain.equals("https://")) {
 			return JobStatus.INVALID_DOMAIN;
 		}
@@ -152,7 +155,8 @@ public class PortJob implements Job, Serializable {
 			return JobStatus.INVALID_DOMAIN;
 		}
 		if (!portMethod.equals(PortMethod.copy_all)
-				&& !portMethod.equals(PortMethod.copy_schema)) {
+				&& !portMethod.equals(PortMethod.copy_schema)
+				&& !portMethod.equals(PortMethod.copy_data)) {
 			return JobStatus.INVALID_PORT_METHOD;
 		}
 		return JobStatus.SUCCESS;
@@ -171,7 +175,7 @@ public class PortJob implements Job, Serializable {
 			final SodaDdl loader = SodaDdl.newDdl(sourceSiteDomain,
 					connectionInfo.getUser(), connectionInfo.getPassword(),
 					connectionInfo.getToken());
-			// creator "creates" a new dataset on the sink site
+			// creator "creates" a new dataset on the sink site (and publishes if applicable)
 			final SodaDdl creator = SodaDdl.newDdl(sinkSiteDomain,
 					connectionInfo.getUser(), connectionInfo.getPassword(),
 					connectionInfo.getToken());
@@ -196,6 +200,8 @@ public class PortJob implements Job, Serializable {
 							sourceSetID);
 					PortUtility.portContents(streamExporter, streamUpserter, sourceSetID, sinkSetID);
 					noPortExceptions = true;
+				} else if (portMethod.equals(PortMethod.copy_data)){
+					
 				} else {
 					errorMessage = JobStatus.INVALID_PORT_METHOD.toString();
 				}
@@ -252,6 +258,7 @@ public class PortJob implements Job, Serializable {
         out.writeObject(sinkSiteDomain);
         out.writeObject(sinkSetID);
         out.writeObject(portMethod);
+        out.writeObject(publishCheck);
     }
 
     /**
@@ -275,6 +282,7 @@ public class PortJob implements Job, Serializable {
         sinkSiteDomain = (String) in.readObject();
         sinkSetID = (String) in.readObject();
         portMethod = (PortMethod) in.readObject();
+        publishCheck = (Boolean) in.readObject();
     }
 }
 

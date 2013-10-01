@@ -26,6 +26,12 @@ public class PortUtility {
 		return sinkSetID;
 	}
 	
+	public static String publishDataset(SodaDdl publisher, String sinkSetID) throws SodaError, InterruptedException {
+		DatasetInfo publishedSet = publisher.publish(sinkSetID);
+		String publishedID = publishedSet.getId();
+		return publishedID;
+	}
+	
 	public static void portContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter, String sourceSetID, String sinkSetID) throws InterruptedException {
 		// Limit of 1000 rows per export, so offset "pages" through dataset
 		// 1000 at a time
