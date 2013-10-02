@@ -10,7 +10,7 @@ import com.socrata.model.UpsertError;
 public class PortJob implements Job, Serializable {
 
     private PortMethod portMethod;
-    private Boolean publishCheck;
+    private Boolean publish;
 	private String sourceSiteDomain;
 	private String sourceSetID;
     private String sinkSiteDomain;
@@ -25,7 +25,7 @@ public class PortJob implements Job, Serializable {
 
     public PortJob() {
         portMethod = PortMethod.copy_all;
-        publishCheck = false;
+        publish = false;
         sourceSiteDomain = "https://";
         sourceSetID = "";
         sinkSiteDomain = "https://";
@@ -53,6 +53,7 @@ public class PortJob implements Job, Serializable {
                 setSinkSiteDomain(loadedJob.getSinkSiteDomain());
                 setSinkSetID(loadedJob.getSinkSetID());
                 setPortMethod(loadedJob.getPortMethod());
+                setPublish(loadedJob.getPublish());
             }
             finally{
                 input.close();
@@ -121,12 +122,12 @@ public class PortJob implements Job, Serializable {
         this.portMethod = portMethod;
     }
     
-    public Boolean getPublishCheck() {
-    	return publishCheck;
+    public Boolean getPublish() {
+    	return publish;
     }
     
-    public void setPublishCheck(Boolean publishCheck) {
-    	this.publishCheck = publishCheck;
+    public void setPublish(Boolean publish) {
+    	this.publish = publish;
     }
 
     public String getPortResult() {
@@ -146,6 +147,7 @@ public class PortJob implements Job, Serializable {
 			return JobStatus.INVALID_DATASET_ID;
 		}
 		if (portMethod.equals(PortMethod.copy_data) && sinkSetID.length() != DATASET_ID_LENGTH){
+			System.out.println("hi, sinksetid length is" + sinkSetID.length());
 			return JobStatus.INVALID_DATASET_ID;
 		}
 		if (sourceSiteDomain.equals("") || sourceSiteDomain.equals("https://")) {
@@ -171,6 +173,11 @@ public class PortJob implements Job, Serializable {
 		if (validationStatus.isError()) {
 			runStatus = validationStatus;
 		} else {
+			System.out.println("Setting up for port method.");
+			System.out.println("Source site: " + sourceSiteDomain);
+			System.out.println("User: " + connectionInfo.getUser());
+			System.out.println("Password: " + connectionInfo.getPassword());
+			System.out.println("Token: " + connectionInfo.getToken());
 			// loader "loads" the source dataset metadata and schema
 			final SodaDdl loader = SodaDdl.newDdl(sourceSiteDomain,
 					connectionInfo.getUser(), connectionInfo.getPassword(),
@@ -187,23 +194,34 @@ public class PortJob implements Job, Serializable {
 			final Soda2Producer streamUpserter = Soda2Producer.newProducer(
                     sinkSiteDomain, connectionInfo.getUser(),
 					connectionInfo.getPassword(), connectionInfo.getToken());
-
+			System.out.println("Set up finished");
 			String errorMessage = "";
 			boolean noPortExceptions = false;
 			try {
 				if (portMethod.equals(PortMethod.copy_schema)) {
+					System.out.println("copy schema");
 					sinkSetID = PortUtility.portSchema(loader, creator,
 							sourceSetID);
 					noPortExceptions = true;
 				} else if (portMethod.equals(PortMethod.copy_all)) {
+					System.out.println("copy all");
 					sinkSetID = PortUtility.portSchema(loader, creator,
 							sourceSetID);
 					PortUtility.portContents(streamExporter, streamUpserter, sourceSetID, sinkSetID);
 					noPortExceptions = true;
 				} else if (portMethod.equals(PortMethod.copy_data)){
-					
+					System.out.println("copy contents");
+					PortUtility.portContents(streamExporter, streamUpserter, sourceSetID, sinkSetID);
 				} else {
+					System.out.println("oh snap");
 					errorMessage = JobStatus.INVALID_PORT_METHOD.toString();
+				}
+				try {
+					if (publish) {
+						sinkSetID = PortUtility.publishDataset(creator, sinkSetID);
+					}
+				} catch (Exception publishE) {
+					errorMessage += "\n" + publishE.getMessage();
 				}
 			} catch (Exception exception) {
 				errorMessage = exception.getMessage();
@@ -258,7 +276,7 @@ public class PortJob implements Job, Serializable {
         out.writeObject(sinkSiteDomain);
         out.writeObject(sinkSetID);
         out.writeObject(portMethod);
-        out.writeObject(publishCheck);
+        out.writeObject(publish);
     }
 
     /**
@@ -282,7 +300,7 @@ public class PortJob implements Job, Serializable {
         sinkSiteDomain = (String) in.readObject();
         sinkSetID = (String) in.readObject();
         portMethod = (PortMethod) in.readObject();
-        publishCheck = (Boolean) in.readObject();
+        publish = (Boolean) in.readObject();
     }
 }
 
