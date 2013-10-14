@@ -1,4 +1,9 @@
-package com.socrata.datasync;
+package com.socrata.datasync.ui;
+
+import com.socrata.datasync.IntegrationUtility;
+import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.job.PortJob;
+import com.socrata.datasync.PortMethod;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;

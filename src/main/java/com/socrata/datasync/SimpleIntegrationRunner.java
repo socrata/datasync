@@ -1,5 +1,7 @@
 package com.socrata.datasync;
 
+import com.socrata.datasync.job.IntegrationJob;
+
 public class SimpleIntegrationRunner {
 	/**
 	 * @author Adrian Laurenzi

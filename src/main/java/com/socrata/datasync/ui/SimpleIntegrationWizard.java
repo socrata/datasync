@@ -1,4 +1,4 @@
-package com.socrata.datasync;
+package com.socrata.datasync.ui;
 
 import java.awt.Container;
 import java.awt.Dimension;
@@ -11,6 +11,10 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import com.socrata.datasync.*;
+import com.socrata.datasync.job.IntegrationJob;
+import com.socrata.datasync.job.Job;
+import com.socrata.datasync.job.PortJob;
 import com.sun.jersey.api.client.GenericType;
 
 import com.socrata.api.HttpLowLevel;
@@ -156,8 +160,6 @@ public class SimpleIntegrationWizard {
         final List<Object> results = response.getEntity(new GenericType<List<Object>>() {
         });
         final Map<String, String> allMetadata = (Map<String, String>) results.get(0);
-        //for (Object row : results) {
-            //Map<String, String> crimeMap = (Map<String, String>) crimeObject;
 
 	    String currentVersion = allMetadata.get("current_version");
 	    
@@ -181,7 +183,7 @@ public class SimpleIntegrationWizard {
 	private void addJobTab(Job job) throws IllegalArgumentException {
         JobTab newJobTab;
         if(job.getClass().equals(IntegrationJob.class)) {
-            newJobTab = new StandardJobTab((IntegrationJob) job, frame);
+            newJobTab = new IntegrationJobTab((IntegrationJob) job, frame);
         } else if(job.getClass().equals(PortJob.class)) {
             newJobTab = new PortJobTab((PortJob) job, frame);
         } else {
@@ -248,7 +250,7 @@ public class SimpleIntegrationWizard {
                 Object[] options = {"Yes", "No"};
                 int n = JOptionPane.showOptionDialog(frame,
                         "Port job completed successfully. Would you like to open the newly created dataset?\n",
-                        "Alert: New Version Available",
+                        "Port job completed successfully",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE,
                         null, options, options[0]);

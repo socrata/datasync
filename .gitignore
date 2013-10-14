@@ -1,6 +1,12 @@
 bin/
 doc/
 misc/
+target/
+.idea/
+.settings/
 .checkstyle
 .classpath
 .project
+.gitignore~
+DataSync.iml
+old_binaries/datasync_0.2.jar

@@ -1,11 +1,11 @@
-package com.socrata.datasync;
+package com.socrata.datasync.job;
 
 import java.io.*;
 
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
-import com.socrata.model.UpsertError;
+import com.socrata.datasync.*;
 
 public class PortJob implements Job, Serializable {
 
@@ -179,7 +179,7 @@ public class PortJob implements Job, Serializable {
 			try {
 				if (portMethod.equals(PortMethod.copy_schema)) {
 					sinkSetID = PortUtility.portSchema(loader, creator,
-							sourceSetID);
+                            sourceSetID);
 					noPortExceptions = true;
 				} else if (portMethod.equals(PortMethod.copy_all)) {
 					sinkSetID = PortUtility.portSchema(loader, creator,

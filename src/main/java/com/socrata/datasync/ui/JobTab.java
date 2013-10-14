@@ -1,4 +1,6 @@
-package com.socrata.datasync;
+package com.socrata.datasync.ui;
+
+import com.socrata.datasync.JobStatus;
 
 import javax.swing.*;
 

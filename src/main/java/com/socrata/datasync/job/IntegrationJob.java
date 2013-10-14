@@ -1,4 +1,4 @@
-package com.socrata.datasync;
+package com.socrata.datasync.job;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -16,6 +16,7 @@ import java.io.Serializable;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaImporter;
+import com.socrata.datasync.*;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
@@ -97,7 +98,7 @@ public class IntegrationJob implements Job, Serializable {
 	
 	/**
 	 * 
-	 * @return an error JobStatus if any input is invalid, otherwise JobStatus.SUCCESS 
+	 * @return an error JobStatus if any input is invalid, otherwise JobStatus.VALID
 	 */
 	public JobStatus validate(SocrataConnectionInfo connectionInfo) {
 		if(connectionInfo.getUrl().equals("")
@@ -125,7 +126,7 @@ public class IntegrationJob implements Job, Serializable {
 		
 		// TODO add more validation
 		
-		return JobStatus.SUCCESS;
+		return JobStatus.VALID;
 	}
 	
 	public JobStatus run() {

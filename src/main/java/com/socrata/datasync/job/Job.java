@@ -1,4 +1,6 @@
-package com.socrata.datasync;
+package com.socrata.datasync.job;
+
+import com.socrata.datasync.JobStatus;
 
 /**
  * Author: Adrian Laurenzi

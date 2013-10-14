@@ -1,4 +1,7 @@
-package com.socrata.datasync;
+package com.socrata.datasync.ui;
+
+import com.socrata.datasync.*;
+import com.socrata.datasync.job.IntegrationJob;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -15,7 +18,7 @@ import java.io.File;
  * Author: Adrian Laurenzi
  * Date: 9/11/13
  */
-public class StandardJobTab implements JobTab {
+public class IntegrationJobTab implements JobTab {
 
     private final int JOB_TEXTFIELD_WIDTH = 370;
     private final int JOB_COMMAND_TEXTFIELD_WIDTH = 211;
@@ -40,7 +43,7 @@ public class StandardJobTab implements JobTab {
     private JTextField runCommandTextField;
 
     // build Container with all tab components
-    public StandardJobTab(IntegrationJob job, JFrame containingFrame) {
+    public IntegrationJobTab(IntegrationJob job, JFrame containingFrame) {
         mainFrame = containingFrame;
 
         // build tab panel form

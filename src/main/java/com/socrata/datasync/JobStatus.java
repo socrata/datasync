@@ -8,6 +8,11 @@ public enum JobStatus {
      * Job completed 
      */
     SUCCESS("Success", false),
+
+    /**
+     * Job details are valid
+     */
+    VALID("Valid", false),
     
     /**
      * This is when an error is returned from the publish API call.
