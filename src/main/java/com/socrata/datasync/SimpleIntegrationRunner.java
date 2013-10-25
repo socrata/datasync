@@ -2,6 +2,8 @@ package com.socrata.datasync;
 
 import com.socrata.datasync.job.IntegrationJob;
 
+import java.io.IOException;
+
 public class SimpleIntegrationRunner {
 	/**
 	 * @author Adrian Laurenzi
@@ -10,9 +12,14 @@ public class SimpleIntegrationRunner {
 	 */
 	
 	public SimpleIntegrationRunner(String jobFileToRun) {
-		IntegrationJob job = new IntegrationJob(jobFileToRun);
-		JobStatus status = job.run();
-		System.out.println(status.getMessage());
+        try {
+            IntegrationJob job = new IntegrationJob(jobFileToRun);
+            JobStatus status = job.run();
+            System.out.println(status.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error reading " + jobFileToRun + ": " + e.toString());
+        }
+
 	}
 
 }

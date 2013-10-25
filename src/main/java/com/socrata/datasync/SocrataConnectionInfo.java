@@ -3,9 +3,6 @@ package com.socrata.datasync;
 /**
  *  This class contains all the information needed to connect to a
  *  Socrata site.
- *
- *  This is normally loaded from the configuration file that contains all
- *  the connection information.
  */
 public class SocrataConnectionInfo
 {

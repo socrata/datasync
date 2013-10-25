@@ -27,7 +27,7 @@ public class IntegrationUtility {
 	/**
 	 * @author Adrian Laurenzi
 	 * 
-	 * A utility class for the SimpleIntegration application
+	 * A utility class for the Integration Job Type
 	 */
 	
 	private IntegrationUtility() {

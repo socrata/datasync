@@ -14,9 +14,6 @@ import java.io.IOException;
 /**
  * Author: Adrian Laurenzi
  * Date: 10/11/13
- *
- * NOTE: the order of these tests DOES matter or else rows counts will be incorrect
- * and tests will fail as a result
  */
 public class IntegrationUtilityTest extends TestBase {
 
@@ -36,17 +33,25 @@ public class IntegrationUtilityTest extends TestBase {
         final Soda2Producer producer = createProducer();
         final SodaDdl ddl = createSodaDdl();
 
+        int numRowsBegin = getTotalRowsUnitTestDataset();
+
         File zeroRowsFile = new File("src/test/resources/datasync_unit_test_zero_rows.csv");
         UpsertResult result = IntegrationUtility.upsert(producer, ddl, UNITTEST_DATASET_ID, null, zeroRowsFile);
 
+        int numRowsAfter = getTotalRowsUnitTestDataset();
+
         TestCase.assertEquals(0, result.errorCount());
-        TestCase.assertEquals(2, getTotalRowsUnitTestDataset());
+        TestCase.assertEquals(numRowsBegin, numRowsAfter);
     }
 
     @Test
     public void testUpsertNoDeletes() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
         final Soda2Producer producer = createProducer();
         final SodaDdl ddl = createSodaDdl();
+
+        // Ensures dataset is in known state (2 rows)
+        File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
+        IntegrationUtility.replaceNew(producer, UNITTEST_DATASET_ID, twoRowsFile);
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
         UpsertResult result = IntegrationUtility.upsert(producer, ddl, UNITTEST_DATASET_ID, null, threeRowsFile);

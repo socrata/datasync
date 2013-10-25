@@ -20,25 +20,20 @@ import com.socrata.datasync.*;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-public class IntegrationJob implements Job, Serializable {
+@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
+public class IntegrationJob implements Job { //, Serializable {
 	/**
 	 * @author Adrian Laurenzi
 	 *
 	 * Stores a single integration job that can be opened/run in the GUI
 	 * or in command-line mode.
 	 */
-	
-	/**
-     * Part of serializability, this id tracks if a serialized object can be
-     * deserialized using this version of the class.
-     * 
-     * NOTE: Please add 1 to this number every time you change the readObject()
-     * or writeObject() methods, so we don't have old-version IntegrationJob
-     * objects being made into new-version IntegrationJob objects.
-     */
-    private static final long serialVersionUID = 2L;
-
     private static final String DELETE_ZERO_ROWS = "";
 
     // When a file to be published is larger than this value (in bytes), file is chunked
@@ -48,7 +43,10 @@ public class IntegrationJob implements Job, Serializable {
 
     // TODO move this somewhere else (or remove it)
     private static final int DATASET_ID_LENGTH = 9;
-    
+
+    // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
+    private static final long fileVersionUID = 1L;
+
 	private String datasetID;
 	private String fileToPublish;
 	private PublishMethod publishMethod;
@@ -70,30 +68,38 @@ public class IntegrationJob implements Job, Serializable {
 	 * uses the saved data to populate the fields
 	 * of this object
 	 */
-	public IntegrationJob(String pathToFile) {
-		try {
-			InputStream file = new FileInputStream(pathToFile);
-			InputStream buffer = new BufferedInputStream(file);
-			ObjectInput input = new ObjectInputStream (buffer);
-			try{
-				IntegrationJob loadedJob = (IntegrationJob) input.readObject();
-				// Load data into this object
-				setPathToSavedFile(loadedJob.getPathToSavedFile());
-				setDatasetID(loadedJob.getDatasetID());
-				setFileToPublish(loadedJob.getFileToPublish());
-				setPublishMethod(loadedJob.getPublishMethod());
-				setFileRowsToDelete(loadedJob.getFileRowsToDelete());
-			}
-			finally{
-				input.close();
-			}
-		}
-		catch(ClassNotFoundException ex){
-			System.out.println("Error loading Standard Job: Cannot perform input. Class not found.");
-		}
-		catch(IOException ex){
-			System.out.println("Error loading Standard Job: Cannot perform input.");
-		}
+	public IntegrationJob(String pathToFile) throws IOException {
+        // first try reading the 'current' format
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            IntegrationJob loadedJob = mapper.readValue(new File(pathToFile), IntegrationJob.class);
+            setPathToSavedFile(loadedJob.getPathToSavedFile());
+            setDatasetID(loadedJob.getDatasetID());
+            setFileToPublish(loadedJob.getFileToPublish());
+            setPublishMethod(loadedJob.getPublishMethod());
+            setFileRowsToDelete(loadedJob.getFileRowsToDelete());
+        } catch (IOException e) {
+            // if reading new format fails...try reading old format into this object
+            try {
+                InputStream file = new FileInputStream(pathToFile);
+                InputStream buffer = new BufferedInputStream(file);
+                ObjectInput input = new ObjectInputStream (buffer);
+                try{
+                    com.socrata.datasync.IntegrationJob loadedJobOld = (com.socrata.datasync.IntegrationJob) input.readObject();
+                    // Load data into this object
+                    setPathToSavedFile(loadedJobOld.getPathToSavedFile());
+                    setDatasetID(loadedJobOld.getDatasetID());
+                    setFileToPublish(loadedJobOld.getFileToPublish());
+                    setPublishMethod(loadedJobOld.getPublishMethod());
+                    setFileRowsToDelete(loadedJobOld.getFileRowsToDelete());
+                }
+                finally{
+                    input.close();
+                }
+            } catch(Exception e2){
+                throw new IOException(e.toString());
+            }
+        }
 	}
 	
 	/**
@@ -248,60 +254,64 @@ public class IntegrationJob implements Job, Serializable {
 	}
 	
 	/**
-	 * Saves this object as a file at specified location
+	 * Saves this object as a file at given filepath
 	 */
-	public void writeToFile(String filepath) {
-		try{
-			OutputStream file = new FileOutputStream(filepath);
-			OutputStream buffer = new BufferedOutputStream(file);
-			ObjectOutput output = new ObjectOutputStream(buffer);
-			try {
-				output.writeObject(this);
-			} finally{
-				output.close();
-			}
-		}  
-		catch(IOException ex){
-			System.out.println("Error writing file: " + filepath);
-		}
+	public void writeToFile(String filepath) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(new File(filepath), this);
 	}
-	
+
+    @JsonProperty("fileVersionUID")
+    public long getFileVersionUID() {
+        return fileVersionUID;
+    }
+
+    @JsonProperty("pathToSavedJobFile")
 	public void setPathToSavedFile(String newPath) {
 		pathToSavedJobFile = newPath;
 	}
 
+    @JsonProperty("pathToSavedJobFile")
 	public String getPathToSavedFile() {
 		return pathToSavedJobFile;
 	}
-	
+
+    @JsonProperty("datasetID")
 	public void setDatasetID(String newDatasetID) {
 		datasetID = newDatasetID;
 	}
-	
+
+    @JsonProperty("datasetID")
 	public String getDatasetID() {
 		return datasetID;
 	}
-	
+
+    @JsonProperty("fileToPublish")
 	public void setFileToPublish(String newFileToPublish) {
 		fileToPublish = newFileToPublish;
 	}
 
+    @JsonProperty("fileToPublish")
 	public String getFileToPublish() {
 		return fileToPublish;
 	}
-	
+
+    @JsonProperty("publishMethod")
 	public void setPublishMethod(PublishMethod newPublishMethod) {
 		publishMethod = newPublishMethod;
 	}
-	
+
+    @JsonProperty("publishMethod")
 	public PublishMethod getPublishMethod() {
 		return publishMethod;
 	}
-	
+
+    @JsonProperty("fileRowsToDelete")
 	public void setFileRowsToDelete(String newFileRowsToDelete) {
 		fileRowsToDelete = newFileRowsToDelete;
 	}
-	
+
+    @JsonProperty("fileRowsToDelete")
 	public String getFileRowsToDelete() {
 		return fileRowsToDelete;
 	}
@@ -312,46 +322,4 @@ public class IntegrationJob implements Job, Serializable {
 		}
 		return new File(pathToSavedJobFile).getName();
 	}
-	
-	/**
-     * Implements a custom serialization of a IntegrationJob object.
-     * 
-     * @param out
-     *            the ObjectOutputStream to write to
-     * @throws IOException
-     *             if the stream fails
-     */
-    private void writeObject(final ObjectOutputStream out) throws IOException {
-        // Write each field to the stream in a specific order.
-        // Specifying this order helps shield the class from problems
-        // in future versions.
-        // The order must be the same as the read order in readObject()
-    	out.writeObject(pathToSavedJobFile);
-    	out.writeObject(datasetID);
-        out.writeObject(fileToPublish);
-        out.writeObject(publishMethod);
-        out.writeObject(fileRowsToDelete);
-    }
-
-    /**
-     * Implements a custom deserialization of an IntegrationJob object.
-     * 
-     * @param in
-     *            the ObjectInputStream to read from
-     * @throws IOException
-     *             if the stream fails
-     * @throws ClassNotFoundException
-     *             if a class is not found
-     */
-    private void readObject(final ObjectInputStream in) throws IOException, ClassNotFoundException {
-        // Read each field from the stream in a specific order.
-        // Specifying this order helps shield the class from problems
-        // in future versions.
-        // The order must be the same as the writing order in writeObject()
-    	pathToSavedJobFile = (String) in.readObject();
-    	datasetID = (String) in.readObject();
-    	fileToPublish = (String) in.readObject();
-    	publishMethod = (PublishMethod) in.readObject();
-    	fileRowsToDelete = (String) in.readObject();
-    }
 }

@@ -13,6 +13,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Author: Adrian Laurenzi
@@ -174,15 +175,20 @@ public class IntegrationJobTab implements JobTab {
             }
         }
         // actually save the job file (may overwrite)
-        newIntegrationJob.writeToFile(selectedJobFileLocation);
+        try {
+            newIntegrationJob.writeToFile(selectedJobFileLocation);
 
-        // Update job tab title label
-        jobTabTitleLabel.setText(newIntegrationJob.getJobFilename());
+            // Update job tab title label
+            jobTabTitleLabel.setText(newIntegrationJob.getJobFilename());
 
-        // Update the textfield with new command
-        if(updateJobCommandTextField) {
-            String runJobCommand = IntegrationUtility.getRunJobCommand(newIntegrationJob.getPathToSavedFile());
-            runCommandTextField.setText(runJobCommand);
+            // Update the textfield with new command
+            if(updateJobCommandTextField) {
+                String runJobCommand = IntegrationUtility.getRunJobCommand(newIntegrationJob.getPathToSavedFile());
+                runCommandTextField.setText(runJobCommand);
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(mainFrame,
+                    "Error saving " + selectedJobFileLocation + ": " + e.getMessage());
         }
     }
 
