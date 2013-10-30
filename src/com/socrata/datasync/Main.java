@@ -1,5 +1,7 @@
 package com.socrata.datasync;
 
+import com.socrata.datasync.ui.SimpleIntegrationWizard;
+
 public class Main {
 	/**
 	 * @author Adrian Laurenzi

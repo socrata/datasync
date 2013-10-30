@@ -18,21 +18,25 @@ public class PortUtility {
 	private PortUtility() {
 		throw new AssertionError("Never instantiate utility classes!");
 	}
-	
-	public static String portSchema(SodaDdl loader, SodaDdl creator, final String sourceSetID) throws SodaError, InterruptedException {
+
+	public static String portSchema(SodaDdl loader, SodaDdl creator,
+			final String sourceSetID) throws SodaError, InterruptedException {
 		DatasetInfo sourceSet = loader.loadDatasetInfo(sourceSetID);
 		DatasetInfo sinkSet = creator.createDataset(sourceSet);
 		String sinkSetID = sinkSet.getId();
 		return sinkSetID;
 	}
-	
-	public static String publishDataset(SodaDdl publisher, String sinkSetID) throws SodaError, InterruptedException {
+
+	public static String publishDataset(SodaDdl publisher, String sinkSetID)
+			throws SodaError, InterruptedException {
 		DatasetInfo publishedSet = publisher.publish(sinkSetID);
 		String publishedID = publishedSet.getId();
 		return publishedID;
 	}
-	
-	public static void portContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter, String sourceSetID, String sinkSetID) throws InterruptedException {
+
+	public static void portContents(Soda2Consumer streamExporter,
+			Soda2Producer streamUpserter, String sourceSetID, String sinkSetID,
+			PublishMethod publishMethod) throws InterruptedException {
 		// Limit of 1000 rows per export, so offset "pages" through dataset
 		// 1000 at a time
 		int offset = 0;
@@ -54,12 +58,10 @@ public class PortUtility {
 					response = streamExporter.query(sourceSetID,
 							HttpLowLevel.JSON_TYPE, myQuery);
 				} catch (SodaError sodaError) {
-					System.out.println("SODA error: "
-							+ sodaError.getMessage());
+					System.out.println("SODA error: " + sodaError.getMessage());
 				}
 			} catch (LongRunningQueryException e) {
-				System.out.println("Query too long to run: "
-						+ e.getMessage());
+				System.out.println("Query too long to run: " + e.getMessage());
 			}
 			// Convert the ClientResponse object to String
 			sourceSetData = response.getEntity(String.class).trim();
@@ -73,9 +75,14 @@ public class PortUtility {
 					// Convert String to byte array
 					InputStream sourceSetStream = new ByteArrayInputStream(
 							sourceSetData.getBytes("UTF-8"));
-					// Upsert using Soda2Producer object
-					streamUpserter.upsertStream(sinkSetID,
-							HttpLowLevel.JSON_TYPE, sourceSetStream);
+					// Upsert or replace using Soda2Producer object
+					if (publishMethod.equals(PublishMethod.upsert)) {
+						streamUpserter.upsertStream(sinkSetID,
+								HttpLowLevel.JSON_TYPE, sourceSetStream);
+					} else if (publishMethod.equals(PublishMethod.replace)){
+						streamUpserter.replaceStream(sinkSetID,
+								HttpLowLevel.JSON_TYPE, sourceSetStream);
+					}
 				} catch (SodaError sodaError) {
 					System.out.println(sodaError.getMessage());
 				} catch (Exception exception) {
@@ -86,4 +93,3 @@ public class PortUtility {
 		} while (sourceSetData.length() > 3);
 	}
 }
-

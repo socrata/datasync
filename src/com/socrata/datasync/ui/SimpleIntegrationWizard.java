@@ -1,4 +1,4 @@
-package com.socrata.datasync;
+package com.socrata.datasync.ui;
 
 import java.awt.Container;
 import java.awt.Dimension;
@@ -12,9 +12,15 @@ import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.sun.jersey.api.client.GenericType;
-
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
+import com.socrata.datasync.IntegrationUtility;
+import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.SMTPMailer;
+import com.socrata.datasync.UserPreferences;
+import com.socrata.datasync.job.IntegrationJob;
+import com.socrata.datasync.job.Job;
+import com.socrata.datasync.job.PortJob;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.soql.SoqlQuery;
@@ -181,7 +187,7 @@ public class SimpleIntegrationWizard {
 	private void addJobTab(Job job) throws IllegalArgumentException {
         JobTab newJobTab;
         if(job.getClass().equals(IntegrationJob.class)) {
-            newJobTab = new StandardJobTab((IntegrationJob) job, frame);
+            newJobTab = new IntegrationJobTab((IntegrationJob) job, frame);
         } else if(job.getClass().equals(PortJob.class)) {
             newJobTab = new PortJobTab((PortJob) job, frame);
         } else {

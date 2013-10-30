@@ -1,6 +1,8 @@
 bin/
 doc/
 misc/
+target/
+.settings/
 .checkstyle
 .classpath
 .project

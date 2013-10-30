@@ -1,4 +1,4 @@
-package com.socrata.datasync;
+package com.socrata.datasync.ui;
 
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -21,15 +21,22 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import com.socrata.datasync.IntegrationUtility;
+import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.PortMethod;
+import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.job.PortJob;
+
 /**
  * Authors: Adrian Laurenzi and Louis Fettet Date: 9/11/13
  */
 public class PortJobTab implements JobTab {
 
 	private final int JOB_TEXTFIELD_WIDTH = 370;
-	private final int JOB_TEXTFIELD_HEIGHT = 26;
+	private final int JOB_TEXTFIELD_HEIGHT = 24;
 	private final int JOB_FIELD_VGAP = 8;
 	private final int SINK_DATASET_ID_TEXTFIELD_WIDTH = 210;
+	private final int OPEN_SINK_DATASET_BUTTON_HEIGHT = 22;
 
 	private final String DEFAULT_DESTINATION_SET_ID = "(Generates after running job)";
 	private final String JOB_FILE_NAME = "Socrata Port Job";
@@ -47,6 +54,7 @@ public class PortJobTab implements JobTab {
 	private JTextField sourceSetIDTextField;
 	private JTextField sinkSiteDomainTextField;
 	private JTextField sinkSetIDTextField;
+	private JComboBox publishMethodComboBox;
 
 	// build Container with all tab components and load data into form
 	public PortJobTab(PortJob job, JFrame containingFrame) {
@@ -113,14 +121,29 @@ public class PortJobTab implements JobTab {
 		JButton openSinkDatasetButton = new JButton("Open Dataset");
 		openSinkDatasetButton
 				.addActionListener(new OpenDatasetButtonListener());
+		openSinkDatasetButton.setPreferredSize(new Dimension(
+				openSinkDatasetButton.getPreferredSize().width,
+				OPEN_SINK_DATASET_BUTTON_HEIGHT));
 		destinationSetIDTextFieldContainer.add(openSinkDatasetButton);
 		jobPanel.add(destinationSetIDTextFieldContainer);
 
-		// Load job data into fields
-		sourceSiteDomainTextField.setText(job.getSourceSiteDomain());
-		sourceSetIDTextField.setText(job.getSourceSetID());
-		sinkSiteDomainTextField.setText(job.getSinkSiteDomain());
+		// Publish method
+		jobPanel.add(new JLabel("Publish method"));
+		JPanel publishMethodTextFieldContainer = new JPanel(new FlowLayout(
+				FlowLayout.LEFT, 0, JOB_FIELD_VGAP));
+		publishMethodComboBox = new JComboBox();
+		for (PublishMethod method : PublishMethod.values()) {
+			if (method != PublishMethod.append) {
+				publishMethodComboBox.addItem(method);
+			}
+		}
+		publishMethodComboBox.setEnabled(false);
+		publishMethodTextFieldContainer.add(publishMethodComboBox);
+		publishMethodTextFieldContainer.setPreferredSize(new Dimension(
+				JOB_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
+		jobPanel.add(publishMethodTextFieldContainer);
 
+		// Load job data into fields
 		PortMethod jobPortMethod = job.getPortMethod();
 		int i = 0;
 		for (PortMethod method : PortMethod.values()) {
@@ -130,7 +153,18 @@ public class PortJobTab implements JobTab {
 			}
 			i++;
 		}
-
+		sourceSiteDomainTextField.setText(job.getSourceSiteDomain());
+		sourceSetIDTextField.setText(job.getSourceSetID());
+		sinkSiteDomainTextField.setText(job.getSinkSiteDomain());
+		PublishMethod jobPublishMethod = job.getPublishMethod();
+		i = 0;
+		for (PublishMethod method : PublishMethod.values()) {
+			if (method.equals(jobPublishMethod)) {
+				publishMethodComboBox.setSelectedIndex(i);
+				break;
+			}
+			i++;
+		}
 		jobFileLocation = job.getPathToSavedFile();
 
 		// if this is an existing job (meaning the job was opened from a file)
@@ -154,6 +188,8 @@ public class PortJobTab implements JobTab {
 		jobToRun.setSourceSiteDomain(sourceSiteDomainTextField.getText());
 		jobToRun.setSourceSetID(sourceSetIDTextField.getText());
 		jobToRun.setSinkSiteDomain(sinkSiteDomainTextField.getText());
+		jobToRun.setPublishMethod((PublishMethod) publishMethodComboBox
+				.getSelectedItem());
 		if (sinkSetIDTextField.isEditable()) {
 			jobToRun.setSinkSetID(sinkSetIDTextField.getText());
 		}
@@ -180,7 +216,8 @@ public class PortJobTab implements JobTab {
 		newPortJob.setSourceSetID(sourceSetIDTextField.getText());
 		newPortJob.setSinkSiteDomain(sinkSiteDomainTextField.getText());
 		newPortJob.setSinkSetID(sinkSetIDTextField.getText());
-
+		newPortJob.setPublishMethod((PublishMethod) publishMethodComboBox
+				.getSelectedItem());
 		newPortJob.setPathToSavedFile(jobFileLocation);
 
 		// TODO If an existing file was selected WARN user of overwriting
@@ -250,12 +287,14 @@ public class PortJobTab implements JobTab {
 					sinkSetIDTextField.setEditable(true);
 					publishCheck.setSelected(false);
 					publishCheck.setEnabled(false);
+					publishMethodComboBox.setEnabled(true);
 					break;
 				case copy_schema:
 				case copy_all:
 					sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
 					sinkSetIDTextField.setEditable(false);
 					publishCheck.setEnabled(true);
+					publishMethodComboBox.setEnabled(false);
 					break;
 				}
 			}

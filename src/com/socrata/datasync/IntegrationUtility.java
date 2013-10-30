@@ -11,16 +11,19 @@ import java.util.List;
 import java.util.Map;
 
 import au.com.bytecode.opencsv.CSVReader;
+
 import com.google.common.collect.ImmutableMap;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
 import com.socrata.api.SodaImporter;
+import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
 import com.socrata.utils.GeneralUtils;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class IntegrationUtility {

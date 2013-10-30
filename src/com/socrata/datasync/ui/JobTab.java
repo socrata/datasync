@@ -1,6 +1,8 @@
-package com.socrata.datasync;
+package com.socrata.datasync.ui;
 
 import javax.swing.*;
+
+import com.socrata.datasync.JobStatus;
 
 /**
  * Author: Adrian Laurenzi
