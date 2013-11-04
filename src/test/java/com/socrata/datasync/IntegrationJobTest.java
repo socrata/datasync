@@ -33,6 +33,7 @@ public class IntegrationJobTest extends TestBase {
     public void testNewJobFileDeserialization() throws IOException {
         IntegrationJob job = new IntegrationJob(PATH_TO_SAVED_JOB_FILE_V0dot3);
 
+        TestCase.assertEquals(1, job.getFileVersionUID());
         TestCase.assertEquals(
                 "/Users/adrian/Dropbox/Socrata_s/projects/data_integration/datasync/misc/honolulu_report2.csv",
                 job.getFileToPublish());

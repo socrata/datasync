@@ -299,27 +299,21 @@ public class SimpleIntegrationWizard {
                     }
 					if(indexOfAlreadyOpenFile == -1) {
                         try {
-                            boolean errorOpeningFile = true;
                             int i = openedFileLocation.lastIndexOf('.');
                             if (i > 0) {
                                 String openedFileExtension = openedFileLocation.substring(i+1);
                                 if(openedFileExtension.equals(STANDARD_JOB_FILE_EXTENSION)) {
                                     addJobTab(new IntegrationJob(openedFileLocation));
-                                    errorOpeningFile = false;
                                 } else if(openedFileExtension.equals(PORT_JOB_FILE_EXTENSION)) {
                                     addJobTab(new PortJob(openedFileLocation));
-                                    errorOpeningFile = false;
+                                } else {
+                                    throw new Exception("unrecognized file extension (" + openedFileExtension + ")");
                                 }
                             }
-                            if(errorOpeningFile) {
-                                JOptionPane.showMessageDialog(frame,
-                                        "Error opening file (unrecognized file extension): " + openedFileLocation);
-                            } else {
-                                // Switch to opened file's tab
-                                jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
-                            }
+                            // Switch to opened file's tab
+                            jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
                         } catch(Exception e2) {
-                            JOptionPane.showMessageDialog(frame, "Error opening file: " + openedFileLocation);
+                            JOptionPane.showMessageDialog(frame, "Error opening " + openedFileLocation + ": " + e2.toString());
                         }
 	                } else {
 	                	// file already open, select that tab

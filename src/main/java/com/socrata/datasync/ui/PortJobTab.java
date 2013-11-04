@@ -8,17 +8,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.socrata.datasync.IntegrationUtility;
@@ -133,6 +127,7 @@ public class PortJobTab implements JobTab {
 				FlowLayout.LEFT, 0, JOB_FIELD_VGAP));
 		publishMethodComboBox = new JComboBox();
 		for (PublishMethod method : PublishMethod.values()) {
+            // TODO clean this up once publish method changes have been implemented
 			if (method != PublishMethod.append) {
 				publishMethodComboBox.addItem(method);
 			}
@@ -145,26 +140,13 @@ public class PortJobTab implements JobTab {
 
 		// Load job data into fields
 		PortMethod jobPortMethod = job.getPortMethod();
-		int i = 0;
-		for (PortMethod method : PortMethod.values()) {
-			if (method.equals(jobPortMethod)) {
-				portMethodComboBox.setSelectedIndex(i);
-				break;
-			}
-			i++;
-		}
+        publishMethodComboBox.setSelectedItem(jobPortMethod);
+        publishCheck.setSelected(job.getPublish());
 		sourceSiteDomainTextField.setText(job.getSourceSiteDomain());
 		sourceSetIDTextField.setText(job.getSourceSetID());
 		sinkSiteDomainTextField.setText(job.getSinkSiteDomain());
 		PublishMethod jobPublishMethod = job.getPublishMethod();
-		i = 0;
-		for (PublishMethod method : PublishMethod.values()) {
-			if (method.equals(jobPublishMethod)) {
-				publishMethodComboBox.setSelectedIndex(i);
-				break;
-			}
-			i++;
-		}
+        publishMethodComboBox.setSelectedItem(jobPublishMethod);
 		jobFileLocation = job.getPathToSavedFile();
 
 		// if this is an existing job (meaning the job was opened from a file)
@@ -245,11 +227,17 @@ public class PortJobTab implements JobTab {
 				jobTabTitleLabel.setText(newPortJob.getJobFilename());
 			}
 		}
-		// actually save the job file (may overwrite)
-		newPortJob.writeToFile(selectedJobFileLocation);
 
-		// Update job tab title label
-		jobTabTitleLabel.setText(newPortJob.getJobFilename());
+		// actually save the job file (may overwrite)
+        try {
+            newPortJob.writeToFile(selectedJobFileLocation);
+
+            // Update job tab title label
+            jobTabTitleLabel.setText(newPortJob.getJobFilename());
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(mainFrame,
+                    "Error saving " + selectedJobFileLocation + ": " + e.getMessage());
+        }
 	}
 
 	public JLabel getJobTabTitleLabel() {

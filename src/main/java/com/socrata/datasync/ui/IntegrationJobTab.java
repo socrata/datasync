@@ -88,14 +88,7 @@ public class IntegrationJobTab implements JobTab {
         datasetIDTextField.setText(job.getDatasetID());
         fileToPublishTextField.setText(job.getFileToPublish());
         PublishMethod jobPublishMethod = job.getPublishMethod();
-        int i = 0;
-        for(PublishMethod method : PublishMethod.values()) {
-            if(method.equals(jobPublishMethod)) {
-                publishMethodComboBox.setSelectedIndex(i);
-                break;
-            }
-            i++;
-        }
+        publishMethodComboBox.setSelectedItem(jobPublishMethod);
 
         jobPanel.add(new JLabel("Command to execute with scheduler"));
         JPanel runCommandTextFieldContainer = new JPanel(

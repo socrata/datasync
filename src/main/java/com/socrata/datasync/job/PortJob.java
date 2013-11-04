@@ -1,18 +1,7 @@
 package com.socrata.datasync.job;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.Serializable;
 
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
@@ -23,10 +12,15 @@ import com.socrata.datasync.PortUtility;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.UserPreferences;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-public class PortJob implements Job, Serializable {
-
-	private PortMethod portMethod;
+@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
+public class PortJob implements Job {
+    private PortMethod portMethod;
 	private Boolean publish;
 	private String sourceSiteDomain;
 	private String sourceSetID;
@@ -35,6 +29,9 @@ public class PortJob implements Job, Serializable {
 	private PublishMethod publishMethod;
 	private String portResult;
 	private String pathToSavedJobFile;
+
+    // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
+    private static final long fileVersionUID = 1L;
 
 	private static final String DEFAULT_JOB_NAME = "Untitled Port Job";
 
@@ -57,110 +54,23 @@ public class PortJob implements Job, Serializable {
 	 * Loads port job data from a file and uses the saved data to populate the
 	 * fields of this object
 	 */
-	public PortJob(String pathToFile) {
-		try {
-			InputStream file = new FileInputStream(pathToFile);
-			InputStream buffer = new BufferedInputStream(file);
-			ObjectInput input = new ObjectInputStream(buffer);
-			try {
-				PortJob loadedJob = (PortJob) input.readObject();
-				// Load data into this object
-				setPathToSavedFile(loadedJob.getPathToSavedFile());
-				setSourceSiteDomain(loadedJob.getSourceSiteDomain());
-				setSourceSetID(loadedJob.getSourceSetID());
-				setSinkSiteDomain(loadedJob.getSinkSiteDomain());
-				setSinkSetID(loadedJob.getSinkSetID());
-				setPortMethod(loadedJob.getPortMethod());
-				setPublishMethod(loadedJob.getPublishMethod());
-				setPublish(loadedJob.getPublish());
-			} finally {
-				input.close();
-			}
-		} catch (ClassNotFoundException ex) {
-			System.out
-					.println("Error loading Port Job: Cannot perform input. Class not found.");
-		} catch (IOException ex) {
-			System.out.println("Error loading Port Job: Cannot perform input.");
-		}
-	}
-
-	public String getJobFilename() {
-		if (pathToSavedJobFile.equals("")) {
-			return DEFAULT_JOB_NAME;
-		}
-		return new File(pathToSavedJobFile).getName();
-	}
-
-	public void setPathToSavedFile(String newPath) {
-		pathToSavedJobFile = newPath;
-	}
-
-	public String getPathToSavedFile() {
-		return pathToSavedJobFile;
-	}
-
-	public String getSinkSetID() {
-		return sinkSetID;
-	}
-
-	public void setSinkSetID(String sinkSetID) {
-		this.sinkSetID = sinkSetID;
-	}
-
-	public String getSourceSiteDomain() {
-		return sourceSiteDomain;
-	}
-
-	public void setSourceSiteDomain(String sourceSiteDomain) {
-		this.sourceSiteDomain = sourceSiteDomain;
-	}
-
-	public String getSourceSetID() {
-		return sourceSetID;
-	}
-
-	public void setSourceSetID(String sourceSetID) {
-		this.sourceSetID = sourceSetID;
-	}
-
-	public String getSinkSiteDomain() {
-		return sinkSiteDomain;
-	}
-
-	public void setSinkSiteDomain(String sinkSiteDomain) {
-		this.sinkSiteDomain = sinkSiteDomain;
-	}
-
-	public PublishMethod getPublishMethod() {
-		return publishMethod;
-	}
-
-	public void setPublishMethod(PublishMethod publishMethod) {
-		this.publishMethod = publishMethod;
-	}
-
-	public PortMethod getPortMethod() {
-		return portMethod;
-	}
-
-	public void setPortMethod(PortMethod portMethod) {
-		this.portMethod = portMethod;
-	}
-
-	public Boolean getPublish() {
-		return publish;
-	}
-
-	public void setPublish(Boolean publish) {
-		this.publish = publish;
-	}
-
-	public String getPortResult() {
-		return portResult;
-	}
-
-	public void setPortResult(String portResult) {
-		this.portResult = portResult;
+	public PortJob(String pathToFile) throws IOException {
+        // first try reading the 'current' format
+        ObjectMapper mapper = new ObjectMapper();
+        // if reading new format fails...try reading old format into this object
+        try {
+            PortJob loadedJob = mapper.readValue(new File(pathToFile), PortJob.class);
+            setPathToSavedFile(loadedJob.getPathToSavedFile());
+            setSourceSiteDomain(loadedJob.getSourceSiteDomain());
+            setSourceSetID(loadedJob.getSourceSetID());
+            setSinkSiteDomain(loadedJob.getSinkSiteDomain());
+            setSinkSetID(loadedJob.getSinkSetID());
+            setPortMethod(loadedJob.getPortMethod());
+            setPublishMethod(loadedJob.getPublishMethod());
+            setPublish(loadedJob.getPublish());
+        } catch(IOException e){
+            throw new IOException(e.toString());
+        }
 	}
 
 	public JobStatus validate(SocrataConnectionInfo connectionInfo) {
@@ -263,70 +173,113 @@ public class PortJob implements Job, Serializable {
 		return runStatus;
 	}
 
-	/**
-	 * Saves this object as a file at specified location
-	 */
-	public void writeToFile(String filepath) {
-		try {
-			OutputStream file = new FileOutputStream(filepath);
-			OutputStream buffer = new BufferedOutputStream(file);
-			ObjectOutput output = new ObjectOutputStream(buffer);
-			try {
-				output.writeObject(this);
-			} finally {
-				output.close();
-			}
-		} catch (IOException ex) {
-			System.out.println("Error writing file: " + filepath);
-		}
-	}
+    /**
+     * Saves this object as a file at given filepath
+     */
+    public void writeToFile(String filepath) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(new File(filepath), this);
+    }
 
-	/**
-	 * Implements a custom serialization of a IntegrationJob object.
-	 * 
-	 * @param out
-	 *            the ObjectOutputStream to write to
-	 * @throws IOException
-	 *             if the stream fails
-	 */
-	private void writeObject(final ObjectOutputStream out) throws IOException {
-		// Write each field to the stream in a specific order.
-		// Specifying this order helps shield the class from problems
-		// in future versions.
-		// The order must be the same as the read order in readObject()
-		out.writeObject(pathToSavedJobFile);
-		out.writeObject(sourceSiteDomain);
-		out.writeObject(sourceSetID);
-		out.writeObject(sinkSiteDomain);
-		out.writeObject(sinkSetID);
-		out.writeObject(portMethod);
-		out.writeObject(publishMethod);
-		out.writeObject(publish);
-	}
+    @JsonProperty("fileVersionUID")
+    public long getFileVersionUID() {
+        return fileVersionUID;
+    }
 
-	/**
-	 * Implements a custom deserialization of an IntegrationJob object.
-	 * 
-	 * @param in
-	 *            the ObjectInputStream to read from
-	 * @throws IOException
-	 *             if the stream fails
-	 * @throws ClassNotFoundException
-	 *             if a class is not found
-	 */
-	private void readObject(final ObjectInputStream in) throws IOException,
-			ClassNotFoundException {
-		// Read each field from the stream in a specific order.
-		// Specifying this order helps shield the class from problems
-		// in future versions.
-		// The order must be the same as the writing order in writeObject()
-		pathToSavedJobFile = (String) in.readObject();
-		sourceSiteDomain = (String) in.readObject();
-		sourceSetID = (String) in.readObject();
-		sinkSiteDomain = (String) in.readObject();
-		sinkSetID = (String) in.readObject();
-		portMethod = (PortMethod) in.readObject();
-		publishMethod = (PublishMethod) in.readObject();
-		publish = (Boolean) in.readObject();
-	}
+    @JsonProperty("pathToSavedJobFile")
+    public void setPathToSavedFile(String newPath) {
+        pathToSavedJobFile = newPath;
+    }
+
+    @JsonProperty("pathToSavedJobFile")
+    public String getPathToSavedFile() {
+        return pathToSavedJobFile;
+    }
+
+    @JsonProperty("sinkSetID")
+    public String getSinkSetID() {
+        return sinkSetID;
+    }
+
+    @JsonProperty("sinkSetID")
+    public void setSinkSetID(String sinkSetID) {
+        this.sinkSetID = sinkSetID;
+    }
+
+    @JsonProperty("sourceSiteDomain")
+    public String getSourceSiteDomain() {
+        return sourceSiteDomain;
+    }
+
+    @JsonProperty("sourceSiteDomain")
+    public void setSourceSiteDomain(String sourceSiteDomain) {
+        this.sourceSiteDomain = sourceSiteDomain;
+    }
+
+    @JsonProperty("sourceSetID")
+    public String getSourceSetID() {
+        return sourceSetID;
+    }
+
+    @JsonProperty("sourceSetID")
+    public void setSourceSetID(String sourceSetID) {
+        this.sourceSetID = sourceSetID;
+    }
+
+    @JsonProperty("sinkSiteDomain")
+    public String getSinkSiteDomain() {
+        return sinkSiteDomain;
+    }
+
+    @JsonProperty("sinkSiteDomain")
+    public void setSinkSiteDomain(String sinkSiteDomain) {
+        this.sinkSiteDomain = sinkSiteDomain;
+    }
+
+    @JsonProperty("publishMethod")
+    public PublishMethod getPublishMethod() {
+        return publishMethod;
+    }
+
+    @JsonProperty("publishMethod")
+    public void setPublishMethod(PublishMethod publishMethod) {
+        this.publishMethod = publishMethod;
+    }
+
+    @JsonProperty("portMethod")
+    public PortMethod getPortMethod() {
+        return portMethod;
+    }
+
+    @JsonProperty("portMethod")
+    public void setPortMethod(PortMethod portMethod) {
+        this.portMethod = portMethod;
+    }
+
+    @JsonProperty("publish")
+    public Boolean getPublish() {
+        return publish;
+    }
+
+    @JsonProperty("publish")
+    public void setPublish(Boolean publish) {
+        this.publish = publish;
+    }
+
+    @JsonProperty("portResult")
+    public String getPortResult() {
+        return portResult;
+    }
+
+    @JsonProperty("portResult")
+    public void setPortResult(String portResult) {
+        this.portResult = portResult;
+    }
+
+    public String getJobFilename() {
+        if (pathToSavedJobFile.equals("")) {
+            return DEFAULT_JOB_NAME;
+        }
+        return new File(pathToSavedJobFile).getName();
+    }
 }
