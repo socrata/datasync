@@ -6,6 +6,7 @@ import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertResult;
 import junit.framework.TestCase;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
