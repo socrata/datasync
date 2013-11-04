@@ -24,11 +24,11 @@ import com.socrata.utils.GeneralUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class IntegrationUtility {
-        /**
-         * @author Adrian Laurenzi
-         * 
-         * A utility class for the Integration Job Type
-         */
+    /**
+     * @author Adrian Laurenzi
+     *
+     * A utility class for the Integration Job Type
+     */
         
     private IntegrationUtility() {
         throw new AssertionError("Never instantiate utility classes!");

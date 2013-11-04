@@ -206,17 +206,16 @@ public class IntegrationJob implements Job { //, Serializable {
 							}
 							runStatus = JobStatus.PUBLISH_ERROR;
 							runStatus.setMessage(errorMessage);
-						} else {
-                            //if(sodaError.getMessage().equals("Not found"))
-                            //runStatus = JobStatus.PUBLISH_ERROR;
-                            //runStatus.setMessage("Dataset with that ID does not exist or you do not have permission to publish to it");
-                        }
-					} else {
-						runStatus = JobStatus.SUCCESS;
+						}
 					}
 				} else {
-					runStatus = JobStatus.PUBLISH_ERROR;
-					runStatus.setMessage(errorMessage);
+                    //System.out.println("err2: " + errorMessage);
+                    runStatus = JobStatus.PUBLISH_ERROR;
+                    if(errorMessage.equals("Not found")) {
+                        runStatus.setMessage("Dataset with that ID does not exist or you do not have permission to publish to it");
+                    } else {
+					    runStatus.setMessage(errorMessage);
+                    }
 				}
 			}
 		}
