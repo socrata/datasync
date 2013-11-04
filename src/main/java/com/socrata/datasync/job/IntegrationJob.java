@@ -187,7 +187,7 @@ public class IntegrationJob implements Job { //, Serializable {
 				errorMessage = ioException.getMessage();
 			} 
 			catch (SodaError sodaError) {
-				errorMessage = sodaError.getMessage();
+                errorMessage = sodaError.getMessage();
 			} 
 			catch (InterruptedException intrruptException) {
 				errorMessage = intrruptException.getMessage();
@@ -197,16 +197,20 @@ public class IntegrationJob implements Job { //, Serializable {
 			}
 			finally {
 				if(noPublishExceptions) {
-					// Check for upsert errors (only for upsert and append publish methods)
+                    // Check for upsert errors (only for upsert and append publish methods)
 					if(result != null) {
-						if(result.errorCount() > 0) {
+                        if(result.errorCount() > 0) {
 							for (UpsertError upsertErr : result.getErrors()) {
 								errorMessage += upsertErr.getError() + " (line "
 										+ (upsertErr.getIndex() + 1) + " of file) \n";
 							}
 							runStatus = JobStatus.PUBLISH_ERROR;
 							runStatus.setMessage(errorMessage);
-						}
+						} else {
+                            //if(sodaError.getMessage().equals("Not found"))
+                            //runStatus = JobStatus.PUBLISH_ERROR;
+                            //runStatus.setMessage("Dataset with that ID does not exist or you do not have permission to publish to it");
+                        }
 					} else {
 						runStatus = JobStatus.SUCCESS;
 					}
