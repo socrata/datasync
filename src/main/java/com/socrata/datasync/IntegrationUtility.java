@@ -24,17 +24,17 @@ import com.socrata.utils.GeneralUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class IntegrationUtility {
-	/**
-	 * @author Adrian Laurenzi
-	 * 
-	 * A utility class for the Integration Job Type
-	 */
-	
-	private IntegrationUtility() {
+        /**
+         * @author Adrian Laurenzi
+         * 
+         * A utility class for the Integration Job Type
+         */
+        
+        private IntegrationUtility() {
         throw new AssertionError("Never instantiate utility classes!");
     }
-	
-	/**
+        
+        /**
      * Does an upsert, looking at two files:
      *    Deleted ID file (contains the IDs of objects to delete), if set to null no rows will be deleted
      *    Added or updated objects (contains the objects to add/update)
@@ -42,11 +42,11 @@ public class IntegrationUtility {
      * This function will read in the deletions + upserts, put them in a single list and then do the upsert operation.
      */
     public static UpsertResult upsert(Soda2Producer producer, SodaDdl ddl, final String id, final File deletedIds, final File addedUpdatedObjects) 
-    		throws IOException, SodaError, InterruptedException, java.net.UnknownHostException
+                    throws IOException, SodaError, InterruptedException, java.net.UnknownHostException
     {
-    	List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
+            List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
         
-    	if(deletedIds != null) {
+            if(deletedIds != null) {
             upsertObjects.addAll(getDeletedUpsertObjects(ddl, id, deletedIds));
         }
 
@@ -153,7 +153,7 @@ public class IntegrationUtility {
      * If you have no row identifier set, this will be a straight append every time.
      */
     public static UpsertResult append(Soda2Producer producer, final String id, final File file)
-    		throws SodaError, InterruptedException, IOException
+                    throws SodaError, InterruptedException, IOException
     {
         //Should be able to replace an append with an upsert
         return producer.upsertCsv(id, file);
@@ -178,71 +178,71 @@ public class IntegrationUtility {
      * 
      * @return status for action to create row in log dataset
      */
-	public static JobStatus addLogEntry(String logDatasetID, SocrataConnectionInfo connectionInfo,
-    		IntegrationJob job, JobStatus status, UpsertResult result) {
-		
-		final Soda2Producer producer = Soda2Producer.newProducer(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
-		
-		List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
-		Map<String, Object> newCols = new HashMap<String,Object>();
+        public static JobStatus addLogEntry(String logDatasetID, SocrataConnectionInfo connectionInfo,
+                    IntegrationJob job, JobStatus status, UpsertResult result) {
+                
+                final Soda2Producer producer = Soda2Producer.newProducer(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
+                
+                List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
+                Map<String, Object> newCols = new HashMap<String,Object>();
 
-		// add standard log data
-		Date currentDateTime = new Date();
-		newCols.put("Date", (Object) currentDateTime);
-		newCols.put("DatasetID", (Object) job.getDatasetID());
-		newCols.put("FileToPublish", (Object) job.getFileToPublish());
-		newCols.put("PublishMethod", (Object) job.getPublishMethod());
-		newCols.put("JobFile", (Object) job.getPathToSavedFile());
+                // add standard log data
+                Date currentDateTime = new Date();
+                newCols.put("Date", (Object) currentDateTime);
+                newCols.put("DatasetID", (Object) job.getDatasetID());
+                newCols.put("FileToPublish", (Object) job.getFileToPublish());
+                newCols.put("PublishMethod", (Object) job.getPublishMethod());
+                newCols.put("JobFile", (Object) job.getPathToSavedFile());
         if(result != null) {
             newCols.put("RowsUpdated", (Object) result.rowsUpdated);
             newCols.put("RowsCreated", (Object) result.rowsCreated);
             newCols.put("RowsDeleted", (Object) result.rowsDeleted);
         }
-		if(status.isError()) {
-			newCols.put("Errors", (Object) status.getMessage());
-		} else {
-			newCols.put("Success", (Object) true);
-		}
-		upsertObjects.add(ImmutableMap.copyOf(newCols));
+                if(status.isError()) {
+                        newCols.put("Errors", (Object) status.getMessage());
+                } else {
+                        newCols.put("Success", (Object) true);
+                }
+                upsertObjects.add(ImmutableMap.copyOf(newCols));
 
-		JobStatus logStatus = JobStatus.SUCCESS;
+                JobStatus logStatus = JobStatus.SUCCESS;
         String errorMessage = "";
         boolean noPublishExceptions = false;
-		try {
-			producer.upsert(logDatasetID, upsertObjects);
+                try {
+                        producer.upsert(logDatasetID, upsertObjects);
             noPublishExceptions = true;
-		}
-		catch (SodaError sodaError) {
-			errorMessage = sodaError.getMessage();
-		} 
-		catch (InterruptedException intrruptException) {
-			errorMessage = intrruptException.getMessage();
-		}
-		catch (Exception other) {
+                }
+                catch (SodaError sodaError) {
+                        errorMessage = sodaError.getMessage();
+                } 
+                catch (InterruptedException intrruptException) {
+                        errorMessage = intrruptException.getMessage();
+                }
+                catch (Exception other) {
             errorMessage = other.toString() + ": " + other.getMessage();
-		} finally {
+                } finally {
             if(!noPublishExceptions) {
                 logStatus = JobStatus.PUBLISH_ERROR;
                 logStatus.setMessage(errorMessage);
             }
-		}
-		return logStatus;
-	}
-	
-	/**
-	 * Open given uri in local web browser
-	 * @param uri to open in browser
-	 */
-	public static void openWebpage(URI uri) {
-	    Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
-	    if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
-	        try {
-	            desktop.browse(uri);
-	        } catch (Exception e) {
-	            System.out.println("Error: cannot open web page");
-	        }
-	    }
-	}
+                }
+                return logStatus;
+        }
+        
+        /**
+         * Open given uri in local web browser
+         * @param uri to open in browser
+         */
+        public static void openWebpage(URI uri) {
+            Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+            if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+                try {
+                    desktop.browse(uri);
+                } catch (Exception e) {
+                    System.out.println("Error: cannot open web page");
+                }
+            }
+        }
 
     /**
      * @param pathToSaveJobFile path to a saved job file
@@ -261,5 +261,5 @@ public class IntegrationUtility {
             return "Error getting path to this executeable: " + unsupportedEncoding.getMessage();
         }
     }
-	
+        
 }

@@ -322,4 +322,4 @@ public class IntegrationJob implements Job { //, Serializable {
 		}
 		return new File(pathToSavedJobFile).getName();
 	}
-}
+}

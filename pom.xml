@@ -16,12 +16,17 @@
     </developer>
   </developers>
   <build>
-    <sourceDirectory>src</sourceDirectory>
+    <sourceDirectory>src/main/java</sourceDirectory>
     <resources>
       <resource>
 	<directory>images/</directory>
       </resource>
     </resources>
+    <testResources>
+      <testResource>
+          <directory>src/test/java</directory>
+      </testResource>
+    </testResources>
     <plugins>
       <plugin>
 	<artifactId>maven-compiler-plugin</artifactId>

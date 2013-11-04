@@ -1,6 +1,5 @@
 package com.socrata.datasync;
 
-import com.oracle.javafx.jmx.json.JSONException;
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
