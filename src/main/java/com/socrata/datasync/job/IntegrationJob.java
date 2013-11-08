@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.util.Arrays;
+import java.util.List;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaImporter;
@@ -21,7 +23,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
-public class IntegrationJob implements Job { //, Serializable {
+public class IntegrationJob implements Job {
 	/**
 	 * @author Adrian Laurenzi
 	 *
@@ -34,6 +36,8 @@ public class IntegrationJob implements Job { //, Serializable {
     private static final int FILESIZE_CHUNK_CUTOFF_BYTES = 78643200; // = 75 MB
     // During chunking files are uploaded NUM_ROWS_PER_CHUNK rows per chunk
     private static final int NUM_ROWS_PER_CHUNK = 10000;
+    // to upload a single chunk
+    private static final int UPLOAD_SINGLE_CHUNK = 0;
 
     // TODO move this somewhere else (or remove it)
     private static final int DATASET_ID_LENGTH = 9;
@@ -45,9 +49,11 @@ public class IntegrationJob implements Job { //, Serializable {
 	private String fileToPublish;
 	private PublishMethod publishMethod;
 	private String fileRowsToDelete;
+    private boolean fileToPublishHasHeaderRow;
 	private String pathToSavedJobFile;
 	
 	private static final String DEFAULT_JOB_NAME = "Untitled Standard Job";
+    List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
 	
 	public IntegrationJob() {
 		pathToSavedJobFile = "";
@@ -55,6 +61,7 @@ public class IntegrationJob implements Job { //, Serializable {
 		fileToPublish = "";
 		publishMethod = PublishMethod.upsert;
 		fileRowsToDelete = DELETE_ZERO_ROWS;
+        fileToPublishHasHeaderRow = true;
 	}
 	
 	/**
@@ -67,11 +74,12 @@ public class IntegrationJob implements Job { //, Serializable {
         ObjectMapper mapper = new ObjectMapper();
         try {
             IntegrationJob loadedJob = mapper.readValue(new File(pathToFile), IntegrationJob.class);
-            setPathToSavedFile(loadedJob.getPathToSavedFile());
             setDatasetID(loadedJob.getDatasetID());
             setFileToPublish(loadedJob.getFileToPublish());
             setPublishMethod(loadedJob.getPublishMethod());
             setFileRowsToDelete(loadedJob.getFileRowsToDelete());
+            setPathToSavedFile(pathToFile);
+            setFileToPublishHasHeaderRow(loadedJob.getFileToPublishHasHeaderRow());
         } catch (IOException e) {
             // if reading new format fails...try reading old format into this object
             try {
@@ -80,12 +88,12 @@ public class IntegrationJob implements Job { //, Serializable {
                 ObjectInput input = new ObjectInputStream (buffer);
                 try{
                     com.socrata.datasync.IntegrationJob loadedJobOld = (com.socrata.datasync.IntegrationJob) input.readObject();
-                    // Load data into this object
-                    setPathToSavedFile(loadedJobOld.getPathToSavedFile());
                     setDatasetID(loadedJobOld.getDatasetID());
                     setFileToPublish(loadedJobOld.getFileToPublish());
                     setPublishMethod(loadedJobOld.getPublishMethod());
                     setFileRowsToDelete(loadedJobOld.getFileRowsToDelete());
+                    setPathToSavedFile(pathToFile);
+                    setFileToPublishHasHeaderRow(true);
                 }
                 finally{
                     input.close();
@@ -117,6 +125,11 @@ public class IntegrationJob implements Job { //, Serializable {
 				errorStatus.setMessage(fileToPublish + ": File to publish does not exist");
 				return errorStatus;
 			}
+            // Ensure file extension is an accepted format
+            String fileToPublishExtension = IntegrationUtility.getFileExtension(fileToPublish);
+            if(!allowedFileToPublishExtensions.contains(fileToPublishExtension)) {
+                return JobStatus.FILE_TO_PUBLISH_INVALID_FORMAT;
+            }
 		}
 		if(!publishMethod.equals(PublishMethod.upsert)
 				&& !publishMethod.equals(PublishMethod.replace)
@@ -148,25 +161,25 @@ public class IntegrationJob implements Job { //, Serializable {
 			if(!fileRowsToDelete.equals(DELETE_ZERO_ROWS)) {
 				deleteRowsFile = new File(fileRowsToDelete);
 			}
-			
 			String errorMessage = "";
 			boolean noPublishExceptions = false;
 			try {
 				if(publishMethod.equals(PublishMethod.upsert)) {
                     if(fileToPublishFile.length() > FILESIZE_CHUNK_CUTOFF_BYTES) {
-                        result = IntegrationUtility.upsertInChunks(
-                                NUM_ROWS_PER_CHUNK, producer, importer, datasetID, deleteRowsFile, fileToPublishFile);
+                        result = IntegrationUtility.upsert(
+                                producer, importer, datasetID, deleteRowsFile, fileToPublishFile, NUM_ROWS_PER_CHUNK, fileToPublishHasHeaderRow);
                     } else {
-					    result = IntegrationUtility.upsert(producer, importer, datasetID, deleteRowsFile, fileToPublishFile);
+					    result = IntegrationUtility.upsert(producer, importer, datasetID, deleteRowsFile, fileToPublishFile, UPLOAD_SINGLE_CHUNK, fileToPublishHasHeaderRow);
                     }
                     noPublishExceptions = true;
 				}
+                // TODO remove this method (replace with append/upsert)
 				else if(publishMethod.equals(PublishMethod.append)) {
                     if(fileToPublishFile.length() > FILESIZE_CHUNK_CUTOFF_BYTES) {
-                        result = IntegrationUtility.appendInChunks(
-                                NUM_ROWS_PER_CHUNK, producer, datasetID, fileToPublishFile);
+                        result = IntegrationUtility.upsert(
+                                producer, importer, datasetID, null, fileToPublishFile, NUM_ROWS_PER_CHUNK, fileToPublishHasHeaderRow);
                     } else {
-                        result = IntegrationUtility.append(producer, datasetID, fileToPublishFile);
+                        result = IntegrationUtility.upsert(producer, importer, datasetID, null, fileToPublishFile, UPLOAD_SINGLE_CHUNK, fileToPublishHasHeaderRow);
                     }
                     noPublishExceptions = true;
 				}
@@ -263,16 +276,6 @@ public class IntegrationJob implements Job { //, Serializable {
         return fileVersionUID;
     }
 
-    @JsonProperty("pathToSavedJobFile")
-	public void setPathToSavedFile(String newPath) {
-		pathToSavedJobFile = newPath;
-	}
-
-    @JsonProperty("pathToSavedJobFile")
-	public String getPathToSavedFile() {
-		return pathToSavedJobFile;
-	}
-
     @JsonProperty("datasetID")
 	public void setDatasetID(String newDatasetID) {
 		datasetID = newDatasetID;
@@ -312,7 +315,25 @@ public class IntegrationJob implements Job { //, Serializable {
 	public String getFileRowsToDelete() {
 		return fileRowsToDelete;
 	}
-	
+
+    @JsonProperty("fileToPublishHasHeaderRow")
+    public boolean getFileToPublishHasHeaderRow() {
+        return fileToPublishHasHeaderRow;
+    }
+
+    @JsonProperty("fileToPublishHasHeaderRow")
+    public void setFileToPublishHasHeaderRow(boolean fileToPublishHasHeaderRow) {
+        this.fileToPublishHasHeaderRow = fileToPublishHasHeaderRow;
+    }
+
+    public void setPathToSavedFile(String newPath) {
+        pathToSavedJobFile = newPath;
+    }
+
+    public String getPathToSavedFile() {
+        return pathToSavedJobFile;
+    }
+
 	public String getJobFilename() {
 		if(pathToSavedJobFile.equals("")) {
 			return DEFAULT_JOB_NAME;

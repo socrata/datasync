@@ -33,6 +33,8 @@ public enum JobStatus {
     MISSING_FILE_TO_PUBLISH("No File To Publish selected", true),
 
     FILE_TO_PUBLISH_DOESNT_EXIST("File To Publish does not exist", true),
+
+    FILE_TO_PUBLISH_INVALID_FORMAT("File To Publish must be a .csv or .tsv file", true),
     
     INVALID_PUBLISH_METHOD("Invalid publish method", true),
 

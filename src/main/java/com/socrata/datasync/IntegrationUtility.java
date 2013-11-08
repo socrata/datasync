@@ -33,42 +33,24 @@ public class IntegrationUtility {
     private IntegrationUtility() {
         throw new AssertionError("Never instantiate utility classes!");
     }
-        
-        /**
-     * Does an upsert, looking at two files:
-     *    Deleted ID file (contains the IDs of objects to delete), if set to null no rows will be deleted
-     *    Added or updated objects (contains the objects to add/update)
-     *
-     * This function will read in the deletions + upserts, put them in a single list and then do the upsert operation.
-     */
-    public static UpsertResult upsert(Soda2Producer producer, SodaDdl ddl, final String id, final File deletedIds, final File addedUpdatedObjects) 
-                    throws IOException, SodaError, InterruptedException, java.net.UnknownHostException
-    {
-        List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
-
-        if(deletedIds != null) {
-            upsertObjects.addAll(getDeletedUpsertObjects(ddl, id, deletedIds));
-        }
-
-        upsertObjects.addAll(GeneralUtils.readInCsv(addedUpdatedObjects));
-        return producer.upsert(id, upsertObjects);
-    }
 
     /**
-     * @param deletedIds File (contains the IDs of objects to delete), if set to null no rows will be deleted
+     * @param csvFile File has rows of data to be published and a :deleted column with TRUE in any column that
+     *                should be deleted
      * @return upsert objects to delete the rows corresponding to the IDs within the given deletedIds File
      *
      */
-    public static List<Map<String, Object>> getDeletedUpsertObjects(SodaDdl ddl, final String id, final File deletedIds)
+    public static List<Map<String, Object>> getDeletedUpsertObjects(SodaDdl ddl, final String id, final File csvFile)
             throws IOException, SodaError, InterruptedException
     {
         List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
 
-        if(deletedIds != null) {
+        if(csvFile != null) {
             // get row identifier of dataset
             Dataset info = (Dataset) ddl.loadDatasetInfo(id);
 
             Column rowIdentifier = info.lookupRowIdentifierColumn();
+
             String rowIdentifierName;
             if (rowIdentifier == null) {
                 rowIdentifierName = ":id";
@@ -76,26 +58,32 @@ public class IntegrationUtility {
                 rowIdentifierName = rowIdentifier.getFieldName();
             }
 
+            // TODO read in csvFile and extract out :deleted column data to generate list of rows to delete
             // read in rows to be deleted
-            String line;
-            FileReader fileReader = new FileReader(deletedIds);
+            /*String line;
+            FileReader fileReader = new FileReader(csvFile);
             BufferedReader reader = new BufferedReader(fileReader);
 
             while((line = reader.readLine()) != null) {
                 upsertObjects.add(ImmutableMap.of(rowIdentifierName, (Object)line, ":deleted", Boolean.TRUE));
             }
-            reader.close();
+            reader.close();*/
         }
         return upsertObjects;
     }
 
     /**
      *
-     * Upserts the given csvFile in chunks where each chunk contains numRowsPerChunk rows.
-     * This is useful when uploading very large CSV files. NOTE: The rows to be deleted are
-     * all added to the first chunk.
+     * Upserts the given csvFile in chunks if numRowsPerChunk > 0 (all in one chunk if numRowsPerChunk == 0)
+     * where each chunk contains numRowsPerChunk rows. Chunking is useful when uploading very large CSV files.
+     *
+     * @param id dataset ID to publish to
+     * @param csvOrTsvFile file containing data in comma- or tab- separated values (CSV or TSV) format
+     *
      */
-    public static UpsertResult upsertInChunks(int numRowsPerChunk, Soda2Producer producer, SodaDdl ddl, final String id, final File deletedIds, final File csvFile)
+    public static UpsertResult upsert(Soda2Producer producer, SodaDdl ddl,
+                                      final String id, final File deletedIds, final File csvOrTsvFile,
+                                      int numRowsPerChunk, boolean containsHeaderRow)
             throws IOException, SodaError, InterruptedException
     {
         List<Map<String, Object>> upsertObjectsChunk = new ArrayList<Map<String, Object>>();
@@ -103,13 +91,41 @@ public class IntegrationUtility {
         int totalRowsUpdated = 0;
         int totalRowsDeleted = 0;
 
-        if(deletedIds != null) {
-            upsertObjectsChunk.addAll(getDeletedUpsertObjects(ddl, id, deletedIds));
+        char columnDelimiter = ',';
+        if(IntegrationUtility.getFileExtension(csvOrTsvFile.toString()).equals("tsv")) {
+            columnDelimiter = '\t';
         }
 
-        FileReader  fileReader = new FileReader(csvFile);
-        CSVReader reader = new CSVReader(fileReader);
-        String[] headers = reader.readNext();
+        // TODO uncomment after getDeletedUpsertObjects is fully implemented (also remove deletedIds param)
+        //if(deletedIds != null) {
+            //upsertObjects.addAll(getDeletedUpsertObjects(ddl, id, addedUpdatedObjects));
+        //}
+
+        FileReader  fileReader = new FileReader(csvOrTsvFile);
+        CSVReader reader = new CSVReader(fileReader, columnDelimiter);
+
+        String[] headers;
+        if(containsHeaderRow) {
+            headers = reader.readNext();
+            // trim whitespace from header names
+            if (headers != null) {
+                for (int i=0; i<headers.length; i++) {
+                    headers[i] = headers[i].trim();
+                }
+            }
+        } else {
+            // get API field names for each column in dataset
+            Dataset info = (Dataset) ddl.loadDatasetInfo(id);
+            List<Column> columns = info.getColumns();
+            for(Column c : columns) {
+                System.out.print(c.getFieldName() + ",");
+            }
+            headers = new String[columns.size()];
+            for(int i = 0; i < columns.size(); i++) {
+                headers[i] = columns.get(i).getFieldName();
+            }
+        }
+
         if (headers != null) {
             String[] currLine;
             do {
@@ -129,18 +145,28 @@ public class IntegrationUtility {
                     totalRowsCreated += chunkResult.getRowsCreated();
                     totalRowsUpdated += chunkResult.getRowsUpdated();
                     totalRowsDeleted += chunkResult.getRowsDeleted();
+
+                    // TODO remove
+                    System.out.println("num rows upserted: " + upsertObjectsChunk.size());
+
                     if(chunkResult.errorCount() > 0) {
                         return new UpsertResult(
                                 totalRowsCreated, totalRowsUpdated, totalRowsDeleted, chunkResult.getErrors());
                     }
                     upsertObjectsChunk.clear();
                 }
-
             } while(currLine != null);
         }
-
         return new UpsertResult(
                 totalRowsCreated, totalRowsUpdated, totalRowsDeleted, new ArrayList<UpsertError>());
+    }
+
+    public static String getFileExtension(String file) {
+        String extension = "";
+        int i = file.lastIndexOf('.');
+        if (i > 0)
+            extension = file.substring(i+1).toLowerCase();
+        return extension;
     }
 
     /**
@@ -152,19 +178,13 @@ public class IntegrationUtility {
      *
      * If you have no row identifier set, this will be a straight append every time.
      */
+    // TODO remove this method
     public static UpsertResult append(Soda2Producer producer, final String id, final File file)
                     throws SodaError, InterruptedException, IOException
     {
         //Should be able to replace an append with an upsert
         return producer.upsertCsv(id, file);
     }
-
-    public static UpsertResult appendInChunks(int numRowsPerChunk, Soda2Producer producer, final String id, final File file)
-            throws SodaError, InterruptedException, IOException
-    {
-        return upsertInChunks(numRowsPerChunk, producer, null, id, null, file);
-    }
-
 
     /**
      * This is a new replace function that does not need a working copy.

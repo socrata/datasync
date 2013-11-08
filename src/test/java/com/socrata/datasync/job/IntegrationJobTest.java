@@ -1,5 +1,7 @@
-package com.socrata.datasync;
+package com.socrata.datasync.job;
 
+import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.TestBase;
 import com.socrata.datasync.job.IntegrationJob;
 import junit.framework.TestCase;
 import org.junit.Test;
@@ -25,7 +27,7 @@ public class IntegrationJobTest extends TestBase {
         TestCase.assertEquals("n38h-y5wpx", job.getDatasetID());
         TestCase.assertEquals(PublishMethod.upsert, job.getPublishMethod());
         TestCase.assertEquals(
-                "/Users/adrian/Dropbox/Socrata_s/projects/data_integration/datasync/misc/honolulu2.sij",
+                "src/test/resources/job_saved_v0.1.sij",
                 job.getPathToSavedFile());
     }
 
@@ -40,7 +42,7 @@ public class IntegrationJobTest extends TestBase {
         TestCase.assertEquals("n38h-y5wpx", job.getDatasetID());
         TestCase.assertEquals(PublishMethod.upsert, job.getPublishMethod());
         TestCase.assertEquals(
-                "/Users/adrian/Desktop/job_saved_v0.3.sij",
+                "src/test/resources/job_saved_v0.3.sij",
                 job.getPathToSavedFile());
     }
 }
