@@ -2,6 +2,7 @@ package com.socrata.datasync.ui;
 
 import com.socrata.datasync.*;
 import com.socrata.datasync.job.PortJob;
+import net.java.balloontip.BalloonTip;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -25,6 +26,8 @@ public class PortJobTab implements JobTab {
     private final int JOB_FIELD_VGAP = 8;
     private final int SINK_DATASET_ID_TEXTFIELD_WIDTH = 210;
     private final int OPEN_SINK_DATASET_BUTTON_HEIGHT = 22;
+    private final int HELP_BUTTON_HEIGHT = 22;
+    private final int HELP_BUTTON_WIDTH = 45;
     private final String DEFAULT_DESTINATION_SET_ID = "(Generates after running job)";
     private final String JOB_FILE_NAME = "Socrata Port Job";
     private final String JOB_FILE_EXTENSION = "spj";
@@ -39,6 +42,8 @@ public class PortJobTab implements JobTab {
     private JTextField sinkSetIDTextField;
     // Need to expose more of the JComponents locally in order to toggle between PublishMethod and PublishDataset
     private JLabel publishMethodLabel;
+    private JButton publishMethodHelp;
+    private JPanel publishMethodContainerLeft;
     private JComboBox publishMethodComboBox;
     private JPanel publishMethodContainer;
     private JLabel publishDatasetLabel;
@@ -115,7 +120,15 @@ public class PortJobTab implements JobTab {
 
         // Publish Method (toggles with Publish Query based on Port Method choice)
         // We will build out the specs of this element without adding it to the jobPanel.
-        publishMethodLabel = new JLabel("Publish Method");
+        publishMethodContainerLeft = new JPanel(new FlowLayout(
+                FlowLayout.LEFT, 0, 0));
+        publishMethodLabel = new JLabel("Publish Method ");
+        publishMethodHelp = new JButton("?");
+        publishMethodHelp.setPreferredSize(new Dimension(
+                HELP_BUTTON_WIDTH, HELP_BUTTON_HEIGHT));
+        publishMethodHelp.addActionListener(new PublishMethodHelpListener());
+        publishMethodContainerLeft.add(publishMethodLabel);
+        publishMethodContainerLeft.add(publishMethodHelp);
         publishMethodContainer = new JPanel(new FlowLayout(
                 FlowLayout.LEFT, 0, JOB_FIELD_VGAP));
         publishMethodComboBox = new JComboBox();
@@ -153,7 +166,7 @@ public class PortJobTab implements JobTab {
             jobPanel.add(publishDatasetContainer);
             publishDatasetComboBox.setEnabled(true);
         } else {
-            jobPanel.add(publishMethodLabel);
+            jobPanel.add(publishMethodContainerLeft);
             jobPanel.add(publishMethodContainer);
             publishMethodComboBox.setEnabled(true);
         }
@@ -289,7 +302,7 @@ public class PortJobTab implements JobTab {
                         jobPanel.remove(publishDatasetLabel);
                         jobPanel.remove(publishDatasetContainer);
                         publishDatasetComboBox.setEnabled(false);
-                        jobPanel.add(publishMethodLabel);
+                        jobPanel.add(publishMethodContainerLeft);
                         jobPanel.add(publishMethodContainer);
                         publishMethodComboBox.setEnabled(true);
                         jobPanel.updateUI();
@@ -298,7 +311,7 @@ public class PortJobTab implements JobTab {
                     case copy_all:
                         sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
                         sinkSetIDTextField.setEditable(false);
-                        jobPanel.remove(publishMethodLabel);
+                        jobPanel.remove(publishMethodContainerLeft);
                         jobPanel.remove(publishMethodContainer);
                         publishMethodComboBox.setEnabled(false);
                         jobPanel.add(publishDatasetLabel);
@@ -317,6 +330,12 @@ public class PortJobTab implements JobTab {
                     .equals(DEFAULT_DESTINATION_SET_ID)) {
                 IntegrationUtility.openWebpage(getURIToSinkDataset());
             }
+        }
+    }
+
+    private class PublishMethodHelpListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+             BalloonTip balloonTip = new BalloonTip(publishMethodHelp, "Example BalloonTip!");
         }
     }
 }
