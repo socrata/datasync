@@ -6,12 +6,7 @@ import java.io.IOException;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
-import com.socrata.datasync.JobStatus;
-import com.socrata.datasync.PortMethod;
-import com.socrata.datasync.PortUtility;
-import com.socrata.datasync.PublishMethod;
-import com.socrata.datasync.SocrataConnectionInfo;
-import com.socrata.datasync.UserPreferences;
+import com.socrata.datasync.*;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -21,12 +16,12 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 public class PortJob implements Job {
     private PortMethod portMethod;
-	private Boolean publish;
 	private String sourceSiteDomain;
 	private String sourceSetID;
 	private String sinkSiteDomain;
 	private String sinkSetID;
 	private PublishMethod publishMethod;
+    private PublishDataset publishDataset;
 	private String portResult;
 	private String pathToSavedJobFile;
 
@@ -40,12 +35,12 @@ public class PortJob implements Job {
 
 	public PortJob() {
 		portMethod = PortMethod.copy_all;
-		publish = false;
 		sourceSiteDomain = "https://";
 		sourceSetID = "";
 		sinkSiteDomain = "https://";
 		sinkSetID = "";
 		publishMethod = PublishMethod.upsert;
+        publishDataset = PublishDataset.working_copy;
 		portResult = "";
 		pathToSavedJobFile = "";
 	}
@@ -67,7 +62,7 @@ public class PortJob implements Job {
             setSinkSetID(loadedJob.getSinkSetID());
             setPortMethod(loadedJob.getPortMethod());
             setPublishMethod(loadedJob.getPublishMethod());
-            setPublish(loadedJob.getPublish());
+            setPublishDataset(loadedJob.getPublishDataset());
         } catch(IOException e){
             throw new IOException(e.toString());
         }
@@ -151,7 +146,7 @@ public class PortJob implements Job {
 					errorMessage = JobStatus.INVALID_PORT_METHOD.toString();
 				}
 				try {
-					if (publish) {
+					if (publishDataset.equals(PublishDataset.publish)) {
 						sinkSetID = PortUtility.publishDataset(creator,
 								sinkSetID);
 					}
@@ -256,14 +251,14 @@ public class PortJob implements Job {
         this.portMethod = portMethod;
     }
 
-    @JsonProperty("publish")
-    public Boolean getPublish() {
-        return publish;
+    @JsonProperty("publishDataset")
+    public PublishDataset getPublishDataset() {
+        return publishDataset;
     }
 
-    @JsonProperty("publish")
-    public void setPublish(Boolean publish) {
-        this.publish = publish;
+    @JsonProperty("publishDataset")
+    public void setPublishDataset(PublishDataset publishDataset) {
+        this.publishDataset = publishDataset;
     }
 
     @JsonProperty("portResult")
