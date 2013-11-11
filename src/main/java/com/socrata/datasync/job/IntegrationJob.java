@@ -53,7 +53,7 @@ public class IntegrationJob implements Job {
 	private String pathToSavedJobFile;
 	
 	private static final String DEFAULT_JOB_NAME = "Untitled Standard Job";
-    List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
+    public static final List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
 	
 	public IntegrationJob() {
 		pathToSavedJobFile = "";
@@ -164,27 +164,19 @@ public class IntegrationJob implements Job {
 			String errorMessage = "";
 			boolean noPublishExceptions = false;
 			try {
-				if(publishMethod.equals(PublishMethod.upsert)) {
+				if(publishMethod.equals(PublishMethod.upsert) || publishMethod.equals(PublishMethod.append)) {
                     if(fileToPublishFile.length() > FILESIZE_CHUNK_CUTOFF_BYTES) {
-                        result = IntegrationUtility.upsert(
-                                producer, importer, datasetID, deleteRowsFile, fileToPublishFile, NUM_ROWS_PER_CHUNK, fileToPublishHasHeaderRow);
+                        result = IntegrationUtility.appendUpsert(
+                                producer, importer, datasetID, fileToPublishFile, NUM_ROWS_PER_CHUNK, fileToPublishHasHeaderRow);
                     } else {
-					    result = IntegrationUtility.upsert(producer, importer, datasetID, deleteRowsFile, fileToPublishFile, UPLOAD_SINGLE_CHUNK, fileToPublishHasHeaderRow);
-                    }
-                    noPublishExceptions = true;
-				}
-                // TODO remove this method (replace with append/upsert)
-				else if(publishMethod.equals(PublishMethod.append)) {
-                    if(fileToPublishFile.length() > FILESIZE_CHUNK_CUTOFF_BYTES) {
-                        result = IntegrationUtility.upsert(
-                                producer, importer, datasetID, null, fileToPublishFile, NUM_ROWS_PER_CHUNK, fileToPublishHasHeaderRow);
-                    } else {
-                        result = IntegrationUtility.upsert(producer, importer, datasetID, null, fileToPublishFile, UPLOAD_SINGLE_CHUNK, fileToPublishHasHeaderRow);
+					    result = IntegrationUtility.appendUpsert(
+                                producer, importer, datasetID, fileToPublishFile, UPLOAD_SINGLE_CHUNK, fileToPublishHasHeaderRow);
                     }
                     noPublishExceptions = true;
 				}
 				else if(publishMethod.equals(PublishMethod.replace)) {
-					result = IntegrationUtility.replaceNew(producer, datasetID, fileToPublishFile);
+					result = IntegrationUtility.replaceNew(
+                            producer, importer, datasetID, fileToPublishFile, fileToPublishHasHeaderRow);
 					noPublishExceptions = true;
 				} else {
 					errorMessage = JobStatus.INVALID_PUBLISH_METHOD.toString();
@@ -240,7 +232,8 @@ public class IntegrationJob implements Job {
 			if(runStatus.isError()) {
 				errorEmailMessage += "There was an error updating a dataset.\n"
 						+ "\nDataset: " + connectionInfo.getUrl() + "/d/" + getDatasetID()
-						+ "\nFile to be published: " + fileToPublish
+						+ "\nFile to publish: " + fileToPublish
+                        + "\nFile to publish has header row: " + fileToPublishHasHeaderRow
 						+ "\nPublish method: " + publishMethod
 						// TODO + "\nFile with rows to delete: " + fileRowsToDelete
 						+ "\nJob File: " + pathToSavedJobFile

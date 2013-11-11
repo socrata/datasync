@@ -40,10 +40,11 @@ public class IntegrationJobTab implements JobTab {
 
     private JTextField datasetIDTextField;
     private JTextField fileToPublishTextField;
+    private JCheckBox fileToPublishHasHeaderCheckBox;
     private JComboBox publishMethodComboBox;
     private JTextField runCommandTextField;
 
-    // build Container with all tab components
+    // build Container with all tab components populated with given job data
     public IntegrationJobTab(IntegrationJob job, JFrame containingFrame) {
         mainFrame = containingFrame;
 
@@ -64,6 +65,11 @@ public class IntegrationJobTab implements JobTab {
         openButton.addActionListener(chooserListener);
         fileSelectorContainer.add(openButton);
         jobPanel.add(fileSelectorContainer);
+
+        jobPanel.add(new JLabel(""));
+        fileToPublishHasHeaderCheckBox = new JCheckBox("File to publish contains a header row");
+        fileToPublishHasHeaderCheckBox.setSelected(job.getFileToPublishHasHeaderRow());
+        jobPanel.add(fileToPublishHasHeaderCheckBox);
 
         jobPanel.add(new JLabel("Dataset ID (i.e. n38h-y5wp)"));
         JPanel datasetIDTextFieldContainer = new JPanel(
@@ -121,12 +127,11 @@ public class IntegrationJobTab implements JobTab {
 
     public JobStatus runJobNow() {
         IntegrationJob jobToRun = new IntegrationJob();
-        jobToRun.setDatasetID(
-                datasetIDTextField.getText());
-        jobToRun.setFileToPublish(
-                fileToPublishTextField.getText());
+        jobToRun.setDatasetID(datasetIDTextField.getText());
+        jobToRun.setFileToPublish(fileToPublishTextField.getText());
         jobToRun.setPublishMethod(
                 (PublishMethod) publishMethodComboBox.getSelectedItem());
+        jobToRun.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
 
         // TODO include delete file
         //jobToRun.setFileColsToDelete("/home/adrian/delete.csv");
@@ -176,7 +181,8 @@ public class IntegrationJobTab implements JobTab {
 
             // Update the textfield with new command
             if(updateJobCommandTextField) {
-                String runJobCommand = IntegrationUtility.getRunJobCommand(newIntegrationJob.getPathToSavedFile());
+                String runJobCommand = IntegrationUtility.getRunJobCommand(
+                        newIntegrationJob.getPathToSavedFile());
                 runCommandTextField.setText(runJobCommand);
             }
         } catch (IOException e) {
@@ -201,8 +207,17 @@ public class IntegrationJobTab implements JobTab {
             fileChooser = chooser;
             filePathTextField = textField;
 
+            String extensionsMsg = "";
+            int numExtensions = IntegrationJob.allowedFileToPublishExtensions.size();
+            String[] allowedFileExtensions = new String[numExtensions];
+            for(int i = 0; i < numExtensions; i++) {
+                if(i > 0)
+                    extensionsMsg += ", ";
+                allowedFileExtensions[i] = IntegrationJob.allowedFileToPublishExtensions.get(i);
+                extensionsMsg += "*." + allowedFileExtensions[i];
+            }
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                    "*.csv, *.json", "csv", "json");
+                    extensionsMsg, allowedFileExtensions);
             fileChooser.setFileFilter(filter);
         }
 

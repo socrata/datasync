@@ -4,23 +4,25 @@ import java.awt.Desktop;
 import java.io.*;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import au.com.bytecode.opencsv.CSVReader;
 import com.google.common.collect.ImmutableMap;
+import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
 import com.socrata.datasync.job.IntegrationJob;
+import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
+import com.socrata.model.requests.SodaRequest;
+import com.socrata.model.requests.SodaTypedRequest;
 import com.socrata.utils.GeneralUtils;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
 import org.apache.commons.lang3.StringUtils;
 
 public class IntegrationUtility {
@@ -35,17 +37,17 @@ public class IntegrationUtility {
     }
 
     /**
-     * @param csvFile File has rows of data to be published and a :deleted column with TRUE in any column that
+     * @param csvOrTsvFile File has rows of data to be published and a :deleted column with TRUE in any column that
      *                should be deleted
      * @return upsert objects to delete the rows corresponding to the IDs within the given deletedIds File
      *
      */
-    public static List<Map<String, Object>> getDeletedUpsertObjects(SodaDdl ddl, final String id, final File csvFile)
+    public static List<Map<String, Object>> getDeletedUpsertObjects(SodaDdl ddl, final String id, final File csvOrTsvFile)
             throws IOException, SodaError, InterruptedException
     {
         List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
 
-        if(csvFile != null) {
+        if(csvOrTsvFile != null) {
             // get row identifier of dataset
             Dataset info = (Dataset) ddl.loadDatasetInfo(id);
 
@@ -61,7 +63,7 @@ public class IntegrationUtility {
             // TODO read in csvFile and extract out :deleted column data to generate list of rows to delete
             // read in rows to be deleted
             /*String line;
-            FileReader fileReader = new FileReader(csvFile);
+            FileReader fileReader = new FileReader(csvFile); // USE CSVReader...
             BufferedReader reader = new BufferedReader(fileReader);
 
             while((line = reader.readLine()) != null) {
@@ -74,18 +76,24 @@ public class IntegrationUtility {
 
     /**
      *
-     * Upserts the given csvFile in chunks if numRowsPerChunk > 0 (all in one chunk if numRowsPerChunk == 0)
+     * Publishes the given csvOrTsvFile via replace or upsert. Publishes in chunks if using upsert
+     * and numRowsPerChunk > 0 (all data will be upserted in one chunk if numRowsPerChunk == 0)
      * where each chunk contains numRowsPerChunk rows. Chunking is useful when uploading very large CSV files.
      *
      * @param id dataset ID to publish to
      * @param csvOrTsvFile file containing data in comma- or tab- separated values (CSV or TSV) format
      *
      */
-    public static UpsertResult upsert(Soda2Producer producer, SodaDdl ddl,
-                                      final String id, final File deletedIds, final File csvOrTsvFile,
+    public static UpsertResult publishDataFile(Soda2Producer producer, SodaDdl ddl,
+                                      final PublishMethod method, final String id, final File csvOrTsvFile,
                                       int numRowsPerChunk, boolean containsHeaderRow)
             throws IOException, SodaError, InterruptedException
     {
+        // If doing a replace force it to upload all data as a single chunk
+        // TODO support chunking for replace publish method
+        if(method.equals(PublishMethod.replace))
+            numRowsPerChunk = 0;
+
         List<Map<String, Object>> upsertObjectsChunk = new ArrayList<Map<String, Object>>();
         int totalRowsCreated = 0;
         int totalRowsUpdated = 0;
@@ -117,9 +125,6 @@ public class IntegrationUtility {
             // get API field names for each column in dataset
             Dataset info = (Dataset) ddl.loadDatasetInfo(id);
             List<Column> columns = info.getColumns();
-            for(Column c : columns) {
-                System.out.print(c.getFieldName() + ",");
-            }
             headers = new String[columns.size()];
             for(int i = 0; i < columns.size(); i++) {
                 headers[i] = columns.get(i).getFieldName();
@@ -132,22 +137,27 @@ public class IntegrationUtility {
                 currLine = reader.readNext();
                 ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
                 if(currLine != null) {
-                    for (int i=0; i<headers.length; i++) {
-                        if (StringUtils.isNotEmpty(currLine[i])) {
+                    for (int i=0; i<currLine.length; i++) {
+                        if (i < headers.length && StringUtils.isNotEmpty(currLine[i])) {
                             builder.put(headers[i], currLine[i]);
                         }
                     }
                     upsertObjectsChunk.add(builder.build());
                 }
                 if(upsertObjectsChunk.size() == numRowsPerChunk || currLine == null) {
-                    // upsert current chunk
-                    UpsertResult chunkResult = producer.upsert(id, upsertObjectsChunk);
+                    // upsert or replace current chunk
+                    UpsertResult chunkResult;
+                    if(method.equals(PublishMethod.upsert) || method.equals(PublishMethod.upsert)) {
+                        chunkResult = producer.upsert(id, upsertObjectsChunk);
+                    } else if(method.equals(PublishMethod.replace)) {
+                        chunkResult = producer.replace(id, upsertObjectsChunk);
+                    } else {
+                        throw new IllegalArgumentException("Error performing publish: "
+                                + method + " is not a valid publishing method");
+                    }
                     totalRowsCreated += chunkResult.getRowsCreated();
                     totalRowsUpdated += chunkResult.getRowsUpdated();
                     totalRowsDeleted += chunkResult.getRowsDeleted();
-
-                    // TODO remove
-                    System.out.println("num rows upserted: " + upsertObjectsChunk.size());
 
                     if(chunkResult.errorCount() > 0) {
                         return new UpsertResult(
@@ -170,27 +180,29 @@ public class IntegrationUtility {
     }
 
     /**
-     * This operation will do an append, through using an upsert.
+     * This operation will do an append/upsert.
      *
      * IMPORTANT: If you have a row identifier set on the dataset, and this is appending a row that
      * has an identifier of a row that has already been added, this will overwrite that row rather than
-     * failing.
-     *
-     * If you have no row identifier set, this will be a straight append every time.
+     * failing. If you have no row identifier set, this will be a straight append every time.
      */
-    // TODO remove this method
-    public static UpsertResult append(Soda2Producer producer, final String id, final File file)
+    public static UpsertResult appendUpsert(Soda2Producer producer, SodaDdl ddl,
+                                            final String id, final File file,
+                                            int numRowsPerChunk, boolean containsHeaderRow)
                     throws SodaError, InterruptedException, IOException
     {
-        //Should be able to replace an append with an upsert
-        return producer.upsertCsv(id, file);
+        return publishDataFile(producer, ddl, PublishMethod.upsert, id, file, numRowsPerChunk, containsHeaderRow);
     }
 
     /**
      * This is a new replace function that does not need a working copy.
      */
-    public static UpsertResult replaceNew(Soda2Producer producer, final String id, final File file) throws SodaError, InterruptedException, IOException {
-        return producer.replaceCsv(id, file);
+    public static UpsertResult replaceNew(Soda2Producer producer, SodaDdl ddl,
+                                            final String id, final File file,
+                                            boolean containsHeaderRow)
+            throws SodaError, InterruptedException, IOException
+    {
+        return publishDataFile(producer, ddl, PublishMethod.replace, id, file, 0, containsHeaderRow);
     }
     
     /**
