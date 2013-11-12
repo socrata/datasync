@@ -33,10 +33,10 @@ public class IntegrationJob implements Job {
     private static final String DELETE_ZERO_ROWS = "";
 
     // When a file to be published is larger than this value (in bytes), file is chunked
-    private static final int FILESIZE_CHUNK_CUTOFF_BYTES = 78643200; // = 75 MB
+    private static final int FILESIZE_CHUNK_CUTOFF_BYTES = 67108864; // = 64 MB
     // During chunking files are uploaded NUM_ROWS_PER_CHUNK rows per chunk
-    private static final int NUM_ROWS_PER_CHUNK = 10000;
-    // to upload a single chunk
+    private static final int NUM_ROWS_PER_CHUNK = 25000;
+    // to upload entire file as a single chunk (numRowsPerChunk == 0)
     private static final int UPLOAD_SINGLE_CHUNK = 0;
 
     // TODO move this somewhere else (or remove it)

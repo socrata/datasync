@@ -11,8 +11,8 @@ public class SimpleIntegrationRunner {
 	 * 
 	 * A command-line interface to DataSync
 	 */
-	
-	public SimpleIntegrationRunner(String jobFileToRun) {
+
+    public SimpleIntegrationRunner(String jobFileToRun) {
         File jobFile = new File(jobFileToRun);
         if(jobFile.exists()) {
             try {
@@ -24,8 +24,12 @@ public class SimpleIntegrationRunner {
             }
         } else {
             // TODO record error in DataSync log
-            System.out.println("Error running " + jobFileToRun + ": given file does not exist.");
+            System.out.println("Error running " + jobFileToRun + ": job file does not exist.");
         }
 	}
 
+    public SimpleIntegrationRunner(IntegrationJob job) {
+        JobStatus status = job.run();
+        System.out.println(status.getMessage());
+    }
 }

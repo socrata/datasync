@@ -46,7 +46,8 @@ public class UserPreferences {
 	public void savePassword(String password) {
 		userPrefs.put(PASSWORD, password);
 	}
-	
+
+    // API key a.k.a. App token
 	public void saveAPIKey(String apiKey) {
 		userPrefs.put(API_KEY, apiKey);
 	}
@@ -98,7 +99,8 @@ public class UserPreferences {
 	public String getPassword() {
 		return userPrefs.get(PASSWORD, "");
 	}
-	
+
+    // API key a.k.a. App token
 	public String getAPIKey() {
 		return userPrefs.get(API_KEY, "");
 	}
