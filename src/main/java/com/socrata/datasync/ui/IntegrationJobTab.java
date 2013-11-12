@@ -146,6 +146,7 @@ public class IntegrationJobTab implements JobTab {
         newIntegrationJob.setFileToPublish(fileToPublishTextField.getText());
         newIntegrationJob.setPublishMethod(
                 (PublishMethod) publishMethodComboBox.getSelectedItem());
+        newIntegrationJob.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
         newIntegrationJob.setPathToSavedFile(jobFileLocation);
 
         // TODO If an existing file was selected WARN user of overwriting

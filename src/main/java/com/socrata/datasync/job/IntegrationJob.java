@@ -16,6 +16,8 @@ import com.socrata.datasync.*;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
+import com.socrata.model.importer.Column;
+import com.socrata.model.importer.Dataset;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -131,10 +133,23 @@ public class IntegrationJob implements Job {
                 return JobStatus.FILE_TO_PUBLISH_INVALID_FORMAT;
             }
 		}
-		if(!publishMethod.equals(PublishMethod.upsert)
-				&& !publishMethod.equals(PublishMethod.replace)
-				&& !publishMethod.equals(PublishMethod.append)) {
-			return JobStatus.INVALID_PUBLISH_METHOD;
+        if(publishMethod.equals(PublishMethod.append)) {
+            // get row identifier of dataset
+            final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
+            Dataset info = null;
+            try {
+                info = (Dataset) importer.loadDatasetInfo(datasetID);
+                Column rowIdentifier = info.lookupRowIdentifierColumn();
+                if (rowIdentifier != null) {
+                    JobStatus status = JobStatus.INVALID_PUBLISH_METHOD;
+                    status.setMessage("Append can only be performed on a dataset without a Row Identifier set" +
+                            ". Dataset with ID '" + datasetID + "' has '" + rowIdentifier + "' set as the Row " +
+                            "Identifier. You probably want to use the upsert method instead." );
+                }
+            } catch (Exception e) {
+                // do nothing; if an exception occurs here it will almost
+                // certainly propagate later where the error message will be more appropriate
+            }
 		}
 		
 		// TODO add more validation

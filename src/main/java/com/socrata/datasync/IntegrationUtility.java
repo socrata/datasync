@@ -50,9 +50,7 @@ public class IntegrationUtility {
         if(csvOrTsvFile != null) {
             // get row identifier of dataset
             Dataset info = (Dataset) ddl.loadDatasetInfo(id);
-
             Column rowIdentifier = info.lookupRowIdentifierColumn();
-
             String rowIdentifierName;
             if (rowIdentifier == null) {
                 rowIdentifierName = ":id";
@@ -138,7 +136,7 @@ public class IntegrationUtility {
                 ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
                 if(currLine != null) {
                     for (int i=0; i<currLine.length; i++) {
-                        if (i < headers.length && StringUtils.isNotEmpty(currLine[i])) {
+                        if (i < headers.length) {
                             builder.put(headers[i], currLine[i]);
                         }
                     }
