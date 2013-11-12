@@ -3,6 +3,9 @@ package com.socrata.datasync.ui;
 import com.socrata.datasync.*;
 import com.socrata.datasync.job.PortJob;
 import net.java.balloontip.BalloonTip;
+import net.java.balloontip.styles.BalloonTipStyle;
+import net.java.balloontip.styles.EdgedBalloonStyle;
+import net.java.balloontip.utils.ToolTipUtils;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -17,7 +20,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * Authors: Adrian Laurenzi and Louis Fettet Date: 9/11/13
+ * Authors: Adrian Laurenzi and Louis Fettet
+ * Date: 9/11/13
  */
 public class PortJobTab implements JobTab {
 
@@ -26,11 +30,23 @@ public class PortJobTab implements JobTab {
     private final int JOB_FIELD_VGAP = 8;
     private final int SINK_DATASET_ID_TEXTFIELD_WIDTH = 210;
     private final int OPEN_SINK_DATASET_BUTTON_HEIGHT = 22;
-    private final int HELP_BUTTON_HEIGHT = 22;
-    private final int HELP_BUTTON_WIDTH = 45;
     private final String DEFAULT_DESTINATION_SET_ID = "(Generates after running job)";
     private final String JOB_FILE_NAME = "Socrata Port Job";
     private final String JOB_FILE_EXTENSION = "spj";
+    private final String HELP_ICON_FILE_PATH = "/help.png";
+
+    private final String PORT_METHOD_TIP_TEXT = "<html>" +
+            "Copy Schema: Ports the dataset's metadata and columns." +
+            "<br>" +
+            "Copy Data: Ports only the rows." +
+            "</html>";
+    private final String SOURCE_SITE_TIP_TEXT = "Domain where the dataset is located.";
+    private final String SOURCE_SET_TIP_TEXT = "The 4-4 id of the dataset (i.e. n38h-y5wp)";
+    private final String SINK_SITE_TIP_TEXT = "Domain where you want the copy to go.";
+    private final String SINK_SET_TIP_TEXT = "The 4-4 id of the dataset that was ported or will be ported to.";
+    private final String PUBLISH_METHOD_TIP_TEXT = "Defines the method in which to publish the data (if the destination dataset is not empty).";
+    private final String PUBLISH_DATASET_TIP_TEXT = "Allows you to publish a dataset or create a working copy.";
+
     private JFrame mainFrame;
     private JPanel jobPanel;
     private String jobFileLocation;
@@ -41,14 +57,13 @@ public class PortJobTab implements JobTab {
     private JTextField sinkSiteDomainTextField;
     private JTextField sinkSetIDTextField;
     // Need to expose more of the JComponents locally in order to toggle between PublishMethod and PublishDataset
-    private JLabel publishMethodLabel;
-    private JButton publishMethodHelp;
     private JPanel publishMethodContainerLeft;
     private JComboBox publishMethodComboBox;
-    private JPanel publishMethodContainer;
-    private JLabel publishDatasetLabel;
+    private JPanel publishMethodContainerRight;
+    private JPanel publishDatasetContainerLeft;
     private JComboBox publishDatasetComboBox;
-    private JPanel publishDatasetContainer;
+    private JPanel publishDatasetContainerRight;
+
 
     // build Container with all tab components and load data into form
     public PortJobTab(PortJob job, JFrame containingFrame) {
@@ -57,32 +72,61 @@ public class PortJobTab implements JobTab {
         // build tab panel form
         jobPanel = new JPanel(new GridLayout(0, 2));
 
+        // set FlowLayouts
+        FlowLayout flowLeft = new FlowLayout(FlowLayout.LEFT, 1, 0);
+        FlowLayout flowRight = new FlowLayout(FlowLayout.LEFT, 0, JOB_FIELD_VGAP);
+
+        // load in help icon for balloontips
+        final ImageIcon helpIcon = new ImageIcon(getClass().
+                getResource(HELP_ICON_FILE_PATH));
+        // set the style of the balloontips
+        BalloonTipStyle style = new EdgedBalloonStyle(Color.LIGHT_GRAY, Color.BLUE);
+
         // Port Method
-        jobPanel.add(new JLabel("Port Method"));
-        JPanel portMethodContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 0,
-                JOB_FIELD_VGAP));
+        JPanel portMethodContainerLeft = new JPanel(flowLeft);
+        JLabel portMethodLabel = new JLabel("Port Method ");
+        portMethodContainerLeft.add(portMethodLabel);
+        JLabel portMethodHelp = new JLabel(helpIcon);
+        BalloonTip portMethodTip = new BalloonTip(portMethodHelp, PORT_METHOD_TIP_TEXT,
+                style, false);
+        ToolTipUtils.balloonToToolTip(portMethodTip, 100, 100000);
+        portMethodContainerLeft.add(portMethodHelp);
+        jobPanel.add(portMethodContainerLeft);
+        JPanel portMethodContainerRight = new JPanel(flowRight);
         portMethodComboBox = new JComboBox();
         for (PortMethod method : PortMethod.values()) {
             portMethodComboBox.addItem(method);
         }
         portMethodComboBox.addItemListener(new PortMethodItemListener());
-        portMethodContainer.add(portMethodComboBox);
-        jobPanel.add(portMethodContainer);
+        portMethodContainerRight.add(portMethodComboBox);
+        jobPanel.add(portMethodContainerRight);
 
         // Source Site
-        jobPanel.add(new JLabel("Source Site (domain where dataset is located)"));
-        JPanel sourceSiteTextFieldContainer = new JPanel(new FlowLayout(
-                FlowLayout.LEFT, 0, JOB_FIELD_VGAP));
+        JPanel sourceSiteContainerLeft = new JPanel(flowLeft);
+        JLabel sourceSiteLabel = new JLabel("Source Site ");
+        sourceSiteContainerLeft.add(sourceSiteLabel);
+        JLabel sourceSiteHelp = new JLabel(helpIcon);
+        BalloonTip sourceSiteTip = new BalloonTip(sourceSiteHelp, SOURCE_SITE_TIP_TEXT, style, false);
+        sourceSiteContainerLeft.add(sourceSiteHelp);
+        jobPanel.add(sourceSiteContainerLeft);
+        ToolTipUtils.balloonToToolTip(sourceSiteTip, 100, 100000);
+        JPanel sourceSiteTextFieldContainer = new JPanel(flowRight);
         sourceSiteDomainTextField = new JTextField();
         sourceSiteDomainTextField.setPreferredSize(new Dimension(
                 JOB_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
         sourceSiteTextFieldContainer.add(sourceSiteDomainTextField);
         jobPanel.add(sourceSiteTextFieldContainer);
 
-        // Source Site Dataset ID
-        jobPanel.add(new JLabel("Source Dataset ID (i.e. n38h-y5wp)"));
-        JPanel sourceSetIDTextFieldContainer = new JPanel(new FlowLayout(
-                FlowLayout.LEFT, 0, JOB_FIELD_VGAP));
+        // Source Set Dataset ID
+        JPanel sourceSetContainerLeft = new JPanel(flowLeft);
+        JLabel sourceSetLabel = new JLabel("Source Dataset ID ");
+        sourceSetContainerLeft.add(sourceSetLabel);
+        JLabel sourceSetHelp = new JLabel(helpIcon);
+        BalloonTip sourceSetTip = new BalloonTip(sourceSetHelp, SOURCE_SET_TIP_TEXT, style, false);
+        ToolTipUtils.balloonToToolTip(sourceSetTip, 100, 100000);
+        sourceSetContainerLeft.add(sourceSetHelp);
+        jobPanel.add(sourceSetContainerLeft);
+        JPanel sourceSetIDTextFieldContainer = new JPanel(flowRight);
         sourceSetIDTextField = new JTextField();
         sourceSetIDTextField.setPreferredSize(new Dimension(
                 JOB_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
@@ -90,10 +134,15 @@ public class PortJobTab implements JobTab {
         jobPanel.add(sourceSetIDTextFieldContainer);
 
         // Sink Site
-        jobPanel.add(new JLabel(
-                "Destination Site (domain where you want copy to go)"));
-        JPanel sinkSiteTextFieldContainer = new JPanel(new FlowLayout(
-                FlowLayout.LEFT, 0, JOB_FIELD_VGAP));
+        JPanel sinkSiteContainerLeft = new JPanel(flowLeft);
+        JLabel sinkSiteLabel = new JLabel("Destination Site ");
+        sinkSiteContainerLeft.add(sinkSiteLabel);
+        JLabel sinkSiteHelp = new JLabel(helpIcon);
+        BalloonTip sinkSiteTip = new BalloonTip(sinkSiteHelp, SINK_SITE_TIP_TEXT, style, false);
+        ToolTipUtils.balloonToToolTip(sinkSiteTip, 100, 100000);
+        sinkSiteContainerLeft.add(sinkSiteHelp);
+        jobPanel.add(sinkSiteContainerLeft);
+        JPanel sinkSiteTextFieldContainer = new JPanel(flowRight);
         sinkSiteDomainTextField = new JTextField();
         sinkSiteDomainTextField.setPreferredSize(new Dimension(
                 JOB_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
@@ -101,9 +150,15 @@ public class PortJobTab implements JobTab {
         jobPanel.add(sinkSiteTextFieldContainer);
 
         // Sink Site Dataset ID
-        jobPanel.add(new JLabel("Destination Dataset ID"));
-        JPanel destinationSetIDTextFieldContainer = new JPanel(new FlowLayout(
-                FlowLayout.LEFT, 0, JOB_FIELD_VGAP));
+        JPanel sinkSetContainerLeft = new JPanel(flowLeft);
+        JLabel sinkSetLabel = new JLabel("Destination Dataset ID ");
+        sinkSetContainerLeft.add(sinkSetLabel);
+        JLabel sinkSetHelp = new JLabel(helpIcon);
+        BalloonTip sinkSetTip = new BalloonTip(sinkSetHelp, SINK_SET_TIP_TEXT, style, false);
+        ToolTipUtils.balloonToToolTip(sinkSetTip, 100, 1000000);
+        sinkSetContainerLeft.add(sinkSetHelp);
+        jobPanel.add(sinkSetContainerLeft);
+        JPanel destinationSetIDTextFieldContainer = new JPanel(flowRight);
         sinkSetIDTextField = new JTextField(DEFAULT_DESTINATION_SET_ID);
         sinkSetIDTextField.setPreferredSize(new Dimension(
                 SINK_DATASET_ID_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
@@ -120,17 +175,15 @@ public class PortJobTab implements JobTab {
 
         // Publish Method (toggles with Publish Query based on Port Method choice)
         // We will build out the specs of this element without adding it to the jobPanel.
-        publishMethodContainerLeft = new JPanel(new FlowLayout(
-                FlowLayout.LEFT, 0, 0));
-        publishMethodLabel = new JLabel("Publish Method ");
-        publishMethodHelp = new JButton("?");
-        publishMethodHelp.setPreferredSize(new Dimension(
-                HELP_BUTTON_WIDTH, HELP_BUTTON_HEIGHT));
-        publishMethodHelp.addActionListener(new PublishMethodHelpListener());
+        publishMethodContainerLeft = new JPanel(flowLeft);
+        JLabel publishMethodLabel = new JLabel("Publish Method ");
         publishMethodContainerLeft.add(publishMethodLabel);
+        JLabel publishMethodHelp = new JLabel(helpIcon);
+        BalloonTip publishMethodTip = new BalloonTip(publishMethodHelp, PUBLISH_METHOD_TIP_TEXT, style, false);
+        ToolTipUtils.balloonToToolTip(publishMethodTip, 100, 1000000);
         publishMethodContainerLeft.add(publishMethodHelp);
-        publishMethodContainer = new JPanel(new FlowLayout(
-                FlowLayout.LEFT, 0, JOB_FIELD_VGAP));
+        jobPanel.add(publishMethodContainerLeft);
+        publishMethodContainerRight = new JPanel(flowRight);
         publishMethodComboBox = new JComboBox();
         for (PublishMethod method : PublishMethod.values()) {
             // TODO: clean this up once publish method changes have been implemented
@@ -139,35 +192,40 @@ public class PortJobTab implements JobTab {
             }
         }
         publishMethodComboBox.setEnabled(false);
-        publishMethodContainer.setPreferredSize(new Dimension(
+        publishMethodContainerRight.setPreferredSize(new Dimension(
                 JOB_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
-        publishMethodContainer.add(publishMethodComboBox);
+        publishMethodContainerRight.add(publishMethodComboBox);
 
         // Publish Destination Dataset (toggles with Publish Method based on Port Method choice)
         // We will build out the specs of this element without adding it to the jobPanel.
-        publishDatasetLabel = new JLabel("Publish Destination Dataset?");
-        publishDatasetContainer = new JPanel(new FlowLayout(
-                FlowLayout.LEFT, 0, JOB_FIELD_VGAP));
+        publishDatasetContainerLeft = new JPanel(flowLeft);
+        JLabel publishDatasetLabel = new JLabel("Publish Destination Dataset? ");
+        publishDatasetContainerLeft.add(publishDatasetLabel);
+        JLabel publishDatasetHelp = new JLabel(helpIcon);
+        BalloonTip publishDatasetTip = new BalloonTip(publishDatasetHelp, PUBLISH_DATASET_TIP_TEXT, style, false);
+        ToolTipUtils.balloonToToolTip(publishDatasetTip, 100, 100000);
+        publishDatasetContainerLeft.add(publishDatasetHelp);
+        publishDatasetContainerRight = new JPanel(flowRight);
         publishDatasetComboBox = new JComboBox();
         for (PublishDataset publish : PublishDataset.values()) {
             publishDatasetComboBox.addItem(publish);
         }
         publishDatasetComboBox.setEnabled(false);
-        publishDatasetContainer.setPreferredSize(new Dimension(
+        publishDatasetContainerRight.setPreferredSize(new Dimension(
                 JOB_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
-        publishDatasetContainer.add(publishDatasetComboBox);
+        publishDatasetContainerRight.add(publishDatasetComboBox);
 
         // Load job data into fields
         PortMethod jobPortMethod = job.getPortMethod();
         portMethodComboBox.setSelectedItem(jobPortMethod);
         if (jobPortMethod.equals(PortMethod.copy_schema)
                 || jobPortMethod.equals(PortMethod.copy_all)) {
-            jobPanel.add(publishDatasetLabel);
-            jobPanel.add(publishDatasetContainer);
+            jobPanel.add(publishDatasetContainerLeft);
+            jobPanel.add(publishDatasetContainerRight);
             publishDatasetComboBox.setEnabled(true);
         } else {
             jobPanel.add(publishMethodContainerLeft);
-            jobPanel.add(publishMethodContainer);
+            jobPanel.add(publishMethodContainerRight);
             publishMethodComboBox.setEnabled(true);
         }
         sourceSiteDomainTextField.setText(job.getSourceSiteDomain());
@@ -299,11 +357,11 @@ public class PortJobTab implements JobTab {
                     case copy_data:
                         sinkSetIDTextField.setText("");
                         sinkSetIDTextField.setEditable(true);
-                        jobPanel.remove(publishDatasetLabel);
-                        jobPanel.remove(publishDatasetContainer);
+                        jobPanel.remove(publishDatasetContainerLeft);
+                        jobPanel.remove(publishDatasetContainerRight);
                         publishDatasetComboBox.setEnabled(false);
                         jobPanel.add(publishMethodContainerLeft);
-                        jobPanel.add(publishMethodContainer);
+                        jobPanel.add(publishMethodContainerRight);
                         publishMethodComboBox.setEnabled(true);
                         jobPanel.updateUI();
                         break;
@@ -312,10 +370,10 @@ public class PortJobTab implements JobTab {
                         sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
                         sinkSetIDTextField.setEditable(false);
                         jobPanel.remove(publishMethodContainerLeft);
-                        jobPanel.remove(publishMethodContainer);
+                        jobPanel.remove(publishMethodContainerRight);
                         publishMethodComboBox.setEnabled(false);
-                        jobPanel.add(publishDatasetLabel);
-                        jobPanel.add(publishDatasetContainer);
+                        jobPanel.add(publishDatasetContainerLeft);
+                        jobPanel.add(publishDatasetContainerRight);
                         publishDatasetComboBox.setEnabled(true);
                         jobPanel.updateUI();
                         break;
@@ -330,12 +388,6 @@ public class PortJobTab implements JobTab {
                     .equals(DEFAULT_DESTINATION_SET_ID)) {
                 IntegrationUtility.openWebpage(getURIToSinkDataset());
             }
-        }
-    }
-
-    private class PublishMethodHelpListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-             BalloonTip balloonTip = new BalloonTip(publishMethodHelp, "Example BalloonTip!");
         }
     }
 }
