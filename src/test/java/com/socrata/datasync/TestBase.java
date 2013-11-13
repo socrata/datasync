@@ -25,6 +25,7 @@ public class TestBase
     public static final String API_KEY = "D8Atrg62F2j017ZTdkMpuZ9vY";
 
     public static final String UNITTEST_DATASET_ID = "8gex-q4ds";
+    public static final String UNITTEST_PORT_RESULT_DATASET_ID = "59q3-syrs";
 
     protected void setTestUserPreferences() {
         UserPreferences userPrefs = new UserPreferences();
@@ -42,10 +43,10 @@ public class TestBase
         return SodaDdl.newDdl(DOMAIN, USERNAME, PASSWORD, API_KEY);
     }
 
-    protected int getTotalRowsUnitTestDataset() throws LongRunningQueryException, SodaError {
+    protected int getTotalRows(String UnitTestDataset) throws LongRunningQueryException, SodaError {
         final Soda2Consumer consumer = Soda2Consumer.newConsumer(DOMAIN, USERNAME, PASSWORD, API_KEY);
 
-        ClientResponse response = consumer.query(UNITTEST_DATASET_ID, HttpLowLevel.JSON_TYPE, "select count(*)");
+        ClientResponse response = consumer.query(UnitTestDataset, HttpLowLevel.JSON_TYPE, "select count(*)");
 
         ArrayList results = response.getEntity(ArrayList.class);
         Map count = (HashMap<String,String>) results.get(0);

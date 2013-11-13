@@ -8,6 +8,7 @@ import com.socrata.model.UpsertResult;
 import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
+import test.model.UnitTestDataset;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +29,7 @@ public class IntegrationUtilityTest extends TestBase {
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsCreated());
-        TestCase.assertEquals(2, getTotalRowsUnitTestDataset());
+        TestCase.assertEquals(2, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test
@@ -41,7 +42,7 @@ public class IntegrationUtilityTest extends TestBase {
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(3, result.getRowsCreated());
-        TestCase.assertEquals(3, getTotalRowsUnitTestDataset());
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test
@@ -54,7 +55,7 @@ public class IntegrationUtilityTest extends TestBase {
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(3, result.getRowsCreated());
-        TestCase.assertEquals(3, getTotalRowsUnitTestDataset());
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test
@@ -67,7 +68,7 @@ public class IntegrationUtilityTest extends TestBase {
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(3, result.getRowsCreated());
-        TestCase.assertEquals(3, getTotalRowsUnitTestDataset());
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test
@@ -75,12 +76,12 @@ public class IntegrationUtilityTest extends TestBase {
         final Soda2Producer producer = createProducer();
         final SodaDdl ddl = createSodaDdl();
 
-        int numRowsBegin = getTotalRowsUnitTestDataset();
+        int numRowsBegin = getTotalRows(UNITTEST_DATASET_ID);
 
         File zeroRowsFile = new File("src/test/resources/datasync_unit_test_zero_rows.csv");
         UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, zeroRowsFile, 0, true);
 
-        int numRowsAfter = getTotalRowsUnitTestDataset();
+        int numRowsAfter = getTotalRows(UNITTEST_DATASET_ID);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(numRowsBegin, numRowsAfter);
@@ -101,7 +102,7 @@ public class IntegrationUtilityTest extends TestBase {
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
         TestCase.assertEquals(1, result.getRowsCreated());
-        TestCase.assertEquals(3, getTotalRowsUnitTestDataset());
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test
@@ -119,7 +120,7 @@ public class IntegrationUtilityTest extends TestBase {
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
         TestCase.assertEquals(1, result.getRowsCreated());
-        TestCase.assertEquals(3, getTotalRowsUnitTestDataset());
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test
@@ -137,7 +138,7 @@ public class IntegrationUtilityTest extends TestBase {
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
         TestCase.assertEquals(1, result.getRowsCreated());
-        TestCase.assertEquals(3, getTotalRowsUnitTestDataset());
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test
@@ -155,7 +156,7 @@ public class IntegrationUtilityTest extends TestBase {
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
         TestCase.assertEquals(1, result.getRowsCreated());
-        TestCase.assertEquals(3, getTotalRowsUnitTestDataset());
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test
@@ -174,7 +175,7 @@ public class IntegrationUtilityTest extends TestBase {
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
         TestCase.assertEquals(1, result.getRowsCreated());
-        TestCase.assertEquals(3, getTotalRowsUnitTestDataset());
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test
@@ -192,7 +193,7 @@ public class IntegrationUtilityTest extends TestBase {
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
         TestCase.assertEquals(1, result.getRowsCreated());
-        TestCase.assertEquals(3, getTotalRowsUnitTestDataset());
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test

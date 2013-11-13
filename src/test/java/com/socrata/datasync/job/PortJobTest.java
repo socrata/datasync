@@ -1,6 +1,8 @@
-package com.socrata.datasync;
+package com.socrata.datasync.job;
 
-import com.socrata.datasync.job.PortJob;
+import com.socrata.datasync.PortMethod;
+import com.socrata.datasync.PublishDataset;
+import com.socrata.datasync.TestBase;
 import junit.framework.TestCase;
 import org.junit.Test;
 
