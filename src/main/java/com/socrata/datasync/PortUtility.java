@@ -2,6 +2,7 @@ package com.socrata.datasync;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.List;
 
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
@@ -9,6 +10,8 @@ import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
+import com.socrata.model.importer.Column;
+import com.socrata.model.importer.Dataset;
 import com.socrata.model.importer.DatasetInfo;
 import com.socrata.model.soql.SoqlQuery;
 import com.sun.jersey.api.client.ClientResponse;
@@ -92,4 +95,27 @@ public class PortUtility {
 			// Break after one empty response.
 		} while (sourceSetData.length() > 3);
 	}
+
+    public static JobStatus assertSchemasAreAlike(SodaDdl sourceChecker, SodaDdl sinkChecker, String sourceSetID, String sinkSetID) throws SodaError, InterruptedException {
+        // We don't need to test metadata; we're only concerned with the columns...
+        Dataset sourceSchema = (Dataset) sourceChecker.loadDatasetInfo(sourceSetID);
+        Dataset sinkSchema = (Dataset) sinkChecker.loadDatasetInfo(sinkSetID);
+        // Grab the columns...
+        List<Column> sourceColumns = sourceSchema.getColumns();
+        List<Column> sinkColumns = sinkSchema.getColumns();
+        // And let the tests begin.
+        if(sourceColumns.size() == sinkColumns.size()) {
+            // If the sizes are the same we can begin comparing columns
+            for (int i = 0; i < sourceColumns.size(); i++) {
+                // The aspects of the columns that we care about are the API field names and their data types
+                if(!sourceColumns.get(i).getFieldName().equals(sinkColumns.get(i).getFieldName()) ||
+                        !sourceColumns.get(i).getDataTypeName().equals(sinkColumns.get(i).getDataTypeName())){
+                    return JobStatus.INVALID_SCHEMAS;
+                }
+            }
+        } else {
+                return JobStatus.INVALID_SCHEMAS;
+        }
+        return JobStatus.SUCCESS;
+    }
 }

@@ -38,7 +38,9 @@ public enum JobStatus {
     
     INVALID_PUBLISH_METHOD("Invalid publish method", true),
 
-    INVALID_PORT_METHOD("Invalid DataPort method", true);
+    INVALID_PORT_METHOD("Invalid port method", true),
+
+    INVALID_SCHEMAS("Schemas do not match; cannot port rows.", true);
 
     /**
      * The human-readable message to store.

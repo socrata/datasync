@@ -139,9 +139,14 @@ public class PortJob implements Job {
 							sourceSetID, sinkSetID, PublishMethod.upsert);
 					noPortExceptions = true;
 				} else if (portMethod.equals(PortMethod.copy_data)) {
-					PortUtility.portContents(streamExporter, streamUpserter,
+                    JobStatus schemaCheck = PortUtility.assertSchemasAreAlike(loader, creator, sourceSetID, sinkSetID);
+                    if (schemaCheck.isError()) {
+                        errorMessage = schemaCheck.getMessage();
+                    } else {
+                        PortUtility.portContents(streamExporter, streamUpserter,
 							sourceSetID, sinkSetID, publishMethod);
-                    noPortExceptions = true;
+                        noPortExceptions = true;
+                    }
 				} else {
 					errorMessage = JobStatus.INVALID_PORT_METHOD.toString();
 				}
