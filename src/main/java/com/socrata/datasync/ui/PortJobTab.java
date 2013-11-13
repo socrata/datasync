@@ -232,9 +232,21 @@ public class PortJobTab implements JobTab {
             jobPanel.add(publishMethodContainerRight);
             publishMethodComboBox.setEnabled(true);
         }
-        sourceSiteDomainTextField.setText(job.getSourceSiteDomain());
+        UserPreferences userPrefs = new UserPreferences();
+        SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
+        if (job.getSourceSiteDomain().equals("https://") &&
+                !connectionInfo.getUrl().equals("https://")) {
+            sourceSiteDomainTextField.setText(connectionInfo.getUrl());
+        } else {
+            sourceSiteDomainTextField.setText(job.getSourceSiteDomain());
+        }
         sourceSetIDTextField.setText(job.getSourceSetID());
-        sinkSiteDomainTextField.setText(job.getSinkSiteDomain());
+        if (job.getSinkSiteDomain().equals("https://") &&
+                !connectionInfo.getUrl().equals("https://")) {
+            sinkSiteDomainTextField.setText(connectionInfo.getUrl());
+        } else {
+            sinkSiteDomainTextField.setText(job.getSinkSiteDomain());
+        }
         if (job.getSinkSetID().equals("")){
             sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
         } else {
