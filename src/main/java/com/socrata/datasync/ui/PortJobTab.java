@@ -5,6 +5,7 @@ import com.socrata.datasync.job.PortJob;
 import net.java.balloontip.BalloonTip;
 import net.java.balloontip.styles.BalloonTipStyle;
 import net.java.balloontip.styles.EdgedBalloonStyle;
+import net.java.balloontip.styles.ToolTipBalloonStyle;
 import net.java.balloontip.utils.ToolTipUtils;
 
 import javax.swing.*;
@@ -36,27 +37,29 @@ public class PortJobTab implements JobTab {
     private final String HELP_ICON_FILE_PATH = "/help.png";
 
     private final String PORT_METHOD_TIP_TEXT = "<html>" +
-            "Copy schema only: copies the source dataset's metadata and columns to new dataset (no rows will be copied).<br>" +
-            "Copy schema and data: makes an identical copy of the source dataset as new dataset (including all rows).<br>" +
-            "Copy data only: copies only the rows from source dataset to another existing dataset." +
-            "</html>";
+            "Copy schema only: copies only the metadata and columns to a new dataset<br>" +
+            "Copy schema and data: makes an identical copy to a new dataset<br>" +
+            "Copy data only: copies only the rows to an existing dataset</html>";
     private final String SOURCE_SITE_TIP_TEXT = "Domain where the source dataset is located.";
     private final String SOURCE_SET_TIP_TEXT = "The 4-4 ID of the source dataset (i.e. n38h-y5wp)";
     private final String SINK_SITE_TIP_TEXT = "Domain where the destination dataset is located.";
-    private final String SINK_SET_TIP_TEXT = "If Port method is 'copy data only' enter the 4-4 ID of the existing dataset (i.e. n38h-y5wp) you wish to copy data to. " +
-            "If 'copy schema' or 'copy schema and data' this field will be populated 4-4 ID of the newly created dataset";
+    private final String SINK_SET_TIP_TEXT = "<html><body style='width: 600px'>If Port method is 'copy data only' enter the 4-4 ID of the existing dataset (i.e. n38h-y5wp) you wish to copy data to. " +
+            "If it is 'copy schema' or 'copy schema and data' this field will be populated with the 4-4 ID of the newly created dataset.</body></html>";
     private final String PUBLISH_METHOD_TIP_TEXT = "The method to use when publishing the data to the destination dataset.";
     private final String PUBLISH_DATASET_TIP_TEXT = "If Yes, publish the newly created destination dataset, or if No, create it as an unpublished working copy.";
 
     private JFrame mainFrame;
     private JPanel jobPanel;
+
     private String jobFileLocation;
     private JLabel jobTabTitleLabel;
+
     private JComboBox portMethodComboBox;
     private JTextField sourceSiteDomainTextField;
     private JTextField sourceSetIDTextField;
     private JTextField sinkSiteDomainTextField;
     private JTextField sinkSetIDTextField;
+
     // Need to expose more of the JComponents locally in order to toggle between PublishMethod and PublishDataset
     private JPanel publishMethodContainerLeft;
     private JComboBox publishMethodComboBox;
@@ -74,14 +77,14 @@ public class PortJobTab implements JobTab {
         jobPanel = new JPanel(new GridLayout(0, 2));
 
         // set FlowLayouts
-        FlowLayout flowLeft = new FlowLayout(FlowLayout.LEFT, 1, 0);
+        FlowLayout flowLeft = new FlowLayout(FlowLayout.LEFT, 0, 0);
         FlowLayout flowRight = new FlowLayout(FlowLayout.LEFT, 0, JOB_FIELD_VGAP);
 
         // load in help icon for balloontips
         final ImageIcon helpIcon = new ImageIcon(getClass().
                 getResource(HELP_ICON_FILE_PATH));
         // set the style of the balloontips
-        BalloonTipStyle style = new EdgedBalloonStyle(Color.LIGHT_GRAY, Color.BLUE);
+        BalloonTipStyle style = new ToolTipBalloonStyle(Color.LIGHT_GRAY, Color.BLUE);
 
         // Port Method
         JPanel portMethodContainerLeft = new JPanel(flowLeft);
@@ -232,7 +235,11 @@ public class PortJobTab implements JobTab {
         sourceSiteDomainTextField.setText(job.getSourceSiteDomain());
         sourceSetIDTextField.setText(job.getSourceSetID());
         sinkSiteDomainTextField.setText(job.getSinkSiteDomain());
-        sinkSetIDTextField.setText(job.getSinkSetID());
+        if (job.getSinkSetID().equals("")){
+            sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
+        } else {
+            sinkSetIDTextField.setText(job.getSinkSetID());
+        }
         PublishMethod jobPublishMethod = job.getPublishMethod();
         publishMethodComboBox.setSelectedItem(jobPublishMethod);
         PublishDataset jobPublishDataset = job.getPublishDataset();
