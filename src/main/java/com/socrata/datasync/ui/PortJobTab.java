@@ -104,7 +104,7 @@ public class PortJobTab implements JobTab {
 
         // Source Site
         JPanel sourceSiteContainerLeft = new JPanel(flowLeft);
-        JLabel sourceSiteLabel = new JLabel("Source Site ");
+        JLabel sourceSiteLabel = new JLabel("Source Domain ");
         sourceSiteContainerLeft.add(sourceSiteLabel);
         JLabel sourceSiteHelp = new JLabel(helpIcon);
         BalloonTip sourceSiteTip = new BalloonTip(sourceSiteHelp, SOURCE_SITE_TIP_TEXT, style, false);
@@ -136,7 +136,7 @@ public class PortJobTab implements JobTab {
 
         // Sink Site
         JPanel sinkSiteContainerLeft = new JPanel(flowLeft);
-        JLabel sinkSiteLabel = new JLabel("Destination Site ");
+        JLabel sinkSiteLabel = new JLabel("Destination Domain ");
         sinkSiteContainerLeft.add(sinkSiteLabel);
         JLabel sinkSiteHelp = new JLabel(helpIcon);
         BalloonTip sinkSiteTip = new BalloonTip(sinkSiteHelp, SINK_SITE_TIP_TEXT, style, false);
