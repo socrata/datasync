@@ -40,7 +40,7 @@ public class SimpleIntegrationWizard {
 	 * GUI interface to DataSync
 	 */
 	
-	private final String VERSION = "0.2";
+	private final String VERSION = "0.3";
 	private final String METADATA_DOMAIN = "https://adrian.demo.socrata.com";
 	private final String METADATA_DATASET_ID = "7w7i-q9n6";
 	
