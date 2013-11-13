@@ -54,7 +54,7 @@ public class SimpleIntegrationWizard {
 	private final int DEFAULT_TEXTFIELD_COLS = 25;
 	private final Dimension AUTH_DETAILS_DIMENSION = new Dimension(465, 100);
 	private final int PREFERENCES_FRAME_WIDTH = 475;
-	private final int PREFERENCES_FRAME_HEIGHT = 335;
+	private final int PREFERENCES_FRAME_HEIGHT = 475;
 	
 	private static UserPreferences userPrefs;
 
@@ -64,6 +64,7 @@ public class SimpleIntegrationWizard {
 
 	private JTextField domainTextField, usernameTextField, apiKeyTextField;
 	private JPasswordField passwordField;
+    private JTextField filesizeChunkingCutoffTextField, numRowsPerChunkTextField;
 	private JTextField logDatasetIDTextField, adminEmailTextField;
 	private JTextField outgoingMailServerTextField, smtpPortTextField, sslPortTextField, smtpUsernameTextField;
 	private JPasswordField smtpPasswordField;
@@ -442,7 +443,40 @@ public class SimpleIntegrationWizard {
 	
 	private JPanel generatePreferencesPanel() {
 		JPanel prefsPanel = new JPanel(new GridLayout(0,2));
-		
+
+        // File chunking settings
+        // TODO add help bubbles
+        JLabel fileChunkingSettingsLabel = new JLabel(" File Chunking Settings");
+        Font boldFont = new Font(fileChunkingSettingsLabel.getFont().getFontName(),
+                Font.BOLD, fileChunkingSettingsLabel.getFont().getSize());
+        fileChunkingSettingsLabel.setFont(boldFont);
+        prefsPanel.add(fileChunkingSettingsLabel);
+        prefsPanel.add(new JLabel(""));
+
+        prefsPanel.add(new JLabel(" Chunking filesize threshold"));
+        JPanel filesizeChuckingContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        filesizeChunkingCutoffTextField = new JTextField();
+        filesizeChunkingCutoffTextField.setPreferredSize(new Dimension(
+                140, 20));
+        filesizeChuckingContainer.add(filesizeChunkingCutoffTextField);
+        filesizeChuckingContainer.add(new JLabel(" MB"));
+        prefsPanel.add(filesizeChuckingContainer);
+
+        prefsPanel.add(new JLabel(" Chunk size"));
+        JPanel chunkSizeContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        numRowsPerChunkTextField = new JTextField();
+        numRowsPerChunkTextField.setPreferredSize(new Dimension(
+                140, 20));
+        chunkSizeContainer.add(numRowsPerChunkTextField);
+        chunkSizeContainer.add(new JLabel(" rows"));
+        prefsPanel.add(chunkSizeContainer);
+
+        // Logging and auto-email settings
+        JLabel loggingAutoEmailSettingsLabel = new JLabel(" Logging and Auto-Email Settings");
+        loggingAutoEmailSettingsLabel.setFont(boldFont);
+        prefsPanel.add(loggingAutoEmailSettingsLabel);
+        prefsPanel.add(new JLabel(""));
+
 		prefsPanel.add(new JLabel(" Log Dataset ID (i.e. n38h-y5wp)"));
 		logDatasetIDTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
 		prefsPanel.add(logDatasetIDTextField);
@@ -454,13 +488,13 @@ public class SimpleIntegrationWizard {
 		emailUponErrorCheckBox = new JCheckBox(" Auto-email admin upon error");
 		prefsPanel.add(emailUponErrorCheckBox);
 		prefsPanel.add(new JLabel("*must fill in SMTP Settings below"));
-		
+
+        // Auto-email SMTP settings
 		JLabel smtpSettingsLabel = new JLabel(" SMTP Settings");
-		Font boldFont = new Font(smtpSettingsLabel.getFont().getFontName(), 
-				Font.BOLD, smtpSettingsLabel.getFont().getSize());
 		smtpSettingsLabel.setFont(boldFont);
 		prefsPanel.add(smtpSettingsLabel);
 		prefsPanel.add(new JLabel(""));
+
 		prefsPanel.add(new JLabel(" Outgoing Mail Server"));
 		outgoingMailServerTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
 		prefsPanel.add(outgoingMailServerTextField);
@@ -515,6 +549,9 @@ public class SimpleIntegrationWizard {
 	}
 	
 	private void loadPreferencesIntoForm() {
+        filesizeChunkingCutoffTextField.setText(userPrefs.getFilesizeChunkingCutoffMB());
+        numRowsPerChunkTextField.setText(userPrefs.getNumRowsPerChunk());
+
 		adminEmailTextField.setText(userPrefs.getAdminEmail());
 		logDatasetIDTextField.setText(userPrefs.getLogDatasetID());
 		emailUponErrorCheckBox.setSelected(userPrefs.emailUponError());
@@ -533,6 +570,19 @@ public class SimpleIntegrationWizard {
 	}
 	
 	private void savePreferences() {
+        try {
+            userPrefs.saveFilesizeChunkingCutoffBytes(
+                    Integer.parseInt(filesizeChunkingCutoffTextField.getText()));
+        } catch(NumberFormatException e) {
+            JOptionPane.showMessageDialog(prefsFrame, "Invalid chunking filesize threshold: must be an integer");
+        }
+        try {
+            userPrefs.saveNumRowsPerChunk(
+                    Integer.parseInt(numRowsPerChunkTextField.getText()));
+        } catch(NumberFormatException e) {
+            JOptionPane.showMessageDialog(prefsFrame, "Invalid chunk size: must be an integer");
+        }
+
 		userPrefs.saveAdminEmail(adminEmailTextField.getText());
 		userPrefs.saveLogDatasetID(logDatasetIDTextField.getText());
 		userPrefs.saveEmailUponError(emailUponErrorCheckBox.isSelected());

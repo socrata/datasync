@@ -37,16 +37,18 @@ public class PortJobTab implements JobTab {
     private final String HELP_ICON_FILE_PATH = "/help.png";
 
     private final String PORT_METHOD_TIP_TEXT = "<html>" +
-            "Copy schema only: copies only the metadata and columns to a new dataset<br>" +
-            "Copy schema and data: makes an identical copy to a new dataset<br>" +
-            "Copy data only: copies only the rows to an existing dataset</html>";
+            "<strong>Copy schema only</strong>: copies only the metadata and columns to a new dataset<br>" +
+            "<strong>Copy schema and data</strong>: makes an identical copy to a new dataset<br>" +
+            "<strong>Copy data only</strong>: copies only the rows to an existing dataset</html>";
     private final String SOURCE_SITE_TIP_TEXT = "Domain where the source dataset is located.";
-    private final String SOURCE_SET_TIP_TEXT = "The 4-4 ID of the source dataset (i.e. n38h-y5wp)";
+    private final String SOURCE_SET_TIP_TEXT = "The xxxx-xxxx ID of the source dataset (i.e. n38h-y5wp)";
     private final String SINK_SITE_TIP_TEXT = "Domain where the destination dataset is located.";
-    private final String SINK_SET_TIP_TEXT = "<html><body style='width: 600px'>If Port method is 'copy data only' enter the 4-4 ID of the existing dataset (i.e. n38h-y5wp) you wish to copy data to. " +
-            "If it is 'copy schema' or 'copy schema and data' this field will be populated with the 4-4 ID of the newly created dataset.</body></html>";
+    private final String SINK_SET_TIP_TEXT = "<html><body style='width: 400px'>If Port Method is '<strong>copy schema</strong>' or '<strong>copy schema and data</strong>' " +
+            "this field will be populated with the xxxx-xxxx ID of the newly created dataset.<br>" +
+            "If Port method is '<strong>copy data only</strong>' enter the xxxx-xxxx ID of the existing dataset you wish to copy data to (i.e. n38h-y5wp).</body></html>";
     private final String PUBLISH_METHOD_TIP_TEXT = "The method to use when publishing the data to the destination dataset.";
-    private final String PUBLISH_DATASET_TIP_TEXT = "If Yes, publish the newly created destination dataset, or if No, create it as an unpublished working copy.";
+    private final String PUBLISH_DATASET_TIP_TEXT = "<html><body style='width: 280px'>If <strong>Yes</strong>, publish the newly created destination dataset.<br>" +
+            "If <strong>No</strong>, create it as an unpublished working copy.</body></html>";
 
     private JFrame mainFrame;
     private JPanel jobPanel;

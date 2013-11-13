@@ -22,11 +22,17 @@ public class UserPreferences {
 	
 	private static final String OUTGOING_MAIL_SERVER = "outgoing_mail_server";
 	private static final String SMTP_PORT = "smtp_port";
-	
 	// NOTE: if SSL port is set to the empty string then do not use SSL
 	private static final String SSL_PORT = "ssl_port";
 	private static final String SMTP_USERNAME = "smtp_username";
 	private static final String SMTP_PASSWORD = "smtp_password";
+
+    private static final String FILESIZE_CHUNKING_CUTOFF_MB = "filesize_chunking_cutoff_mb";
+    private static final String NUM_ROWS_PER_CHUNK = "num_rows_per_chunk";
+    // When a file to be published is larger than this value (in MB), file is chunked
+    private static final String DEFAULT_FILESIZE_CHUNK_CUTOFF_MB = "64"; // = 67108864 bytes
+    // During chunking files are uploaded NUM_ROWS_PER_CHUNK rows per chunk
+    private static final String DEFAULT_NUM_ROWS_PER_CHUNK = "25000";
 	
 	private final String DEFAULT_DOMAIN = "https://";
 	private final String DEFAULT_SSL_PORT = "465";
@@ -79,14 +85,22 @@ public class UserPreferences {
 	public void saveSSLPort(String port) {
 		userPrefs.put(SSL_PORT, port);
 	}
-	
-	public void saveSMTPUsername(String username) {
-		userPrefs.put(SMTP_USERNAME, username);
+
+	public void saveFilesizeChunkingCutoffBytes(int numBytes) {
+		userPrefs.put(FILESIZE_CHUNKING_CUTOFF_MB, Integer.toString(numBytes));
 	}
 
-	public void saveSMTPPassword(String password) {
-		userPrefs.put(SMTP_PASSWORD, password);
+	public void saveNumRowsPerChunk(int numRows) {
+		userPrefs.put(NUM_ROWS_PER_CHUNK, Integer.toString(numRows));
 	}
+
+    public void saveSMTPUsername(String username) {
+        userPrefs.put(SMTP_USERNAME, username);
+    }
+
+    public void saveSMTPPassword(String password) {
+        userPrefs.put(SMTP_PASSWORD, password);
+    }
 	
 	public String getDomain() {
 		return userPrefs.get(DOMAIN, DEFAULT_DOMAIN);
@@ -137,6 +151,15 @@ public class UserPreferences {
 	public String getSMTPPassword() {
 		return userPrefs.get(SMTP_PASSWORD, "");
 	}
+
+    public String getFilesizeChunkingCutoffMB() {
+        return userPrefs.get(
+                FILESIZE_CHUNKING_CUTOFF_MB, DEFAULT_FILESIZE_CHUNK_CUTOFF_MB);
+    }
+
+    public String getNumRowsPerChunk() {
+        return userPrefs.get(NUM_ROWS_PER_CHUNK, DEFAULT_NUM_ROWS_PER_CHUNK);
+    }
 	
 	public SocrataConnectionInfo getConnectionInfo()
 	{

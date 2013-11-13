@@ -34,10 +34,6 @@ public class IntegrationJob implements Job {
 	 */
     private static final String DELETE_ZERO_ROWS = "";
 
-    // When a file to be published is larger than this value (in bytes), file is chunked
-    private static final int FILESIZE_CHUNK_CUTOFF_BYTES = 67108864; // = 64 MB
-    // During chunking files are uploaded NUM_ROWS_PER_CHUNK rows per chunk
-    private static final int NUM_ROWS_PER_CHUNK = 25000;
     // to upload entire file as a single chunk (numRowsPerChunk == 0)
     private static final int UPLOAD_SINGLE_CHUNK = 0;
 
@@ -163,7 +159,7 @@ public class IntegrationJob implements Job {
 		
 		UpsertResult result = null;
 		JobStatus runStatus = JobStatus.SUCCESS;
-		
+        String runErrorMessage = "";
 		JobStatus validationStatus = validate(connectionInfo);
 		if(validationStatus.isError()) {
 			runStatus = validationStatus;
@@ -176,13 +172,15 @@ public class IntegrationJob implements Job {
 			if(!fileRowsToDelete.equals(DELETE_ZERO_ROWS)) {
 				deleteRowsFile = new File(fileRowsToDelete);
 			}
-			String errorMessage = "";
 			boolean noPublishExceptions = false;
 			try {
 				if(publishMethod.equals(PublishMethod.upsert) || publishMethod.equals(PublishMethod.append)) {
-                    if(fileToPublishFile.length() > FILESIZE_CHUNK_CUTOFF_BYTES) {
+                    int filesizeChunkingCutoffMB =
+                            Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * 1048576;
+                    int numRowsPerChunk = Integer.parseInt(userPrefs.getNumRowsPerChunk());
+                    if(fileToPublishFile.length() > filesizeChunkingCutoffMB) {
                         result = IntegrationUtility.appendUpsert(
-                                producer, importer, datasetID, fileToPublishFile, NUM_ROWS_PER_CHUNK, fileToPublishHasHeaderRow);
+                                producer, importer, datasetID, fileToPublishFile, numRowsPerChunk, fileToPublishHasHeaderRow);
                     } else {
 					    result = IntegrationUtility.appendUpsert(
                                 producer, importer, datasetID, fileToPublishFile, UPLOAD_SINGLE_CHUNK, fileToPublishHasHeaderRow);
@@ -194,20 +192,20 @@ public class IntegrationJob implements Job {
                             producer, importer, datasetID, fileToPublishFile, fileToPublishHasHeaderRow);
 					noPublishExceptions = true;
 				} else {
-					errorMessage = JobStatus.INVALID_PUBLISH_METHOD.toString();
+					runErrorMessage = JobStatus.INVALID_PUBLISH_METHOD.toString();
 				}
 			}
 			catch (IOException ioException) {
-				errorMessage = ioException.getMessage();
+				runErrorMessage = ioException.getMessage();
 			} 
 			catch (SodaError sodaError) {
-                errorMessage = sodaError.getMessage();
+                runErrorMessage = sodaError.getMessage();
 			} 
 			catch (InterruptedException intrruptException) {
-				errorMessage = intrruptException.getMessage();
+				runErrorMessage = intrruptException.getMessage();
 			}
 			catch (Exception other) {
-				errorMessage = other.toString() + ": " + other.getMessage();
+				runErrorMessage = other.toString() + ": " + other.getMessage();
 			}
 			finally {
 				if(noPublishExceptions) {
@@ -215,21 +213,19 @@ public class IntegrationJob implements Job {
 					if(result != null) {
                         if(result.errorCount() > 0) {
 							for (UpsertError upsertErr : result.getErrors()) {
-								errorMessage += upsertErr.getError() + " (line "
+								runErrorMessage += upsertErr.getError() + " (line "
 										+ (upsertErr.getIndex() + 1) + " of file) \n";
 							}
 							runStatus = JobStatus.PUBLISH_ERROR;
-							runStatus.setMessage(errorMessage);
+                            runStatus.setMessage(runErrorMessage);
 						}
 					}
 				} else {
-                    //System.out.println("err2: " + errorMessage);
                     runStatus = JobStatus.PUBLISH_ERROR;
-                    if(errorMessage.equals("Not found")) {
-                        runStatus.setMessage("Dataset with that ID does not exist or you do not have permission to publish to it");
-                    } else {
-					    runStatus.setMessage(errorMessage);
+                    if(runErrorMessage.equals("Not found")) {
+                        runErrorMessage = "Dataset with that ID does not exist or you do not have permission to publish to it";
                     }
+                    runStatus.setMessage(runErrorMessage);
 				}
 			}
 		}
@@ -252,7 +248,7 @@ public class IntegrationJob implements Job {
 						+ "\nPublish method: " + publishMethod
 						// TODO + "\nFile with rows to delete: " + fileRowsToDelete
 						+ "\nJob File: " + pathToSavedJobFile
-						+ "\nError message: " + runStatus.getMessage()
+						+ "\nError message: " + runErrorMessage
 						+ "\nLog dataset: " + urlToLogDataset + "\n\n";
 			}
 			if(logStatus.isError()) {
@@ -268,6 +264,12 @@ public class IntegrationJob implements Job {
 				}
 			}
 		}
+
+        // IMPORTANT because setMessage from Logging dataset interferes with enum
+        // TODO NEED to fix this..
+        if(runStatus.isError())
+            runStatus.setMessage(runErrorMessage);
+
 		return runStatus;
 	}
 	

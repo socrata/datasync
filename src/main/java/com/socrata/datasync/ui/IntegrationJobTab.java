@@ -4,7 +4,6 @@ import com.socrata.datasync.*;
 import com.socrata.datasync.job.IntegrationJob;
 import net.java.balloontip.BalloonTip;
 import net.java.balloontip.styles.BalloonTipStyle;
-import net.java.balloontip.styles.EdgedBalloonStyle;
 import net.java.balloontip.styles.ToolTipBalloonStyle;
 import net.java.balloontip.utils.ToolTipUtils;
 
@@ -38,11 +37,19 @@ public class IntegrationJobTab implements JobTab {
     private final String JOB_FILE_EXTENSION = "sij";
     private final String HELP_ICON_FILE_PATH = "/help.png";
 
-
-    private final String DATASET_TIP_TEXT = "some text";
-    private final String FILE_TO_PUBLISH_TIP_TEXT = "some text";
-    private final String PUBLISH_METHOD_TIP_TEXT = "some text";
-    private final String RUN_COMMAND_TIP_TEXT = "some text";
+    private final String FILE_TO_PUBLISH_TIP_TEXT = "CSV or TSV file containing the data to be published";
+    private final String HAS_HEADER_ROW_TIP_TEXT = "<html><body style='width: 300px'>Check this box if the first row in the CSV/TSV contains the column names in the dataset.<br>" +
+            "If the CSV/TSV does not have a header row the order of rows must exactly match the order in the dataset.</body></html>";
+    private final String DATASET_ID_TIP_TEXT = "<html><body style='width: 300px'>The identifier in the form of xxxx-xxxx (i.e. n38h-y5wp) " +
+            "of the Socrata dataset where the data will be published</body></html>";
+    private final String PUBLISH_METHOD_TIP_TEXT = "<html><body style='width: 400px'>Method used to publish data:<br>" +
+            "<strong>upsert</strong>: update any rows that already exist and append any new rows." +
+            "<br>NOTE: updating rows requires the dataset to have Row Identifier.<br>" +
+            "<strong>append</strong>: adds all rows in the CSV/TSV as new rows.<br>" +
+            "<strong>replace</strong>: simply replaces the dataset with the data in the CSV/TSV file to publish." +
+            "</body></html>";
+    private final String RUN_COMMAND_TIP_TEXT = "<html><body style='width: 300px'>After saving the job this field will be populated with a command-line command that can be used to run the job." +
+            " This command can be input into tools such as the Windows Scheduler or ETL tools to run the job automatically.</body></html>";
 
     private JFrame mainFrame;
     private JPanel jobPanel;
@@ -97,14 +104,21 @@ public class IntegrationJobTab implements JobTab {
 
         jobPanel.add(new JLabel(""));
         fileToPublishHasHeaderCheckBox = new JCheckBox("File to publish contains a header row");
-        fileToPublishHasHeaderCheckBox.setSelected(job.getFileToPublishHasHeaderRow());
-        jobPanel.add(fileToPublishHasHeaderCheckBox);
+        //jobPanel.add(fileToPublishHasHeaderCheckBox);
+
+        JPanel hasHeaderRowLabelContainer = new JPanel(flowLeft);
+        hasHeaderRowLabelContainer.add(fileToPublishHasHeaderCheckBox);
+        JLabel hasHeaderRowHelp = new JLabel(helpIcon);
+        BalloonTip hasHeaderRowTip = new BalloonTip(hasHeaderRowHelp, HAS_HEADER_ROW_TIP_TEXT, style, false);
+        ToolTipUtils.balloonToToolTip(hasHeaderRowTip, 100, 100000);
+        hasHeaderRowLabelContainer.add(hasHeaderRowHelp);
+        jobPanel.add(hasHeaderRowLabelContainer);
 
         JPanel datasetLabelContainer = new JPanel(flowLeft);
         JLabel datasetLabel = new JLabel("Dataset ID ");
         datasetLabelContainer.add(datasetLabel);
         JLabel datasetHelp = new JLabel(helpIcon);
-        BalloonTip datasetTip = new BalloonTip(datasetHelp, DATASET_TIP_TEXT, style, false);
+        BalloonTip datasetTip = new BalloonTip(datasetHelp, DATASET_ID_TIP_TEXT, style, false);
         ToolTipUtils.balloonToToolTip(datasetTip, 100, 100000);
         datasetLabelContainer.add(datasetHelp);
         jobPanel.add(datasetLabelContainer);
@@ -131,12 +145,6 @@ public class IntegrationJobTab implements JobTab {
         publishMethodTextFieldContainer.add(publishMethodComboBox);
         jobPanel.add(publishMethodTextFieldContainer);
 
-        // Load job data into fields
-        datasetIDTextField.setText(job.getDatasetID());
-        fileToPublishTextField.setText(job.getFileToPublish());
-        PublishMethod jobPublishMethod = job.getPublishMethod();
-        publishMethodComboBox.setSelectedItem(jobPublishMethod);
-
         JPanel runCommandLabelContainer = new JPanel(flowLeft);
         JLabel runCommandLabel = new JLabel("Command to execute with scheduler ");
         runCommandLabelContainer.add(runCommandLabel);
@@ -157,9 +165,16 @@ public class IntegrationJobTab implements JobTab {
         runCommandTextFieldContainer.add(copyJobCommandButton);
         jobPanel.add(runCommandTextFieldContainer);
 
-        jobFileLocation = job.getPathToSavedFile();
+        // Load job data into fields
+        datasetIDTextField.setText(job.getDatasetID());
+        fileToPublishTextField.setText(job.getFileToPublish());
+        PublishMethod jobPublishMethod = job.getPublishMethod();
+        publishMethodComboBox.setSelectedItem(jobPublishMethod);
+        fileToPublishHasHeaderCheckBox.setSelected(job.getFileToPublishHasHeaderRow());
 
-        // if this is an existing job (meaning the job was opened from a file) -> populate the scheduler command textfield
+        jobFileLocation = job.getPathToSavedFile();
+        // if this is an existing job (meaning the job was opened from a file)
+        // then populate the scheduler command textfield
         if(!jobFileLocation.equals("")) {
             runCommandTextField.setText(
                     IntegrationUtility.getRunJobCommand(jobFileLocation));
