@@ -224,10 +224,12 @@ public class PortJobTab implements JobTab {
         portMethodComboBox.setSelectedItem(jobPortMethod);
         if (jobPortMethod.equals(PortMethod.copy_schema)
                 || jobPortMethod.equals(PortMethod.copy_all)) {
+            sinkSetIDTextField.setEditable(false);
             jobPanel.add(publishDatasetContainerLeft);
             jobPanel.add(publishDatasetContainerRight);
             publishDatasetComboBox.setEnabled(true);
         } else {
+            sinkSetIDTextField.setEditable(true);
             jobPanel.add(publishMethodContainerLeft);
             jobPanel.add(publishMethodContainerRight);
             publishMethodComboBox.setEnabled(true);
@@ -247,7 +249,7 @@ public class PortJobTab implements JobTab {
         } else {
             sinkSiteDomainTextField.setText(job.getSinkSiteDomain());
         }
-        if (job.getSinkSetID().equals("")){
+        if (job.getSinkSetID().equals("") && !sinkSetIDTextField.isEditable()){
             sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
         } else {
             sinkSetIDTextField.setText(job.getSinkSetID());
