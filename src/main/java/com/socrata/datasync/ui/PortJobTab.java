@@ -226,18 +226,32 @@ public class PortJobTab implements JobTab {
         portMethodComboBox.setSelectedItem(jobPortMethod);
         if (jobPortMethod.equals(PortMethod.copy_schema)
                 || jobPortMethod.equals(PortMethod.copy_all)) {
+            sinkSetIDTextField.setEditable(false);
             jobPanel.add(publishDatasetContainerLeft);
             jobPanel.add(publishDatasetContainerRight);
             publishDatasetComboBox.setEnabled(true);
         } else {
+            sinkSetIDTextField.setEditable(true);
             jobPanel.add(publishMethodContainerLeft);
             jobPanel.add(publishMethodContainerRight);
             publishMethodComboBox.setEnabled(true);
         }
-        sourceSiteDomainTextField.setText(job.getSourceSiteDomain());
+        UserPreferences userPrefs = new UserPreferences();
+        SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
+        if (job.getSourceSiteDomain().equals("https://") &&
+                !connectionInfo.getUrl().equals("https://")) {
+            sourceSiteDomainTextField.setText(connectionInfo.getUrl());
+        } else {
+            sourceSiteDomainTextField.setText(job.getSourceSiteDomain());
+        }
         sourceSetIDTextField.setText(job.getSourceSetID());
-        sinkSiteDomainTextField.setText(job.getSinkSiteDomain());
-        if (job.getSinkSetID().equals("")){
+        if (job.getSinkSiteDomain().equals("https://") &&
+                !connectionInfo.getUrl().equals("https://")) {
+            sinkSiteDomainTextField.setText(connectionInfo.getUrl());
+        } else {
+            sinkSiteDomainTextField.setText(job.getSinkSiteDomain());
+        }
+        if (job.getSinkSetID().equals("") && !sinkSetIDTextField.isEditable()){
             sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
         } else {
             sinkSetIDTextField.setText(job.getSinkSetID());
