@@ -1,9 +1,9 @@
 package com.socrata.datasync;
 
 public enum PublishDataset {
-    publish("Publish Dataset"),
+    publish("Yes"),
 
-    working_copy("Create Working Copy");
+    working_copy("No, create a working copy");
 
     /**
      * The human-readable message to store.
