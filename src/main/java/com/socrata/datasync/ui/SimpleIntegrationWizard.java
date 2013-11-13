@@ -249,8 +249,8 @@ public class SimpleIntegrationWizard {
                 PortJobTab selectedPortJobTab = (PortJobTab) selectedJobTab;
                 Object[] options = {"Yes", "No"};
                 int n = JOptionPane.showOptionDialog(frame,
-                        "Port job completed successfully. Would you like to open the newly created dataset?\n",
-                        "Port job completed successfully",
+                        "Port job completed successfully. Would you like to open the destination dataset?\n",
+                        "Port Job Successful",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE,
                         null, options, options[0]);
