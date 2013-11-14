@@ -85,11 +85,20 @@ public class Main {
     }
 
     private static boolean commandArgsValid(CommandLine cmd) {
-        if(cmd.getOptionValue("i") == null ||
-           cmd.getOptionValue("f") == null ||
-           cmd.getOptionValue("m") == null ||
-           cmd.getOptionValue("h") == null) {
-            System.out.println("Missing one or more required arguments.");
+        if(cmd.getOptionValue("f") == null) {
+            System.out.println("Missing required argument: -f,--file is required");
+            return false;
+        }
+        if(cmd.getOptionValue("h") == null) {
+            System.out.println("Missing required argument: -h,--header is required");
+            return false;
+        }
+        if(cmd.getOptionValue("i") == null) {
+            System.out.println("Missing required argument: -i,--datasetid is required");
+            return false;
+        }
+        if(cmd.getOptionValue("m") == null) {
+            System.out.println("Missing required argument: -m,--method is required");
             return false;
         }
 
