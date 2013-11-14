@@ -11,6 +11,7 @@ Looking for the latest release? Get it here: [DataSync 0.3](https://github.com/s
 DataSync is a lightweight desktop client that makes automated publishing of data to Socrata datasets easy. The simple, clean, graphical interface (GUI) can be used to configure various jobs to publish your data. DataSync runs on any platform with Java (1.6) installed, so it will work on Windows, Mac, and Linux.
 
 Guide on how to use Datasync: [Setting Up a Basic DataSync Job](http://support.socrata.com/entries/24241271-Setting-up-a-basic-DataSync-job)
+
 The Socrata University Class: [Socrata Introduction to Integration](http://socrata.wistia.com/medias/q4pwut6s56)
 
 ### Standard Jobs
@@ -27,6 +28,7 @@ This repository is our development basecamp. If you find a bug or have questions
 
 ### Apache Maven
 DataSync uses Maven for building and package management. For more information: [What is Maven?](http://maven.apache.org/what-is-maven.html)
+
 To build the project run:
 ```
 mvn clean install
