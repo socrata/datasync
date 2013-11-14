@@ -1,10 +1,6 @@
 package com.socrata.datasync.ui;
 
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridLayout;
-import java.awt.FlowLayout;
+import java.awt.*;
 import java.awt.event.*;
 
 import javax.swing.*;
@@ -23,6 +19,10 @@ import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.soql.SoqlQuery;
 import com.sun.jersey.api.client.ClientResponse;
+import net.java.balloontip.BalloonTip;
+import net.java.balloontip.styles.BalloonTipStyle;
+import net.java.balloontip.styles.ToolTipBalloonStyle;
+import net.java.balloontip.utils.ToolTipUtils;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -62,7 +62,21 @@ public class SimpleIntegrationWizard {
 	private final String STANDARD_JOB_FILE_EXTENSION = "sij";
     private final String PORT_JOB_FILE_EXTENSION = "spj";
 
-	private JTextField domainTextField, usernameTextField, apiKeyTextField;
+    // load in help icon for balloontips
+    final ImageIcon helpIcon = new ImageIcon(getClass().getResource("/help.png"));
+    BalloonTipStyle helpBubbleStyle = new ToolTipBalloonStyle(Color.LIGHT_GRAY, Color.BLUE);
+    private final String FILE_CHUNKING_THRESHOLD_TIP_TEXT = "<html><body style='width: 300px'>When a CSV/TSV file to be published is larger than this value (in megabytes), " +
+            "the file is automatically split up and published in chunks (because it is problematic to publish large files all at once). " +
+            "Usually chunking is necessary when a file is larger than about 64 MB.</body></html>";
+    private final String CHUNK_SIZE_THRESHOLD_TIP_TEXT = "<html><body style='width: 300px'>The number of rows to publish in each chunk " +
+            "(in cases where filesize exceeds above filesize threshold). Higher values usually means faster upload time but setting the value too " +
+            "high could crash the program, depending on your computer's memory limits.</body></html>";
+    private final String DOMAIN_TIP_TEXT = "The domain of the Socrata data site you wish to publish data to (i.e. https://explore.data.gov/)";
+    private final String USERNAME_TIP_TEXT = "Socrata account username (account must have Publisher or Administrator permissions)";
+    private final String PASSWORD_TIP_TEXT = "Socrata account password";
+    private final String APP_TOKEN_TIP_TEXT = "You can create an app token free at http://dev.socrata.com/register";
+
+    private JTextField domainTextField, usernameTextField, apiKeyTextField;
 	private JPasswordField passwordField;
     private JTextField filesizeChunkingCutoffTextField, numRowsPerChunkTextField;
 	private JTextField logDatasetIDTextField, adminEmailTextField;
@@ -445,7 +459,6 @@ public class SimpleIntegrationWizard {
 		JPanel prefsPanel = new JPanel(new GridLayout(0,2));
 
         // File chunking settings
-        // TODO add help bubbles
         JLabel fileChunkingSettingsLabel = new JLabel(" File Chunking Settings");
         Font boldFont = new Font(fileChunkingSettingsLabel.getFont().getFontName(),
                 Font.BOLD, fileChunkingSettingsLabel.getFont().getSize());
@@ -453,7 +466,8 @@ public class SimpleIntegrationWizard {
         prefsPanel.add(fileChunkingSettingsLabel);
         prefsPanel.add(new JLabel(""));
 
-        prefsPanel.add(new JLabel(" Chunking filesize threshold"));
+        prefsPanel.add(
+                generateLabelWithHelpBubble(" Chunking filesize threshold", FILE_CHUNKING_THRESHOLD_TIP_TEXT));
         JPanel filesizeChuckingContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
         filesizeChunkingCutoffTextField = new JTextField();
         filesizeChunkingCutoffTextField.setPreferredSize(new Dimension(
@@ -462,7 +476,8 @@ public class SimpleIntegrationWizard {
         filesizeChuckingContainer.add(new JLabel(" MB"));
         prefsPanel.add(filesizeChuckingContainer);
 
-        prefsPanel.add(new JLabel(" Chunk size"));
+        prefsPanel.add(
+                generateLabelWithHelpBubble(" Chunk size", CHUNK_SIZE_THRESHOLD_TIP_TEXT));
         JPanel chunkSizeContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
         numRowsPerChunkTextField = new JTextField();
         numRowsPerChunkTextField.setPreferredSize(new Dimension(
@@ -641,21 +656,37 @@ public class SimpleIntegrationWizard {
 	
 	private JPanel generateAuthenticationDetailsFormPanel() {
 		JPanel authenticationDetailsPanel = new JPanel(new GridLayout(0,2));
-		authenticationDetailsPanel.add(new JLabel("Domain"));
+
+        authenticationDetailsPanel.add(
+                generateLabelWithHelpBubble("Domain", DOMAIN_TIP_TEXT));
 		domainTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
 		authenticationDetailsPanel.add(domainTextField);
-		authenticationDetailsPanel.add(new JLabel("Username"));
+		authenticationDetailsPanel.add(
+                generateLabelWithHelpBubble("Username", USERNAME_TIP_TEXT));
 		usernameTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
 		authenticationDetailsPanel.add(usernameTextField);
-		authenticationDetailsPanel.add(new JLabel("Password"));
+		authenticationDetailsPanel.add(
+                generateLabelWithHelpBubble("Password", PASSWORD_TIP_TEXT));
 		passwordField = new JPasswordField(DEFAULT_TEXTFIELD_COLS);
 		authenticationDetailsPanel.add(passwordField);
-		authenticationDetailsPanel.add(new JLabel("App token"));
+		authenticationDetailsPanel.add(
+                generateLabelWithHelpBubble("App Token", APP_TOKEN_TIP_TEXT));
 		apiKeyTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
 		authenticationDetailsPanel.add(apiKeyTextField);
 		authenticationDetailsPanel.setPreferredSize(AUTH_DETAILS_DIMENSION);
 		return authenticationDetailsPanel;
 	}
+
+    // TODO move this to Utility class
+    private JPanel generateLabelWithHelpBubble(String labelText, String helpBubbleText) {
+        JPanel labelContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        labelContainer.add(new JLabel(labelText));
+        JLabel chunkSizeHelp = new JLabel(helpIcon);
+        BalloonTip chunkSizeTip = new BalloonTip(chunkSizeHelp, helpBubbleText, helpBubbleStyle, false);
+        ToolTipUtils.balloonToToolTip(chunkSizeTip, 100, 100000);
+        labelContainer.add(chunkSizeHelp);
+        return labelContainer;
+    }
     
 	/**
 	 * Ensures consistency of fields within job tabs
