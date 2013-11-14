@@ -477,7 +477,7 @@ public class SimpleIntegrationWizard {
         prefsPanel.add(loggingAutoEmailSettingsLabel);
         prefsPanel.add(new JLabel(""));
 
-		prefsPanel.add(new JLabel(" Log Dataset ID (i.e. n38h-y5wp)"));
+		prefsPanel.add(new JLabel(" Log Dataset ID (e.g., n38h-y5wp)"));
 		logDatasetIDTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
 		prefsPanel.add(logDatasetIDTextField);
 		

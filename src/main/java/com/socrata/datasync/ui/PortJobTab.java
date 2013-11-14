@@ -41,7 +41,7 @@ public class PortJobTab implements JobTab {
             "<strong>Copy schema and data</strong>: makes an identical copy to a new dataset<br>" +
             "<strong>Copy data only</strong>: copies only the rows to an existing dataset</html>";
     private final String SOURCE_SITE_TIP_TEXT = "Domain where the source dataset is located.";
-    private final String SOURCE_SET_TIP_TEXT = "The xxxx-xxxx ID of the source dataset (i.e. n38h-y5wp)";
+    private final String SOURCE_SET_TIP_TEXT = "The xxxx-xxxx ID of the source dataset (e.g., n38h-y5wp)";
     private final String SINK_SITE_TIP_TEXT = "Domain where the destination dataset is located.";
     private final String SINK_SET_TIP_TEXT = "<html><body style='width: 400px'>If Port Method is '<strong>copy schema</strong>' or '<strong>copy schema and data</strong>' " +
             "this field will be populated with the xxxx-xxxx ID of the newly created dataset.<br>" +
