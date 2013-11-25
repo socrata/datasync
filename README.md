@@ -5,7 +5,7 @@ Last updated: November 14, 2013
 
 Authors: [Adrian Laurenzi](http://www.github.com/alaurenz) & [Louis Fettet](http://www.github.com/LouisFettet)
 
-Looking for the latest release? Get it here: [DataSync 0.3](https://github.com/socrata/datasync/releases/tag/0.3)
+Looking for the latest release? Get it here: https://github.com/socrata/datasync/releases
 
 ## General Information
 DataSync is a lightweight desktop client that makes automated publishing of data to Socrata datasets easy. The simple, clean, graphical interface (GUI) can be used to configure various jobs to publish your data. DataSync runs on any platform with Java (1.6) installed, so it will work on Windows, Mac, and Linux.

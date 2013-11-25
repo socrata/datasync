@@ -47,28 +47,27 @@ public class IntegrationUtility {
     {
         List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
 
-        if(csvOrTsvFile != null) {
-            // get row identifier of dataset
-            Dataset info = (Dataset) ddl.loadDatasetInfo(id);
-            Column rowIdentifier = info.lookupRowIdentifierColumn();
-            String rowIdentifierName;
-            if (rowIdentifier == null) {
-                rowIdentifierName = ":id";
-            } else {
-                rowIdentifierName = rowIdentifier.getFieldName();
-            }
-
-            // TODO read in csvFile and extract out :deleted column data to generate list of rows to delete
-            // read in rows to be deleted
-            /*String line;
-            FileReader fileReader = new FileReader(csvFile); // USE CSVReader...
-            BufferedReader reader = new BufferedReader(fileReader);
-
-            while((line = reader.readLine()) != null) {
-                upsertObjects.add(ImmutableMap.of(rowIdentifierName, (Object)line, ":deleted", Boolean.TRUE));
-            }
-            reader.close();*/
+        // get row identifier of dataset
+        Dataset info = (Dataset) ddl.loadDatasetInfo(id);
+        Column rowIdentifier = info.lookupRowIdentifierColumn();
+        String rowIdentifierName;
+        if (rowIdentifier == null) {
+            rowIdentifierName = ":id";
+        } else {
+            rowIdentifierName = rowIdentifier.getFieldName();
         }
+
+        // TODO read in csvFile and extract out :deleted column data to generate list of rows to delete
+        // read in rows to be deleted (OLD CODE)
+        String line;
+        FileReader fileReader = new FileReader(csvOrTsvFile); // USE CSVReader...
+        BufferedReader reader = new BufferedReader(fileReader);
+
+        while((line = reader.readLine()) != null) {
+            upsertObjects.add(ImmutableMap.of(rowIdentifierName, (Object)line, ":deleted", Boolean.TRUE));
+        }
+        reader.close();
+
         return upsertObjects;
     }
 
@@ -148,6 +147,7 @@ public class IntegrationUtility {
                     if(method.equals(PublishMethod.upsert) || method.equals(PublishMethod.upsert)) {
                         chunkResult = producer.upsert(id, upsertObjectsChunk);
                     } else if(method.equals(PublishMethod.replace)) {
+                        // TODO need to use the old publisher workflow...
                         chunkResult = producer.replace(id, upsertObjectsChunk);
                     } else {
                         throw new IllegalArgumentException("Error performing publish: "

@@ -159,7 +159,7 @@ public class IntegrationJob implements Job {
 		
 		UpsertResult result = null;
 		JobStatus runStatus = JobStatus.SUCCESS;
-        String runErrorMessage = "";
+        String runErrorMessage = null;
 		JobStatus validationStatus = validate(connectionInfo);
 		if(validationStatus.isError()) {
 			runStatus = validationStatus;
@@ -217,7 +217,6 @@ public class IntegrationJob implements Job {
 										+ (upsertErr.getIndex() + 1) + " of file) \n";
 							}
 							runStatus = JobStatus.PUBLISH_ERROR;
-                            runStatus.setMessage(runErrorMessage);
 						}
 					}
 				} else {
@@ -225,7 +224,6 @@ public class IntegrationJob implements Job {
                     if(runErrorMessage.equals("Not found")) {
                         runErrorMessage = "Dataset with that ID does not exist or you do not have permission to publish to it";
                     }
-                    runStatus.setMessage(runErrorMessage);
 				}
 			}
 		}
@@ -267,7 +265,7 @@ public class IntegrationJob implements Job {
 
         // IMPORTANT because setMessage from Logging dataset interferes with enum
         // TODO NEED to fix this..
-        if(runStatus.isError())
+        if(runErrorMessage != null)
             runStatus.setMessage(runErrorMessage);
 
 		return runStatus;
