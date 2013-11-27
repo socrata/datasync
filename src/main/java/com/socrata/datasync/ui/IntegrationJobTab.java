@@ -2,10 +2,6 @@ package com.socrata.datasync.ui;
 
 import com.socrata.datasync.*;
 import com.socrata.datasync.job.IntegrationJob;
-import net.java.balloontip.BalloonTip;
-import net.java.balloontip.styles.BalloonTipStyle;
-import net.java.balloontip.styles.ToolTipBalloonStyle;
-import net.java.balloontip.utils.ToolTipUtils;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -35,12 +31,12 @@ public class IntegrationJobTab implements JobTab {
 
     private final String JOB_FILE_NAME = "Socrata Integration Job";
     private final String JOB_FILE_EXTENSION = "sij";
-    private final String HELP_ICON_FILE_PATH = "/help.png";
 
+    private final int HELP_ICON_TOP_PADDING = 12;
     private final String FILE_TO_PUBLISH_TIP_TEXT = "CSV or TSV file containing the data to be published";
     private final String HAS_HEADER_ROW_TIP_TEXT = "<html><body style='width: 300px'>Check this box if the first row in the CSV/TSV contains the column names in the dataset.<br>" +
             "If the CSV/TSV does not have a header row the order of rows must exactly match the order in the dataset.</body></html>";
-    private final String DATASET_ID_TIP_TEXT = "<html><body style='width: 300px'>The identifier in the form of xxxx-xxxx (i.e. n38h-y5wp) " +
+    private final String DATASET_ID_TIP_TEXT = "<html><body style='width: 300px'>The identifier in the form of xxxx-xxxx (e.g. n38h-y5wp) " +
             "of the Socrata dataset where the data will be published</body></html>";
     private final String PUBLISH_METHOD_TIP_TEXT = "<html><body style='width: 400px'>Method used to publish data:<br>" +
             "<strong>upsert</strong>: update any rows that already exist and append any new rows." +
@@ -74,21 +70,9 @@ public class IntegrationJobTab implements JobTab {
         FlowLayout flowLeft = new FlowLayout(FlowLayout.LEFT, 0, 0);
         FlowLayout flowRight = new FlowLayout(FlowLayout.LEFT, 0, JOB_FIELD_VGAP);
 
-        // load in help icon for balloontips
-        final ImageIcon helpIcon = new ImageIcon(getClass()
-                .getResource(HELP_ICON_FILE_PATH));
-        //set the style of the balloontips
-        BalloonTipStyle style = new ToolTipBalloonStyle(Color.LIGHT_GRAY, Color.BLUE);
-
         // File to Publish
-        JPanel fileToPublishLabelContainer = new JPanel(flowLeft);
-        JLabel fileToPublishLabel = new JLabel("File to publish");
-        fileToPublishLabelContainer.add(fileToPublishLabel);
-        JLabel fileToPublishHelp = new JLabel(helpIcon);
-        BalloonTip fileToPublishTip = new BalloonTip(fileToPublishHelp, FILE_TO_PUBLISH_TIP_TEXT, style, false);
-        ToolTipUtils.balloonToToolTip(fileToPublishTip, 100, 100000);
-        fileToPublishLabelContainer.add(fileToPublishHelp);
-        jobPanel.add(fileToPublishLabelContainer);
+        jobPanel.add(
+                UIUtility.generateLabelWithHelpBubble("File to publish", FILE_TO_PUBLISH_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel fileSelectorContainer = new JPanel(flowRight);
         fileToPublishTextField = new JTextField();
         fileToPublishTextField.setPreferredSize(new Dimension(
@@ -104,24 +88,15 @@ public class IntegrationJobTab implements JobTab {
 
         jobPanel.add(new JLabel(""));
         fileToPublishHasHeaderCheckBox = new JCheckBox("File to publish contains a header row");
-        //jobPanel.add(fileToPublishHasHeaderCheckBox);
 
         JPanel hasHeaderRowLabelContainer = new JPanel(flowLeft);
         hasHeaderRowLabelContainer.add(fileToPublishHasHeaderCheckBox);
-        JLabel hasHeaderRowHelp = new JLabel(helpIcon);
-        BalloonTip hasHeaderRowTip = new BalloonTip(hasHeaderRowHelp, HAS_HEADER_ROW_TIP_TEXT, style, false);
-        ToolTipUtils.balloonToToolTip(hasHeaderRowTip, 100, 100000);
-        hasHeaderRowLabelContainer.add(hasHeaderRowHelp);
+        hasHeaderRowLabelContainer.add(
+                UIUtility.generateHelpBubble(HAS_HEADER_ROW_TIP_TEXT));
         jobPanel.add(hasHeaderRowLabelContainer);
 
-        JPanel datasetLabelContainer = new JPanel(flowLeft);
-        JLabel datasetLabel = new JLabel("Dataset ID ");
-        datasetLabelContainer.add(datasetLabel);
-        JLabel datasetHelp = new JLabel(helpIcon);
-        BalloonTip datasetTip = new BalloonTip(datasetHelp, DATASET_ID_TIP_TEXT, style, false);
-        ToolTipUtils.balloonToToolTip(datasetTip, 100, 100000);
-        datasetLabelContainer.add(datasetHelp);
-        jobPanel.add(datasetLabelContainer);
+        jobPanel.add(UIUtility.generateLabelWithHelpBubble(
+                "Dataset ID", DATASET_ID_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel datasetIDTextFieldContainer = new JPanel(flowRight);
         datasetIDTextField = new JTextField();
         datasetIDTextField.setPreferredSize(new Dimension(
@@ -129,14 +104,8 @@ public class IntegrationJobTab implements JobTab {
         datasetIDTextFieldContainer.add(datasetIDTextField);
         jobPanel.add(datasetIDTextFieldContainer);
 
-        JPanel publishMethodLabelContainer = new JPanel(flowLeft);
-        JLabel publishMethodLabel = new JLabel("Publish method ");
-        publishMethodLabelContainer.add(publishMethodLabel);
-        JLabel publishMethodHelp = new JLabel(helpIcon);
-        BalloonTip publishMethodTip = new BalloonTip(publishMethodHelp, PUBLISH_METHOD_TIP_TEXT, style, false);
-        ToolTipUtils.balloonToToolTip(publishMethodTip, 100, 100000);
-        publishMethodLabelContainer.add(publishMethodHelp);
-        jobPanel.add(publishMethodLabelContainer);
+        jobPanel.add(UIUtility.generateLabelWithHelpBubble(
+                "Publish method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel publishMethodTextFieldContainer = new JPanel(flowRight);
         publishMethodComboBox = new JComboBox();
         for(PublishMethod method : PublishMethod.values()) {
@@ -145,14 +114,8 @@ public class IntegrationJobTab implements JobTab {
         publishMethodTextFieldContainer.add(publishMethodComboBox);
         jobPanel.add(publishMethodTextFieldContainer);
 
-        JPanel runCommandLabelContainer = new JPanel(flowLeft);
-        JLabel runCommandLabel = new JLabel("Command to execute with scheduler ");
-        runCommandLabelContainer.add(runCommandLabel);
-        JLabel runCommandHelp = new JLabel(helpIcon);
-        BalloonTip runCommandTip = new BalloonTip(runCommandHelp, RUN_COMMAND_TIP_TEXT, style, false);
-        ToolTipUtils.balloonToToolTip(runCommandTip, 100, 100000);
-        runCommandLabelContainer.add(runCommandHelp);
-        jobPanel.add(runCommandLabelContainer);
+        jobPanel.add(UIUtility.generateLabelWithHelpBubble(
+                "Command to execute with scheduler", RUN_COMMAND_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel runCommandTextFieldContainer = new JPanel(flowRight);
         runCommandTextField = new JTextField(DEFAULT_RUN_JOB_COMMAND);
         runCommandTextField.setPreferredSize(new Dimension(
