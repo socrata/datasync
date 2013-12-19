@@ -7,6 +7,8 @@ import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
 import com.socrata.datasync.*;
+import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.preferences.UserPreferencesJava;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -15,6 +17,8 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 public class PortJob implements Job {
+    private UserPreferences userPrefs;
+
     private PortMethod portMethod;
 	private String sourceSiteDomain;
 	private String sourceSetID;
@@ -100,7 +104,7 @@ public class PortJob implements Job {
 	}
 
 	public JobStatus run() {
-		UserPreferences userPrefs = new UserPreferences();
+		userPrefs = new UserPreferencesJava();
 		SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
 
 		JobStatus runStatus;

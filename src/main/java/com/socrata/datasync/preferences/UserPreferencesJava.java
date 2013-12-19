@@ -1,14 +1,18 @@
-package com.socrata.datasync;
+package com.socrata.datasync.preferences;
+
+import com.socrata.datasync.SocrataConnectionInfo;
 
 import java.util.prefs.Preferences;
 
-public class UserPreferences {
+public class UserPreferencesJava implements UserPreferences {
 	/**
 	 * @author Adrian Laurenzi
 	 * 
-	 * This class manages the saved (global) user preferences.
+	 * This class saves and retrieves (global) user preferences using the
+     * Java Preferences class (which stores/retrieves data from standard
+     * locations that vary depending on the platform).
 	 */
-	
+
 	private static Preferences userPrefs;
 	// Preference keys for saving user data
 	private static final String DOMAIN = "domain";
@@ -29,15 +33,16 @@ public class UserPreferences {
 
     private static final String FILESIZE_CHUNKING_CUTOFF_MB = "filesize_chunking_cutoff_mb";
     private static final String NUM_ROWS_PER_CHUNK = "num_rows_per_chunk";
+
     // When a file to be published is larger than this value (in MB), file is chunked
-    private static final String DEFAULT_FILESIZE_CHUNK_CUTOFF_MB = "64"; // = 67108864 bytes
+    private static final String DEFAULT_FILESIZE_CHUNK_CUTOFF_MB = "10";
     // During chunking files are uploaded NUM_ROWS_PER_CHUNK rows per chunk
-    private static final String DEFAULT_NUM_ROWS_PER_CHUNK = "25000";
+    private static final String DEFAULT_NUM_ROWS_PER_CHUNK = "10000";
 	
 	private final String DEFAULT_DOMAIN = "https://";
 	private final String DEFAULT_SSL_PORT = "465";
     
-	public UserPreferences() {
+	public UserPreferencesJava() {
 		userPrefs = Preferences.userRoot().node("SocrataIntegrationPrefs");
 	}
 	
@@ -160,14 +165,9 @@ public class UserPreferences {
     public String getNumRowsPerChunk() {
         return userPrefs.get(NUM_ROWS_PER_CHUNK, DEFAULT_NUM_ROWS_PER_CHUNK);
     }
-	
-	public SocrataConnectionInfo getConnectionInfo()
-	{
-		String url = getDomain();
-		String user = getUsername();
-		String password = getPassword();
-		String token = getAPIKey();
-		return new SocrataConnectionInfo(url, user, password, token);
-	}
 
+    public SocrataConnectionInfo getConnectionInfo() {
+        return new SocrataConnectionInfo(
+                this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());
+    }
 }

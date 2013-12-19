@@ -197,12 +197,46 @@ public class IntegrationUtilityTest extends TestBase {
     }
 
     @Test
-    public void testUpsertWithDeletes() {
+    public void testDeleteNoHeader() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
+        final Soda2Producer producer = createProducer();
+        final SodaDdl ddl = createSodaDdl();
+
+        // Ensures dataset is in known state (3 rows)
+        File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
+        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, true);
+
+        File deleteTwoRowsFile = new File("src/test/resources/datasync_unit_test_delete_two_rows_no_header.csv");
+        UpsertResult result = IntegrationUtility.deleteRows(producer, ddl, UNITTEST_DATASET_ID, deleteTwoRowsFile, 0, false);
+
+        TestCase.assertEquals(0, result.errorCount());
+        TestCase.assertEquals(2, result.getRowsDeleted());
+        TestCase.assertEquals(1, getTotalRows(UNITTEST_DATASET_ID));
+    }
+
+    @Test
+    public void testDeleteWithHeaderAndNonExistantRowIDs() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
+        final Soda2Producer producer = createProducer();
+        final SodaDdl ddl = createSodaDdl();
+
+        // Ensures dataset is in known state (3 rows)
+        File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
+        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, true);
+
+        File deleteTwoRowsFile = new File("src/test/resources/datasync_unit_test_delete_two_rows_with_header.csv");
+        UpsertResult result = IntegrationUtility.deleteRows(producer, ddl, UNITTEST_DATASET_ID, deleteTwoRowsFile, 0, true);
+
+        TestCase.assertEquals(0, result.errorCount());
+        TestCase.assertEquals(2, result.getRowsDeleted());
+        TestCase.assertEquals(1, getTotalRows(UNITTEST_DATASET_ID));
+    }
+
+    @Test
+    public void testDeleteWithHeader() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
 
     }
 
     @Test
-    public void testUpsertInChunksWithDeletes() {
+    public void testDeleteInChunks() {
 
     }
 

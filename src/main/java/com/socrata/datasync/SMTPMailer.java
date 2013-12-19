@@ -1,5 +1,7 @@
 package com.socrata.datasync;
 
+import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.sun.mail.smtp.SMTPTransport;
 
 import java.security.Security;
@@ -53,7 +55,7 @@ public class SMTPMailer {
      */
     public static void send(String recipientEmail, String ccEmail, String title, String message) 
     		throws AddressException, MessagingException {
-    	UserPreferences userPrefs = new UserPreferences();
+    	UserPreferences userPrefs = new UserPreferencesJava();
     	
         Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
         final String SSL_FACTORY = "javax.net.ssl.SSLSocketFactory";

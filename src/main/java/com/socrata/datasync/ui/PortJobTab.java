@@ -2,6 +2,8 @@ package com.socrata.datasync.ui;
 
 import com.socrata.datasync.*;
 import com.socrata.datasync.job.PortJob;
+import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.preferences.UserPreferencesJava;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -144,12 +146,15 @@ public class PortJobTab implements JobTab {
         jobPanel.add(publishMethodContainerLeft);
         publishMethodContainerRight = new JPanel(flowRight);
         publishMethodComboBox = new JComboBox();
-        for (PublishMethod method : PublishMethod.values()) {
+        /*for (PublishMethod method : PublishMethod.values()) {
             // TODO: clean this up once publish method changes have been implemented
             if (!method.equals(PublishMethod.append)) {
                 publishMethodComboBox.addItem(method);
             }
-        }
+        }*/
+        publishMethodComboBox.addItem(PublishMethod.upsert);
+        publishMethodComboBox.addItem(PublishMethod.replace);
+
         publishMethodComboBox.setEnabled(false);
         publishMethodContainerRight.setPreferredSize(new Dimension(
                 JOB_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
@@ -184,7 +189,7 @@ public class PortJobTab implements JobTab {
             jobPanel.add(publishMethodContainerRight);
             publishMethodComboBox.setEnabled(true);
         }
-        UserPreferences userPrefs = new UserPreferences();
+        UserPreferences userPrefs = new UserPreferencesJava();
         SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
         if (job.getSourceSiteDomain().equals("https://") &&
                 !connectionInfo.getUrl().equals("https://")) {

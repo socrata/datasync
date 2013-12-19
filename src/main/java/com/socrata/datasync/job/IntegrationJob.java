@@ -13,11 +13,15 @@ import java.util.List;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaImporter;
 import com.socrata.datasync.*;
+import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.preferences.UserPreferencesFile;
+import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
+import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -32,6 +36,8 @@ public class IntegrationJob implements Job {
 	 * Stores a single integration job that can be opened/run in the GUI
 	 * or in command-line mode.
 	 */
+    private UserPreferences userPrefs;
+
     private static final String DELETE_ZERO_ROWS = "";
 
     // to upload entire file as a single chunk (numRowsPerChunk == 0)
@@ -54,13 +60,33 @@ public class IntegrationJob implements Job {
     public static final List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
 	
 	public IntegrationJob() {
-		pathToSavedJobFile = "";
-		datasetID = "";
-		fileToPublish = "";
-		publishMethod = PublishMethod.upsert;
-		fileRowsToDelete = DELETE_ZERO_ROWS;
-        fileToPublishHasHeaderRow = true;
+        userPrefs = new UserPreferencesJava();
+        setDefaultParams();
 	}
+
+    /*
+     * This is a method that enables DataSync preferences to be loaded from
+     * a .json file instead of Java Preferences class
+     */
+    public IntegrationJob(File preferencesConfigFile) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            userPrefs = mapper.readValue(preferencesConfigFile, UserPreferencesFile.class);
+        } catch (IOException e) {
+            // TODO add log entry???
+            throw new IOException(e.toString());
+        }
+        setDefaultParams();
+    }
+
+    private void setDefaultParams() {
+        pathToSavedJobFile = "";
+        datasetID = "";
+        fileToPublish = "";
+        publishMethod = PublishMethod.upsert;
+        fileRowsToDelete = DELETE_ZERO_ROWS;
+        fileToPublishHasHeaderRow = true;
+    }
 	
 	/**
 	 * Loads integration job data from a file and
@@ -68,6 +94,8 @@ public class IntegrationJob implements Job {
 	 * of this object
 	 */
 	public IntegrationJob(String pathToFile) throws IOException {
+        userPrefs = new UserPreferencesJava();
+
         // first try reading the 'current' format
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -97,6 +125,7 @@ public class IntegrationJob implements Job {
                     input.close();
                 }
             } catch(Exception e2) {
+                // TODO add log entry???
                 throw new IOException(e.toString());
             }
         }
@@ -154,7 +183,6 @@ public class IntegrationJob implements Job {
 	}
 	
 	public JobStatus run() {
-		UserPreferences userPrefs = new UserPreferences();
 		SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
 		
 		UpsertResult result = null;
@@ -172,12 +200,14 @@ public class IntegrationJob implements Job {
 			if(!fileRowsToDelete.equals(DELETE_ZERO_ROWS)) {
 				deleteRowsFile = new File(fileRowsToDelete);
 			}
+
 			boolean noPublishExceptions = false;
 			try {
+                int filesizeChunkingCutoffMB =
+                        Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * 1048576;
+                int numRowsPerChunk = Integer.parseInt(userPrefs.getNumRowsPerChunk());
+
 				if(publishMethod.equals(PublishMethod.upsert) || publishMethod.equals(PublishMethod.append)) {
-                    int filesizeChunkingCutoffMB =
-                            Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * 1048576;
-                    int numRowsPerChunk = Integer.parseInt(userPrefs.getNumRowsPerChunk());
                     if(fileToPublishFile.length() > filesizeChunkingCutoffMB) {
                         result = IntegrationUtility.appendUpsert(
                                 producer, importer, datasetID, fileToPublishFile, numRowsPerChunk, fileToPublishHasHeaderRow);
@@ -191,7 +221,19 @@ public class IntegrationJob implements Job {
 					result = IntegrationUtility.replaceNew(
                             producer, importer, datasetID, fileToPublishFile, fileToPublishHasHeaderRow);
 					noPublishExceptions = true;
-				} else {
+                }
+                else if(publishMethod.equals(PublishMethod.delete)) {
+                    // TODO might be a good idea to do deleted in chunks by default
+                    if(fileToPublishFile.length() > filesizeChunkingCutoffMB) {
+                        result = IntegrationUtility.deleteRows(
+                                producer, importer, datasetID, fileToPublishFile, numRowsPerChunk, fileToPublishHasHeaderRow);
+                    } else {
+                        result = IntegrationUtility.deleteRows(
+                                producer, importer, datasetID, fileToPublishFile, UPLOAD_SINGLE_CHUNK, fileToPublishHasHeaderRow);
+                        System.out.println();
+                    }
+                    noPublishExceptions = true;
+                } else {
 					runErrorMessage = JobStatus.INVALID_PUBLISH_METHOD.toString();
 				}
 			}
@@ -232,6 +274,8 @@ public class IntegrationJob implements Job {
 		String logDatasetID = userPrefs.getLogDatasetID();
 		JobStatus logStatus = JobStatus.SUCCESS;
 		if(!logDatasetID.equals("")) {
+            if(runErrorMessage != null)
+                runStatus.setMessage(runErrorMessage);
 			logStatus = IntegrationUtility.addLogEntry(logDatasetID, connectionInfo, this, runStatus, result);
 		}
 		// Send email if there was an error updating log or target dataset

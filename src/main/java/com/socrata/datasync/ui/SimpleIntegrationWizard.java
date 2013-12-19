@@ -11,6 +11,7 @@ import com.socrata.datasync.*;
 import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.Job;
 import com.socrata.datasync.job.PortJob;
+import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.sun.jersey.api.client.GenericType;
 
 import com.socrata.api.HttpLowLevel;
@@ -52,7 +53,7 @@ public class SimpleIntegrationWizard {
 	private final int PREFERENCES_FRAME_WIDTH = 475;
 	private final int PREFERENCES_FRAME_HEIGHT = 475;
 	
-	private static UserPreferences userPrefs;
+	private static UserPreferencesJava userPrefs;
 
     // TODO remove these declarations from this file (duplicates...)
 	private final String STANDARD_JOB_FILE_EXTENSION = "sij";
@@ -100,7 +101,7 @@ public class SimpleIntegrationWizard {
 	 */
 	public SimpleIntegrationWizard() {
 		// load user preferences (saved locally)
-		userPrefs = new UserPreferences();
+		userPrefs = new UserPreferencesJava();
 		
 		// Build GUI
 		frame = new JFrame(TITLE);

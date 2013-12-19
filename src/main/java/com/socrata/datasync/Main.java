@@ -1,7 +1,14 @@
 package com.socrata.datasync;
 
+import com.socrata.datasync.job.FTPSmartUpdateJob;
+import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.preferences.UserPreferencesFile;
+import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.socrata.datasync.ui.SimpleIntegrationWizard;
 import org.apache.commons.cli.*;
+
+import java.io.File;
+import java.io.IOException;
 
 public class Main {
 	/**
@@ -23,6 +30,7 @@ public class Main {
         options.addOption("m", "method", true, "Publish method (" + VALID_PUBLISH_METHODS + ")");
         options.addOption("i", "datasetid", true, "Dataset ID to publish to");
         options.addOption("f", "file", true, "CSV or TSV file to publish");
+        options.addOption("c", "config", true, ".json file that establishes user preferences (optional)");
         options.addOption("?", "help", false, "Help");
     }
 
@@ -33,6 +41,7 @@ public class Main {
         if(args.length == 0) {
             // Open GUI (default)
             new SimpleIntegrationWizard();
+
         } else if(args.length == 1) {
     		// Run a specific job file in command line mode (usually for scheduler calls)
             if(args[0].equals("-?") || args[0].equals("--help")) {
@@ -47,21 +56,36 @@ public class Main {
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("DataSync", options);
             } else {
-                // generate & run a job from command line args
-                UserPreferences userPrefs = new UserPreferences();
+                // TODO allow different job types
 
-                com.socrata.datasync.job.IntegrationJob jobToRun = new com.socrata.datasync.job.IntegrationJob();
+                // generate & run a an Integration job from command line args
+                com.socrata.datasync.job.IntegrationJob jobToRun = null;
+                if (cmd.hasOption('c')) {
+                    File configFile = new File(cmd.getOptionValue("c"));
+                    try {
+                        jobToRun = new com.socrata.datasync.job.IntegrationJob(configFile);
+                    } catch (IOException e) {
+                        System.out.println("Failed to load " + configFile.getAbsolutePath() + ": " + e.toString());
+                        System.exit(1);
+                    }
+                } else {
+                    jobToRun = new com.socrata.datasync.job.IntegrationJob();
+                }
+
                 jobToRun.setDatasetID(cmd.getOptionValue("i"));
                 jobToRun.setFileToPublish(cmd.getOptionValue("f"));
-                jobToRun.setPublishMethod(PublishMethod.valueOf(cmd.getOptionValue("m")));
+                jobToRun.setPublishMethod(
+                        PublishMethod.valueOf(cmd.getOptionValue("m")));
                 if(cmd.getOptionValue("h").equals("true")) {
                     jobToRun.setFileToPublishHasHeaderRow(true);
                 } else { // cmd.getOptionValue("h") == "false"
                     jobToRun.setFileToPublishHasHeaderRow(false);
                 }
 
+                // DEPRECIATED...now you can only establish auth credentials from config file
                 // Set authentication credentials if they were supplied,
                 // otherwise get them from previously saved UserPreferences
+                /*UserPreferencesJava userPrefs = new UserPreferencesJava();
                 final String domain = cmd.getOptionValue("d", userPrefs.getDomain());
                 final String username = cmd.getOptionValue("u", userPrefs.getUsername());
                 final String appToken = cmd.getOptionValue("a", userPrefs.getAPIKey());
@@ -77,7 +101,7 @@ public class Main {
                 userPrefs.saveDomain(domain);
                 userPrefs.saveUsername(username);
                 userPrefs.saveAPIKey(appToken);
-                userPrefs.savePassword(password);
+                userPrefs.savePassword(password);*/
 
                 new SimpleIntegrationRunner(jobToRun);
             }

@@ -4,9 +4,9 @@ import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
+import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
-import com.socrata.model.soql.SoqlQuery;
 import com.sun.jersey.api.client.ClientResponse;
 
 import java.io.IOException;
@@ -28,7 +28,7 @@ public class TestBase
     public static final String UNITTEST_PORT_RESULT_DATASET_ID = "59q3-syrs";
 
     protected void setTestUserPreferences() {
-        UserPreferences userPrefs = new UserPreferences();
+        UserPreferencesJava userPrefs = new UserPreferencesJava();
         userPrefs.saveDomain(DOMAIN);
         userPrefs.saveUsername(USERNAME);
         userPrefs.savePassword(PASSWORD);

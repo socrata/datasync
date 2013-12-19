@@ -42,10 +42,13 @@ public class IntegrationUtility {
      * @return upsert objects to delete the rows corresponding to the IDs within the given deletedIds File
      *
      */
-    public static List<Map<String, Object>> getDeletedUpsertObjects(SodaDdl ddl, final String id, final File csvOrTsvFile)
+    public static UpsertResult deleteRows(Soda2Producer producer, SodaDdl ddl,
+                                          final String id, final File csvOrTsvFile, final int numRowsPerChunk, final boolean containsHeaderRow)
             throws IOException, SodaError, InterruptedException
     {
-        List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> upsertObjectsChunk = new ArrayList<Map<String, Object>>();
+        int totalRowsDeleted = 0;
+        List<UpsertError> deleteErrors = new ArrayList<UpsertError>();
 
         // get row identifier of dataset
         Dataset info = (Dataset) ddl.loadDatasetInfo(id);
@@ -58,17 +61,40 @@ public class IntegrationUtility {
         }
 
         // TODO read in csvFile and extract out :deleted column data to generate list of rows to delete
-        // read in rows to be deleted (OLD CODE)
-        String line;
-        FileReader fileReader = new FileReader(csvOrTsvFile); // USE CSVReader...
-        BufferedReader reader = new BufferedReader(fileReader);
 
-        while((line = reader.readLine()) != null) {
-            upsertObjects.add(ImmutableMap.of(rowIdentifierName, (Object)line, ":deleted", Boolean.TRUE));
+        FileReader  fileReader = new FileReader(csvOrTsvFile);
+        CSVReader reader = new CSVReader(fileReader);
+        String[] currLine;
+
+        // skip first row if there is a header row
+        if(containsHeaderRow) {
+            reader.readNext();
         }
+
+        do {
+            currLine = reader.readNext();
+            if(currLine != null) {
+                upsertObjectsChunk.add(ImmutableMap.of(rowIdentifierName, (Object)currLine[0], ":deleted", Boolean.TRUE));
+            }
+            if(upsertObjectsChunk.size() == numRowsPerChunk || currLine == null) {
+                UpsertResult chunkResult = producer.upsert(id, upsertObjectsChunk);
+                totalRowsDeleted += chunkResult.getRowsDeleted();
+
+                if(chunkResult.errorCount() > 0) {
+                    // TODO find a better way to suppress these errors (which are really not errors anyway)
+                    for(UpsertError err : chunkResult.getErrors()) {
+                        if(!err.getError().contains("no record is found")) {
+                            deleteErrors.add(err);
+                        }
+                    }
+                }
+                upsertObjectsChunk.clear();
+            }
+        } while(currLine != null);
         reader.close();
 
-        return upsertObjects;
+        return new UpsertResult(
+                0, 0, totalRowsDeleted, deleteErrors);
     }
 
     /**
@@ -83,7 +109,7 @@ public class IntegrationUtility {
      */
     public static UpsertResult publishDataFile(Soda2Producer producer, SodaDdl ddl,
                                       final PublishMethod method, final String id, final File csvOrTsvFile,
-                                      int numRowsPerChunk, boolean containsHeaderRow)
+                                      int numRowsPerChunk, final boolean containsHeaderRow)
             throws IOException, SodaError, InterruptedException
     {
         // If doing a replace force it to upload all data as a single chunk
@@ -101,11 +127,7 @@ public class IntegrationUtility {
             columnDelimiter = '\t';
         }
 
-        // TODO uncomment after getDeletedUpsertObjects is fully implemented (also remove deletedIds param)
-        //if(deletedIds != null) {
-            //upsertObjects.addAll(getDeletedUpsertObjects(ddl, id, addedUpdatedObjects));
-        //}
-
+        int numUploadedChunks = 0;
         FileReader  fileReader = new FileReader(csvOrTsvFile);
         CSVReader reader = new CSVReader(fileReader, columnDelimiter);
 
@@ -142,12 +164,18 @@ public class IntegrationUtility {
                     upsertObjectsChunk.add(builder.build());
                 }
                 if(upsertObjectsChunk.size() == numRowsPerChunk || currLine == null) {
+                    if(numRowsPerChunk == 0) {
+                        System.out.println("Publishing entire file...");
+                    } else {
+                        System.out.print("\rPublishing file in chunks (" + numUploadedChunks * numRowsPerChunk + " rows uploaded so far)...");
+                    }
+
                     // upsert or replace current chunk
                     UpsertResult chunkResult;
-                    if(method.equals(PublishMethod.upsert) || method.equals(PublishMethod.upsert)) {
+                    if(method.equals(PublishMethod.upsert) || method.equals(PublishMethod.append)) {
                         chunkResult = producer.upsert(id, upsertObjectsChunk);
                     } else if(method.equals(PublishMethod.replace)) {
-                        // TODO need to use the old publisher workflow...
+                        // TODO need to use the old publisher workflow and enable replace chunking...
                         chunkResult = producer.replace(id, upsertObjectsChunk);
                     } else {
                         throw new IllegalArgumentException("Error performing publish: "
@@ -156,6 +184,7 @@ public class IntegrationUtility {
                     totalRowsCreated += chunkResult.getRowsCreated();
                     totalRowsUpdated += chunkResult.getRowsUpdated();
                     totalRowsDeleted += chunkResult.getRowsDeleted();
+                    numUploadedChunks += 1;
 
                     if(chunkResult.errorCount() > 0) {
                         return new UpsertResult(
@@ -165,6 +194,7 @@ public class IntegrationUtility {
                 }
             } while(currLine != null);
         }
+        reader.close();
         return new UpsertResult(
                 totalRowsCreated, totalRowsUpdated, totalRowsDeleted, new ArrayList<UpsertError>());
     }
