@@ -21,16 +21,11 @@ public class Main {
 
     public static final Options options = new Options();
     static {
-        options.addOption("P", false, "Prompt for the Socrata password (optional)");
-        options.addOption("p", "password", true, "Socrata password (optional)");
-        options.addOption("a", "apptoken", true, "App token (optional)");
-        options.addOption("u", "username", true, "Socrata username (optional)");
-        options.addOption("d", "domain", true, "Domain where dataset resides (optional)");
         options.addOption("h", "header", true, "File to publish has header row (true or false)");
         options.addOption("m", "method", true, "Publish method (" + VALID_PUBLISH_METHODS + ")");
         options.addOption("i", "datasetid", true, "Dataset ID to publish to");
         options.addOption("f", "file", true, "CSV or TSV file to publish");
-        options.addOption("c", "config", true, ".json file that establishes user preferences (optional)");
+        options.addOption("c", "config", true, ".json file that stores authentication details and/or user preferences (optional)");
         options.addOption("?", "help", false, "Help");
     }
 
@@ -55,6 +50,7 @@ public class Main {
             if (!commandArgsValid(cmd)) {
                 HelpFormatter formatter = new HelpFormatter();
                 formatter.printHelp("DataSync", options);
+                System.exit(1);
             } else {
                 // TODO allow different job types
 
@@ -65,7 +61,7 @@ public class Main {
                     try {
                         jobToRun = new com.socrata.datasync.job.IntegrationJob(configFile);
                     } catch (IOException e) {
-                        System.out.println("Failed to load " + configFile.getAbsolutePath() + ": " + e.toString());
+                        System.err.println("Failed to load " + configFile.getAbsolutePath() + ": " + e.toString());
                         System.exit(1);
                     }
                 } else {
@@ -133,13 +129,13 @@ public class Main {
                 publishMethodValid = true;
         }
         if(!publishMethodValid) {
-            System.out.println("Invalid publish method: " + inputPublishMethod +
+            System.err.println("Invalid publish method: " + inputPublishMethod +
                     " (must be " + VALID_PUBLISH_METHODS + ")");
             return false;
         }
 
         if(!cmd.getOptionValue("h").equals("true") && !cmd.getOptionValue("h").equals("false")) {
-            System.out.println("You must specify if file to publish has a header row (true or false)");
+            System.err.println("You must specify if file to publish has a header row (true or false)");
             return false;
         }
 
