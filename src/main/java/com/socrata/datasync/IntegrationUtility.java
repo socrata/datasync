@@ -1,29 +1,29 @@
 package com.socrata.datasync;
 
 import java.awt.Desktop;
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import au.com.bytecode.opencsv.CSVReader;
+
 import com.google.common.collect.ImmutableMap;
-import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
 import com.socrata.datasync.job.IntegrationJob;
-import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
-import com.socrata.model.requests.SodaRequest;
-import com.socrata.model.requests.SodaTypedRequest;
-import com.socrata.utils.GeneralUtils;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import org.apache.commons.lang3.StringUtils;
 
 public class IntegrationUtility {
     /**
@@ -178,6 +178,7 @@ public class IntegrationUtility {
                         // TODO need to use the old publisher workflow and enable replace chunking...
                         chunkResult = producer.replace(id, upsertObjectsChunk);
                     } else {
+                        reader.close();
                         throw new IllegalArgumentException("Error performing publish: "
                                 + method + " is not a valid publishing method");
                     }
@@ -187,6 +188,7 @@ public class IntegrationUtility {
                     numUploadedChunks += 1;
 
                     if(chunkResult.errorCount() > 0) {
+                        reader.close();
                         return new UpsertResult(
                                 totalRowsCreated, totalRowsUpdated, totalRowsDeleted, chunkResult.getErrors());
                     }
@@ -199,6 +201,11 @@ public class IntegrationUtility {
                 totalRowsCreated, totalRowsUpdated, totalRowsDeleted, new ArrayList<UpsertError>());
     }
 
+    /**
+     * Get file extension 
+     * @param file filename 
+     * @return
+     */
     public static String getFileExtension(String file) {
         String extension = "";
         int i = file.lastIndexOf('.');
