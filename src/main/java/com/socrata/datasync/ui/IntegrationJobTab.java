@@ -56,7 +56,7 @@ public class IntegrationJobTab implements JobTab {
     private JTextField datasetIDTextField;
     private JTextField fileToPublishTextField;
     private JCheckBox fileToPublishHasHeaderCheckBox;
-    private JComboBox<PublishMethod> publishMethodComboBox;
+    private JComboBox publishMethodComboBox;
     private JTextField runCommandTextField;
 
     // build Container with all tab components populated with given job data
@@ -107,7 +107,7 @@ public class IntegrationJobTab implements JobTab {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
                 "Publish method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel publishMethodTextFieldContainer = new JPanel(flowRight);
-        publishMethodComboBox = new JComboBox<PublishMethod>();
+        publishMethodComboBox = new JComboBox();
         for(PublishMethod method : PublishMethod.values()) {
             publishMethodComboBox.addItem(method);
         }
