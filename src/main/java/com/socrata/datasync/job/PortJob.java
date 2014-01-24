@@ -34,20 +34,32 @@ public class PortJob implements Job {
 
 	private static final String DEFAULT_JOB_NAME = "Untitled Port Job";
 
-	// TODO move this somewhere else (or remove it)
-	private static final int DATASET_ID_LENGTH = 9;
-
 	public PortJob() {
-		portMethod = PortMethod.copy_all;
-		sourceSiteDomain = "https://";
-		sourceSetID = "";
-		sinkSiteDomain = "https://";
-		sinkSetID = "";
-		publishMethod = PublishMethod.upsert;
-        publishDataset = PublishDataset.working_copy;
-		portResult = "";
-		pathToSavedJobFile = "";
+        userPrefs = new UserPreferencesJava();
+        setDefaultParams();
 	}
+
+    /*
+     * This is a method that enables DataSync preferences to be established
+     * directly when DataSync is used in "library mode" or "command-line mode"
+     * (rather than being loaded from Preferences class)
+     */
+    public PortJob(UserPreferences userPrefs) {
+        this.userPrefs = userPrefs;
+        setDefaultParams();
+    }
+
+    private void setDefaultParams() {
+        portMethod = PortMethod.copy_all;
+        sourceSiteDomain = "https://";
+        sourceSetID = "";
+        sinkSiteDomain = "https://";
+        sinkSetID = "";
+        publishMethod = PublishMethod.upsert;
+        publishDataset = PublishDataset.working_copy;
+        portResult = "";
+        pathToSavedJobFile = "";
+    }
 
 	/**
 	 * Loads port job data from a file and uses the saved data to populate the
@@ -77,11 +89,11 @@ public class PortJob implements Job {
 				|| connectionInfo.getUrl().equals("https://")) {
 			return JobStatus.INVALID_DOMAIN;
 		}
-		if (sourceSetID.length() != DATASET_ID_LENGTH) {
+		if (!IntegrationUtility.uidIsValid(sourceSetID)) {
 			return JobStatus.INVALID_DATASET_ID;
 		}
 		if (portMethod.equals(PortMethod.copy_data)
-				&& sinkSetID.length() != DATASET_ID_LENGTH) {
+				&& !IntegrationUtility.uidIsValid(sinkSetID)) {
 			return JobStatus.INVALID_DATASET_ID;
 		}
 
@@ -104,7 +116,6 @@ public class PortJob implements Job {
 	}
 
 	public JobStatus run() {
-		userPrefs = new UserPreferencesJava();
 		SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
 
 		JobStatus runStatus;
@@ -116,11 +127,18 @@ public class PortJob implements Job {
 			final SodaDdl loader = SodaDdl.newDdl(sourceSiteDomain,
 					connectionInfo.getUser(), connectionInfo.getPassword(),
 					connectionInfo.getToken());
+
+            // special feature to enable porting datasets to Staging (where app token is different)
+            String portDestinationDomainAppToken = connectionInfo.getToken();
+            if(userPrefs.getPortDestinationDomainAppToken() != null && !userPrefs.getPortDestinationDomainAppToken().equals("")) {
+                portDestinationDomainAppToken = userPrefs.getPortDestinationDomainAppToken();
+            }
+
 			// creator "creates" a new dataset on the sink site (and publishes
 			// if applicable)
-			final SodaDdl creator = SodaDdl.newDdl(sinkSiteDomain,
+            final SodaDdl creator = SodaDdl.newDdl(sinkSiteDomain,
 					connectionInfo.getUser(), connectionInfo.getPassword(),
-					connectionInfo.getToken());
+                    portDestinationDomainAppToken);
 			// streamExporter "exports" the source dataset rows
 			final Soda2Consumer streamExporter = Soda2Consumer.newConsumer(
 					sourceSiteDomain, connectionInfo.getUser(),
@@ -128,7 +146,7 @@ public class PortJob implements Job {
 			// streamUpserter "upserts" the rows exported to the created dataset
 			final Soda2Producer streamUpserter = Soda2Producer.newProducer(
 					sinkSiteDomain, connectionInfo.getUser(),
-					connectionInfo.getPassword(), connectionInfo.getToken());
+					connectionInfo.getPassword(), portDestinationDomainAppToken);
 			String errorMessage = "";
 			boolean noPortExceptions = false;
 			try {

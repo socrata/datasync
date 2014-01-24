@@ -126,6 +126,9 @@ public class PortUtilityTest extends TestBase {
 
     @Test
     public void testPortContentsReplace() throws SodaError, InterruptedException, IOException, LongRunningQueryException {
+        File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
+        IntegrationUtility.replaceNew(sinkProducer, sinkDdl, UNITTEST_DATASET_ID, threeRowsFile, true);
+
         // Query for the rows of the source dataset.
         int sourceTotalRows = getTotalRows(UNITTEST_DATASET_ID);
 

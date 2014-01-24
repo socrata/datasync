@@ -37,5 +37,8 @@ public interface UserPreferences {
 
     public String getNumRowsPerChunk();
 
+    public String getPortDestinationDomainAppToken();
+
     public SocrataConnectionInfo getConnectionInfo();
+
 }

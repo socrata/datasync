@@ -93,7 +93,7 @@ public class PortJobTab implements JobTab {
 
         // Source Site
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                "Port Domain", SOURCE_SITE_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                "Source Domain", SOURCE_SITE_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel sourceSiteTextFieldContainer = new JPanel(flowRight);
         sourceSiteDomainTextField = new JTextField();
         sourceSiteDomainTextField.setPreferredSize(new Dimension(

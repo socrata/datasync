@@ -8,7 +8,7 @@ public class UserPreferencesJava implements UserPreferences {
 	/**
 	 * @author Adrian Laurenzi
 	 * 
-	 * This class saves and retrieves (global) user preferences using the
+	 * Saves and retrieves (global) user preferences using the
      * Java Preferences class (which stores/retrieves data from standard
      * locations that vary depending on the platform).
 	 */
@@ -164,6 +164,15 @@ public class UserPreferencesJava implements UserPreferences {
 
     public String getNumRowsPerChunk() {
         return userPrefs.get(NUM_ROWS_PER_CHUNK, DEFAULT_NUM_ROWS_PER_CHUNK);
+    }
+
+    /**
+     * This preference is for testing usage only (returns empty string because
+     * portDestinationDomainAppToken should only be set when DataSync is run
+     * in command-line mode).
+     */
+    public String getPortDestinationDomainAppToken() {
+        return "";
     }
 
     public SocrataConnectionInfo getConnectionInfo() {

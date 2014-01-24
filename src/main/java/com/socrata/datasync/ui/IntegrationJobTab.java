@@ -39,10 +39,14 @@ public class IntegrationJobTab implements JobTab {
     private final String DATASET_ID_TIP_TEXT = "<html><body style='width: 300px'>The identifier in the form of xxxx-xxxx (e.g. n38h-y5wp) " +
             "of the Socrata dataset where the data will be published</body></html>";
     private final String PUBLISH_METHOD_TIP_TEXT = "<html><body style='width: 400px'>Method used to publish data:<br>" +
-            "<strong>upsert</strong>: update any rows that already exist and append any new rows." +
-            "<br>NOTE: updating rows requires the dataset to have Row Identifier.<br>" +
+            "<strong>upsert</strong>: update rows that already exist and append any new rows.<br>" +
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; " +
+            "NOTE: updating rows requires the dataset to have Row Identifier<br>" +
             "<strong>append</strong>: adds all rows in the CSV/TSV as new rows.<br>" +
-            "<strong>replace</strong>: simply replaces the dataset with the data in the CSV/TSV file to publish." +
+            "<strong>replace</strong>: simply replaces the dataset with the data in the CSV/TSV file to publish.<br>" +
+            "<strong>delete</strong>: delete all rows matching Row Identifiers given in CSV/TSV file.<br>" +
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; " +
+            "NOTE: requires dataset to have Row Identifier." +
             "</body></html>";
     private final String RUN_COMMAND_TIP_TEXT = "<html><body style='width: 300px'>After saving the job this field will be populated with a command-line command that can be used to run the job." +
             " This command can be input into tools such as the Windows Scheduler or ETL tools to run the job automatically.</body></html>";

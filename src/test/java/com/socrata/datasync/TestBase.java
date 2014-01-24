@@ -27,6 +27,8 @@ public class TestBase
     public static final String UNITTEST_DATASET_ID = "8gex-q4ds";
     public static final String UNITTEST_PORT_RESULT_DATASET_ID = "59q3-syrs";
 
+    public static final String PATH_TO_CONFIG_FILE = "src/test/resources/basic_test_config.json";
+
     protected void setTestUserPreferences() {
         UserPreferencesJava userPrefs = new UserPreferencesJava();
         userPrefs.saveDomain(DOMAIN);

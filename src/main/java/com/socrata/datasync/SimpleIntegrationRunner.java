@@ -1,6 +1,8 @@
 package com.socrata.datasync;
 
 import com.socrata.datasync.job.IntegrationJob;
+import com.socrata.datasync.job.Job;
+import com.socrata.datasync.job.PortJob;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +24,7 @@ public class SimpleIntegrationRunner {
                     System.err.println(status.getMessage());
                     System.exit(1);
                 } else {
+                    // job ran successfully!
                     System.out.println(status.getMessage());
                 }
             } catch (IOException e) {
@@ -29,13 +32,25 @@ public class SimpleIntegrationRunner {
                 System.exit(1);
             }
         } else {
-            // TODO record error in DataSync log
+            // TODO record error in DataSync log?
             System.err.println("Error running " + jobFileToRun + ": job file does not exist.");
             System.exit(1);
         }
 	}
 
-    public SimpleIntegrationRunner(IntegrationJob job) {
+    public SimpleIntegrationRunner(PortJob job) {
+        JobStatus status = job.run();
+        if(status.isError()) {
+            System.err.println(status.getMessage());
+            System.exit(1);
+        } else {
+            System.out.println(status.getMessage() + ". " +
+                    "Your newly created dataset is at:\n" +
+                    job.getSinkSiteDomain() + "/d/" + job.getSinkSetID());
+        }
+    }
+
+    public SimpleIntegrationRunner(Job job) {
         JobStatus status = job.run();
         if(status.isError()) {
             System.err.println(status.getMessage());
@@ -44,4 +59,5 @@ public class SimpleIntegrationRunner {
             System.out.println(status.getMessage());
         }
     }
+
 }

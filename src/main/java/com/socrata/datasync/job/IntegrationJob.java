@@ -14,14 +14,12 @@ import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaImporter;
 import com.socrata.datasync.*;
 import com.socrata.datasync.preferences.UserPreferences;
-import com.socrata.datasync.preferences.UserPreferencesFile;
 import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -38,13 +36,8 @@ public class IntegrationJob implements Job {
 	 */
     private UserPreferences userPrefs;
 
-    private static final String DELETE_ZERO_ROWS = "";
-
     // to upload entire file as a single chunk (numRowsPerChunk == 0)
     private static final int UPLOAD_SINGLE_CHUNK = 0;
-
-    // TODO move this somewhere else (or remove it)
-    private static final int DATASET_ID_LENGTH = 9;
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
     private static final long fileVersionUID = 1L;
@@ -52,9 +45,9 @@ public class IntegrationJob implements Job {
 	private String datasetID;
 	private String fileToPublish;
 	private PublishMethod publishMethod;
-	private String fileRowsToDelete;
     private boolean fileToPublishHasHeaderRow;
 	private String pathToSavedJobFile;
+    private String pathToFTPControlFile;
 	
 	private static final String DEFAULT_JOB_NAME = "Untitled Standard Job";
     public static final List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
@@ -65,17 +58,12 @@ public class IntegrationJob implements Job {
 	}
 
     /*
-     * This is a method that enables DataSync preferences to be loaded from
-     * a .json file instead of Java Preferences class
+     * This is a method that enables DataSync preferences to be established
+     * directly when DataSync is used in "library mode" or "command-line mode"
+     * (rather than being loaded from Preferences class)
      */
-    public IntegrationJob(File preferencesConfigFile) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            userPrefs = mapper.readValue(preferencesConfigFile, UserPreferencesFile.class);
-        } catch (IOException e) {
-            // TODO add log entry???
-            throw new IOException(e.toString());
-        }
+    public IntegrationJob(UserPreferences userPrefs) {
+        this.userPrefs = userPrefs;
         setDefaultParams();
     }
 
@@ -84,8 +72,8 @@ public class IntegrationJob implements Job {
         datasetID = "";
         fileToPublish = "";
         publishMethod = PublishMethod.upsert;
-        fileRowsToDelete = DELETE_ZERO_ROWS;
         fileToPublishHasHeaderRow = true;
+        pathToFTPControlFile = null;
     }
 	
 	/**
@@ -103,7 +91,6 @@ public class IntegrationJob implements Job {
             setDatasetID(loadedJob.getDatasetID());
             setFileToPublish(loadedJob.getFileToPublish());
             setPublishMethod(loadedJob.getPublishMethod());
-            setFileRowsToDelete(loadedJob.getFileRowsToDelete());
             setPathToSavedFile(pathToFile);
             setFileToPublishHasHeaderRow(loadedJob.getFileToPublishHasHeaderRow());
         } catch (IOException e) {
@@ -117,7 +104,6 @@ public class IntegrationJob implements Job {
                     setDatasetID(loadedJobOld.getDatasetID());
                     setFileToPublish(loadedJobOld.getFileToPublish());
                     setPublishMethod(loadedJobOld.getPublishMethod());
-                    setFileRowsToDelete(loadedJobOld.getFileRowsToDelete());
                     setPathToSavedFile(pathToFile);
                     setFileToPublishHasHeaderRow(true);
                 }
@@ -125,7 +111,7 @@ public class IntegrationJob implements Job {
                     input.close();
                 }
             } catch(Exception e2) {
-                // TODO add log entry???
+                // TODO add log entry?
                 throw new IOException(e.toString());
             }
         }
@@ -140,7 +126,7 @@ public class IntegrationJob implements Job {
 				|| connectionInfo.getUrl().equals("https://")) {
 			return JobStatus.INVALID_DOMAIN;
 		}
-		if(datasetID.length() != DATASET_ID_LENGTH) {
+        if(!IntegrationUtility.uidIsValid(datasetID)) {
 			return JobStatus.INVALID_DATASET_ID;
 		}
 		if(fileToPublish.equals("")) {
@@ -192,15 +178,16 @@ public class IntegrationJob implements Job {
 		if(validationStatus.isError()) {
 			runStatus = validationStatus;
 		} else {
-			final Soda2Producer producer = Soda2Producer.newProducer(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
-			final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
+			// attach a requestId to all Producer API calls (for error tracking purposes)
+            String jobRequestId = IntegrationUtility.generateRequestId();
+            // TODO swap this out...
+            //final Soda2Producer producer = Soda2Producer.newProducerWithRequestId(
+            //        connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken(), jobRequestId);
+            final Soda2Producer producer = Soda2Producer.newProducer(
+                    connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
+            final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
 	
 			File fileToPublishFile = new File(fileToPublish);
-			File deleteRowsFile = null;
-			if(!fileRowsToDelete.equals(DELETE_ZERO_ROWS)) {
-				deleteRowsFile = new File(fileRowsToDelete);
-			}
-
 			boolean noPublishExceptions = false;
 			try {
                 int filesizeChunkingCutoffMB =
@@ -218,9 +205,13 @@ public class IntegrationJob implements Job {
                     noPublishExceptions = true;
 				}
 				else if(publishMethod.equals(PublishMethod.replace)) {
-					result = IntegrationUtility.replaceNew(
-                            producer, importer, datasetID, fileToPublishFile, fileToPublishHasHeaderRow);
-					noPublishExceptions = true;
+					JobStatus ftpSmartUpdateStatus = IntegrationUtility.publishViaFTPDropboxV2(
+                            userPrefs, importer, publishMethod, datasetID, fileToPublishFile, fileToPublishHasHeaderRow, pathToFTPControlFile);
+					if(ftpSmartUpdateStatus.isError()) {
+                        runErrorMessage = ftpSmartUpdateStatus.getMessage();
+                    } else {
+                        noPublishExceptions = true;
+                    }
                 }
                 else if(publishMethod.equals(PublishMethod.delete)) {
                     // TODO might be a good idea to do deleted in chunks by default
@@ -230,7 +221,6 @@ public class IntegrationJob implements Job {
                     } else {
                         result = IntegrationUtility.deleteRows(
                                 producer, importer, datasetID, fileToPublishFile, UPLOAD_SINGLE_CHUNK, fileToPublishHasHeaderRow);
-                        System.out.println();
                     }
                     noPublishExceptions = true;
                 } else {
@@ -251,7 +241,7 @@ public class IntegrationJob implements Job {
 			}
 			finally {
 				if(noPublishExceptions) {
-                    // Check for upsert errors (only for upsert and append publish methods)
+                    // Check for [row-level] SODA 2 errors
 					if(result != null) {
                         if(result.errorCount() > 0) {
 							for (UpsertError upsertErr : result.getErrors()) {
@@ -288,7 +278,6 @@ public class IntegrationJob implements Job {
 						+ "\nFile to publish: " + fileToPublish
                         + "\nFile to publish has header row: " + fileToPublishHasHeaderRow
 						+ "\nPublish method: " + publishMethod
-						// TODO + "\nFile with rows to delete: " + fileRowsToDelete
 						+ "\nJob File: " + pathToSavedJobFile
 						+ "\nError message: " + runErrorMessage
 						+ "\nLog dataset: " + urlToLogDataset + "\n\n";
@@ -308,7 +297,7 @@ public class IntegrationJob implements Job {
 		}
 
         // IMPORTANT because setMessage from Logging dataset interferes with enum
-        // TODO NEED to fix this..
+        // TODO NEED to make this cleaner by turning JobStatus into regular class (rather than enum)
         if(runErrorMessage != null)
             runStatus.setMessage(runErrorMessage);
 
@@ -358,25 +347,22 @@ public class IntegrationJob implements Job {
 		return publishMethod;
 	}
 
-    @JsonProperty("fileRowsToDelete")
-	public void setFileRowsToDelete(String newFileRowsToDelete) {
-		fileRowsToDelete = newFileRowsToDelete;
-	}
-
-    @JsonProperty("fileRowsToDelete")
-	public String getFileRowsToDelete() {
-		return fileRowsToDelete;
-	}
-
     @JsonProperty("fileToPublishHasHeaderRow")
     public boolean getFileToPublishHasHeaderRow() {
         return fileToPublishHasHeaderRow;
     }
 
     @JsonProperty("fileToPublishHasHeaderRow")
-    public void setFileToPublishHasHeaderRow(boolean fileToPublishHasHeaderRow) {
-        this.fileToPublishHasHeaderRow = fileToPublishHasHeaderRow;
+    public void setFileToPublishHasHeaderRow(boolean newFileToPublishHasHeaderRow) {
+
+        fileToPublishHasHeaderRow = newFileToPublishHasHeaderRow;
     }
+
+    @JsonProperty("pathToFTPControlFile")
+    public String getPathToFTPControlFile() { return pathToFTPControlFile; }
+
+    @JsonProperty("pathToFTPControlFile")
+    public void setPathToFTPControlFile(String newPathToFTPControlFile) { pathToFTPControlFile = newPathToFTPControlFile; }
 
     public void setPathToSavedFile(String newPath) {
         pathToSavedJobFile = newPath;

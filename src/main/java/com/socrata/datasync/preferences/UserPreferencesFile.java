@@ -16,7 +16,7 @@ public class UserPreferencesFile implements UserPreferences {
     /**
      * @author Adrian Laurenzi
      *
-     * This class reads in the given config file and retrieves user preferences
+     * Allows reading in a config file to retrieve user preferences
      * from that file (preferences encoded as JSON).
      */
     private String domain;
@@ -33,9 +33,10 @@ public class UserPreferencesFile implements UserPreferences {
     private String smtpPassword;
     private String filesizeChunkingCutoffMB;
     private String numRowsPerChunk;
+    private String portDestinationDomainAppToken;
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
-    private static final long fileVersionUID = 1L;
+    private static final long fileVersionUID = 3L;
 
     @JsonProperty("domain")
     public String getDomain() {
@@ -109,6 +110,11 @@ public class UserPreferencesFile implements UserPreferences {
     @JsonProperty("numRowsPerChunk")
     public String getNumRowsPerChunk() {
         return numRowsPerChunk;
+    }
+
+    @JsonProperty("portDestinationDomainAppToken")
+    public String getPortDestinationDomainAppToken() {
+        return portDestinationDomainAppToken;
     }
 
     public SocrataConnectionInfo getConnectionInfo() {

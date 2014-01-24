@@ -6,10 +6,7 @@ import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertResult;
 import junit.framework.TestCase;
-import org.junit.Before;
 import org.junit.Test;
-import test.model.UnitTestDataset;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -253,5 +250,16 @@ public class IntegrationUtilityTest extends TestBase {
     @Test
     public void testAddLogEntry() {
 
+    }
+
+    @Test
+    public void testUidIsValid() {
+        TestCase.assertFalse(IntegrationUtility.uidIsValid("hello"));
+        TestCase.assertFalse(IntegrationUtility.uidIsValid("abcd/1234"));
+        TestCase.assertFalse(IntegrationUtility.uidIsValid("6thm1hz4z"));
+
+        TestCase.assertTrue(IntegrationUtility.uidIsValid("abcd-1234"));
+        TestCase.assertTrue(IntegrationUtility.uidIsValid("vysc-frub"));
+        TestCase.assertTrue(IntegrationUtility.uidIsValid("6thm-hz4z"));
     }
 }
