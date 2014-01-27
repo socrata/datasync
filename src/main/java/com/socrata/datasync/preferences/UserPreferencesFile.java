@@ -1,14 +1,10 @@
 package com.socrata.datasync.preferences;
 
-import com.socrata.datasync.SocrataConnectionInfo;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import java.io.File;
-import java.io.IOException;
+import com.socrata.datasync.SocrataConnectionInfo;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)

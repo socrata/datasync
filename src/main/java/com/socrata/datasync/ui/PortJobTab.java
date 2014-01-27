@@ -76,7 +76,6 @@ public class PortJobTab implements JobTab {
         jobPanel = new JPanel(new GridLayout(0, 2));
 
         // set FlowLayouts
-        FlowLayout flowLeft = new FlowLayout(FlowLayout.LEFT, 0, 0);
         FlowLayout flowRight = new FlowLayout(FlowLayout.LEFT, 0, JOB_FIELD_VGAP);
 
         // Port Method
@@ -268,7 +267,6 @@ public class PortJobTab implements JobTab {
         // if first time saving this job: Open dialog box to select "Save as..."
         // location
         // otherwise save to existing file
-        boolean updateJobCommandTextField = false;
         String selectedJobFileLocation = jobFileLocation;
         if (selectedJobFileLocation.equals("")) {
             JFileChooser savedJobFileChooser = new JFileChooser();

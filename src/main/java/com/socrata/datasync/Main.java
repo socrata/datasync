@@ -1,21 +1,20 @@
 package com.socrata.datasync;
 
-import com.socrata.api.SodaImporter;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.datasync.preferences.UserPreferencesFile;
-import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.socrata.datasync.ui.SimpleIntegrationWizard;
-import com.socrata.exceptions.SodaError;
-import com.socrata.model.importer.Column;
-import com.socrata.model.importer.Dataset;
-import org.apache.commons.cli.*;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.ObjectMapper;
-
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
+
+import com.socrata.datasync.ui.SimpleIntegrationWizard;
 
 public class Main {
 	/**

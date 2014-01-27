@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 import au.com.bytecode.opencsv.CSVReader;
+
 import com.google.common.collect.ImmutableMap;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
@@ -193,6 +194,7 @@ public class IntegrationUtility {
                         // TODO need to use the old publisher workflow and enable replace chunking...
                         chunkResult = producer.replace(id, upsertObjectsChunk);
                     } else {
+                        reader.close();
                         throw new IllegalArgumentException("Error performing publish: "
                                 + method + " is not a valid publishing method");
                     }
@@ -202,6 +204,7 @@ public class IntegrationUtility {
                     numUploadedChunks += 1;
 
                     if(chunkResult.errorCount() > 0) {
+                        reader.close();
                         return new UpsertResult(
                                 totalRowsCreated, totalRowsUpdated, totalRowsDeleted, chunkResult.getErrors());
                     }
@@ -214,6 +217,11 @@ public class IntegrationUtility {
                 totalRowsCreated, totalRowsUpdated, totalRowsDeleted, new ArrayList<UpsertError>());
     }
 
+    /**
+     * Get file extension 
+     * @param file filename 
+     * @return
+     */
     public static String getFileExtension(String file) {
         String extension = "";
         int i = file.lastIndexOf('.');
@@ -461,7 +469,7 @@ public class IntegrationUtility {
                 return status;
             }
         } catch(IOException e) {
-            System.err.println(e.getStackTrace());
+            e.printStackTrace();
             status.setMessage("FTP error: " + e.getMessage());
             return status;
         } finally {
