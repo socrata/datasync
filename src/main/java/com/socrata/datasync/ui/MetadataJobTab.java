@@ -36,7 +36,7 @@ public class MetadataJobTab implements JobTab {
     private final String DEFAULT_RUN_JOB_COMMAND = "(Generates when job is saved)";
 
     private final String JOB_FILE_NAME = "Socrata Metadata Job";
-    private final String JOB_FILE_EXTENSION = "smj";
+    public final static String JOB_FILE_EXTENSION = "smj";
 
     private final int HELP_ICON_TOP_PADDING = 10;
     

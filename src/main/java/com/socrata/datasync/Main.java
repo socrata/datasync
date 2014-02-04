@@ -6,6 +6,7 @@ import com.socrata.datasync.preferences.UserPreferencesFile;
 import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.socrata.datasync.ui.SimpleIntegrationWizard;
 import org.apache.commons.cli.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +45,6 @@ public class Main {
                 formatter.printHelp("DataSync", options);
             } else {
     		    String jobFileToRun = args[0];
-    		    //TODO: Check file extension to determine type of job to run?
 			    new SimpleIntegrationRunner(jobFileToRun);
             }
 		} else {
