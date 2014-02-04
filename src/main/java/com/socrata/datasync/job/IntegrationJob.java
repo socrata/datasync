@@ -10,18 +10,9 @@ import java.io.ObjectInputStream;
 import java.util.Arrays;
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaImporter;
-import com.socrata.datasync.IntegrationUtility;
-import com.socrata.datasync.JobStatus;
-import com.socrata.datasync.PublishMethod;
-import com.socrata.datasync.SMTPMailer;
-import com.socrata.datasync.SocrataConnectionInfo;
+import com.socrata.datasync.*;
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.datasync.preferences.UserPreferencesFile;
 import com.socrata.datasync.preferences.UserPreferencesJava;
@@ -30,6 +21,11 @@ import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
@@ -200,10 +196,10 @@ public class IntegrationJob implements Job {
 			final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
 	
 			File fileToPublishFile = new File(fileToPublish);
-//			File deleteRowsFile = null;
-//			if(!fileRowsToDelete.equals(DELETE_ZERO_ROWS)) {
-//				deleteRowsFile = new File(fileRowsToDelete);
-//			}
+			File deleteRowsFile = null;
+			if(!fileRowsToDelete.equals(DELETE_ZERO_ROWS)) {
+				deleteRowsFile = new File(fileRowsToDelete);
+			}
 
 			boolean noPublishExceptions = false;
 			try {

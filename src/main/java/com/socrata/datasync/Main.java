@@ -1,16 +1,14 @@
 package com.socrata.datasync;
 
+//import com.socrata.datasync.job.FTPSmartUpdateJob;
+import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.preferences.UserPreferencesFile;
+import com.socrata.datasync.preferences.UserPreferencesJava;
+import com.socrata.datasync.ui.SimpleIntegrationWizard;
+import org.apache.commons.cli.*;
+
 import java.io.File;
 import java.io.IOException;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
-
-import com.socrata.datasync.ui.SimpleIntegrationWizard;
 
 public class Main {
 	/**
@@ -46,6 +44,7 @@ public class Main {
                 formatter.printHelp("DataSync", options);
             } else {
     		    String jobFileToRun = args[0];
+    		    //TODO: Check file extension to determine type of job to run?
 			    new SimpleIntegrationRunner(jobFileToRun);
             }
 		} else {
@@ -54,8 +53,6 @@ public class Main {
                 formatter.printHelp("DataSync", options);
                 System.exit(1);
             } else {
-                // TODO allow different job types
-
                 // generate & run a an Integration job from command line args
                 com.socrata.datasync.job.IntegrationJob jobToRun = null;
                 if (cmd.hasOption('c')) {

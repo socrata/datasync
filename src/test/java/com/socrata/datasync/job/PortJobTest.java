@@ -26,4 +26,5 @@ public class PortJobTest extends TestBase {
         TestCase.assertEquals("https://louis.demo.socrata.com", job.getSinkSiteDomain());
         TestCase.assertEquals(PublishDataset.publish, job.getPublishDataset());
     }
+
 }
