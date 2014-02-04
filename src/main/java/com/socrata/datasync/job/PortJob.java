@@ -208,16 +208,6 @@ public class PortJob implements Job {
         return fileVersionUID;
     }
 
-    @JsonProperty("pathToSavedJobFile")
-    public void setPathToSavedFile(String newPath) {
-        pathToSavedJobFile = newPath;
-    }
-
-    @JsonProperty("pathToSavedJobFile")
-    public String getPathToSavedFile() {
-        return pathToSavedJobFile;
-    }
-
     @JsonProperty("sinkSetID")
     public String getSinkSetID() {
         return sinkSetID;
@@ -296,6 +286,14 @@ public class PortJob implements Job {
     @JsonProperty("portResult")
     public void setPortResult(String portResult) {
         this.portResult = portResult;
+    }
+
+    public void setPathToSavedFile(String newPath) {
+        pathToSavedJobFile = newPath;
+    }
+
+    public String getPathToSavedFile() {
+        return pathToSavedJobFile;
     }
 
     public String getJobFilename() {
