@@ -581,7 +581,7 @@ public class SimpleIntegrationWizard {
 	
 	private void savePreferences() {
         try {
-            userPrefs.saveFilesizeChunkingCutoffBytes(
+            userPrefs.saveFilesizeChunkingCutoffMB(
                     Integer.parseInt(filesizeChunkingCutoffTextField.getText()));
         } catch(NumberFormatException e) {
             JOptionPane.showMessageDialog(prefsFrame, "Invalid chunking filesize threshold: must be an integer");
@@ -672,7 +672,7 @@ public class SimpleIntegrationWizard {
 		return authenticationDetailsPanel;
 	}
 
-    // TODO move this to Utility class
+    // TODO move this to UI Utility class
 
     
 	/**

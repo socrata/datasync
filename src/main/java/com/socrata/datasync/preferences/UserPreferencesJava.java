@@ -91,8 +91,8 @@ public class UserPreferencesJava implements UserPreferences {
 		userPrefs.put(SSL_PORT, port);
 	}
 
-	public void saveFilesizeChunkingCutoffBytes(int numBytes) {
-		userPrefs.put(FILESIZE_CHUNKING_CUTOFF_MB, Integer.toString(numBytes));
+	public void saveFilesizeChunkingCutoffMB(int numMegaBytes) {
+		userPrefs.put(FILESIZE_CHUNKING_CUTOFF_MB, Integer.toString(numMegaBytes));
 	}
 
 	public void saveNumRowsPerChunk(int numRows) {
