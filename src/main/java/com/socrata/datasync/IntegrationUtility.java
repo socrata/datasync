@@ -4,6 +4,7 @@ import java.awt.Desktop;
 import java.io.*;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,6 +24,8 @@ import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.ftp.*;
+
+import javax.net.ssl.SSLContext;
 
 public class IntegrationUtility {
     /**
@@ -59,15 +62,7 @@ public class IntegrationUtility {
         int totalRowsDeleted = 0;
         List<UpsertError> deleteErrors = new ArrayList<UpsertError>();
 
-        // get row identifier of dataset
-        Dataset info = (Dataset) ddl.loadDatasetInfo(id);
-        Column rowIdentifier = info.lookupRowIdentifierColumn();
-        String rowIdentifierName;
-        if (rowIdentifier == null) {
-            rowIdentifierName = ":id";
-        } else {
-            rowIdentifierName = rowIdentifier.getFieldName();
-        }
+        String rowIdentifierName = getDatasetRowId(ddl, id);
 
         FileReader  fileReader = new FileReader(csvOrTsvFile);
         CSVReader reader = new CSVReader(fileReader);
@@ -102,6 +97,18 @@ public class IntegrationUtility {
 
         return new UpsertResult(
                 0, 0, totalRowsDeleted, deleteErrors);
+    }
+
+    private static String getDatasetRowId(SodaDdl ddl, String id) throws SodaError, InterruptedException {
+        Dataset info = (Dataset) ddl.loadDatasetInfo(id);
+        Column rowIdentifier = info.lookupRowIdentifierColumn();
+        String rowIdentifierName;
+        if (rowIdentifier == null) {
+            rowIdentifierName = ":id";
+        } else {
+            rowIdentifierName = rowIdentifier.getFieldName();
+        }
+        return rowIdentifierName;
     }
 
     /**
@@ -251,8 +258,7 @@ public class IntegrationUtility {
     public static UpsertResult replaceNew(Soda2Producer producer, SodaDdl ddl,
                                             final String id, final File file,
                                             boolean containsHeaderRow)
-            throws SodaError, InterruptedException, IOException
-    {
+            throws SodaError, InterruptedException, IOException {
         return publishViaSoda2(producer, ddl, PublishMethod.replace, id, file, 0, containsHeaderRow);
     }
 
@@ -270,15 +276,19 @@ public class IntegrationUtility {
      *                          otherwise upload all rows as new rows (column order must exactly match that of
      *                          Socrata dataset)
      *                          NOTE: this option will be overriden if userPrefs has pathToFTPControlFile set
+     * @param pathToFTPControlFile path to control.json (if this is supplied it will override publishMethod and
+     *                             containsHeaderRow)
      * @return JobStatus containing success or error information
      */
     public static JobStatus publishViaFTPDropboxV2(final UserPreferences userPrefs, final SodaDdl ddl,
-                                                   PublishMethod publishMethod, final String datasetId,
+                                                   final PublishMethod publishMethod, final String datasetId,
                                                    final File csvOrTsvFile, boolean containsHeaderRow,
                                                    final String pathToFTPControlFile) {
         JobStatus status = JobStatus.PUBLISH_ERROR;
-        FTPSClient ftp = new FTPSClient("SSL", false);
+        FTPSClient ftp = null;
         try {
+            //ftp = new FTPSClient("SSL", false); (w/o validation)
+            ftp = new FTPSClient(false, SSLContext.getDefault());
             ftp.connect(FTP_HOST, FTP_HOST_PORT);
             SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
             ftp.login(connectionInfo.getUser(), connectionInfo.getPassword());
@@ -293,15 +303,8 @@ public class IntegrationUtility {
                 // Set data channel protection to private
                 ftp.execPROT("P");
 
-                String pathToDatasetDir = "";
-                FTPFile[] checkRequestIdFile = ftp.listFiles(FTP_REQUEST_ID_FILENAME);
-                if(checkRequestIdFile.length == 0) { // user is a SuperAdmin
-                    String domainWithoutHTTP = connectionInfo.getUrl().replaceAll("https://", "");
-                    domainWithoutHTTP = domainWithoutHTTP.replaceAll("/", "");
-                    pathToDatasetDir = "/" + domainWithoutHTTP;
-                }
-                String pathToDomainRoot = pathToDatasetDir;
-                pathToDatasetDir += "/" + datasetId;
+                String pathToDomainRoot = getPathToDomainRoot(ftp, connectionInfo);
+                String pathToDatasetDir = pathToDomainRoot + "/" + datasetId;
 
                 // if datasetId does not exist then create the directory
                 FTPFile[] checkDatasetDirExists = ftp.listFiles(pathToDatasetDir + "/" + FTP_STATUS_FILENAME);
@@ -323,79 +326,18 @@ public class IntegrationUtility {
                     return status;
                 }
 
-                String controlFilePathFTP = pathToDatasetDir + "/" + FTP_CONTROL_FILENAME;
-                InputStream inputControlFile;
-                if(pathToFTPControlFile != null) {
-                    // if control file supplied in User Preferences
-                    inputControlFile = new FileInputStream(pathToFTPControlFile);
-                } else {
-                    // configure job
-                    String skipValue = "0";
-                    String columnsValue = "null";
-
-                    if(!containsHeaderRow) {
-                        // if no header row get API field names for each column in dataset
-                        Dataset info = null;
-                        try {
-                            info = (Dataset) ddl.loadDatasetInfo(datasetId);
-                        } catch (SodaError sodaError) {
-                            closeFTPConnection(ftp);
-                            status.setMessage("Error retrieving column names from dataset" +
-                                    " with uid '" + datasetId + "': " + sodaError.getMessage());
-                            return status;
-                        } catch (InterruptedException e) {
-                            closeFTPConnection(ftp);
-                            status.setMessage("Error retrieving column names from dataset" +
-                                    " with uid '" + datasetId + "': " + e.getMessage());
-                            return status;
-                        }
-                        columnsValue = "[";
-                        List<Column> columns = info.getColumns();
-                        for(int i = 0; i < columns.size(); i++) {
-                            if(i > 0)
-                                columnsValue += ",";
-                            columnsValue += "\"" + columns.get(i).getFieldName() + "\"";
-                        }
-                        columnsValue += "]";
-                    }
-
-                    if(publishMethod.equals(PublishMethod.upsert)) {
-                        publishMethod = PublishMethod.append;
-                    }
-                    String publishMethodCapitalized = publishMethod.name().substring(0, 1).toUpperCase()
-                            + publishMethod.name().substring(1);
-                    String controlFileContent = "{\n" +
-                            "  \"action\" : \"" + publishMethodCapitalized + "\", \n" +
-                            "  \"csv\" :\n" +
-                            "    {\n" +
-                            "      \"fixedTimestampFormat\" : \"ISO8601\",\n" +
-                            "      \"separator\" : \",\",\n" +
-                            "      \"timezone\" : \"UTC\",\n" +
-                            "      \"encoding\" : \"utf-8\",\n" +
-                            "      \"overrides\" : {},\n" +
-                            "      \"quote\" : \"\\\"\",\n" +
-                            "      \"emptyTextIsNull\" : true,\n" +
-                            "      \"columns\" : " + columnsValue + ",\n" +
-                            "      \"skip\" : " + skipValue + ",\n" +
-                            "      \"floatingTimestampFormat\" : \"ISO8601\"\n" +
-                            "    },\n" +
-                            "  \"tsv\" :\n" +
-                            "    {\n" +
-                            "      \"fixedTimestampFormat\" : \"ISO8601\",\n" +
-                            "      \"separator\" : \"\\t\",\n" +
-                            "      \"timezone\" : \"UTC\",\n" +
-                            "      \"encoding\" : \"utf-8\",\n" +
-                            "      \"overrides\" : {},\n" +
-                            "      \"quote\" : \"\\u0000\",\n" +
-                            "      \"emptyTextIsNull\" : true,\n" +
-                            "      \"columns\" : " + columnsValue + ",\n" +
-                            "      \"skip\" : " + skipValue + ",\n" +
-                            "      \"floatingTimestampFormat\" : \"ISO8601\"\n" +
-                            "    }\n" +
-                            "}";
-                    inputControlFile = new ByteArrayInputStream(controlFileContent.getBytes("UTF-8"));
+                InputStream inputControlFile = null;
+                try {
+                    inputControlFile = getControlFileInputStream(
+                            ddl, publishMethod, datasetId, containsHeaderRow, pathToFTPControlFile);
+                } catch (Exception e) {
+                    closeFTPConnection(ftp);
+                    e.printStackTrace();
+                    setStatusMessage(datasetId, status, e.getMessage());
+                    return status;
                 }
-                // upload control.json file
+                // upload control.json file content
+                String controlFilePathFTP = pathToDatasetDir + "/" + FTP_CONTROL_FILENAME;
                 String controlResponse = uploadAndEnqueue(ftp, inputControlFile, controlFilePathFTP, 0);
                 inputControlFile.close();
                 if(!controlResponse.equals(SUCCESS_PREFIX)) {
@@ -472,11 +414,133 @@ public class IntegrationUtility {
             e.printStackTrace();
             status.setMessage("FTP error: " + e.getMessage());
             return status;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            status.setMessage("Java error: " + e.getMessage());
+            return status;
         } finally {
-            closeFTPConnection(ftp);
+            if(ftp != null)
+                closeFTPConnection(ftp);
         }
-
         return JobStatus.SUCCESS;
+    }
+
+    /**
+     * Generates content of control.json file, either from existing file or generates
+     * content based on job parameters
+     *
+     * @param ddl
+     * @param publishMethod
+     * @param datasetId
+     * @param containsHeaderRow
+     * @param pathToFTPControlFile
+     * @return
+     * @throws FileNotFoundException
+     * @throws UnsupportedEncodingException
+     * @throws SodaError
+     * @throws InterruptedException
+     */
+    private static InputStream getControlFileInputStream(
+            SodaDdl ddl, PublishMethod publishMethod, String datasetId, boolean containsHeaderRow, String pathToFTPControlFile) throws FileNotFoundException, UnsupportedEncodingException, SodaError, InterruptedException {
+        InputStream inputControlFile;
+        if(pathToFTPControlFile != null) {
+            // if control file supplied in User Preferences
+            inputControlFile = new FileInputStream(pathToFTPControlFile);
+        } else {
+            // configure SmartUpdate job based on UI input (rather than control.json)
+            String skipValue = "0";
+            String columnsValue = "null";
+
+            if(!containsHeaderRow) {
+                // if no header row get API field names for each column in dataset
+                columnsValue = getDatasetFieldNames(ddl, datasetId);
+            }
+
+            // In FTP Dropbox v2 there is only Append (append == upsert)
+            if(publishMethod.equals(PublishMethod.upsert)) {
+                publishMethod = PublishMethod.append;
+            }
+
+            String publishMethodCapitalized = publishMethod.name().substring(0, 1).toUpperCase()
+                    + publishMethod.name().substring(1);
+            String controlFileContent = "{\n" +
+                    "  \"action\" : \"" + publishMethodCapitalized + "\", \n" +
+                    "  \"csv\" :\n" +
+                    "    {\n" +
+                    "      \"fixedTimestampFormat\" : \"ISO8601\",\n" +
+                    "      \"separator\" : \",\",\n" +
+                    "      \"timezone\" : \"UTC\",\n" +
+                    "      \"encoding\" : \"utf-8\",\n" +
+                    "      \"overrides\" : {},\n" +
+                    "      \"quote\" : \"\\\"\",\n" +
+                    "      \"emptyTextIsNull\" : true,\n" +
+                    "      \"columns\" : " + columnsValue + ",\n" +
+                    "      \"skip\" : " + skipValue + ",\n" +
+                    "      \"floatingTimestampFormat\" : \"ISO8601\",\n" +
+                    "      \"trimWhitespace\" : true\n" +
+                    "    },\n" +
+                    "  \"tsv\" :\n" +
+                    "    {\n" +
+                    "      \"fixedTimestampFormat\" : \"ISO8601\",\n" +
+                    "      \"separator\" : \"\\t\",\n" +
+                    "      \"timezone\" : \"UTC\",\n" +
+                    "      \"encoding\" : \"utf-8\",\n" +
+                    "      \"overrides\" : {},\n" +
+                    "      \"quote\" : \"\\u0000\",\n" +
+                    "      \"emptyTextIsNull\" : true,\n" +
+                    "      \"columns\" : " + columnsValue + ",\n" +
+                    "      \"skip\" : " + skipValue + ",\n" +
+                    "      \"floatingTimestampFormat\" : \"ISO8601\",\n" +
+                    "      \"trimWhitespace\" : true\n" +
+                    "    }\n" +
+                    "}";
+            inputControlFile = new ByteArrayInputStream(controlFileContent.getBytes("UTF-8"));
+        }
+        return inputControlFile;
+    }
+
+    /**
+     * Gets list of dataset field names in the form [col1, col2,...]
+     *
+     * @param ddl
+     * @param datasetId
+     * @return list of field names or null if there
+     */
+    public static String getDatasetFieldNames(SodaDdl ddl, String datasetId) throws SodaError, InterruptedException {
+        Dataset info = (Dataset) ddl.loadDatasetInfo(datasetId);
+        String columnsValue = "[";
+        List<Column> columns = info.getColumns();
+        for(int i = 0; i < columns.size(); i++) {
+            if(i > 0)
+                columnsValue += ",";
+            columnsValue += "\"" + columns.get(i).getFieldName() + "\"";
+        }
+        columnsValue += "]";
+        return columnsValue;
+    }
+
+    /**
+     * Determines path on FTP server to domain root
+     *
+     * @param ftp
+     * @param connectionInfo
+     * @return "" if user user, or "/<DOMAIN>/" if user is SuperAdmin or has multi-domain access
+     * @throws IOException
+     */
+    private static String getPathToDomainRoot(FTPSClient ftp, SocrataConnectionInfo connectionInfo) throws IOException {
+        String pathToDomainRoot = "";
+        FTPFile[] checkRequestIdFile = ftp.listFiles(FTP_REQUEST_ID_FILENAME);
+        if(checkRequestIdFile.length == 0) { // user is a SuperAdmin or has multi-domain access
+            String domainWithoutHTTP = connectionInfo.getUrl().replaceAll("https://", "");
+            domainWithoutHTTP = domainWithoutHTTP.replaceAll("/", "");
+            pathToDomainRoot = "/" + domainWithoutHTTP;
+        }
+        return pathToDomainRoot;
+    }
+
+    private static void setStatusMessage(String datasetId, JobStatus status, String error) {
+        status.setMessage("Error retrieving column names from dataset" +
+                " with uid '" + datasetId + "': " + error);
     }
 
     /**
@@ -613,8 +677,8 @@ public class IntegrationUtility {
      * 
      * @return status for action to create row in log dataset
      */
-    public static JobStatus addLogEntry(String logDatasetID, SocrataConnectionInfo connectionInfo,
-                                        IntegrationJob job, JobStatus status, UpsertResult result) {
+    public static JobStatus addLogEntry(final String logDatasetID, final SocrataConnectionInfo connectionInfo,
+                                        final IntegrationJob job, final JobStatus status, final UpsertResult result) {
         final Soda2Producer producer = Soda2Producer.newProducer(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
 
         List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
@@ -719,5 +783,29 @@ public class IntegrationUtility {
     public static boolean uidIsValid(String uid) {
         Matcher uidMatcher = Pattern.compile("[a-z0-9]{4}-[a-z0-9]{4}").matcher(uid);
         return uidMatcher.matches();
+    }
+
+    public static String getValidPublishMethods() {
+        String validPublishMethods = "";
+        int i = 0;
+        for(PublishMethod method: PublishMethod.values()) {
+            if(i > 0)
+                validPublishMethods += ",";
+            validPublishMethods += method;
+            i++;
+        }
+        return validPublishMethods;
+    }
+
+    public static String getValidPortMethods() {
+        String validPortMethods = "";
+        int i = 0;
+        for(PortMethod method: PortMethod.values()) {
+            if(i > 0)
+                validPortMethods += ",";
+            validPortMethods += method;
+            i++;
+        }
+        return validPortMethods;
     }
 }
