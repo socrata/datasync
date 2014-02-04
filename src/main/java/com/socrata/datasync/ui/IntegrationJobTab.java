@@ -161,10 +161,6 @@ public class IntegrationJobTab implements JobTab {
         jobToRun.setPublishMethod(
                 (PublishMethod) publishMethodComboBox.getSelectedItem());
         jobToRun.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
-
-        // TODO include delete file
-        //jobToRun.setFileColsToDelete("/home/adrian/delete.csv");
-
         return jobToRun.run();
     }
 
