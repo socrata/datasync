@@ -7,5 +7,5 @@ package com.socrata.datasync;
  * publish data using the Socrata publisher API
  */
 public enum PublishMethod {
-	upsert, append, replace, delete
+    replace, upsert, append, delete
 }

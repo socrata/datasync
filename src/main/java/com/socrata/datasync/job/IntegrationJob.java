@@ -33,7 +33,7 @@ import com.socrata.model.importer.Dataset;
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 public class IntegrationJob implements Job {
-	/**
+    /**
 	 * @author Adrian Laurenzi
 	 *
 	 * Stores a single integration job that can be opened/run in the GUI
@@ -44,8 +44,12 @@ public class IntegrationJob implements Job {
     // to upload entire file as a single chunk (numRowsPerChunk == 0)
     private static final int UPLOAD_SINGLE_CHUNK = 0;
 
+    public static final int NUM_BYTES_PER_MB = 1048576;
+    private static final String DEFAULT_JOB_NAME = "Untitled Standard Job";
+    public static final List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
+
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
-    private static final long fileVersionUID = 1L;
+    private static final long fileVersionUID = 2L;
 
 	private String datasetID;
 	private String fileToPublish;
@@ -53,9 +57,7 @@ public class IntegrationJob implements Job {
     private boolean fileToPublishHasHeaderRow;
 	private String pathToSavedJobFile;
     private String pathToFTPControlFile;
-	
-	private static final String DEFAULT_JOB_NAME = "Untitled Standard Job";
-    public static final List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
+    private boolean publishViaFTP;
 	
 	public IntegrationJob() {
         userPrefs = new UserPreferencesJava();
@@ -79,6 +81,7 @@ public class IntegrationJob implements Job {
         publishMethod = PublishMethod.upsert;
         fileToPublishHasHeaderRow = true;
         pathToFTPControlFile = null;
+        publishViaFTP = false;
     }
 	
 	/**
@@ -87,6 +90,7 @@ public class IntegrationJob implements Job {
 	 * of this object
 	 */
 	public IntegrationJob(String pathToFile) throws IOException {
+        setDefaultParams();
         userPrefs = new UserPreferencesJava();
 
         // first try reading the 'current' format
@@ -168,7 +172,7 @@ public class IntegrationJob implements Job {
             }
 		}
 		
-		// TODO add more validation
+		// TODO add more validation?
 		
 		return JobStatus.VALID;
 	}
@@ -179,6 +183,7 @@ public class IntegrationJob implements Job {
 		UpsertResult result = null;
 		JobStatus runStatus = JobStatus.SUCCESS;
         String runErrorMessage = null;
+
 		JobStatus validationStatus = validate(connectionInfo);
 		if(validationStatus.isError()) {
 			runStatus = validationStatus;
@@ -195,63 +200,75 @@ public class IntegrationJob implements Job {
 			File fileToPublishFile = new File(fileToPublish);
 			boolean noPublishExceptions = false;
 			try {
-                int filesizeChunkingCutoffMB =
-                        Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * 1048576;
+                int filesizeChunkingCutoffBytes =
+                        Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * NUM_BYTES_PER_MB;
                 int numRowsPerChunk = Integer.parseInt(userPrefs.getNumRowsPerChunk());
 
-				if(publishMethod.equals(PublishMethod.upsert) || publishMethod.equals(PublishMethod.append)) {
-                    if(fileToPublishFile.length() > filesizeChunkingCutoffMB) {
-                        result = IntegrationUtility.appendUpsert(
-                                producer, importer, datasetID, fileToPublishFile, numRowsPerChunk, fileToPublishHasHeaderRow);
+                if(publishMethod.equals(PublishMethod.upsert) || publishMethod.equals(PublishMethod.append)) {
+                    if(publishViaFTP) {
+                        runErrorMessage = "FTP does not currently support upsert or append";
                     } else {
-					    result = IntegrationUtility.appendUpsert(
-                                producer, importer, datasetID, fileToPublishFile, UPLOAD_SINGLE_CHUNK, fileToPublishHasHeaderRow);
+                        result = doAppendOrUpsertViaHTTP(
+                                producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+                        noPublishExceptions = true;
                     }
-                    noPublishExceptions = true;
 				}
 				else if(publishMethod.equals(PublishMethod.replace)) {
-					JobStatus ftpSmartUpdateStatus = IntegrationUtility.publishViaFTPDropboxV2(
-                            userPrefs, importer, publishMethod, datasetID, fileToPublishFile, fileToPublishHasHeaderRow, pathToFTPControlFile);
-					if(ftpSmartUpdateStatus.isError()) {
-                        runErrorMessage = ftpSmartUpdateStatus.getMessage();
+                    // TODO clean all of this up (once I refactor JobStatus class)
+                    if(publishViaFTP) {
+                        // Publish via FTP
+                        JobStatus ftpSmartUpdateStatus = IntegrationUtility.publishViaFTPDropboxV2(
+                                userPrefs, importer, publishMethod, datasetID, fileToPublishFile, fileToPublishHasHeaderRow, pathToFTPControlFile);
+                        if(ftpSmartUpdateStatus.isError()) {
+                            runErrorMessage = ftpSmartUpdateStatus.getMessage();
+                        } else {
+                            noPublishExceptions = true;
+                        }
                     } else {
+                        // Publish via HTTP
+                        result = IntegrationUtility.replaceNew(
+                                producer, importer, datasetID, fileToPublishFile, fileToPublishHasHeaderRow);
                         noPublishExceptions = true;
                     }
                 }
                 else if(publishMethod.equals(PublishMethod.delete)) {
-                    // TODO might be a good idea to do deleted in chunks by default
-                    if(fileToPublishFile.length() > filesizeChunkingCutoffMB) {
-                        result = IntegrationUtility.deleteRows(
-                                producer, importer, datasetID, fileToPublishFile, numRowsPerChunk, fileToPublishHasHeaderRow);
+                    if(publishViaFTP) {
+                        runErrorMessage = "FTP does not currently support delete";
                     } else {
-                        result = IntegrationUtility.deleteRows(
-                                producer, importer, datasetID, fileToPublishFile, UPLOAD_SINGLE_CHUNK, fileToPublishHasHeaderRow);
+                        result = doDeleteViaHTTP(
+                            producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+                        noPublishExceptions = true;
                     }
-                    noPublishExceptions = true;
                 } else {
-					runErrorMessage = JobStatus.INVALID_PUBLISH_METHOD.toString();
+					runErrorMessage = JobStatus.INVALID_PUBLISH_METHOD.getMessage();
 				}
 			}
 			catch (IOException ioException) {
-				runErrorMessage = ioException.getMessage();
+                ioException.printStackTrace();
+				runErrorMessage = "IO exception: " + ioException.getMessage();
 			} 
 			catch (SodaError sodaError) {
-                runErrorMessage = sodaError.getMessage();
+                sodaError.printStackTrace();
+                runErrorMessage = "SODA error: " + sodaError.getMessage();
 			} 
 			catch (InterruptedException intrruptException) {
-				runErrorMessage = intrruptException.getMessage();
+                intrruptException.printStackTrace();
+				runErrorMessage = "Interrupted exception: " + intrruptException.getMessage();
 			}
 			catch (Exception other) {
-				runErrorMessage = other.toString() + ": " + other.getMessage();
+                other.printStackTrace();
+				runErrorMessage = "Unexpected exception: " + other.getMessage();
 			}
 			finally {
 				if(noPublishExceptions) {
                     // Check for [row-level] SODA 2 errors
 					if(result != null) {
                         if(result.errorCount() > 0) {
+                            int lineIndexOffset = (fileToPublishHasHeaderRow) ? 2 : 1;
+                            runErrorMessage = "";
 							for (UpsertError upsertErr : result.getErrors()) {
 								runErrorMessage += upsertErr.getError() + " (line "
-										+ (upsertErr.getIndex() + 1) + " of file) \n";
+										+ (upsertErr.getIndex() + lineIndexOffset) + " of file) \n";
 							}
 							runStatus = JobStatus.PUBLISH_ERROR;
 						}
@@ -264,52 +281,84 @@ public class IntegrationJob implements Job {
 				}
 			}
 		}
-		
+
 		String adminEmail = userPrefs.getAdminEmail();
 		String logDatasetID = userPrefs.getLogDatasetID();
 		JobStatus logStatus = JobStatus.SUCCESS;
 		if(!logDatasetID.equals("")) {
+            // TODO refactor this once JobStatus is a normal class
             if(runErrorMessage != null)
                 runStatus.setMessage(runErrorMessage);
 			logStatus = IntegrationUtility.addLogEntry(logDatasetID, connectionInfo, this, runStatus, result);
 		}
-		// Send email if there was an error updating log or target dataset
+
 		if(userPrefs.emailUponError() && !adminEmail.equals("")) {
-			String errorEmailMessage = "";
-			String urlToLogDataset = connectionInfo.getUrl() + "/d/" + logDatasetID;
-			if(runStatus.isError()) {
-				errorEmailMessage += "There was an error updating a dataset.\n"
-						+ "\nDataset: " + connectionInfo.getUrl() + "/d/" + getDatasetID()
-						+ "\nFile to publish: " + fileToPublish
-                        + "\nFile to publish has header row: " + fileToPublishHasHeaderRow
-						+ "\nPublish method: " + publishMethod
-						+ "\nJob File: " + pathToSavedJobFile
-						+ "\nError message: " + runErrorMessage
-						+ "\nLog dataset: " + urlToLogDataset + "\n\n";
-			}
-			if(logStatus.isError()) {
-				errorEmailMessage += "There was an error updating the log dataset: "
-						+ urlToLogDataset + "\n"
-						+ "Error message: " + logStatus.getMessage() + "\n\n";
-			}
-			if(runStatus.isError() || logStatus.isError()) {
-				try {
-					SMTPMailer.send(adminEmail, "Socrata DataSync Error", errorEmailMessage);
-				} catch (Exception e) {
-					System.out.println("Error sending email to: " + adminEmail + "\n" + e.getMessage());
-				}
-			}
+            sendErrorNotificationEmail(
+                    adminEmail, connectionInfo, runStatus, runErrorMessage, logDatasetID, logStatus);
 		}
 
-        // IMPORTANT because setMessage from Logging dataset interferes with enum
         // TODO NEED to make this cleaner by turning JobStatus into regular class (rather than enum)
+        // IMPORTANT because setMessage from Logging dataset interferes with enum
         if(runErrorMessage != null)
             runStatus.setMessage(runErrorMessage);
 
-		return runStatus;
+        return runStatus;
 	}
-	
-	/**
+
+    private void sendErrorNotificationEmail(final String adminEmail, final SocrataConnectionInfo connectionInfo, final JobStatus runStatus, final String runErrorMessage, final String logDatasetID, final JobStatus logStatus) {
+        String errorEmailMessage = "";
+        String urlToLogDataset = connectionInfo.getUrl() + "/d/" + logDatasetID;
+        if(runStatus.isError()) {
+            errorEmailMessage += "There was an error updating a dataset.\n"
+                    + "\nDataset: " + connectionInfo.getUrl() + "/d/" + getDatasetID()
+                    + "\nFile to publish: " + fileToPublish
++ "\nFile to publish has header row: " + fileToPublishHasHeaderRow
+                    + "\nPublish method: " + publishMethod
+                    + "\nJob File: " + pathToSavedJobFile
+                    + "\nError message: " + runErrorMessage
+                    + "\nLog dataset: " + urlToLogDataset + "\n\n";
+        }
+        if(logStatus.isError()) {
+            errorEmailMessage += "There was an error updating the log dataset: "
+                    + urlToLogDataset + "\n"
+                    + "Error message: " + logStatus.getMessage() + "\n\n";
+        }
+        if(runStatus.isError() || logStatus.isError()) {
+            try {
+                SMTPMailer.send(adminEmail, "Socrata DataSync Error", errorEmailMessage);
+            } catch (Exception e) {
+                System.out.println("Error sending email to: " + adminEmail + "\n" + e.getMessage());
+            }
+        }
+    }
+
+    private UpsertResult doAppendOrUpsertViaHTTP(Soda2Producer producer, SodaImporter importer, File fileToPublishFile, int filesizeChunkingCutoffBytes, int numRowsPerChunk) throws SodaError, InterruptedException, IOException {
+        int numberOfRows = numRowsPerChunk(fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+        UpsertResult result = IntegrationUtility.appendUpsert(
+                producer, importer, datasetID, fileToPublishFile, numberOfRows, fileToPublishHasHeaderRow);
+        return result;
+    }
+
+    private UpsertResult doDeleteViaHTTP(
+            Soda2Producer producer, SodaImporter importer, File fileToPublishFile, int filesizeChunkingCutoffBytes, int numRowsPerChunk)
+            throws SodaError, InterruptedException, IOException {
+        int numberOfRows = numRowsPerChunk(fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+        UpsertResult result = IntegrationUtility.deleteRows(
+                producer, importer, datasetID, fileToPublishFile, numberOfRows, fileToPublishHasHeaderRow);
+        return result;
+    }
+
+    private int numRowsPerChunk(File fileToPublishFile, int filesizeChunkingCutoffBytes, int numRowsPerChunk) {
+        int numberOfRows;
+        if(fileToPublishFile.length() > filesizeChunkingCutoffBytes) {
+            numberOfRows = numRowsPerChunk;
+        } else {
+            numberOfRows = UPLOAD_SINGLE_CHUNK;
+        }
+        return numberOfRows;
+    }
+
+    /**
 	 * Saves this object as a file at given filepath
 	 */
 	public void writeToFile(String filepath) throws IOException {
@@ -367,7 +416,16 @@ public class IntegrationJob implements Job {
     public String getPathToFTPControlFile() { return pathToFTPControlFile; }
 
     @JsonProperty("pathToFTPControlFile")
-    public void setPathToFTPControlFile(String newPathToFTPControlFile) { pathToFTPControlFile = newPathToFTPControlFile; }
+    public void setPathToFTPControlFile(String newPathToFTPControlFile) {
+        pathToFTPControlFile = newPathToFTPControlFile; }
+
+    @JsonProperty("publishViaFTP")
+    public boolean getPublishViaFTP() { return publishViaFTP; }
+
+    @JsonProperty("publishViaFTP")
+    public void setPublishViaFTP(boolean newPublishViaFTP) {
+        publishViaFTP = newPublishViaFTP;
+    }
 
     public void setPathToSavedFile(String newPath) {
         pathToSavedJobFile = newPath;
