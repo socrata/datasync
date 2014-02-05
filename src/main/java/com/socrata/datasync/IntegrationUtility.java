@@ -1,11 +1,13 @@
 package com.socrata.datasync;
 
-import java.awt.Desktop;
+import java.awt.*;
 import java.io.*;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
@@ -13,15 +15,18 @@ import java.util.zip.GZIPOutputStream;
 import au.com.bytecode.opencsv.CSVReader;
 
 import com.google.common.collect.ImmutableMap;
+import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
 import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.ftp.*;
 
@@ -33,8 +38,10 @@ public class IntegrationUtility {
      *
      * A utility class for the Integration Job Type
      */
-    private static final String FTP_HOST = "168.62.210.201"; //"10.98.0.8";  //"ftp.socrata.com";
-    private static final int FTP_HOST_PORT = 2222;
+    private static final String VERSION_API_ENDPOINT = "/api/version.json";
+    private static final String FTP_HOST_SUFFIX = ".ftp.socrata.net";
+    private static final String X_SOCRATA_REGION = "X-Socrata-Region";
+    private static final int FTP_HOST_PORT = 22222;
     private static final String FTP_CONTROL_FILENAME = "control.json";
     private static final String FTP_ENQUEUE_JOB_DIRNAME = "move-files-here-to-enqueue-job";
     private static final String SUCCESS_PREFIX = "SUCCESS";
@@ -285,11 +292,20 @@ public class IntegrationUtility {
                                                    final File csvOrTsvFile, boolean containsHeaderRow,
                                                    final String pathToFTPControlFile) {
         JobStatus status = JobStatus.PUBLISH_ERROR;
+
+        String ftpHost = null;
+        try {
+            ftpHost = getFTPHost(userPrefs.getDomain(), ddl);
+        } catch (Exception e) {
+            e.printStackTrace();
+            status.setMessage("Error obtaining FTP host: " + e.getMessage());
+            return status;
+        }
+
         FTPSClient ftp = null;
         try {
-            //ftp = new FTPSClient("SSL", false); (w/o validation)
             ftp = new FTPSClient(false, SSLContext.getDefault());
-            ftp.connect(FTP_HOST, FTP_HOST_PORT);
+            ftp.connect(ftpHost, FTP_HOST_PORT);
             SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
             ftp.login(connectionInfo.getUser(), connectionInfo.getPassword());
 
@@ -423,6 +439,14 @@ public class IntegrationUtility {
                 closeFTPConnection(ftp);
         }
         return JobStatus.SUCCESS;
+    }
+
+    public static String getFTPHost(String domain, SodaDdl ddl) throws URISyntaxException, LongRunningQueryException, SodaError {
+        HttpLowLevel httpClient = ddl.getHttpLowLevel();
+        URI versionApiUri = new URI(domain + VERSION_API_ENDPOINT);
+        ClientResponse response = httpClient.queryRaw(versionApiUri, HttpLowLevel.JSON_TYPE);
+        String regionName = response.getHeaders().get(X_SOCRATA_REGION).get(0);
+        return regionName + FTP_HOST_SUFFIX;
     }
 
     /**
