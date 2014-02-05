@@ -467,9 +467,7 @@ public class SimpleIntegrationWizard {
 		}
 
         // TODO populate job tabs w/ previously opened tabs or [if none] a new job tab
-        //addJobTab(new IntegrationJob());
-		addJobTab(new MetadataJob()); //TODO: BW - Switch back to integration job by default
-
+        addJobTab(new IntegrationJob());
 		return mainContainer;
 	}
 	
