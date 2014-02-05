@@ -158,6 +158,7 @@ public class MetadataJob implements Job {
 		JobStatus runStatus = JobStatus.SUCCESS;
         String runErrorMessage = null;
 		JobStatus validationStatus = validate(connectionInfo);
+		boolean workingCopyCreated = false;
 		
 		if(validationStatus.isError()) {
 			runStatus = validationStatus;
@@ -177,7 +178,6 @@ public class MetadataJob implements Job {
 					runStatus = JobStatus.PUBLISH_ERROR;
 				}
 				else {
-					boolean workingCopyCreated = false;
 					if (datasetInfo.PUBLISHED.equals(datasetInfo.getPublicationStage())) {
 						DatasetInfo workingCopyDatasetInfo = workflower.createWorkingCopy(datasetInfo.getId());
 						datasetInfo = updater.loadDatasetInfo(workingCopyDatasetInfo.getId());
@@ -201,6 +201,7 @@ public class MetadataJob implements Job {
 						//TODO: Once issue with setting no license via api is resolved, update below to handle
 						if (licenseType == LicenseType.no_license) {
 							//datasetInfo.setLicenseId(""); //null, "", "''", "\"\"", Tried all of these, no luck, validation errors on all, so 
+							datasetInfo.setLicenseId(licenseType.getValue()); //TODO: Remove after testing error msgs
 						}
 						else {
 							datasetInfo.setLicenseId(licenseType.getValue());
@@ -224,6 +225,7 @@ public class MetadataJob implements Job {
 					
 					if (workingCopyCreated) {
 						workflower.publish(datasetInfo.getId());
+						workingCopyCreated = false;
 					}
 					noExceptions = true;
 				}
@@ -239,6 +241,17 @@ public class MetadataJob implements Job {
 			catch (Exception other) {
 				runErrorMessage = other.toString() + ": " + other.getMessage() + " \r\n " + ExceptionUtils.getStackTrace(other);
 				runStatus = JobStatus.PUBLISH_ERROR;
+			}
+			finally {
+				try {
+					if (workingCopyCreated)	{
+						workflower.publish(datasetID);
+					}
+				}
+				catch(Exception e) {
+					runErrorMessage += " | Unable to publish dataset after updates";
+					runStatus = JobStatus.PUBLISH_ERROR;
+				}
 			}
 		}
 		
