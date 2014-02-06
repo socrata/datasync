@@ -158,7 +158,8 @@ public class MetadataJob implements Job {
 		JobStatus runStatus = JobStatus.SUCCESS;
         String runErrorMessage = null;
 		JobStatus validationStatus = validate(connectionInfo);
-		boolean workingCopyCreated = false;
+		//boolean workingCopyCreated = false;
+		String workingCopyDatasetId = null;
 		
 		if(validationStatus.isError()) {
 			runStatus = validationStatus;
@@ -181,7 +182,7 @@ public class MetadataJob implements Job {
 					if (datasetInfo.PUBLISHED.equals(datasetInfo.getPublicationStage())) {
 						DatasetInfo workingCopyDatasetInfo = workflower.createWorkingCopy(datasetInfo.getId());
 						datasetInfo = updater.loadDatasetInfo(workingCopyDatasetInfo.getId());
-						workingCopyCreated = true;
+						workingCopyDatasetId = datasetInfo.getId();
 					}				
 					//runErrorMessage = debugMetadata(datasetInfo);				
 					
@@ -200,8 +201,7 @@ public class MetadataJob implements Job {
 					if (licenseType != null) {
 						//TODO: Once issue with setting no license via api is resolved, update below to handle
 						if (licenseType == LicenseType.no_license) {
-							//datasetInfo.setLicenseId(""); //null, "", "''", "\"\"", Tried all of these, no luck, validation errors on all, so 
-							datasetInfo.setLicenseId(licenseType.getValue()); //TODO: Remove after testing error msgs
+							datasetInfo.setLicenseId(""); //null, "", "''", "\"\"", Tried all of these, no luck, validation errors on all, so 
 						}
 						else {
 							datasetInfo.setLicenseId(licenseType.getValue());
@@ -223,9 +223,9 @@ public class MetadataJob implements Job {
 					
 					updater.updateDatasetInfo(datasetInfo);
 					
-					if (workingCopyCreated) {
+					if (!StringUtils.isBlank(workingCopyDatasetId)) {
 						workflower.publish(datasetInfo.getId());
-						workingCopyCreated = false;
+						workingCopyDatasetId = null;
 					}
 					noExceptions = true;
 				}
@@ -244,8 +244,8 @@ public class MetadataJob implements Job {
 			}
 			finally {
 				try {
-					if (workingCopyCreated)	{
-						workflower.publish(datasetID);
+					if (!StringUtils.isBlank(workingCopyDatasetId))	{
+						workflower.publish(workingCopyDatasetId);
 					}
 				}
 				catch(Exception e) {
@@ -261,7 +261,7 @@ public class MetadataJob implements Job {
 		if(!logDatasetID.equals("")) {
             if(runErrorMessage != null)
                 runStatus.setMessage(runErrorMessage);
-			logStatus = addLogEntry(logDatasetID, connectionInfo, this, runStatus);
+			logStatus = MetadataUtility.addLogEntry(logDatasetID, connectionInfo, this, runStatus);
 		}
 		//Send email if there was an error updating log or target dataset
 		if(userPrefs.emailUponError() && !adminEmail.equals("")) {
@@ -532,49 +532,5 @@ public class MetadataJob implements Job {
 			}
 		}
 		return retVal;
-	}
-	
-	//Probably makes sense to make one generic addLogEntry() for all job types
-    private static JobStatus addLogEntry(String logDatasetID, SocrataConnectionInfo connectionInfo,
-            MetadataJob job, JobStatus status) {
-	    final Soda2Producer producer = Soda2Producer.newProducer(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
-	
-	    List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
-	    Map<String, Object> newCols = new HashMap<String,Object>();
-	
-	    // add standard log data
-	    Date currentDateTime = new Date();
-	    newCols.put("Date", (Object) currentDateTime);
-	    newCols.put("DatasetID", (Object) job.getDatasetID());
-	    newCols.put("JobFile", (Object) job.getPathToSavedFile());
-	    if(status.isError()) {
-	        newCols.put("Errors", (Object) status.getMessage());
-	    } else {
-	        newCols.put("Success", (Object) true);
-	    }
-	    upsertObjects.add(ImmutableMap.copyOf(newCols));
-	
-	    JobStatus logStatus = JobStatus.SUCCESS;
-	    String errorMessage = "";
-	    boolean noPublishExceptions = false;
-	    try {
-	        producer.upsert(logDatasetID, upsertObjects);
-	        noPublishExceptions = true;
-	    }
-	    catch (SodaError sodaError) {
-	        errorMessage = sodaError.getMessage();
-	    }
-	    catch (InterruptedException intrruptException) {
-	        errorMessage = intrruptException.getMessage();
-	    }
-	    catch (Exception other) {
-	        errorMessage = other.toString() + ": " + other.getMessage();
-	    } finally {
-	        if(!noPublishExceptions) {
-	            logStatus = JobStatus.PUBLISH_ERROR;
-	            logStatus.setMessage(errorMessage);
-	        }
-	    }
-    return logStatus;
-}	
+	}	
 }
