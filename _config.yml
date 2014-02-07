@@ -1,0 +1,11 @@
+destination: "public/datasync"
+exclude: [Gemfile, Gemfile.lock, .rvmrc, public]
+
+# TODO: Get a unique tracking code for datasync
+ga_tracking_code: "UA-9046230-3"
+
+subsite: dev
+title: Socrata DataSync
+root: "/datasync"
+icon: fa fa-refresh
+github_repo: https://github.com/socrata/datasync

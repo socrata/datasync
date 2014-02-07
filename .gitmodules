@@ -1,0 +1,6 @@
+[submodule "_layouts"]
+	path = _layouts
+	url = git://github.com/socrata/labs-common-jekyll.git
+[submodule "common"]
+	path = common
+	url = git://github.com/socrata/labs-common.git
