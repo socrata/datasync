@@ -50,7 +50,6 @@ public class MetadataJob implements Job {
 	 */
     private UserPreferences userPrefs;
 
-    // TODO move this somewhere else (or remove it)
     private static final int DATASET_ID_LENGTH = 9;
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
@@ -61,7 +60,6 @@ public class MetadataJob implements Job {
 	private String description;
 	private String category;
 	private List<String> keywords;
-	//private String licenseType;
 	private LicenseType licenseType;
 	private String dataProvidedBy;
 	private String sourceLink;
@@ -90,8 +88,12 @@ public class MetadataJob implements Job {
         }
         setDefaultParams();
     }
+    
+    public MetadataJob(UserPreferences userPreferences) {
+    	userPrefs = userPreferences;
+    	setDefaultParams();
+    }
 
-    //TODO: Do these really need to be set?
     private void setDefaultParams() {
         pathToSavedJobFile = "";
         datasetID = "";
@@ -139,8 +141,8 @@ public class MetadataJob implements Job {
 	//TODO: Need to get info on max sizes on fields and validate here.
 	public JobStatus validate(SocrataConnectionInfo connectionInfo) {
 		
-		if(connectionInfo.getUrl().equals("")
-				|| connectionInfo.getUrl().equals("https://")) {
+		if(!(connectionInfo.getUrl().startsWith("http://")
+				|| connectionInfo.getUrl().startsWith("https://"))) {
 			return JobStatus.INVALID_DOMAIN;
 		}
 		if(datasetID.length() != DATASET_ID_LENGTH) {
@@ -193,7 +195,7 @@ public class MetadataJob implements Job {
 						datasetInfo.setDescription(description);
 					}
 					if (!StringUtils.isBlank(category)) {
-						datasetInfo.setCategory(category); //TODO: What if category entered doesn't match an available category?  Need to test
+						datasetInfo.setCategory(category); 
 					}
 					if (keywords != null && !keywords.isEmpty()) {
 						datasetInfo.setTags(keywords);
@@ -289,7 +291,6 @@ public class MetadataJob implements Job {
 		}
 
         // IMPORTANT because setMessage from Logging dataset interferes with enum
-        // TODO NEED to fix this..
         if(runErrorMessage != null)
             runStatus.setMessage(runErrorMessage);
 
@@ -317,10 +318,10 @@ public class MetadataJob implements Job {
         mapper.writeValue(new File(filepath), this);
 	}
 
-//    @JsonProperty("fileVersionUID")
-//    public long getFileVersionUID() {
-//        return fileVersionUID;
-//    }
+    @JsonProperty("fileVersionUID")
+    public long getFileVersionUID() {
+        return fileVersionUID;
+    }
 
     @JsonProperty("datasetID")
 	public void setDatasetID(String newDatasetID) {
@@ -380,18 +381,6 @@ public class MetadataJob implements Job {
     	return licenseType.no_license.getValue();
 	}
     
-//    public String getLicenseName() {
-//    	if (StringUtils.isBlank(licenseType)) {
-//    		return "";
-//    	}
-//    	for (LicenseType licenseType : LicenseType.values()) {
-//    		if (licenseType.getValue().equals(licenseType)) {
-//    			return licenseType.getValue();
-//    		}
-//    	}
-//    	return "";
-//    }
-
     @JsonProperty("license_type_id")
 	public void setLicenseTypeId(String licenseTypeId) {
 		this.licenseType = LicenseType.getLicenseTypeForValue(licenseTypeId); 
@@ -470,67 +459,4 @@ public class MetadataJob implements Job {
 			}
 		}
 	}
-	
-	//TODO: Delete me after done w/ development
-	private String debugMetadata(DatasetInfo datasetInfo) {
-		String retVal = "Found Dataset, Initial Metadata: \r\n";
-		retVal += " Title: " + datasetInfo.getName() + " \r\n";
-		retVal += " Description: " + datasetInfo.getDescription() + " \r\n";
-		retVal += " Category: " + datasetInfo.getCategory() + " \r\n";
-		List<String> keywords = datasetInfo.getTags();
-		if (keywords != null) {
-			for (String keyword : keywords) { 
-				retVal += " Tags/Keyword: " + keyword + " \r\n";
-			}
-		}
-		retVal += " License Type: " + datasetInfo.getLicenseId() + " \r\n";
-		if (datasetInfo.getLicense() != null) {
-			retVal += " License Name: " + datasetInfo.getLicense().getName() + " \r\n";
-			retVal += " License Link: " + datasetInfo.getLicense().getTermsLink() + " \r\n";
-		}
-		retVal += " Attribution: " + datasetInfo.getAttribution() + " \r\n";
-		retVal += " Attribution Link: " + datasetInfo.getAttributionLink() + " \r\n";
-		if (datasetInfo.getMetadata() != null) {
-			retVal += " Row Class: " + datasetInfo.getMetadata().getRdfClass() + " \r\n";
-			retVal += " Subject Column: " + datasetInfo.getMetadata().getRdfSubject() + " \r\n";
-			retVal += " Row Identifier: " + datasetInfo.getMetadata().getRowIdentifier() + " \r\n";
-		}
-		retVal += " Resource Name: " + datasetInfo.getResourceName() + " \r\n";
-		Map<String,Object> privateMetadata = datasetInfo.getPrivateMetadata();
-		if (privateMetadata != null) {
-			for (String key : privateMetadata.keySet()) {
-				retVal += " Private Metadata \r\n";
-				retVal += " \t key: " + key + " \r\n";
-				retVal += " \t value: " + privateMetadata.get(key) + " \r\n";
-			}
-		}
-		List<String> rights = datasetInfo.getRights();
-		if (rights != null) {
-			for (String right : rights) {
-				retVal += " Right: " + right + " \r\n";
-			}
-		}
-		if (datasetInfo instanceof Dataset) {
-			Dataset dataset = (Dataset) datasetInfo;
-			List<Column> columns = dataset.getColumns();
-			if (columns != null) {
-				for (Column column : columns) {
-					retVal += " Column \r\n";
-					retVal += " \t Name: " + column.getName() + " \r\n";
-					retVal += " \t Date Type Name: " + column.getDataTypeName() + " \r\n";
-					retVal += " \t Description: " + column.getDescription() + " \r\n";
-					retVal += " \t Field Name: " + column.getFieldName() + " \r\n";
-					retVal += " \t ID: " + column.getId() + " \r\n";
-					List<Object> flags = column.getFlags();
-					if (flags != null) {
-						for (Object flag : flags) {
-							retVal += " \t Flag Type: " + flag.getClass();	
-							retVal += " \t Flag Obj Tostring: " + flag.toString();
-						}
-					}
-				}
-			}
-		}
-		return retVal;
-	}	
 }
