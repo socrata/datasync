@@ -188,17 +188,14 @@ public class MetadataJob implements Job {
 					}				
 					//runErrorMessage = debugMetadata(datasetInfo);				
 					
-					if (!StringUtils.isBlank(title)) {
-						datasetInfo.setName(title);
-					}
-					if (!StringUtils.isBlank(description)) {
-						datasetInfo.setDescription(description);
-					}
-					if (!StringUtils.isBlank(category)) {
-						datasetInfo.setCategory(category); 
-					}
+					datasetInfo.setName(title);
+					datasetInfo.setDescription(description);
+					datasetInfo.setCategory(category); 
 					if (keywords != null && !keywords.isEmpty()) {
 						datasetInfo.setTags(keywords);
+					}
+					else {
+						datasetInfo.setTags(new ArrayList<String>());
 					}
 					if (licenseType != null) {
 						//TODO: Once issue with setting no license via api is resolved, update below to handle
@@ -209,19 +206,13 @@ public class MetadataJob implements Job {
 							datasetInfo.setLicenseId(licenseType.getValue());
 						}
 					}
-					if (!StringUtils.isBlank(dataProvidedBy)) {
-						datasetInfo.setAttribution(dataProvidedBy);
+					datasetInfo.setAttribution(dataProvidedBy);
+					datasetInfo.setAttributionLink(sourceLink);
+					Map<String, Object> privateMetadata = datasetInfo.getPrivateMetadata();
+					if (privateMetadata == null) {
+						privateMetadata = new HashMap<String, Object>();
 					}
-					if (!StringUtils.isBlank(sourceLink)) {
-						datasetInfo.setAttributionLink(sourceLink);
-					}
-					if (!StringUtils.isBlank(contactInfo)) {
-						Map<String, Object> privateMetadata = datasetInfo.getPrivateMetadata();
-						if (privateMetadata == null) {
-							privateMetadata = new HashMap<String, Object>();
-						}
-						privateMetadata.put("contactEmail", contactInfo);
-					}
+					privateMetadata.put("contactEmail", contactInfo);
 					
 					updater.updateDatasetInfo(datasetInfo);
 					
