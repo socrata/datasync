@@ -18,7 +18,7 @@ import org.junit.Test;
 
 public class MetadataJobTest extends TestBase {
 	
-	private static final String RESET_CATEGORY = null;
+	private static final String RESET_CATEGORY = "Business";
 	private static final List<String> RESET_KEYWORDS = new ArrayList<String>();
 	private static final LicenseType RESET_LICENSE_TYPE = LicenseType.cc0_10;
 	private static final String RESET_DATA_PROVIDED_BY = "test";
@@ -30,10 +30,10 @@ public class MetadataJobTest extends TestBase {
 	
 	private static final String CATEGORY = "Government";
 	private static final List<String> KEYWORDS = Collections.unmodifiableList(
-			Arrays.asList("Metadata", "Update", "Test"));
+			Arrays.asList("metadata", "update", "test"));
 	private static final LicenseType LICENSE_TYPE = LicenseType.cc_30_by_aus;
 	private static final String DATA_PROVIDED_BY = "test updated";
-	private static final String SOURCE_LINK = "Centers for Disease Control and Prevention";
+	private static final String SOURCE_LINK = "http://www.socrata.com";
 	private static final String CONTACT_INFO = "bwk8@cdc.gov";
 	//private static final String LICENSE_TYPE_ID = LicenseType.cc_30_by_aus.getValue();
 	private static final String TITLE = "DataSync Unit Test Dataset Updated";
@@ -45,6 +45,8 @@ public class MetadataJobTest extends TestBase {
 	
 	public static final String INVALID_DOMAIN = "htps://sandbox.demo.socrata.com";
 	public static final String INVALID_DATASET_ID = "8gex-q4dsx";
+	
+	//vwNvo07znDv3GMp2WOgS91lxi
 
 	private UserPreferencesJava setupUserPreferencesForTest() {
 		UserPreferencesJava userPrefs = new UserPreferencesJava();
@@ -64,15 +66,7 @@ public class MetadataJobTest extends TestBase {
 	@Test
 	public void testWritingJobFile() throws IOException {
 		MetadataJob metadataJob = new MetadataJob();
-		metadataJob.setCategory(CATEGORY);
-		metadataJob.setKeywords(KEYWORDS);
-		metadataJob.setLicenseType(LICENSE_TYPE);
-		metadataJob.setDataProvidedBy(DATA_PROVIDED_BY);
-		metadataJob.setSourceLink(SOURCE_LINK);
-		metadataJob.setContactInfo(CONTACT_INFO);
-		metadataJob.setTitle(TITLE);
-		metadataJob.setDescription(DESCRIPTION);
-		
+		setUpdatedMetadataJob(metadataJob);
 		metadataJob.writeToFile(TEMP_FILE_PATH);
 		
 		metadataJob = new MetadataJob(TEMP_FILE_PATH);
@@ -107,16 +101,26 @@ public class MetadataJobTest extends TestBase {
 	
 	@Test
 	public void testMetadataUpdate() {
-		
-		MetadataJob metadataJob = new MetadataJob(setupUserPreferencesForTest());
+		UserPreferencesJava prefs = setupUserPreferencesForTest();
+		MetadataJob metadataJob = new MetadataJob(prefs);
+		metadataJob.setDatasetID(UNITTEST_DATASET_ID);
+		setUpdatedMetadataJob(metadataJob);
 		
 		//Update metadata based on resource file
+		JobStatus runResults = metadataJob.run();
+		TestCase.assertEquals(JobStatus.SUCCESS, runResults);
 		
 		//Load current metadata
+		String result = metadataJob.loadCurrentMetadata();
+		TestCase.assertEquals("", result);
 		
 		//Assert all values have been updated as expected
+		testUpdate(metadataJob);
 		
 		//Reset metadata based on reset resource file
+		setResetMetadataJob(metadataJob);
+		JobStatus resetResults = metadataJob.run();
+		TestCase.assertEquals(JobStatus.SUCCESS, resetResults);
 	}
 	
 	@Test
@@ -157,5 +161,27 @@ public class MetadataJobTest extends TestBase {
 		TestCase.assertEquals(CONTACT_INFO, metadataJob.getContactInfo());
 		TestCase.assertEquals(TITLE, metadataJob.getTitle());
 		TestCase.assertEquals(DESCRIPTION, metadataJob.getDescription());		
+	}
+	
+	private void setUpdatedMetadataJob(MetadataJob metadataJob) {
+		metadataJob.setCategory(CATEGORY);
+		metadataJob.setKeywords(KEYWORDS);
+		metadataJob.setLicenseType(LICENSE_TYPE);
+		metadataJob.setDataProvidedBy(DATA_PROVIDED_BY);
+		metadataJob.setSourceLink(SOURCE_LINK);
+		metadataJob.setContactInfo(CONTACT_INFO);
+		metadataJob.setTitle(TITLE);
+		metadataJob.setDescription(DESCRIPTION);
+	}
+	
+	private void setResetMetadataJob(MetadataJob metadataJob) {
+		metadataJob.setCategory(RESET_CATEGORY);
+		metadataJob.setKeywords(RESET_KEYWORDS);
+		metadataJob.setLicenseType(RESET_LICENSE_TYPE);
+		metadataJob.setDataProvidedBy(RESET_DATA_PROVIDED_BY);
+		metadataJob.setSourceLink(RESET_SOURCE_LINK);
+		metadataJob.setContactInfo(RESET_CONTACT_INFO);
+		metadataJob.setTitle(RESET_TITLE);
+		metadataJob.setDescription(RESET_DESCRIPTION);
 	}
 }

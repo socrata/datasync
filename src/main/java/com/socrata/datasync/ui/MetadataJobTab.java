@@ -326,31 +326,22 @@ public class MetadataJobTab implements JobTab {
     		metadataJob = new MetadataJob();
     	}
     	metadataJob.setDatasetID(datasetIDTextField.getText());
-    	if (!StringUtils.isBlank(titleTextField.getText())) {
-    		metadataJob.setTitle(titleTextField.getText());
-    	}
-    	if (!StringUtils.isBlank(descriptionTextArea.getText())) {
-    		metadataJob.setDescription(descriptionTextArea.getText());
-    	}
-    	if (!StringUtils.isBlank(categoryTextField.getText())) {
-    		metadataJob.setCategory(categoryTextField.getText());
-    	}
+    	metadataJob.setTitle(titleTextField.getText());
+    	metadataJob.setDescription(descriptionTextArea.getText());
+    	metadataJob.setCategory(categoryTextField.getText());
     	if (!StringUtils.isBlank(keywordsTextField.getText())) {
     		metadataJob.setKeywords(Arrays.asList(keywordsTextField.getText().split("\\s*,\\s*")));
+    	}
+    	else {
+    		metadataJob.setKeywords(null);
     	}
     	LicenseType selectedLicenseType = (LicenseType) licenseTypeComboBox.getSelectedItem();
     	if (selectedLicenseType != null) {
     		metadataJob.setLicenseType(selectedLicenseType);
     	}
-    	if (!StringUtils.isBlank(dataProvidedByTextField.getText())) {
-    		metadataJob.setDataProvidedBy(dataProvidedByTextField.getText());
-    	}
-    	if (!StringUtils.isBlank(sourceLinkTextField.getText())) {
-    		metadataJob.setSourceLink(sourceLinkTextField.getText());
-    	}
-    	if (!StringUtils.isBlank(contactInfoTextField.getText())) {
-    		metadataJob.setContactInfo(contactInfoTextField.getText());
-    	}
+    	metadataJob.setDataProvidedBy(dataProvidedByTextField.getText());
+    	metadataJob.setSourceLink(sourceLinkTextField.getText());
+    	metadataJob.setContactInfo(contactInfoTextField.getText());
     }
 
 //    private class FileToPublishSelectorListener implements ActionListener {
