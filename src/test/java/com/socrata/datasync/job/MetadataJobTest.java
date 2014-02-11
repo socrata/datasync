@@ -14,19 +14,20 @@ import com.socrata.datasync.preferences.UserPreferencesJava;
 
 import junit.framework.TestCase;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class MetadataJobTest extends TestBase {
 	
-	private static final String RESET_CATEGORY = "Business";
+	private static final String RESET_CATEGORY = "";
 	private static final List<String> RESET_KEYWORDS = new ArrayList<String>();
 	private static final LicenseType RESET_LICENSE_TYPE = LicenseType.cc0_10;
 	private static final String RESET_DATA_PROVIDED_BY = "test";
-	private static final String RESET_SOURCE_LINK = null;
+	private static final String RESET_SOURCE_LINK = "";
 	private static final String RESET_CONTACT_INFO = "";
 	//private static final String RESET_LICENSE_TYPE_ID = LicenseType.cc0_10.getValue();
 	private static final String RESET_TITLE = "DataSync Unit Test Dataset";
-	private static final String RESET_DESCRIPTION = null;
+	private static final String RESET_DESCRIPTION = "";
 	
 	private static final String CATEGORY = "Government";
 	private static final List<String> KEYWORDS = Collections.unmodifiableList(
@@ -140,27 +141,27 @@ public class MetadataJobTest extends TestBase {
 	//TODO : Test edge cases?
 	
 	private void testReset(MetadataJob metadataJob) {
-		TestCase.assertEquals(RESET_CATEGORY, metadataJob.getCategory());
+		TestCase.assertEquals(RESET_CATEGORY, standardize(metadataJob.getCategory()));
 		//TODO: Probably need to check the types of the two lists here, equality needs same items in same order.
 		TestCase.assertEquals(RESET_KEYWORDS, metadataJob.getKeywords());
 		TestCase.assertEquals(RESET_LICENSE_TYPE, metadataJob.getLicenseType());
-		TestCase.assertEquals(RESET_DATA_PROVIDED_BY, metadataJob.getDataProvidedBy());
-		TestCase.assertEquals(RESET_SOURCE_LINK, metadataJob.getSourceLink());
-		TestCase.assertEquals(RESET_CONTACT_INFO, metadataJob.getContactInfo());
-		TestCase.assertEquals(RESET_TITLE, metadataJob.getTitle());
-		TestCase.assertEquals(RESET_DESCRIPTION, metadataJob.getDescription());		
+		TestCase.assertEquals(RESET_DATA_PROVIDED_BY, standardize(metadataJob.getDataProvidedBy()));
+		TestCase.assertEquals(RESET_SOURCE_LINK, standardize(metadataJob.getSourceLink()));
+		TestCase.assertEquals(RESET_CONTACT_INFO, standardize(metadataJob.getContactInfo()));
+		TestCase.assertEquals(RESET_TITLE, standardize(metadataJob.getTitle()));
+		TestCase.assertEquals(RESET_DESCRIPTION, standardize(metadataJob.getDescription()));		
 	}
 	
 	private void testUpdate(MetadataJob metadataJob) {
-		TestCase.assertEquals(CATEGORY, metadataJob.getCategory()); 
+		TestCase.assertEquals(CATEGORY, standardize(metadataJob.getCategory())); 
 		//TODO: Probably need to check the types of the two lists here, equality needs same items in same order.
 		TestCase.assertEquals(KEYWORDS, metadataJob.getKeywords());
 		TestCase.assertEquals(LICENSE_TYPE, metadataJob.getLicenseType());
-		TestCase.assertEquals(DATA_PROVIDED_BY, metadataJob.getDataProvidedBy());
-		TestCase.assertEquals(SOURCE_LINK, metadataJob.getSourceLink());
-		TestCase.assertEquals(CONTACT_INFO, metadataJob.getContactInfo());
-		TestCase.assertEquals(TITLE, metadataJob.getTitle());
-		TestCase.assertEquals(DESCRIPTION, metadataJob.getDescription());		
+		TestCase.assertEquals(DATA_PROVIDED_BY, standardize(metadataJob.getDataProvidedBy()));
+		TestCase.assertEquals(SOURCE_LINK, standardize(metadataJob.getSourceLink()));
+		TestCase.assertEquals(CONTACT_INFO, standardize(metadataJob.getContactInfo()));
+		TestCase.assertEquals(TITLE, standardize(metadataJob.getTitle()));
+		TestCase.assertEquals(DESCRIPTION, standardize(metadataJob.getDescription()));		
 	}
 	
 	private void setUpdatedMetadataJob(MetadataJob metadataJob) {
@@ -183,5 +184,16 @@ public class MetadataJobTest extends TestBase {
 		metadataJob.setContactInfo(RESET_CONTACT_INFO);
 		metadataJob.setTitle(RESET_TITLE);
 		metadataJob.setDescription(RESET_DESCRIPTION);
+	}
+	
+	//Setting empty values via web interface and API differ in empty strings or null values
+	//We will standardize to empty strings for comparisons
+	private String standardize(String input) {
+		if (input == null) {
+			return "";		
+		}
+		else {
+			return input;
+		}
 	}
 }

@@ -186,7 +186,6 @@ public class MetadataJob implements Job {
 						datasetInfo = updater.loadDatasetInfo(workingCopyDatasetInfo.getId());
 						workingCopyDatasetId = datasetInfo.getId();
 					}				
-					//runErrorMessage = debugMetadata(datasetInfo);				
 					
 					datasetInfo.setName(title);
 					datasetInfo.setDescription(description);
