@@ -136,13 +136,8 @@ public class MetadataJobTest extends TestBase {
 		testReset(metadataJob);
 	}
 	
-	//TODO : Test logging dataset is updated?
-	
-	//TODO : Test edge cases?
-	
 	private void testReset(MetadataJob metadataJob) {
 		TestCase.assertEquals(RESET_CATEGORY, standardize(metadataJob.getCategory()));
-		//TODO: Probably need to check the types of the two lists here, equality needs same items in same order.
 		TestCase.assertEquals(RESET_KEYWORDS, metadataJob.getKeywords());
 		TestCase.assertEquals(RESET_LICENSE_TYPE, metadataJob.getLicenseType());
 		TestCase.assertEquals(RESET_DATA_PROVIDED_BY, standardize(metadataJob.getDataProvidedBy()));
@@ -154,7 +149,6 @@ public class MetadataJobTest extends TestBase {
 	
 	private void testUpdate(MetadataJob metadataJob) {
 		TestCase.assertEquals(CATEGORY, standardize(metadataJob.getCategory())); 
-		//TODO: Probably need to check the types of the two lists here, equality needs same items in same order.
 		TestCase.assertEquals(KEYWORDS, metadataJob.getKeywords());
 		TestCase.assertEquals(LICENSE_TYPE, metadataJob.getLicenseType());
 		TestCase.assertEquals(DATA_PROVIDED_BY, standardize(metadataJob.getDataProvidedBy()));
