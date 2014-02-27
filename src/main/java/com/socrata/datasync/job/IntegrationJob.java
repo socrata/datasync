@@ -92,7 +92,6 @@ public class IntegrationJob implements Job {
 	public IntegrationJob(String pathToFile) throws IOException {
         setDefaultParams();
         userPrefs = new UserPreferencesJava();
-
         // first try reading the 'current' format
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -100,8 +99,10 @@ public class IntegrationJob implements Job {
             setDatasetID(loadedJob.getDatasetID());
             setFileToPublish(loadedJob.getFileToPublish());
             setPublishMethod(loadedJob.getPublishMethod());
-            setPathToSavedFile(pathToFile);
             setFileToPublishHasHeaderRow(loadedJob.getFileToPublishHasHeaderRow());
+            setPathToSavedFile(pathToFile);
+            setPathToFTPControlFile(loadedJob.getPathToFTPControlFile());
+            setPublishViaFTP(loadedJob.getPublishViaFTP());
         } catch (IOException e) {
             // if reading new format fails...try reading old format into this object
             try {
@@ -142,7 +143,7 @@ public class IntegrationJob implements Job {
 			return JobStatus.MISSING_FILE_TO_PUBLISH;
 		} else {
 			File checkFileToPublish = new File(fileToPublish);
-			if(!checkFileToPublish.exists()) {
+			if(!checkFileToPublish.exists() || checkFileToPublish.isDirectory()) {
 				JobStatus errorStatus = JobStatus.FILE_TO_PUBLISH_DOESNT_EXIST;
 				errorStatus.setMessage(fileToPublish + ": File to publish does not exist");
 				return errorStatus;
@@ -171,6 +172,14 @@ public class IntegrationJob implements Job {
                 // certainly propagate later where the error message will be more appropriate
             }
 		}
+        if(pathToFTPControlFile != null) {
+            File controlFile = new File(pathToFTPControlFile);
+            if(!controlFile.exists() || controlFile.isDirectory()) {
+                JobStatus errorStatus = JobStatus.PUBLISH_ERROR;
+                errorStatus.setMessage(pathToFTPControlFile + ": FTP control file does not exist");
+                return errorStatus;
+            }
+        }
 		
 		// TODO add more validation?
 		
