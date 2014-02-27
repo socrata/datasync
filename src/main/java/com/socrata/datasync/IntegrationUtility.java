@@ -305,26 +305,33 @@ public class IntegrationUtility {
         FTPSClient ftp = null;
         try {
             ftp = new FTPSClient(false, SSLContext.getDefault());
+
+            System.out.println("Connecting to " + ftpHost + ":" + FTP_HOST_PORT); // TODO remove
             ftp.connect(ftpHost, FTP_HOST_PORT);
             SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
             ftp.login(connectionInfo.getUser(), connectionInfo.getPassword());
 
             // verify connection was successful
             if(FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
+                System.out.println("ftp.setFileType(FTP.BINARY_FILE_TYPE);"); // TODO remove
                 ftp.setFileType(FTP.BINARY_FILE_TYPE);
+                System.out.println("ftp.enterLocalPassiveMode();"); // TODO remove
                 ftp.enterLocalPassiveMode();
 
                 // Set protection buffer size (what does this do??)
                 //ftp.execPBSZ(0);
                 // Set data channel protection to private
+                System.out.println("ftp.execPROT(\"P\");"); // TODO remove
                 ftp.execPROT("P");
 
                 String pathToDomainRoot = getPathToDomainRoot(ftp, connectionInfo);
                 String pathToDatasetDir = pathToDomainRoot + "/" + datasetId;
 
                 // if datasetId does not exist then create the directory
+                System.out.println("ftp.listFiles(pathToDatasetDir + \"/\" + FTP_STATUS_FILENAME);"); // TODO remove
                 FTPFile[] checkDatasetDirExists = ftp.listFiles(pathToDatasetDir + "/" + FTP_STATUS_FILENAME);
                 if(checkDatasetDirExists.length == 0) {
+                    System.out.println("ftp.makeDirectory(pathToDatasetDir);"); // TODO remove
                     boolean datasetDirCreated = ftp.makeDirectory(pathToDatasetDir);
                     if(!datasetDirCreated) {
                         closeFTPConnection(ftp);
@@ -379,22 +386,15 @@ public class IntegrationUtility {
                     return status;
                 }
 
-                // gzip datafile
-                File tempGzippedFile = File.createTempFile("DataSyncTemp_", "_" + csvOrTsvFile.getName() + ".gz");
-                File fileToUpload = tempGzippedFile;
-                String dataFilePathFTP = pathToDatasetDir + "/" + csvOrTsvFile.getName() + ".gz";
-                byte[] buffer = new byte[NUM_BYTES_OUT_BUFFER];
+                // attempt to gzip CSV/TSV file before uploading
+                boolean deleteFileToUpload = false;
+                File fileToUpload;
+                String dataFilePathFTP;
                 try {
-                    FileOutputStream fileOutputStream = new FileOutputStream(fileToUpload);
-                    GZIPOutputStream gzipOuputStream = new GZIPOutputStream(fileOutputStream);
-                    FileInputStream fileInput = new FileInputStream(csvOrTsvFile);
-                    int bytes_read;
-                    while ((bytes_read = fileInput.read(buffer)) > 0) {
-                        gzipOuputStream.write(buffer, 0, bytes_read);
-                    }
-                    fileInput.close();
-                    gzipOuputStream.finish();
-                    gzipOuputStream.close();
+                    System.out.println("Gzipping file before uploading...");
+                    fileToUpload = createTempGzippedFile(csvOrTsvFile);
+                    dataFilePathFTP = pathToDatasetDir + "/" + csvOrTsvFile.getName() + ".gz";
+                    deleteFileToUpload = true;
                 } catch (IOException ex) {
                     // if gzipping fails revert to sending raw CSV
                     System.out.println("Gzipping failed, uploading CSV directly");
@@ -412,8 +412,9 @@ public class IntegrationUtility {
                     status.setMessage(dataFileResponse);
                     return status;
                 }
-                tempGzippedFile.delete();
                 inputDataFile.close();
+                if(deleteFileToUpload)
+                    fileToUpload.delete();
 
                 // Poll upload status until complete
                 String dataFileUploadStatus = pollUploadStatus(
@@ -441,12 +442,59 @@ public class IntegrationUtility {
         return JobStatus.SUCCESS;
     }
 
+    /**
+     *
+     * @param fileToZip file to be compressed
+     * @return gzipped version of fileToZip
+     * @throws IOException
+     */
+    private static File createTempGzippedFile(File fileToZip) throws IOException {
+        File tempGzippedFile = File.createTempFile("DataSyncTemp_", "_" + fileToZip.getName() + ".gz");
+        byte[] buffer = new byte[NUM_BYTES_OUT_BUFFER];
+        FileOutputStream fileOutputStream = new FileOutputStream(tempGzippedFile);
+        GZIPOutputStream gzipOuputStream = new GZIPOutputStream(fileOutputStream);
+        FileInputStream fileInput = new FileInputStream(fileToZip);
+        int bytes_read;
+        while ((bytes_read = fileInput.read(buffer)) > 0) {
+            gzipOuputStream.write(buffer, 0, bytes_read);
+        }
+        fileInput.close();
+        gzipOuputStream.finish();
+        gzipOuputStream.close();
+        return tempGzippedFile;
+    }
+
+    /**
+     *
+     * @param fileInput stream to convert to file
+     * @return temp file with stream content
+     * @throws IOException
+     */
+    private static File createFileFromStream(InputStream fileInput, String tempFilenameSuffix) throws IOException {
+        File tempFile = File.createTempFile("DataSyncTemp_", "_" + tempFilenameSuffix) ;
+        byte[] buffer = new byte[NUM_BYTES_OUT_BUFFER];
+        FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
+        //FileInputStream fileInput = new FileInputStream(fileToZip);
+        int bytes_read;
+        while ((bytes_read = fileInput.read(buffer)) > 0) {
+            fileOutputStream.write(buffer, 0, bytes_read);
+        }
+        fileInput.close();
+        fileOutputStream.close();
+        return tempFile;
+    }
+
     public static String getFTPHost(String domain, SodaDdl ddl) throws URISyntaxException, LongRunningQueryException, SodaError {
         HttpLowLevel httpClient = ddl.getHttpLowLevel();
         URI versionApiUri = new URI(domain + VERSION_API_ENDPOINT);
         ClientResponse response = httpClient.queryRaw(versionApiUri, HttpLowLevel.JSON_TYPE);
         String regionName = response.getHeaders().get(X_SOCRATA_REGION).get(0);
         return regionName + FTP_HOST_SUFFIX;
+    }
+
+    public static File getFileFromFTP(URI pathToFTPFile) throws IOException {
+        // TODO
+        return null;
     }
 
     /**
@@ -553,6 +601,7 @@ public class IntegrationUtility {
      */
     private static String getPathToDomainRoot(FTPSClient ftp, SocrataConnectionInfo connectionInfo) throws IOException {
         String pathToDomainRoot = "";
+        System.out.println("ftp.listFiles(FTP_REQUEST_ID_FILENAME);"); // TODO remove
         FTPFile[] checkRequestIdFile = ftp.listFiles(FTP_REQUEST_ID_FILENAME);
         if(checkRequestIdFile.length == 0) { // user is a SuperAdmin or has multi-domain access
             String domainWithoutHTTP = connectionInfo.getUrl().replaceAll("https://", "");
@@ -596,6 +645,7 @@ public class IntegrationUtility {
             } else {
                 uploadStatus = "";
             }
+            System.out.print("\rPolling upload status..." + uploadStatus);
         } while(!uploadStatus.startsWith(SUCCESS_PREFIX) && !uploadStatus.startsWith(FAILURE_PREFIX));
         return uploadStatus;
     }
@@ -612,6 +662,7 @@ public class IntegrationUtility {
     private static String setFTPRequestId(FTPSClient ftp, String pathToRequestIdFile) throws IOException {
         String requestId = generateRequestId();
         InputStream inputRequestId = new ByteArrayInputStream(requestId.getBytes("UTF-8"));
+        System.out.println("ftp.storeFile(pathToRequestIdFile, inputRequestId)"); // TODO remove
         if (!ftp.storeFile(pathToRequestIdFile, inputRequestId)) {
             return FAILURE_PREFIX + ": " + ftp.getReplyString();
         }
@@ -624,7 +675,7 @@ public class IntegrationUtility {
      *
      * @param ftp authenticated ftps object
      */
-    private static void closeFTPConnection(FTPSClient ftp) {
+    private static void closeFTPConnection(FTPClient ftp) {
         if(ftp.isConnected()) {
             try {
                 ftp.logout();
@@ -667,11 +718,13 @@ public class IntegrationUtility {
             // upload to enqueue directory
             File fileFromPath = new File(path);
             String datasetDirPath = fileFromPath.getParent();
+            System.out.println("ftp.rename(path, datasetDirPath + \"/\" + FTP_ENQUEUE_JOB_DIRNAME);"); // TODO remove
             ftp.rename(path, datasetDirPath + "/" + FTP_ENQUEUE_JOB_DIRNAME);
             if(!FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
                 return FAILURE_PREFIX + ": " + ftp.getReplyString();
             }
         } catch (IOException e) {
+            e.printStackTrace();
             return FAILURE_PREFIX + ": " + e.getMessage();
         }
         return SUCCESS_PREFIX;
@@ -683,10 +736,8 @@ public class IntegrationUtility {
      * @param path absolute path on FTP server where file is located
      * @return filesize of file in bytes
      */
-    private static long getFTPFilesize(FTPSClient ftp, final String path) throws IOException {
-        // For some odd reason this doesn't work...
-        //FTPFile uploadedFile = ftp.mlistFile(path);
-        //long uploadedFilesize = uploadedFile.getSize();
+    private static long getFTPFilesize(FTPClient ftp, final String path) throws IOException {
+        System.out.println("ftp.sendCommand(\"SIZE\", path);"); // TODO remove
         ftp.sendCommand("SIZE", path);
         String replyString = ftp.getReplyString();
         if(!FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
@@ -735,12 +786,15 @@ public class IntegrationUtility {
             noPublishExceptions = true;
         }
         catch (SodaError sodaError) {
+            sodaError.printStackTrace();
             errorMessage = sodaError.getMessage();
         }
         catch (InterruptedException intrruptException) {
+            intrruptException.printStackTrace();
             errorMessage = intrruptException.getMessage();
         }
         catch (Exception other) {
+            other.printStackTrace();
             errorMessage = other.toString() + ": " + other.getMessage();
         } finally {
             if(!noPublishExceptions) {
@@ -790,13 +844,6 @@ public class IntegrationUtility {
     public static String generateRequestId() {
         String uuid = UUID.randomUUID().toString();
         String requestId = uuid.replace("-", "");
-
-        /*OLD (not using because code requires exception handling)
-        Random rand = new Random();
-        String randomString = "DataSync: " +  new Date().getTime() + rand.nextLong();
-        byte[] digest = MessageDigest.getInstance("MD5").digest(randomString.getBytes());
-        BigInteger bigInt = new BigInteger(1,digest);
-        String requestId = bigInt.toString(16);*/
         return requestId;
     }
 
@@ -814,8 +861,8 @@ public class IntegrationUtility {
         int i = 0;
         for(PublishMethod method: PublishMethod.values()) {
             if(i > 0)
-                validPublishMethods += ",";
-            validPublishMethods += method;
+                validPublishMethods += ", ";
+            validPublishMethods += "'" + method.name() + "'";
             i++;
         }
         return validPublishMethods;
@@ -824,12 +871,22 @@ public class IntegrationUtility {
     public static String getValidPortMethods() {
         String validPortMethods = "";
         int i = 0;
-        for(PortMethod method: PortMethod.values()) {
+        for(PortMethod method : PortMethod.values()) {
             if(i > 0)
-                validPortMethods += ",";
-            validPortMethods += method;
+                validPortMethods += ", ";
+            validPortMethods += method.name();
             i++;
         }
         return validPortMethods;
+    }
+
+    public static String getArrayAsQuotedList(String[] array) {
+        String list = "";
+        for(int i = 0; i < array.length; i++) {
+            if(i > 0)
+                list += ", ";
+            list += "'" + array[i] + "'";
+        }
+        return list;
     }
 }
