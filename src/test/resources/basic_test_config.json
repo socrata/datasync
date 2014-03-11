@@ -5,7 +5,7 @@
     "appToken": "D8Atrg62F2j017ZTdkMpuZ9vY",
     "adminEmail": "admin@something.com",
     "emailUponError": "false",
-    "logDatasetID": "abcd-1234",
+    "logDatasetID": "",
     "outgoingMailServer": "smtp.something.com",
     "smtpPort": "21",
     "sslPort": "47",
