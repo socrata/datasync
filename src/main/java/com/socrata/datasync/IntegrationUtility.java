@@ -143,14 +143,16 @@ public class IntegrationUtility {
             throws IOException, SodaError, InterruptedException
     {
         // If doing a replace force it to upload all data as a single chunk
-        // TODO support chunking for replace publish method
-        if(method.equals(PublishMethod.replace))
+        if(method.equals(PublishMethod.replace)) {
+            System.out.println("WARNING: replace does not support chunking.");
             numRowsPerChunk = 0;
+        }
 
         List<Map<String, Object>> upsertObjectsChunk = new ArrayList<Map<String, Object>>();
         int totalRowsCreated = 0;
         int totalRowsUpdated = 0;
         int totalRowsDeleted = 0;
+        List<UpsertError> upsertErrors = new ArrayList<UpsertError>();
 
         char columnDelimiter = ',';
         if(IntegrationUtility.getFileExtension(csvOrTsvFile.toString()).equals("tsv")) {
@@ -197,7 +199,7 @@ public class IntegrationUtility {
                     if(numRowsPerChunk == 0) {
                         System.out.println("Publishing entire file via HTTP...");
                     } else {
-                        System.out.print("\rPublishing file in chunks via HTTP (" + numUploadedChunks * numRowsPerChunk + " rows uploaded so far)...");
+                        System.out.println("Publishing file in chunks via HTTP (" + numUploadedChunks * numRowsPerChunk + " rows uploaded so far)...");
                     }
 
                     // upsert or replace current chunk
@@ -205,7 +207,6 @@ public class IntegrationUtility {
                     if(method.equals(PublishMethod.upsert) || method.equals(PublishMethod.append)) {
                         chunkResult = producer.upsert(id, upsertObjectsChunk);
                     } else if(method.equals(PublishMethod.replace)) {
-                        // TODO need to use the old publisher workflow and enable replace chunking...
                         chunkResult = producer.replace(id, upsertObjectsChunk);
                     } else {
                         reader.close();
@@ -218,17 +219,30 @@ public class IntegrationUtility {
                     numUploadedChunks += 1;
 
                     if(chunkResult.errorCount() > 0) {
-                        reader.close();
-                        return new UpsertResult(
-                                totalRowsCreated, totalRowsUpdated, totalRowsDeleted, chunkResult.getErrors());
+                        if(numRowsPerChunk != 0) {
+                            for (UpsertError upsertErr : chunkResult.getErrors()) {
+                                int lineIndexOffset = (containsHeaderRow) ? 2 : 1;
+                                System.out.println("Error uploading chunk " + numUploadedChunks + ": " +
+                                        upsertErr.getError() + " (line " +
+                                        (upsertErr.getIndex() + lineIndexOffset + ((numUploadedChunks-1) * numRowsPerChunk)) + " of file)");
+                            }
+                        }
+                        upsertErrors.addAll(chunkResult.getErrors());
                     }
+
+                    if(numRowsPerChunk != 0) {
+                        System.out.println("Chunk " + numUploadedChunks + " uploaded: " + chunkResult.getRowsCreated() + " rows created; " +
+                            chunkResult.getRowsUpdated() + " rows updated; " + chunkResult.getRowsDeleted() +
+                            " rows deleted; " + chunkResult.errorCount() + " rows omitted");
+                    }
+
                     upsertObjectsChunk.clear();
                 }
             } while(currLine != null);
         }
         reader.close();
         return new UpsertResult(
-                totalRowsCreated, totalRowsUpdated, totalRowsDeleted, new ArrayList<UpsertError>());
+                totalRowsCreated, totalRowsUpdated, totalRowsDeleted, upsertErrors);
     }
 
     /**
@@ -271,7 +285,7 @@ public class IntegrationUtility {
 
     /**
      * Publishes the given CSV/TSV file to the dataset with given datasetId
-     * using FTP Dropbox v2.0.
+     * using FTP Dropbox v2.0 (a.k.a. "SmartUpdate").
      *
      * @param userPrefs object containing the user preferences
      * @param ddl Soda 2 ddl object
@@ -474,7 +488,6 @@ public class IntegrationUtility {
         File tempFile = File.createTempFile("DataSyncTemp_", "_" + tempFilenameSuffix) ;
         byte[] buffer = new byte[NUM_BYTES_OUT_BUFFER];
         FileOutputStream fileOutputStream = new FileOutputStream(tempFile);
-        //FileInputStream fileInput = new FileInputStream(fileToZip);
         int bytes_read;
         while ((bytes_read = fileInput.read(buffer)) > 0) {
             fileOutputStream.write(buffer, 0, bytes_read);
@@ -490,11 +503,6 @@ public class IntegrationUtility {
         ClientResponse response = httpClient.queryRaw(versionApiUri, HttpLowLevel.JSON_TYPE);
         String regionName = response.getHeaders().get(X_SOCRATA_REGION).get(0);
         return regionName + FTP_HOST_SUFFIX;
-    }
-
-    public static File getFileFromFTP(URI pathToFTPFile) throws IOException {
-        // TODO
-        return null;
     }
 
     /**
