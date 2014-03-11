@@ -28,9 +28,10 @@ public class PortJob implements Job {
     private PublishDataset publishDataset;
 	private String portResult;
 	private String pathToSavedJobFile;
+    private String destinationDatasetTitle;
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
-    private static final long fileVersionUID = 1L;
+    private static final long fileVersionUID = 2L;
 
 	private static final String DEFAULT_JOB_NAME = "Untitled Port Job";
 
@@ -59,6 +60,7 @@ public class PortJob implements Job {
         publishDataset = PublishDataset.working_copy;
         portResult = "";
         pathToSavedJobFile = "";
+        destinationDatasetTitle = "";
     }
 
 	/**
@@ -79,6 +81,7 @@ public class PortJob implements Job {
             setPortMethod(loadedJob.getPortMethod());
             setPublishMethod(loadedJob.getPublishMethod());
             setPublishDataset(loadedJob.getPublishDataset());
+            setDestinationDatasetTitle(loadedJob.getDestinationDatasetTitle());
         } catch(IOException e){
             throw new IOException(e.toString());
         }
@@ -152,11 +155,11 @@ public class PortJob implements Job {
 			try {
 				if (portMethod.equals(PortMethod.copy_schema)) {
 					sinkSetID = PortUtility.portSchema(loader, creator,
-							sourceSetID);
+							sourceSetID, destinationDatasetTitle);
 					noPortExceptions = true;
 				} else if (portMethod.equals(PortMethod.copy_all)) {
 					sinkSetID = PortUtility.portSchema(loader, creator,
-							sourceSetID);
+							sourceSetID, destinationDatasetTitle);
 					PortUtility.portContents(streamExporter, streamUpserter,
 							sourceSetID, sinkSetID, PublishMethod.upsert);
 					noPortExceptions = true;
@@ -278,12 +281,20 @@ public class PortJob implements Job {
         this.publishDataset = publishDataset;
     }
 
-    @JsonProperty("portResult")
+    @JsonProperty("destinationDatasetTitle")
+    public String getDestinationDatasetTitle() {
+        return destinationDatasetTitle;
+    }
+
+    @JsonProperty("destinationDatasetTitle")
+    public void setDestinationDatasetTitle(String destinationDatasetTitle) {
+        this.destinationDatasetTitle = destinationDatasetTitle;
+    }
+
     public String getPortResult() {
         return portResult;
     }
 
-    @JsonProperty("portResult")
     public void setPortResult(String portResult) {
         this.portResult = portResult;
     }

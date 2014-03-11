@@ -13,25 +13,25 @@ public class UnitTestDataset {
     public static final GenericType<List<UnitTestDataset>> LIST_TYPE = new GenericType<List<UnitTestDataset>>() {
     };
 
-    Integer name;
-    String name_2;
+    Integer id;
+    String name;
     String another_name;
     String date;
 
-    public Integer getName() {
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer name) {
+        this.id = id;
+    }
+
+    public String getName() {
         return name;
     }
 
-    public void setName(Integer name) {
+    public void setName(String name) {
         this.name = name;
-    }
-
-    public String getName_2() {
-        return name_2;
-    }
-
-    public void setName_2(String name) {
-        this.name_2 = name;
     }
 
     public String getAnother_name() {
