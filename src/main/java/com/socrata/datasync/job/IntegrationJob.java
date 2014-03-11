@@ -105,29 +105,39 @@ public class IntegrationJob implements Job {
             setPublishViaFTP(loadedJob.getPublishViaFTP());
         } catch (IOException e) {
             // if reading new format fails...try reading old format into this object
-            try {
-                InputStream file = new FileInputStream(pathToFile);
-                InputStream buffer = new BufferedInputStream(file);
-                ObjectInput input = new ObjectInputStream (buffer);
-                try{
-                    com.socrata.datasync.IntegrationJob loadedJobOld = (com.socrata.datasync.IntegrationJob) input.readObject();
-                    setDatasetID(loadedJobOld.getDatasetID());
-                    setFileToPublish(loadedJobOld.getFileToPublish());
-                    setPublishMethod(loadedJobOld.getPublishMethod());
-                    setPathToSavedFile(pathToFile);
-                    setFileToPublishHasHeaderRow(true);
-                }
-                finally{
-                    input.close();
-                }
-            } catch(Exception e2) {
-                // TODO add log entry?
-                throw new IOException(e.toString());
-            }
+            loadOldSijFile(pathToFile);
         }
 	}
-	
-	/**
+
+    /**
+     * This allows backward compatability with DataSync 0.1 .sij file format
+     *
+     * @param pathToFile .sij file that uses old serialization format (Java native)
+     * @throws IOException
+     */
+    private void loadOldSijFile(String pathToFile) throws IOException {
+        try {
+            InputStream file = new FileInputStream(pathToFile);
+            InputStream buffer = new BufferedInputStream(file);
+            ObjectInput input = new ObjectInputStream (buffer);
+            try{
+                com.socrata.datasync.IntegrationJob loadedJobOld = (com.socrata.datasync.IntegrationJob) input.readObject();
+                setDatasetID(loadedJobOld.getDatasetID());
+                setFileToPublish(loadedJobOld.getFileToPublish());
+                setPublishMethod(loadedJobOld.getPublishMethod());
+                setPathToSavedFile(pathToFile);
+                setFileToPublishHasHeaderRow(true);
+            }
+            finally{
+                input.close();
+            }
+        } catch(Exception e) {
+            // TODO add log entry?
+            throw new IOException(e.toString());
+        }
+    }
+
+    /**
 	 * 
 	 * @return an error JobStatus if any input is invalid, otherwise JobStatus.VALID
 	 */
@@ -284,8 +294,10 @@ public class IntegrationJob implements Job {
 					}
 				} else {
                     runStatus = JobStatus.PUBLISH_ERROR;
-                    if(runErrorMessage.equals("Not found")) {
-                        runErrorMessage = "Dataset with that ID does not exist or you do not have permission to publish to it";
+                    if(runErrorMessage != null) {
+                        if(runErrorMessage.equals("Not found")) {
+                            runErrorMessage = "Dataset with that ID does not exist or you do not have permission to publish to it";
+                        }
                     }
 				}
 			}
