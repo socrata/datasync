@@ -141,19 +141,19 @@ public class UserPreferencesJava implements UserPreferences {
 		return userPrefs.get(OUTGOING_MAIL_SERVER, "");
 	}
 	
-	public String getSMTPPort() {
+	public String getSmtpPort() {
 		return userPrefs.get(SMTP_PORT, "");
 	}
 	
-	public String getSSLPort() {
+	public String getSslPort() {
 		return userPrefs.get(SSL_PORT, DEFAULT_SSL_PORT);
 	}
 	
-	public String getSMTPUsername() {
+	public String getSmtpUsername() {
 		return userPrefs.get(SMTP_USERNAME, "");
 	}
 
-	public String getSMTPPassword() {
+	public String getSmtpPassword() {
 		return userPrefs.get(SMTP_PASSWORD, "");
 	}
 

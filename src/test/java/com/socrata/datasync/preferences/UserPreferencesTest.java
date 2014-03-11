@@ -24,12 +24,47 @@ public class UserPreferencesTest extends TestBase {
         TestCase.assertEquals("D8Atrg62F2j017ZTdkMpuZ9vY", userPrefs.getAPIKey());
         TestCase.assertEquals("admin@something.com", userPrefs.getAdminEmail());
         TestCase.assertEquals(false, userPrefs.emailUponError());
+        TestCase.assertEquals("", userPrefs.getLogDatasetID());
+        TestCase.assertEquals("smtp.something.com", userPrefs.getOutgoingMailServer());
+        TestCase.assertEquals("21", userPrefs.getSmtpPort());
+        TestCase.assertEquals("47", userPrefs.getSslPort());
+        TestCase.assertEquals("test@something.com", userPrefs.getSmtpUsername());
+        TestCase.assertEquals("smtppass", userPrefs.getSmtpPassword());
+        TestCase.assertEquals("10", userPrefs.getFilesizeChunkingCutoffMB());
+        TestCase.assertEquals("10000", userPrefs.getNumRowsPerChunk());
+    }
+
+    @Test
+    public void testLoadUserPreferencesFromJavaPreferences() throws IOException {
+        UserPreferencesJava userPrefs = new UserPreferencesJava();
+
+        userPrefs.saveDomain("https://sandbox.demo.socrata.com");
+        userPrefs.saveUsername("testuser@gmail.com");
+        userPrefs.savePassword("OpenData");
+        userPrefs.saveAPIKey("D8Atrg62F2j017ZTdkMpuZ9vY");
+        userPrefs.saveAdminEmail("admin@something.com");
+        userPrefs.saveEmailUponError(false);
+        userPrefs.saveLogDatasetID("abcd-1234");
+        userPrefs.saveOutgoingMailServer("smtp.something.com");
+        userPrefs.saveSMTPPort("21");
+        userPrefs.saveSSLPort("47");
+        userPrefs.saveSMTPUsername("test@something.com");
+        userPrefs.saveSMTPPassword("smtppass");
+        userPrefs.saveFilesizeChunkingCutoffMB(10);
+        userPrefs.saveNumRowsPerChunk(10000);
+
+        TestCase.assertEquals("https://sandbox.demo.socrata.com", userPrefs.getDomain());
+        TestCase.assertEquals("testuser@gmail.com", userPrefs.getUsername());
+        TestCase.assertEquals("OpenData", userPrefs.getPassword());
+        TestCase.assertEquals("D8Atrg62F2j017ZTdkMpuZ9vY", userPrefs.getAPIKey());
+        TestCase.assertEquals("admin@something.com", userPrefs.getAdminEmail());
+        TestCase.assertEquals(false, userPrefs.emailUponError());
         TestCase.assertEquals("abcd-1234", userPrefs.getLogDatasetID());
         TestCase.assertEquals("smtp.something.com", userPrefs.getOutgoingMailServer());
-        TestCase.assertEquals("21", userPrefs.getSMTPPort());
-        TestCase.assertEquals("47", userPrefs.getSSLPort());
-        TestCase.assertEquals("test@something.com", userPrefs.getSMTPUsername());
-        TestCase.assertEquals("smtppass", userPrefs.getSMTPPassword());
+        TestCase.assertEquals("21", userPrefs.getSmtpPort());
+        TestCase.assertEquals("47", userPrefs.getSslPort());
+        TestCase.assertEquals("test@something.com", userPrefs.getSmtpUsername());
+        TestCase.assertEquals("smtppass", userPrefs.getSmtpPassword());
         TestCase.assertEquals("10", userPrefs.getFilesizeChunkingCutoffMB());
         TestCase.assertEquals("10000", userPrefs.getNumRowsPerChunk());
     }

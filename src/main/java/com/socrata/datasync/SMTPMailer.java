@@ -64,8 +64,8 @@ public class SMTPMailer {
         Properties props = System.getProperties();
         props.setProperty("mail.smtps.host", userPrefs.getOutgoingMailServer());
         props.setProperty("mail.smtp.socketFactory.fallback", "false");
-        props.setProperty("mail.smtp.port", userPrefs.getSMTPPort());
-        String sslPort = userPrefs.getSSLPort();
+        props.setProperty("mail.smtp.port", userPrefs.getSmtpPort());
+        String sslPort = userPrefs.getSslPort();
         if(!sslPort.equals("")) {
         	props.setProperty("mail.smtp.socketFactory.class", SSL_FACTORY);
         	props.setProperty("mail.smtp.socketFactory.port", sslPort);
@@ -88,7 +88,7 @@ public class SMTPMailer {
         final MimeMessage msg = new MimeMessage(session);
 
         // -- Set the FROM and TO fields --
-        msg.setFrom(new InternetAddress(userPrefs.getSMTPUsername()));
+        msg.setFrom(new InternetAddress(userPrefs.getSmtpUsername()));
         msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail, false));
 
         if (ccEmail.length() > 0) {
@@ -101,7 +101,7 @@ public class SMTPMailer {
 
         SMTPTransport t = (SMTPTransport)session.getTransport("smtps");
         
-        t.connect(userPrefs.getOutgoingMailServer(), userPrefs.getSMTPUsername(), userPrefs.getSMTPPassword());
+        t.connect(userPrefs.getOutgoingMailServer(), userPrefs.getSmtpUsername(), userPrefs.getSmtpPassword());
         t.sendMessage(msg, msg.getAllRecipients());      
         t.close();
     }

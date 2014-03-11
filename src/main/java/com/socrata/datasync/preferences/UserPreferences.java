@@ -25,13 +25,13 @@ public interface UserPreferences {
 
     public String getOutgoingMailServer();
 
-    public String getSMTPPort();
+    public String getSmtpPort();
 
-    public String getSSLPort();
+    public String getSslPort();
 
-    public String getSMTPUsername();
+    public String getSmtpUsername();
 
-    public String getSMTPPassword();
+    public String getSmtpPassword();
 
     public String getFilesizeChunkingCutoffMB();
 

@@ -79,22 +79,22 @@ public class UserPreferencesFile implements UserPreferences {
     }
 
     @JsonProperty("smtpPort")
-    public String getSMTPPort() {
+    public String getSmtpPort() {
         return smtpPort;
     }
 
     @JsonProperty("sslPort")
-    public String getSSLPort() {
+    public String getSslPort() {
         return sslPort;
     }
 
     @JsonProperty("smtpUsername")
-    public String getSMTPUsername() {
+    public String getSmtpUsername() {
         return smtpUsername;
     }
 
     @JsonProperty("smtpPassword")
-    public String getSMTPPassword() {
+    public String getSmtpPassword() {
         return smtpPassword;
     }
 

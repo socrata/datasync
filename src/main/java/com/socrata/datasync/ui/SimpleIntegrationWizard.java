@@ -567,16 +567,16 @@ public class SimpleIntegrationWizard {
 		emailUponErrorCheckBox.setSelected(userPrefs.emailUponError());
 		
 		outgoingMailServerTextField.setText(userPrefs.getOutgoingMailServer());
-		smtpPortTextField.setText(userPrefs.getSMTPPort());
-		String sslPort = userPrefs.getSSLPort();
+		smtpPortTextField.setText(userPrefs.getSmtpPort());
+		String sslPort = userPrefs.getSslPort();
 		sslPortTextField.setText(sslPort);
 		if(sslPort.equals("")) {
 			useSSLCheckBox.setSelected(false);
 		} else {
 			useSSLCheckBox.setSelected(true);
 		}
-		smtpUsernameTextField.setText(userPrefs.getSMTPUsername());
-		smtpPasswordField.setText(userPrefs.getSMTPPassword());
+		smtpUsernameTextField.setText(userPrefs.getSmtpUsername());
+		smtpPasswordField.setText(userPrefs.getSmtpPassword());
 	}
 	
 	private void savePreferences() {
