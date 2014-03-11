@@ -2,13 +2,20 @@ package com.socrata.datasync;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
+import com.socrata.api.SodaImporter;
+import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.preferences.UserPreferencesFile;
+import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertResult;
 import junit.framework.TestCase;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Author: Adrian Laurenzi
@@ -176,24 +183,6 @@ public class IntegrationUtilityTest extends TestBase {
     }
 
     @Test
-    public void testUpsertNoDeletes() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
-        final Soda2Producer producer = createProducer();
-        final SodaDdl ddl = createSodaDdl();
-
-        // Ensures dataset is in known state (2 rows)
-        File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
-
-        File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
-        UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, 0, true);
-
-        TestCase.assertEquals(0, result.errorCount());
-        TestCase.assertEquals(2, result.getRowsUpdated());
-        TestCase.assertEquals(1, result.getRowsCreated());
-        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
-    }
-
-    @Test
     public void testDeleteNoHeader() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
         final Soda2Producer producer = createProducer();
         final SodaDdl ddl = createSodaDdl();
@@ -208,6 +197,62 @@ public class IntegrationUtilityTest extends TestBase {
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsDeleted());
         TestCase.assertEquals(1, getTotalRows(UNITTEST_DATASET_ID));
+    }
+
+    @Test
+    public void tesGetFTPHost() throws URISyntaxException, IOException, LongRunningQueryException, SodaError {
+        final SodaDdl ddl = createSodaDdl();
+        TestCase.assertEquals("production.ftp.socrata.net",
+                IntegrationUtility.getFTPHost("https://sandbox.demo.socrata.com", ddl));
+        TestCase.assertEquals("production.ftp.socrata.net",
+                IntegrationUtility.getFTPHost("https://adrian.demo.socrata.com", ddl));
+        TestCase.assertEquals("azure-staging.ftp.socrata.net",
+                IntegrationUtility.getFTPHost("https://opendata.test-socrata.com", ddl));
+    }
+
+    @Test
+    public void testReplaceViaFTPWithControlFile() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
+        final SodaDdl ddl = createSodaDdl();
+        final UserPreferences userPrefs = getUserPrefs();
+
+        File twoRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
+        JobStatus result = IntegrationUtility.publishViaFTPDropboxV2(
+                userPrefs, ddl, PublishMethod.replace, UNITTEST_DATASET_ID, twoRowsFile, true,
+                "src/test/resources/datasync_unit_test_three_rows_control.json");
+
+        TestCase.assertEquals(JobStatus.SUCCESS, result);
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
+    }
+
+    @Test
+    public void testReplaceViaFTPInvalidControlFile() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
+        final SodaDdl ddl = createSodaDdl();
+        final UserPreferences userPrefs = getUserPrefs();
+
+        File twoRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
+        JobStatus result = IntegrationUtility.publishViaFTPDropboxV2(
+                userPrefs, ddl, PublishMethod.replace, UNITTEST_DATASET_ID, twoRowsFile, true,
+                "src/test/resources/datasync_unit_test_three_rows_control_invalid.json");
+
+        TestCase.assertEquals(JobStatus.PUBLISH_ERROR, result);
+    }
+
+    @Test
+    public void testReplaceViaFTPWithoutControlFile() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
+        final SodaDdl ddl = createSodaDdl();
+        final UserPreferences userPrefs = getUserPrefs();
+
+        File twoRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_ISO_dates.csv");
+        JobStatus result = IntegrationUtility.publishViaFTPDropboxV2(
+                userPrefs, ddl, PublishMethod.replace, UNITTEST_DATASET_ID, twoRowsFile, false, null);
+
+        TestCase.assertEquals(JobStatus.SUCCESS, result);
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
+    }
+
+    @Test
+    public void testDownloadingFileViaFTP() throws IOException, SodaError, InterruptedException, LongRunningQueryException, URISyntaxException {
+        // TODO...
     }
 
     @Test
@@ -238,12 +283,47 @@ public class IntegrationUtilityTest extends TestBase {
     }
 
     @Test
-    public void testUpsertWithBadData() {
+    public void testUpsertWithInvalidData() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
+        final Soda2Producer producer = createProducer();
+        final SodaDdl ddl = createSodaDdl();
 
+        // Ensures dataset is in known state (2 rows)
+        File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
+        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+
+        File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_invalid_date.csv");
+        int numRowsPerChunk = 0;
+        UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, numRowsPerChunk, true);
+
+        TestCase.assertEquals(1, result.errorCount());
+        TestCase.assertEquals(2, result.getRowsUpdated());
+        TestCase.assertEquals(0, result.getRowsCreated());
+        TestCase.assertEquals(2, getTotalRows(UNITTEST_DATASET_ID));
+        TestCase.assertEquals("Unknown date format 'invalid_date'.", result.getErrors().get(0).getError());
+        TestCase.assertEquals(2, result.getErrors().get(0).getIndex());
     }
 
     @Test
-    public void testReplaceNewWithBadData() {
+    public void testUpsertInChunksWithInvalidData() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
+        final Soda2Producer producer = createProducer();
+        final SodaDdl ddl = createSodaDdl();
+
+        // Ensures dataset is in known state (2 rows)
+        File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
+        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+
+        File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_multiple_invalid_dates.csv");
+        int numRowsPerChunk = 2;
+        UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, numRowsPerChunk, true);
+
+        TestCase.assertEquals(2, result.errorCount());
+        TestCase.assertEquals(1, result.getRowsUpdated());
+        TestCase.assertEquals(0, result.getRowsCreated());
+        TestCase.assertEquals(2, getTotalRows(UNITTEST_DATASET_ID));
+    }
+
+    @Test
+    public void testReplaceNewWithInvalidData() {
 
     }
 
@@ -251,6 +331,16 @@ public class IntegrationUtilityTest extends TestBase {
     public void testAddLogEntry() {
 
     }
+
+    @Test
+    public void testGetDatasetFieldNames() throws IOException, SodaError, InterruptedException {
+        //UserPreferences userPrefs = new UserPreferencesJava();
+        //System.out.println(IntegrationUtility.getDatasetFieldNames(ddl, "6qkn-8xvw"));
+        final SodaDdl ddl = createSodaDdl();
+        String datasetFieldNames = IntegrationUtility.getDatasetFieldNames(ddl, UNITTEST_DATASET_ID);
+        TestCase.assertEquals("[\"id\",\"name\",\"another_name\",\"date\"]", datasetFieldNames);
+    }
+
 
     @Test
     public void testUidIsValid() {
