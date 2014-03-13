@@ -44,8 +44,8 @@ public class SimpleIntegrationWizard {
 	private final String TITLE = "Socrata DataSync " + VERSION;
 	private final String LOGO_FILE_PATH = "/datasync_logo.png";
 	private final int FRAME_WIDTH = 800;
-	private final int FRAME_HEIGHT = 410;
-	private final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 235);
+	private final int FRAME_HEIGHT = 440;
+	private final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 265);
     private final Dimension BUTTON_PANEL_DIMENSION = new Dimension(780, 40);
     private final int SSL_PORT_TEXTFIELD_HEIGHT = 26;
 	private final int DEFAULT_TEXTFIELD_COLS = 25;

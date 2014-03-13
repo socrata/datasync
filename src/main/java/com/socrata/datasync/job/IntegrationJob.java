@@ -47,6 +47,7 @@ public class IntegrationJob implements Job {
     public static final int NUM_BYTES_PER_MB = 1048576;
     private static final String DEFAULT_JOB_NAME = "Untitled Standard Job";
     public static final List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
+    public static final List<String> allowedFtpControlFileExtensions = Arrays.asList("json");
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
     private static final long fileVersionUID = 2L;
@@ -78,10 +79,10 @@ public class IntegrationJob implements Job {
         pathToSavedJobFile = "";
         datasetID = "";
         fileToPublish = "";
-        publishMethod = PublishMethod.upsert;
+        publishMethod = PublishMethod.replace;
         fileToPublishHasHeaderRow = true;
         pathToFTPControlFile = null;
-        publishViaFTP = false;
+        publishViaFTP = true;
     }
 	
 	/**
@@ -182,12 +183,18 @@ public class IntegrationJob implements Job {
                 // certainly propagate later where the error message will be more appropriate
             }
 		}
-        if(pathToFTPControlFile != null) {
-            File controlFile = new File(pathToFTPControlFile);
-            if(!controlFile.exists() || controlFile.isDirectory()) {
+        if(publishViaFTP) {
+            if(pathToFTPControlFile == null || pathToFTPControlFile.equals("")) {
                 JobStatus errorStatus = JobStatus.PUBLISH_ERROR;
-                errorStatus.setMessage(pathToFTPControlFile + ": FTP control file does not exist");
+                errorStatus.setMessage("You must select a Control file if publishing via FTP SmartUpdate");
                 return errorStatus;
+            } else {
+                File controlFile = new File(pathToFTPControlFile);
+                if(!controlFile.exists() || controlFile.isDirectory()) {
+                    JobStatus errorStatus = JobStatus.PUBLISH_ERROR;
+                    errorStatus.setMessage(pathToFTPControlFile + ": FTP control file does not exist");
+                    return errorStatus;
+                }
             }
         }
 		
