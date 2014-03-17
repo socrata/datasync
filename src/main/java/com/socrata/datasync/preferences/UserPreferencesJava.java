@@ -175,6 +175,15 @@ public class UserPreferencesJava implements UserPreferences {
         return "";
     }
 
+    /**
+     * This preference is for internal testing usage only (returns false
+     * because useNewBackend should only be set when DataSync is run in
+     * command-line mode).
+     */
+    public boolean getUseNewBackend() {
+        return false;
+    }
+
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(
                 this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());

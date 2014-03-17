@@ -30,9 +30,10 @@ public class UserPreferencesFile implements UserPreferences {
     private String filesizeChunkingCutoffMB;
     private String numRowsPerChunk;
     private String portDestinationDomainAppToken;
+    private boolean useNewBackend;
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
-    private static final long fileVersionUID = 3L;
+    private static final long fileVersionUID = 4L;
 
     @JsonProperty("domain")
     public String getDomain() {
@@ -112,6 +113,9 @@ public class UserPreferencesFile implements UserPreferences {
     public String getPortDestinationDomainAppToken() {
         return portDestinationDomainAppToken;
     }
+
+    @JsonProperty("useNewBackend")
+    public boolean getUseNewBackend() { return useNewBackend; }
 
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(

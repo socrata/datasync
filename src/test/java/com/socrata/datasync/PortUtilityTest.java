@@ -39,9 +39,29 @@ public class PortUtilityTest extends TestBase {
     @Test
     public void testPortSchema() throws SodaError, InterruptedException {
         // Perform the test operation, saving the String return value.
-        String newDatasetID = PortUtility.portSchema(sourceDdl, sinkDdl, UNITTEST_DATASET_ID, "");
-        System.out.println(newDatasetID);
+        String newDatasetID = PortUtility.portSchema(sourceDdl, sinkDdl, UNITTEST_DATASET_ID, "", false);
+        //System.out.println(newDatasetID);
+        validatePortedSchema(newDatasetID);
+    }
 
+    @Test
+    public void testPortSchemaNewBackend() throws SodaError, InterruptedException {
+        // TODO remove conditional check
+        // onyl necessary because New Backend is ONLY enabled on staging
+        if(testOnStaging) {
+            // Perform the test operation, saving the String return value.
+            String newDatasetID = PortUtility.portSchema(sourceDdl, sinkDdl, UNITTEST_DATASET_ID, "", true);
+            System.out.println("New Backend dataset: " + newDatasetID);
+
+            // TODO validate that metadata denoting New Backend is true by hitting:
+                // https://opendata.test-socrata.com/api/views/s5r5-8cth.json
+                //DatasetInfo sinkMeta = sinkDdl.loadDatasetInfo(newDatasetID);
+
+            validatePortedSchema(newDatasetID);
+        }
+    }
+
+    private void validatePortedSchema(final String newDatasetID) throws SodaError, InterruptedException {
         // Grab the necessary objects for testing.
         DatasetInfo sourceMeta = sourceDdl.loadDatasetInfo(UNITTEST_DATASET_ID);
         DatasetInfo sinkMeta = sinkDdl.loadDatasetInfo(newDatasetID);
@@ -80,7 +100,7 @@ public class PortUtilityTest extends TestBase {
     public void testPortSchemaRenameDataeset() throws SodaError, InterruptedException {
         String destinationDatasetName = "New Dataset";
         // Perform the test operation, saving the String return value.
-        String newDatasetID = PortUtility.portSchema(sourceDdl, sinkDdl, UNITTEST_DATASET_ID, destinationDatasetName);
+        String newDatasetID = PortUtility.portSchema(sourceDdl, sinkDdl, UNITTEST_DATASET_ID, destinationDatasetName, false);
 
         // Grab the necessary objects for testing.
         DatasetInfo sourceMeta = sourceDdl.loadDatasetInfo(UNITTEST_DATASET_ID);
@@ -88,12 +108,7 @@ public class PortUtilityTest extends TestBase {
 
         try {
             // Test the metadata (just the basics) via DatasetInfo.
-            TestCase.assertEquals(sourceMeta.getViewType(), sinkMeta.getViewType());
             TestCase.assertEquals(destinationDatasetName, sinkMeta.getName());
-            TestCase.assertEquals(sourceMeta.getDescription(), sinkMeta.getDescription());
-            TestCase.assertEquals(sourceMeta.getCategory(), sinkMeta.getCategory());
-            TestCase.assertEquals(sourceMeta.getTags(), sinkMeta.getTags());
-            TestCase.assertEquals(sourceMeta.getRights(), sinkMeta.getRights());
         } finally {
             sinkDdl.deleteDataset(newDatasetID);
         }
@@ -102,7 +117,7 @@ public class PortUtilityTest extends TestBase {
     @Test
     public void testPublishDataset() throws SodaError, InterruptedException {
         // Port a dataset's schema and confirm that it is unpublished by default.
-        String unpublishedID = PortUtility.portSchema(sourceDdl, sinkDdl, UNITTEST_DATASET_ID, "");
+        String unpublishedID = PortUtility.portSchema(sourceDdl, sinkDdl, UNITTEST_DATASET_ID, "", false);
         DatasetInfo source = sourceDdl.loadDatasetInfo(unpublishedID);
         TestCase.assertEquals("unpublished", source.getPublicationStage());
 
@@ -120,7 +135,7 @@ public class PortUtilityTest extends TestBase {
         List<UnitTestDataset> sourceRows = sinkProducer.query(UNITTEST_DATASET_ID, SoqlQuery.SELECT_ALL, UnitTestDataset.LIST_TYPE);
 
         // Port a dataset's schema to get an empty copy to test with.
-        String newDatasetID = PortUtility.portSchema(sourceDdl, sinkDdl, UNITTEST_DATASET_ID, "");
+        String newDatasetID = PortUtility.portSchema(sourceDdl, sinkDdl, UNITTEST_DATASET_ID, "", false);
 
         // Query for the rows (well, lack thereof) of the sink dataset.
         List<UnitTestDataset> sinkRows = sinkProducer.query(newDatasetID, SoqlQuery.SELECT_ALL, UnitTestDataset.LIST_TYPE);

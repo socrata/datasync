@@ -23,12 +23,15 @@ public class PortUtility {
 	}
 
 	public static String portSchema(SodaDdl loader, SodaDdl creator,
-			final String sourceSetID, String destinationDatasetTitle) throws SodaError, InterruptedException {
+			final String sourceSetID, final String destinationDatasetTitle,
+            final boolean useNewBackend) throws SodaError, InterruptedException {
 		DatasetInfo sourceSet = loader.loadDatasetInfo(sourceSetID);
         if(destinationDatasetTitle != null && !destinationDatasetTitle.equals(""))
             sourceSet.setName(destinationDatasetTitle);
-		DatasetInfo sinkSet = creator.createDataset(sourceSet);
-		String sinkSetID = sinkSet.getId();
+
+		DatasetInfo sinkSet = creator.createDataset(sourceSet, useNewBackend);
+
+        String sinkSetID = sinkSet.getId();
 		return sinkSetID;
 	}
 

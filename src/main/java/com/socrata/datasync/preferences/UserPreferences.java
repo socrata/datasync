@@ -39,6 +39,8 @@ public interface UserPreferences {
 
     public String getPortDestinationDomainAppToken();
 
+    public boolean getUseNewBackend();
+
     public SocrataConnectionInfo getConnectionInfo();
 
 }

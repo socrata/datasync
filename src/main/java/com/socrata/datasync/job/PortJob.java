@@ -155,11 +155,11 @@ public class PortJob implements Job {
 			try {
 				if (portMethod.equals(PortMethod.copy_schema)) {
 					sinkSetID = PortUtility.portSchema(loader, creator,
-							sourceSetID, destinationDatasetTitle);
+							sourceSetID, destinationDatasetTitle, userPrefs.getUseNewBackend());
 					noPortExceptions = true;
 				} else if (portMethod.equals(PortMethod.copy_all)) {
 					sinkSetID = PortUtility.portSchema(loader, creator,
-							sourceSetID, destinationDatasetTitle);
+							sourceSetID, destinationDatasetTitle, userPrefs.getUseNewBackend());
 					PortUtility.portContents(streamExporter, streamUpserter,
 							sourceSetID, sinkSetID, PublishMethod.upsert);
 					noPortExceptions = true;
