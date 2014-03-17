@@ -167,7 +167,7 @@ public class MainTest extends TestBase {
         userPrefsClearDomain.saveDomain("");
 
         String[] args = {"-t", "LoadPreferences",
-                "-c", PATH_TO_CONFIG_FILE};
+                "-c", PATH_TO_PROD_CONFIG_FILE};
         Main.main(args);
         UserPreferencesJava userPrefs = new UserPreferencesJava();
         TestCase.assertEquals("https://sandbox.demo.socrata.com", userPrefs.getDomain());

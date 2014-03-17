@@ -15,7 +15,7 @@ import java.io.IOException;
 public class UserPreferencesTest extends TestBase {
     @Test
     public void testLoadUserPreferencesFromFile() throws IOException {
-        File configFile = new File(PATH_TO_CONFIG_FILE);
+        File configFile = new File(PATH_TO_PROD_CONFIG_FILE);
         ObjectMapper mapper = new ObjectMapper();
         UserPreferences userPrefs = mapper.readValue(configFile, UserPreferencesFile.class);
         TestCase.assertEquals("https://sandbox.demo.socrata.com", userPrefs.getDomain());
