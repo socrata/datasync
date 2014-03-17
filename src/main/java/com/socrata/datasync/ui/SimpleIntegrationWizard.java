@@ -336,10 +336,17 @@ public class SimpleIntegrationWizard {
 
 	private class NewStandardJobListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			addJobTab(new IntegrationJob());
-			jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
+            addJobTab(getNewIntegrationJob());
+            jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
 		}
 	}
+
+    private IntegrationJob getNewIntegrationJob() {
+        IntegrationJob newJob = new IntegrationJob();
+        // set publishViaFTP to true as default (ONLY for GUI mode)
+        newJob.setPublishViaFTP(true);
+        return newJob;
+    }
 
     private class NewPortJobListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
@@ -445,7 +452,7 @@ public class SimpleIntegrationWizard {
 		}
 
         // TODO populate job tabs w/ previously opened tabs or [if none] a new job tab
-        addJobTab(new IntegrationJob());
+        addJobTab(getNewIntegrationJob());
 
 		return mainContainer;
 	}
@@ -671,9 +678,6 @@ public class SimpleIntegrationWizard {
 		authenticationDetailsPanel.setPreferredSize(AUTH_DETAILS_DIMENSION);
 		return authenticationDetailsPanel;
 	}
-
-    // TODO move this to UI Utility class
-
     
 	/**
 	 * Ensures consistency of fields within job tabs

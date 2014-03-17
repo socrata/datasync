@@ -74,6 +74,7 @@ public class IntegrationJobTest extends TestBase {
         jobToRun.setFileToPublish("src/test/resources/datasync_unit_test_two_rows.csv");
         jobToRun.setPublishMethod(PublishMethod.replace);
         jobToRun.setFileToPublishHasHeaderRow(true);
+        jobToRun.setPublishViaFTP(false);
         JobStatus status = jobToRun.run();
         TestCase.assertEquals(false, jobToRun.getPublishViaFTP());
         TestCase.assertEquals(JobStatus.SUCCESS, status);

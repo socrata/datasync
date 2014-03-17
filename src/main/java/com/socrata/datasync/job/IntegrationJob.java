@@ -82,7 +82,7 @@ public class IntegrationJob implements Job {
         publishMethod = PublishMethod.replace;
         fileToPublishHasHeaderRow = true;
         pathToFTPControlFile = null;
-        publishViaFTP = true;
+        publishViaFTP = false;
     }
 	
 	/**
@@ -128,6 +128,7 @@ public class IntegrationJob implements Job {
                 setPublishMethod(loadedJobOld.getPublishMethod());
                 setPathToSavedFile(pathToFile);
                 setFileToPublishHasHeaderRow(true);
+                setPublishViaFTP(false);
             }
             finally{
                 input.close();
