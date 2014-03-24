@@ -3,15 +3,11 @@ package com.socrata.datasync.job;
 import com.socrata.datasync.JobStatus;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.TestBase;
-import com.socrata.datasync.preferences.UserPreferences;
-import com.socrata.datasync.preferences.UserPreferencesFile;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import junit.framework.TestCase;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -23,6 +19,8 @@ public class IntegrationJobTest extends TestBase {
     public static final String PATH_TO_SAVED_JOB_FILE_V0dot1 = "src/test/resources/job_saved_v0.1.sij";
     public static final String PATH_TO_SAVED_JOB_FILE_V0dot3 = "src/test/resources/job_saved_v0.3.sij";
     public static final String PATH_TO_SAVED_JOB_FILE_V0dot4 = "src/test/resources/job_saved_v0.4.sij";
+    public static final String PATH_TO_SAVED_JOB_FILE_V0dot4_CONTROL_CONTENT =
+            "src/test/resources/job_saved_v0.4_control_content.sij";
 
     @Test
     public void testDataSyncV0dot1JobFileDeserialization() throws IOException {
@@ -65,6 +63,20 @@ public class IntegrationJobTest extends TestBase {
         TestCase.assertEquals(true, job.getPublishViaFTP());
         TestCase.assertEquals("E:\\tm\\control.json", job.getPathToFTPControlFile());
         TestCase.assertEquals("job_saved_v0.4.sij", job.getJobFilename());
+    }
+
+    @Test
+    public void testDataSyncJSONv0dot4ControlContentJobFileDeserialization() throws IOException {
+        IntegrationJob job = new IntegrationJob(PATH_TO_SAVED_JOB_FILE_V0dot4_CONTROL_CONTENT);
+        TestCase.assertEquals("test", job.getFileToPublish());
+        TestCase.assertEquals("kwgk-zc5k", job.getDatasetID());
+        TestCase.assertEquals(PublishMethod.replace, job.getPublishMethod());
+        TestCase.assertEquals("src/test/resources/job_saved_v0.4_control_content.sij", job.getPathToSavedFile());
+        TestCase.assertEquals(true, job.getFileToPublishHasHeaderRow());
+        TestCase.assertEquals(true, job.getPublishViaFTP());
+        TestCase.assertEquals("", job.getPathToFTPControlFile());
+        TestCase.assertEquals("{json}", job.getFtpControlFileContent());
+        TestCase.assertEquals("job_saved_v0.4_control_content.sij", job.getJobFilename());
     }
 
     @Test

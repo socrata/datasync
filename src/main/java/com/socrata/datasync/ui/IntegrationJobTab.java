@@ -1,12 +1,14 @@
 package com.socrata.datasync.ui;
 
+import com.socrata.api.SodaDdl;
 import com.socrata.datasync.*;
 import com.socrata.datasync.job.IntegrationJob;
+import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.preferences.UserPreferencesJava;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.*;
-import java.util.List;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -20,14 +22,18 @@ import java.io.IOException;
 public class IntegrationJobTab implements JobTab {
 
     private static final int JOB_TEXTFIELD_WIDTH = 370;
-    private static final int JOB_COMMAND_TEXTFIELD_WIDTH = 211;
-    private static final int JOB_FILE_TEXTFIELD_WIDTH = 238;
+    private static final int JOB_COMMAND_TEXTFIELD_WIDTH = 212;
+    private static final int JOB_FILE_TEXTFIELD_WIDTH = 263;
     private static final int JOB_TEXTFIELD_HEIGHT = 26;
     private static final int JOB_FIELD_VGAP = 8;
+    private static final int CONTROL_FILE_TEXTFIELD_WIDTH = 102;
+    private static final Dimension CONTROL_FILE_EDITOR_DIMENSIONS = new Dimension(350, 200);
     private static final FlowLayout FLOW_LEFT = new FlowLayout(FlowLayout.LEFT, 0, 0);
     private static final FlowLayout FLOW_RIGHT = new FlowLayout(FlowLayout.LEFT, 0, JOB_FIELD_VGAP);
 
     private static final String DEFAULT_RUN_JOB_COMMAND = "(Generates when job is saved)";
+    private static final String BROWSE_BUTTON_TEXT = "Browse...";
+    private static final String EMPTY_TEXTAREA_CONTENT = "";
 
     private static final String JOB_FILE_NAME = "Socrata Integration Job";
     private static final String JOB_FILE_EXTENSION = "sij";
@@ -52,6 +58,10 @@ public class IntegrationJobTab implements JobTab {
     private static final String FTP_CONTROL_FILE_TIP_TEXT = "TODO...";
     private static final String RUN_COMMAND_TIP_TEXT = "<html><body style='width: 300px'>After saving the job this field will be populated with a command-line command that can be used to run the job." +
             " This command can be input into tools such as the Windows Scheduler or ETL tools to run the job automatically.</body></html>";
+    public static final String CONTAINS_A_HEADER_ROW_CHECKBOX_TEXT = "File to publish contains a header row";
+    public static final String PUBLISH_VIA_FTP_CHECKBOX_TEXT = "Publish via FTP \"SmartUpdate\"";
+    public static final String COPY_TO_CLIPBOARD_BUTTON_TEXT = "Copy to clipboard";
+    public static final String GENERATE_EDIT_CONTROL_FILE_BUTTON_TEXT = "Generate/Edit";
 
     private JFrame mainFrame;
     private JPanel jobPanel;
@@ -65,8 +75,11 @@ public class IntegrationJobTab implements JobTab {
     private JComboBox publishMethodComboBox;
     private JCheckBox publishViaFTPSmartUpdateCheckBox;
     private JTextField ftpControlFileTextField;
+    private JButton browseForControlFileButton;
     private JPanel ftpControlFileLabelContainer;
     private JPanel ftpControlFileSelectorContainer;
+    private JButton generateEditControlFileButton;
+    private JTextArea ftpControlFileContentTextArea;
     private JTextField runCommandTextField;
 
     // build Container with all tab components populated with given job data
@@ -79,6 +92,7 @@ public class IntegrationJobTab implements JobTab {
         addFileToPublishFieldToJobPanel();
         addDatasetIdFieldToJobPanel();
         addPublishMethodFieldToJobPanel();
+        ftpControlFileContentTextArea = new JTextArea(EMPTY_TEXTAREA_CONTENT);
         addFtpControlFileFieldToJobPanel();
         addRunCommandFieldToJobPanel();
 
@@ -91,16 +105,22 @@ public class IntegrationJobTab implements JobTab {
         jobPanel.add(ftpControlFileLabelContainer);
 
         ftpControlFileSelectorContainer = new JPanel(FLOW_RIGHT);
+        generateEditControlFileButton = new JButton(GENERATE_EDIT_CONTROL_FILE_BUTTON_TEXT);
+        generateEditControlFileButton.addActionListener(new EditGenerateControlFileListener());
+        ftpControlFileSelectorContainer.add(generateEditControlFileButton);
+        JLabel orLabel = new JLabel(" -or- ");
+        ftpControlFileSelectorContainer.add(orLabel);
+
         ftpControlFileTextField = new JTextField();
         ftpControlFileTextField.setPreferredSize(new Dimension(
-                JOB_FILE_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
+                CONTROL_FILE_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
         ftpControlFileSelectorContainer.add(ftpControlFileTextField);
         JFileChooser ftpControlFileChooser = new JFileChooser();
-        JButton openButton = new JButton("Select a file...");
+        browseForControlFileButton = new JButton(BROWSE_BUTTON_TEXT);
         FtpControlFileSelectorListener chooserListener = new FtpControlFileSelectorListener(
                 ftpControlFileChooser, ftpControlFileTextField);
-        openButton.addActionListener(chooserListener);
-        ftpControlFileSelectorContainer.add(openButton);
+        browseForControlFileButton.addActionListener(chooserListener);
+        ftpControlFileSelectorContainer.add(browseForControlFileButton);
         jobPanel.add(ftpControlFileSelectorContainer);
     }
 
@@ -114,7 +134,7 @@ public class IntegrationJobTab implements JobTab {
         runCommandTextField.setEditable(false);
         runCommandTextField.addMouseListener(new JobCommandTextFieldListener());
         runCommandTextFieldContainer.add(runCommandTextField);
-        JButton copyJobCommandButton = new JButton("Copy to clipboard");
+        JButton copyJobCommandButton = new JButton(COPY_TO_CLIPBOARD_BUTTON_TEXT);
         copyJobCommandButton.addActionListener(new CopyJobCommandListener());
         runCommandTextFieldContainer.add(copyJobCommandButton);
         jobPanel.add(runCommandTextFieldContainer);
@@ -132,7 +152,7 @@ public class IntegrationJobTab implements JobTab {
 
         publishMethodTextFieldContainer.add(publishMethodComboBox);
 
-        publishViaFTPSmartUpdateCheckBox = new JCheckBox("Publish via FTP \"SmartUpdate\"");
+        publishViaFTPSmartUpdateCheckBox = new JCheckBox(PUBLISH_VIA_FTP_CHECKBOX_TEXT);
         publishViaFTPSmartUpdateCheckBox.addActionListener(
                 new PublishViaFTPSmartUpdateCheckBoxListener());
         JPanel publishViaFTPSmartUpdateLabelContainer = new JPanel(FLOW_LEFT);
@@ -164,7 +184,7 @@ public class IntegrationJobTab implements JobTab {
                 JOB_FILE_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
         fileSelectorContainer.add(fileToPublishTextField);
         JFileChooser fileToPublishChooser = new JFileChooser();
-        JButton openButton = new JButton("Select a file...");
+        JButton openButton = new JButton(BROWSE_BUTTON_TEXT);
         FileToPublishSelectorListener chooserListener = new FileToPublishSelectorListener(
                 fileToPublishChooser, fileToPublishTextField);
         openButton.addActionListener(chooserListener);
@@ -172,7 +192,7 @@ public class IntegrationJobTab implements JobTab {
         jobPanel.add(fileSelectorContainer);
 
         jobPanel.add(new JLabel(""));
-        fileToPublishHasHeaderCheckBox = new JCheckBox("File to publish contains a header row");
+        fileToPublishHasHeaderCheckBox = new JCheckBox(CONTAINS_A_HEADER_ROW_CHECKBOX_TEXT);
 
         JPanel hasHeaderRowLabelContainer = new JPanel(FLOW_LEFT);
         hasHeaderRowLabelContainer.add(fileToPublishHasHeaderCheckBox);
@@ -190,7 +210,8 @@ public class IntegrationJobTab implements JobTab {
 
         updatePublishViaFTPSmartUpdateUIFields(job.getPublishMethod(),
                 job.getPublishViaFTP());
-        ftpControlFileTextField.setText(job.getPathToFTPControlFile());
+
+        updateControlFileInputs(job.getPathToFTPControlFile(), job.getFtpControlFileContent());
 
         jobFileLocation = job.getPathToSavedFile();
         // if this is an existing job (meaning the job was opened from a file)
@@ -201,6 +222,31 @@ public class IntegrationJobTab implements JobTab {
         }
 
         jobTabTitleLabel = new JLabel(job.getJobFilename());
+    }
+
+    private void updateControlFileInputs(final String pathToFtpControlFile, final String controlFileContent) {
+        if((pathToFtpControlFile == null || pathToFtpControlFile.equals(""))
+                && (controlFileContent == null || controlFileContent.equals(""))) {
+            setFtpControlFileSelectorEnabled(true);
+            setEditGenerateFtpControlFileButtonEnabled(true);
+        } else if(pathToFtpControlFile != null && !pathToFtpControlFile.equals("")) {
+            ftpControlFileTextField.setText(pathToFtpControlFile);
+            setFtpControlFileSelectorEnabled(true);
+            setEditGenerateFtpControlFileButtonEnabled(false);
+        } else {
+            ftpControlFileContentTextArea.setText(controlFileContent);
+            setFtpControlFileSelectorEnabled(false);
+            setEditGenerateFtpControlFileButtonEnabled(true);
+        }
+    }
+
+    private void setFtpControlFileSelectorEnabled(boolean setSelectFtpControlFileEnabled) {
+        ftpControlFileTextField.setEnabled(setSelectFtpControlFileEnabled);
+        browseForControlFileButton.setEnabled(setSelectFtpControlFileEnabled);
+    }
+
+    private void setEditGenerateFtpControlFileButtonEnabled(boolean setEditGenerateFtpControlFileEnabled) {
+        generateEditControlFileButton.setEnabled(setEditGenerateFtpControlFileEnabled);
     }
 
     private void updatePublishViaFTPSmartUpdateUIFields(PublishMethod publishMethod,
@@ -231,6 +277,7 @@ public class IntegrationJobTab implements JobTab {
         jobToRun.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
         jobToRun.setPublishViaFTP(publishViaFTPSmartUpdateCheckBox.isSelected());
         jobToRun.setPathToFTPControlFile(ftpControlFileTextField.getText());
+        jobToRun.setFtpControlFileContent(ftpControlFileContentTextArea.getText());
         return jobToRun.run();
     }
 
@@ -244,6 +291,7 @@ public class IntegrationJobTab implements JobTab {
         newIntegrationJob.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
         newIntegrationJob.setPublishViaFTP(publishViaFTPSmartUpdateCheckBox.isSelected());
         newIntegrationJob.setPathToFTPControlFile(ftpControlFileTextField.getText());
+        newIntegrationJob.setFtpControlFileContent(ftpControlFileContentTextArea.getText());
         newIntegrationJob.setPathToSavedFile(jobFileLocation);
 
         // TODO If an existing file was selected WARN user of overwriting
@@ -270,7 +318,11 @@ public class IntegrationJobTab implements JobTab {
                 updateJobCommandTextField = true;
             }
         }
-        // actually save the job file (may overwrite)
+
+        saveJobAsFile(newIntegrationJob, updateJobCommandTextField, selectedJobFileLocation);
+    }
+
+    private void saveJobAsFile(IntegrationJob newIntegrationJob, boolean updateJobCommandTextField, String selectedJobFileLocation) {
         try {
             newIntegrationJob.writeToFile(selectedJobFileLocation);
 
@@ -305,7 +357,7 @@ public class IntegrationJobTab implements JobTab {
             fileChooser = chooser;
             filePathTextField = textField;
             fileChooser.setFileFilter(
-                    getFileChooserFilter(IntegrationJob.allowedFileToPublishExtensions));
+                    UIUtility.getFileChooserFilter(IntegrationJob.allowedFileToPublishExtensions));
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -327,7 +379,7 @@ public class IntegrationJobTab implements JobTab {
             fileChooser = chooser;
             filePathTextField = textField;
             fileChooser.setFileFilter(
-                    getFileChooserFilter(IntegrationJob.allowedFtpControlFileExtensions));
+                    UIUtility.getFileChooserFilter(IntegrationJob.allowedFtpControlFileExtensions));
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -335,6 +387,8 @@ public class IntegrationJobTab implements JobTab {
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 filePathTextField.setText(file.getAbsolutePath());
+                setFtpControlFileSelectorEnabled(true);
+                setEditGenerateFtpControlFileButtonEnabled(false);
             } else {
                 // Open command cancelled by user: do nothing
             }
@@ -357,21 +411,6 @@ public class IntegrationJobTab implements JobTab {
                     (PublishMethod) publishMethodComboBox.getSelectedItem(),
                     publishViaFTPSmartUpdateCheckBox.isSelected());
         }
-    }
-
-    private FileNameExtensionFilter getFileChooserFilter(List<String> allowedExtensions) {
-        String extensionsMsg = "";
-        int numExtensions = allowedExtensions.size();
-        String[] allowedFileExtensions = new String[numExtensions];
-        for(int i = 0; i < numExtensions; i++) {
-            if(i > 0)
-                extensionsMsg += ", ";
-            allowedFileExtensions[i] = allowedExtensions.get(i);
-            extensionsMsg += "*." + allowedFileExtensions[i];
-        }
-        FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                extensionsMsg, allowedFileExtensions);
-        return filter;
     }
 
     private class JobCommandTextFieldListener implements MouseListener {
@@ -397,6 +436,89 @@ public class IntegrationJobTab implements JobTab {
             Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
             clpbrd.setContents(stringSelection, null);
         }
+    }
+
+    private class EditGenerateControlFileListener implements ActionListener {
+        public void actionPerformed(ActionEvent evnt) {
+            String generateControlFileErrorMessage = null;
+            String previousControlFileContent = ftpControlFileContentTextArea.getText();
+            String controlFileContent = previousControlFileContent;
+
+            if(previousControlFileContent.equals(EMPTY_TEXTAREA_CONTENT)) {
+                if(!fileToPublishIsSelected()) {
+                    generateControlFileErrorMessage = "Error generating control file: " +
+                            "you must select a File to Publish";
+                } else if(!datasetIdValid()) {
+                    generateControlFileErrorMessage = "Error generating control file: " +
+                            "you must enter valid Dataset ID";
+                } else {
+                    try {
+                        controlFileContent = IntegrationUtility.generateControlFileContent(
+                                getSodaDdl(),
+                                fileToPublishTextField.getText(),
+                                (PublishMethod) publishMethodComboBox.getSelectedItem(),
+                                datasetIDTextField.getText(),
+                                fileToPublishHasHeaderCheckBox.isSelected());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        generateControlFileErrorMessage = "Error generating control file: " + e.getMessage();
+                    }
+                }
+            }
+
+            if(generateControlFileErrorMessage == null) {
+                int clickedOkOrCancel = showEditControlFileDialog(controlFileContent);
+                if(clickedOkOrCancel == JOptionPane.OK_OPTION) {
+                    setFtpControlFileSelectorEnabled(false);
+                    setEditGenerateFtpControlFileButtonEnabled(true);
+                } else if (clickedOkOrCancel == JOptionPane.CANCEL_OPTION) {
+                    // Set control file content to its previous content
+                    ftpControlFileContentTextArea.setText(previousControlFileContent);
+                }
+            } else {
+                JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
+            }
+        }
+
+        private boolean fileToPublishIsSelected() {
+            String fileToPublish = fileToPublishTextField.getText();
+            return !fileToPublish.equals("");
+        }
+
+        private boolean datasetIdValid() {
+            String datasetId = datasetIDTextField.getText();
+            return IntegrationUtility.uidIsValid(datasetId);
+        }
+
+        /**
+         * Display dialog with scrollable text area allowing editing
+         * of given control file content
+         *
+         * @param textAreaContent
+         * @return generated scrollable text area
+         */
+        private int showEditControlFileDialog(String textAreaContent) {
+            ftpControlFileContentTextArea.setText(textAreaContent);
+            JScrollPane scrollPane = new JScrollPane(ftpControlFileContentTextArea);
+            ftpControlFileContentTextArea.setLineWrap(true);
+            ftpControlFileContentTextArea.setWrapStyleWord(true);
+            ftpControlFileContentTextArea.setCaretPosition(0);
+            scrollPane.setPreferredSize(CONTROL_FILE_EDITOR_DIMENSIONS);
+            return JOptionPane.showConfirmDialog(mainFrame,
+                    scrollPane,
+                    "Edit Control File Content",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE);
+        }
+    }
+
+    private SodaDdl getSodaDdl() {
+        UserPreferences userPrefs = new UserPreferencesJava();
+        return SodaDdl.newDdl(
+                userPrefs.getDomain(),
+                userPrefs.getUsername(),
+                userPrefs.getPassword(),
+                userPrefs.getAPIKey());
     }
 
 }

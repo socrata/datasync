@@ -50,7 +50,7 @@ public class IntegrationJob implements Job {
     public static final List<String> allowedFtpControlFileExtensions = Arrays.asList("json");
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
-    private static final long fileVersionUID = 2L;
+    private static final long fileVersionUID = 3L;
 
 	private String datasetID;
 	private String fileToPublish;
@@ -58,6 +58,7 @@ public class IntegrationJob implements Job {
     private boolean fileToPublishHasHeaderRow;
 	private String pathToSavedJobFile;
     private String pathToFTPControlFile;
+    private String ftpControlFileContent;
     private boolean publishViaFTP;
 	
 	public IntegrationJob() {
@@ -82,6 +83,7 @@ public class IntegrationJob implements Job {
         publishMethod = PublishMethod.replace;
         fileToPublishHasHeaderRow = true;
         pathToFTPControlFile = null;
+        ftpControlFileContent = null;
         publishViaFTP = false;
     }
 	
@@ -103,6 +105,7 @@ public class IntegrationJob implements Job {
             setFileToPublishHasHeaderRow(loadedJob.getFileToPublishHasHeaderRow());
             setPathToSavedFile(pathToFile);
             setPathToFTPControlFile(loadedJob.getPathToFTPControlFile());
+            setFtpControlFileContent(loadedJob.getFtpControlFileContent());
             setPublishViaFTP(loadedJob.getPublishViaFTP());
         } catch (IOException e) {
             // if reading new format fails...try reading old format into this object
@@ -129,6 +132,8 @@ public class IntegrationJob implements Job {
                 setPathToSavedFile(pathToFile);
                 setFileToPublishHasHeaderRow(true);
                 setPublishViaFTP(false);
+                setPathToFTPControlFile(null);
+                setFtpControlFileContent(null);
             }
             finally{
                 input.close();
@@ -185,21 +190,24 @@ public class IntegrationJob implements Job {
             }
 		}
         if(publishViaFTP) {
-            if(pathToFTPControlFile == null || pathToFTPControlFile.equals("")) {
+            if((pathToFTPControlFile == null || pathToFTPControlFile.equals("")) &&
+                    (ftpControlFileContent == null || ftpControlFileContent.equals(""))) {
                 JobStatus errorStatus = JobStatus.PUBLISH_ERROR;
-                errorStatus.setMessage("You must select a Control file if publishing via FTP SmartUpdate");
+                errorStatus.setMessage("You must generate or select a Control file if publishing via FTP SmartUpdate");
                 return errorStatus;
             } else {
-                File controlFile = new File(pathToFTPControlFile);
-                if(!controlFile.exists() || controlFile.isDirectory()) {
-                    JobStatus errorStatus = JobStatus.PUBLISH_ERROR;
-                    errorStatus.setMessage(pathToFTPControlFile + ": FTP control file does not exist");
-                    return errorStatus;
+                if(pathToFTPControlFile != null && !pathToFTPControlFile.equals("")) {
+                    File controlFile = new File(pathToFTPControlFile);
+                    if(!controlFile.exists() || controlFile.isDirectory()) {
+                        JobStatus errorStatus = JobStatus.PUBLISH_ERROR;
+                        errorStatus.setMessage(pathToFTPControlFile + ": FTP control file does not exist");
+                        return errorStatus;
+                    }
                 }
             }
         }
 		
-		// TODO add more validation?
+		// TODO add more validation? (e.g. validation of File To Publish header row
 		
 		return JobStatus.VALID;
 	}
@@ -212,8 +220,9 @@ public class IntegrationJob implements Job {
         String runErrorMessage = null;
 
 		JobStatus validationStatus = validate(connectionInfo);
-		if(validationStatus.isError()) {
+        if(validationStatus.isError()) {
 			runStatus = validationStatus;
+            runErrorMessage = validationStatus.getMessage();
 		} else {
 			// attach a requestId to all Producer API calls (for error tracking purposes)
             String jobRequestId = IntegrationUtility.generateRequestId();
@@ -244,8 +253,7 @@ public class IntegrationJob implements Job {
                     // TODO clean all of this up (once I refactor JobStatus class)
                     if(publishViaFTP) {
                         // Publish via FTP
-                        JobStatus ftpSmartUpdateStatus = IntegrationUtility.publishViaFTPDropboxV2(
-                                userPrefs, importer, publishMethod, datasetID, fileToPublishFile, fileToPublishHasHeaderRow, pathToFTPControlFile);
+                        JobStatus ftpSmartUpdateStatus = doPublishViaFTPv2(importer, fileToPublishFile);
                         if(ftpSmartUpdateStatus.isError()) {
                             runErrorMessage = ftpSmartUpdateStatus.getMessage();
                         } else {
@@ -315,10 +323,14 @@ public class IntegrationJob implements Job {
 		String logDatasetID = userPrefs.getLogDatasetID();
 		JobStatus logStatus = JobStatus.SUCCESS;
 		if(!logDatasetID.equals("")) {
+            String logDatasetUrl = userPrefs.getDomain() + "/d/" + userPrefs.getLogDatasetID();
+            System.out.println("Publishing results to logging dataset (" + logDatasetUrl + ")...");
             // TODO refactor this once JobStatus is a normal class
             if(runErrorMessage != null)
                 runStatus.setMessage(runErrorMessage);
 			logStatus = IntegrationUtility.addLogEntry(logDatasetID, connectionInfo, this, runStatus, result);
+            if(logStatus.isError())
+                System.out.println("Error publishing results to logging dataset (" + logDatasetUrl + "): " + logStatus.getMessage());
 		}
 
 		if(userPrefs.emailUponError() && !adminEmail.equals("")) {
@@ -333,6 +345,18 @@ public class IntegrationJob implements Job {
 
         return runStatus;
 	}
+
+    private JobStatus doPublishViaFTPv2(SodaImporter importer, File fileToPublishFile) {
+        if((pathToFTPControlFile != null && !pathToFTPControlFile.equals(""))) {
+            return IntegrationUtility.publishViaFTPDropboxV2(
+                userPrefs, importer,
+                datasetID, fileToPublishFile, new File(pathToFTPControlFile));
+        } else {
+            return IntegrationUtility.publishViaFTPDropboxV2(
+                    userPrefs, importer,
+                    datasetID, fileToPublishFile, ftpControlFileContent);
+        }
+    }
 
     private void sendErrorNotificationEmail(final String adminEmail, final SocrataConnectionInfo connectionInfo, final JobStatus runStatus, final String runErrorMessage, final String logDatasetID, final JobStatus logStatus) {
         String errorEmailMessage = "";
@@ -447,6 +471,13 @@ public class IntegrationJob implements Job {
     @JsonProperty("pathToFTPControlFile")
     public void setPathToFTPControlFile(String newPathToFTPControlFile) {
         pathToFTPControlFile = newPathToFTPControlFile; }
+
+    @JsonProperty("ftpControlFileContent")
+    public String getFtpControlFileContent() { return ftpControlFileContent; }
+
+    @JsonProperty("ftpControlFileContent")
+    public void setFtpControlFileContent(String newFtpControlFileContent) {
+        ftpControlFileContent = newFtpControlFileContent; }
 
     @JsonProperty("publishViaFTP")
     public boolean getPublishViaFTP() { return publishViaFTP; }

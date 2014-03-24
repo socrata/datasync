@@ -213,12 +213,53 @@ public class IntegrationUtilityTest extends TestBase {
     @Test
     public void testReplaceViaFTPWithControlFile() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
         final SodaDdl ddl = createSodaDdl();
+        final Soda2Producer producer = createProducer();
         final UserPreferences userPrefs = getUserPrefs();
 
-        File twoRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
+        // Ensures dataset is in known state (2 rows)
+        File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
+        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+
+        File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
         JobStatus result = IntegrationUtility.publishViaFTPDropboxV2(
-                userPrefs, ddl, PublishMethod.replace, UNITTEST_DATASET_ID, twoRowsFile, true,
-                "src/test/resources/datasync_unit_test_three_rows_control.json");
+                userPrefs, ddl, UNITTEST_DATASET_ID, threeRowsFile,
+                new File("src/test/resources/datasync_unit_test_three_rows_control.json"));
+
+        TestCase.assertEquals(JobStatus.SUCCESS, result);
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
+    }
+
+    @Test
+    public void testReplaceViaFTPWithControlFileContent() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
+        final SodaDdl ddl = createSodaDdl();
+        final Soda2Producer producer = createProducer();
+        final UserPreferences userPrefs = getUserPrefs();
+
+        // Ensures dataset is in known state (2 rows)
+        File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
+        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+
+        String controlFileContent = "{\n" +
+                "  \"action\" : \"Replace\", \n" +
+                "  \"csv\" :\n" +
+                "    {\n" +
+                "      \"fixedTimestampFormat\" : \"ISO8601\",\n" +
+                "      \"separator\" : \",\",\n" +
+                "      \"timezone\" : \"UTC\",\n" +
+                "      \"encoding\" : \"utf-8\",\n" +
+                "      \"overrides\" : {},\n" +
+                "      \"quote\" : \"\\\"\",\n" +
+                "      \"emptyTextIsNull\" : true,\n" +
+                "      \"columns\" : [\"id\",\"name\", \"another_name\", \"date\"],\n" +
+                "      \"skip\" : 1,\n" +
+                "      \"floatingTimestampFormat\" : \"MM/dd/yyyy\"\n" +
+                "    }\n" +
+                "}";
+
+        File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
+        JobStatus result = IntegrationUtility.publishViaFTPDropboxV2(
+                userPrefs, ddl, UNITTEST_DATASET_ID, threeRowsFile,
+                controlFileContent);
 
         TestCase.assertEquals(JobStatus.SUCCESS, result);
         TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
@@ -229,25 +270,12 @@ public class IntegrationUtilityTest extends TestBase {
         final SodaDdl ddl = createSodaDdl();
         final UserPreferences userPrefs = getUserPrefs();
 
-        File twoRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
+        File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
         JobStatus result = IntegrationUtility.publishViaFTPDropboxV2(
-                userPrefs, ddl, PublishMethod.replace, UNITTEST_DATASET_ID, twoRowsFile, true,
-                "src/test/resources/datasync_unit_test_three_rows_control_invalid.json");
+                userPrefs, ddl, UNITTEST_DATASET_ID, threeRowsFile,
+                new File("src/test/resources/datasync_unit_test_three_rows_control_invalid.json"));
 
         TestCase.assertEquals(JobStatus.PUBLISH_ERROR, result);
-    }
-
-    @Test
-    public void testReplaceViaFTPWithoutControlFile() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
-        final SodaDdl ddl = createSodaDdl();
-        final UserPreferences userPrefs = getUserPrefs();
-
-        File twoRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_ISO_dates.csv");
-        JobStatus result = IntegrationUtility.publishViaFTPDropboxV2(
-                userPrefs, ddl, PublishMethod.replace, UNITTEST_DATASET_ID, twoRowsFile, false, null);
-
-        TestCase.assertEquals(JobStatus.SUCCESS, result);
-        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test

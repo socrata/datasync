@@ -6,7 +6,9 @@ import net.java.balloontip.styles.ToolTipBalloonStyle;
 import net.java.balloontip.utils.ToolTipUtils;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.util.*;
 
 /**
  * Author: Adrian Laurenzi
@@ -41,5 +43,20 @@ public class UIUtility {
         BalloonTip chunkSizeTip = new BalloonTip(chunkSizeHelp, helpBubbleText, helpBubbleStyle, false);
         ToolTipUtils.balloonToToolTip(chunkSizeTip, 100, 100000);
         return chunkSizeHelp;
+    }
+
+    public static FileNameExtensionFilter getFileChooserFilter(java.util.List<String> allowedExtensions) {
+        String extensionsMsg = "";
+        int numExtensions = allowedExtensions.size();
+        String[] allowedFileExtensions = new String[numExtensions];
+        for(int i = 0; i < numExtensions; i++) {
+            if(i > 0)
+                extensionsMsg += ", ";
+            allowedFileExtensions[i] = allowedExtensions.get(i);
+            extensionsMsg += "*." + allowedFileExtensions[i];
+        }
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                extensionsMsg, allowedFileExtensions);
+        return filter;
     }
 }

@@ -246,7 +246,7 @@ public class IntegrationUtility {
     }
 
     /**
-     * Get file extension 
+     * Get file extension from the given path to a file
      * @param file filename 
      * @return
      */
@@ -289,25 +289,69 @@ public class IntegrationUtility {
      *
      * @param userPrefs object containing the user preferences
      * @param ddl Soda 2 ddl object
-     * @param publishMethod to use to publish (upsert, append, replace, or delete)
-     *               NOTE: this option will be overriden if userPrefs has pathToFTPControlFile set
      * @param datasetId id of the Socrata dataset to publish to
      * @param csvOrTsvFile file to publish containing data in comma- or tab- separated values (CSV or TSV) format
-     * @param containsHeaderRow if true assume the first row in CSV/TSV file is a list of the dataset columns,
-     *                          otherwise upload all rows as new rows (column order must exactly match that of
-     *                          Socrata dataset)
-     *                          NOTE: this option will be overriden if userPrefs has pathToFTPControlFile set
-     * @param pathToFTPControlFile path to control.json (if this is supplied it will override publishMethod and
-     *                             containsHeaderRow)
+     * @param controlFile Control.json file to configure FTP dropbox v2
      * @return JobStatus containing success or error information
      */
     public static JobStatus publishViaFTPDropboxV2(final UserPreferences userPrefs, final SodaDdl ddl,
-                                                   final PublishMethod publishMethod, final String datasetId,
-                                                   final File csvOrTsvFile, boolean containsHeaderRow,
-                                                   final String pathToFTPControlFile) {
+                                                   final String datasetId, final File csvOrTsvFile,
+                                                   final File controlFile) {
+        try {
+            InputStream inputControlFile = new FileInputStream(controlFile);
+            return publishViaFTPDropboxV2(userPrefs, ddl, datasetId, csvOrTsvFile, inputControlFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage("Error uploading control file: " + e.getMessage());
+            return status;
+        }
+
+
+    }
+
+    /**
+     * Publishes the given CSV/TSV file to the dataset with given datasetId
+     * using FTP Dropbox v2.0 (a.k.a. "SmartUpdate").
+     *
+     * @param userPrefs object containing the user preferences
+     * @param ddl Soda 2 ddl object
+     * @param datasetId id of the Socrata dataset to publish to
+     * @param csvOrTsvFile file to publish containing data in comma- or tab- separated values (CSV or TSV) format
+     * @param controlFileContent content of Control file to configure FTP dropbox v2
+     * @return JobStatus containing success or error information
+     */
+    public static JobStatus publishViaFTPDropboxV2(final UserPreferences userPrefs, final SodaDdl ddl,
+                                                   final String datasetId, final File csvOrTsvFile,
+                                                   final String controlFileContent) {
+        try {
+            InputStream inputControlFile = new ByteArrayInputStream(controlFileContent.getBytes("UTF-8"));
+            return publishViaFTPDropboxV2(userPrefs, ddl, datasetId, csvOrTsvFile, inputControlFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage("Error uploading control file content: " + e.getMessage());
+            return status;
+        }
+    }
+
+    /**
+     * Publishes the given CSV/TSV file to the dataset with given datasetId
+     * using FTP Dropbox v2.0 (a.k.a. "SmartUpdate").
+     *
+     * @param userPrefs object containing the user preferences
+     * @param ddl Soda 2 ddl object
+     * @param datasetId id of the Socrata dataset to publish to
+     * @param csvOrTsvFile file to publish containing data in comma- or tab- separated values (CSV or TSV) format
+     * @param inputControlFile  stream of control.json file content
+     * @return JobStatus containing success or error information
+     */
+    private static JobStatus publishViaFTPDropboxV2(final UserPreferences userPrefs, final SodaDdl ddl,
+                                                   final String datasetId, final File csvOrTsvFile,
+                                                   final InputStream inputControlFile) {
         JobStatus status = JobStatus.PUBLISH_ERROR;
 
-        String ftpHost = null;
+        String ftpHost;
         try {
             ftpHost = getFTPHost(userPrefs.getDomain(), ddl);
         } catch (Exception e) {
@@ -363,16 +407,6 @@ public class IntegrationUtility {
                     return status;
                 }
 
-                InputStream inputControlFile = null;
-                try {
-                    inputControlFile = getControlFileInputStream(
-                            ddl, publishMethod, datasetId, containsHeaderRow, pathToFTPControlFile);
-                } catch (Exception e) {
-                    closeFTPConnection(ftp);
-                    e.printStackTrace();
-                    setStatusMessage(datasetId, status, e.getMessage());
-                    return status;
-                }
                 // upload control.json file content
                 String controlFilePathFTP = pathToDatasetDir + "/" + FTP_CONTROL_FILENAME;
                 String controlResponse = uploadAndEnqueue(ftp, inputControlFile, controlFilePathFTP, 0);
@@ -506,81 +540,73 @@ public class IntegrationUtility {
     }
 
     /**
-     * Generates content of control.json file, either from existing file or generates
-     * content based on job parameters
+     * Generates default content of control.json based on given job parameters
      *
-     * @param ddl
-     * @param publishMethod
-     * @param datasetId
-     * @param containsHeaderRow
-     * @param pathToFTPControlFile
-     * @return
-     * @throws FileNotFoundException
-     * @throws UnsupportedEncodingException
+     * @param ddl Soda 2 ddl object
+     * @param publishMethod to use to publish (upsert, append, replace, or delete)
+     *               NOTE: this option will be overriden if userPrefs has pathToFTPControlFile set
+     * @param datasetId id of the Socrata dataset to publish to
+     * @param fileToPublish filename of file to publish (.tsv or .csv file)
+     * @param containsHeaderRow if true assume the first row in CSV/TSV file is a list of the dataset columns,
+     *                          otherwise upload all rows as new rows (column order must exactly match that of
+     *                          Socrata dataset)
+     * @return content of control.json based on given job parameters
      * @throws SodaError
      * @throws InterruptedException
      */
-    private static InputStream getControlFileInputStream(
-            SodaDdl ddl, PublishMethod publishMethod, String datasetId, boolean containsHeaderRow, String pathToFTPControlFile) throws FileNotFoundException, UnsupportedEncodingException, SodaError, InterruptedException {
-        InputStream inputControlFile;
-        if(pathToFTPControlFile != null) {
-            // if control file supplied in User Preferences
-            inputControlFile = new FileInputStream(pathToFTPControlFile);
-        } else {
-            // configure SmartUpdate job based on UI input (rather than control.json)
-            String skipValue = "0";
-            String columnsValue = "null";
-
-            if(!containsHeaderRow) {
-                // if no header row get API field names for each column in dataset
-                columnsValue = getDatasetFieldNames(ddl, datasetId);
-            }
-
-            // In FTP Dropbox v2 there is only Append (append == upsert)
-            if(publishMethod.equals(PublishMethod.upsert)) {
-                publishMethod = PublishMethod.append;
-            }
-
-            String publishMethodCapitalized = publishMethod.name().substring(0, 1).toUpperCase()
-                    + publishMethod.name().substring(1);
-            String controlFileContent = "{\n" +
-                    "  \"action\" : \"" + publishMethodCapitalized + "\", \n" +
-                    "  \"csv\" :\n" +
-                    "    {\n" +
-                    "      \"fixedTimestampFormat\" : \"ISO8601\",\n" +
-                    "      \"separator\" : \",\",\n" +
-                    "      \"timezone\" : \"UTC\",\n" +
-                    "      \"encoding\" : \"utf-8\",\n" +
-                    "      \"overrides\" : {},\n" +
-                    "      \"quote\" : \"\\\"\",\n" +
-                    "      \"emptyTextIsNull\" : true,\n" +
-                    "      \"columns\" : " + columnsValue + ",\n" +
-                    "      \"skip\" : " + skipValue + ",\n" +
-                    "      \"floatingTimestampFormat\" : \"ISO8601\",\n" +
-                    "      \"trimWhitespace\" : true\n" +
-                    "    },\n" +
-                    "  \"tsv\" :\n" +
-                    "    {\n" +
-                    "      \"fixedTimestampFormat\" : \"ISO8601\",\n" +
-                    "      \"separator\" : \"\\t\",\n" +
-                    "      \"timezone\" : \"UTC\",\n" +
-                    "      \"encoding\" : \"utf-8\",\n" +
-                    "      \"overrides\" : {},\n" +
-                    "      \"quote\" : \"\\u0000\",\n" +
-                    "      \"emptyTextIsNull\" : true,\n" +
-                    "      \"columns\" : " + columnsValue + ",\n" +
-                    "      \"skip\" : " + skipValue + ",\n" +
-                    "      \"floatingTimestampFormat\" : \"ISO8601\",\n" +
-                    "      \"trimWhitespace\" : true\n" +
-                    "    }\n" +
-                    "}";
-            inputControlFile = new ByteArrayInputStream(controlFileContent.getBytes("UTF-8"));
+    public static String generateControlFileContent(final SodaDdl ddl,
+                                                    final String fileToPublish, final PublishMethod publishMethod,
+                                                    final String datasetId, final boolean containsHeaderRow) throws SodaError, InterruptedException {
+        String skipValue = "0";
+        String columnsValue = "null";
+        if(!containsHeaderRow) {
+            // if no header row get API field names for each column in dataset
+            columnsValue = getDatasetFieldNames(ddl, datasetId);
         }
-        return inputControlFile;
+
+        // In FTP Dropbox v2 there is only Append (append == upsert)
+        PublishMethod ftpDropboxPublishMethod = publishMethod;
+        if(publishMethod.equals(PublishMethod.upsert)) {
+            ftpDropboxPublishMethod = PublishMethod.append;
+        }
+
+        String fileToPublishExtension = IntegrationUtility.getFileExtension(fileToPublish);
+        String separator = ",";
+        String fileType = "csv";
+        String quote = "\\\"";
+        if(fileToPublishExtension.equalsIgnoreCase("tsv")) {
+            fileType = "tsv";
+            separator = "\\t";
+            quote = "\\u0000";
+        }
+
+        return "{\n" +
+                "  \"action\" : \"" + capitalizeFirstLetter(ftpDropboxPublishMethod) + "\", \n" +
+                "  \"" + fileType + "\" :\n" +
+                "    {\n" +
+                "      \"columns\" : " + columnsValue + ",\n" +
+                "      \"skip\" : " + skipValue + ",\n" +
+                "      \"fixedTimestampFormat\" : \"ISO8601\",\n" +
+                "      \"floatingTimestampFormat\" : \"ISO8601\",\n" +
+                "      \"timezone\" : \"UTC\",\n" +
+                "      \"separator\" : \"" + separator + "\",\n" +
+                "      \"quote\" : \"" + quote + "\",\n" +
+                "      \"encoding\" : \"utf-8\",\n" +
+                "      \"emptyTextIsNull\" : true,\n" +
+                "      \"trimWhitespace\" : true,\n" +
+                "      \"trimServerWhitespace\" : true,\n" +
+                "      \"overrides\" : {}\n" +
+                "    }\n" +
+                "}";
+    }
+
+    private static String capitalizeFirstLetter(PublishMethod ftpDropboxPublishMethod) {
+        return ftpDropboxPublishMethod.name().substring(0, 1).toUpperCase()
+                + ftpDropboxPublishMethod.name().substring(1);
     }
 
     /**
-     * Gets list of dataset field names in the form [col1, col2,...]
+     * Returns list of dataset field names in the form '[col1, col2,...]'
      *
      * @param ddl
      * @param datasetId

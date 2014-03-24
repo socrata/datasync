@@ -334,6 +334,15 @@ public class SimpleIntegrationWizard {
 		}
 	}
 
+    private class AuthenticationDetailsFocusListener implements FocusListener {
+        @Override
+        public void focusGained(FocusEvent e) { }
+        @Override
+        public void focusLost(FocusEvent e) {
+            saveAuthenticationInfoFromForm();
+        }
+    }
+
 	private class NewStandardJobListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
             addJobTab(getNewIntegrationJob());
@@ -676,6 +685,13 @@ public class SimpleIntegrationWizard {
 		apiKeyTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
 		authenticationDetailsPanel.add(apiKeyTextField);
 		authenticationDetailsPanel.setPreferredSize(AUTH_DETAILS_DIMENSION);
+
+        AuthenticationDetailsFocusListener focusListener = new AuthenticationDetailsFocusListener();
+        domainTextField.addFocusListener(focusListener);
+        usernameTextField.addFocusListener(focusListener);
+        passwordField.addFocusListener(focusListener);
+        apiKeyTextField.addFocusListener(focusListener);
+
 		return authenticationDetailsPanel;
 	}
     
