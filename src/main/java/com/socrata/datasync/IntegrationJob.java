@@ -5,13 +5,19 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 /**
- *
- * **** IMPORTANT NOTICE PLEASE READ ****
+ * ******************************************************
+ * ******************************************************
+ * ************ IMPORTANT NOTICE PLEASE READ ************
+ * ******************************************************
  *
  * The purpose of this class is solely for backwards compatability for
  * opening old .sij files (saved from DataSync 0.2 or earlier). The
  * "real"/current implementation of this class is:
  * com.socrata.datasync.job.IntegrationJob
+ *
+ * ******************************************************
+ * ******************************************************
+ * ******************************************************
  */
 public class IntegrationJob implements Serializable {
     /**
