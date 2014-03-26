@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>DataSync</groupId>
     <artifactId>DataSync</artifactId>
-    <version>0.3.0.2-SNAPSHOT</version>
+    <version>0.4.6-SNAPSHOT</version>
     <developers>
         <developer>
             <name>Adrian Laurenzi</name>
@@ -55,8 +55,8 @@
     <dependencies>
         <dependency>
             <groupId>com.socrata</groupId>
-            <artifactId>soda-api-java</artifactId>
-            <version>0.9.4</version>
+            <artifactId>soda-api-java-NBE</artifactId>
+            <version>0.9.8.3-NBE</version>
         </dependency>
         <dependency>
             <groupId>javax.mail</groupId>
@@ -108,6 +108,11 @@
             <groupId>net.java.balloontip</groupId>
             <artifactId>balloontip</artifactId>
             <version>1.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.16</version>
         </dependency>
     </dependencies>
 </project>

@@ -20,6 +20,7 @@ import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.soql.SoqlQuery;
 import com.sun.jersey.api.client.ClientResponse;
+import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -37,9 +38,9 @@ public class SimpleIntegrationWizard {
 	 * GUI interface to DataSync
 	 */
 	
-	private final String VERSION = "0.3";
-	private final String METADATA_DOMAIN = "https://adrian.demo.socrata.com";
-	private final String METADATA_DATASET_ID = "7w7i-q9n6";
+	private final String VERSION = DataSyncMetadata.getVersion();
+	private final String METADATA_DOMAIN = DataSyncMetadata.getMetadataDomain();
+	private final String METADATA_DATASET_ID = DataSyncMetadata.getMetadataDatasetId();
 	
 	private final String TITLE = "Socrata DataSync " + VERSION;
 	private final String LOGO_FILE_PATH = "/datasync_logo.png";
@@ -47,6 +48,7 @@ public class SimpleIntegrationWizard {
 	private final int FRAME_HEIGHT = 410;
 	private final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 235);
     private final Dimension BUTTON_PANEL_DIMENSION = new Dimension(780, 40);
+    private final Dimension LOG_SCROLL_PANE_DIMENSIONS = new Dimension(650, 350);
     private final int SSL_PORT_TEXTFIELD_HEIGHT = 26;
 	private final int DEFAULT_TEXTFIELD_COLS = 25;
 	private final Dimension AUTH_DETAILS_DIMENSION = new Dimension(465, 100);
@@ -95,6 +97,10 @@ public class SimpleIntegrationWizard {
 	private JTabbedPane jobTabsPane;
 	private JFrame frame;
 	private JFrame prefsFrame;
+    private JFrame logViewerFrame;
+    private JTextArea logViewerTextArea;
+
+    //private static Thread jobRunnerThread = new Thread();
 	
 	/*
 	 * Constructs the GUI and displays it on the screen.
@@ -102,10 +108,12 @@ public class SimpleIntegrationWizard {
 	public SimpleIntegrationWizard() {
 		// load user preferences (saved locally)
 		userPrefs = new UserPreferencesJava();
-		
+
 		// Build GUI
-		frame = new JFrame(TITLE);
+        frame = new JFrame(TITLE);
 		frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+
+        createLogViewerFrame();
 
         jobTabs = new ArrayList<JobTab>();
 		// save tabs on close
@@ -124,24 +132,10 @@ public class SimpleIntegrationWizard {
 		
 		JPanel mainPanel = generateMainPanel();
 		loadAuthenticationInfoIntoForm();
-		
-		// Create preferences popup window
-		prefsFrame = new JFrame("Preferences");
-		prefsFrame.setSize(PREFERENCES_FRAME_WIDTH, PREFERENCES_FRAME_HEIGHT);
-		prefsFrame.setVisible(false);
-		JPanel preferencesPanel = generatePreferencesPanel();
-		prefsFrame.add(preferencesPanel);
-		prefsFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		prefsFrame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent we) {
-            	prefsFrame.setVisible(false);
-            }
-        });
+		generatePreferencesWindow();
 		
         frame.add(mainPanel);
-		
-        frame.pack();
+		frame.pack();
         // centers the window
      	frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
@@ -153,8 +147,52 @@ public class SimpleIntegrationWizard {
 			// do nothing upon failure
 		}
 	}
-	
-	/** Queries special Socrata dataset with DataSync metadata to 
+
+    private void createLogViewerFrame() {
+        logViewerFrame = new JFrame("Job log viewer");
+        logViewerFrame.setLocationRelativeTo(frame);
+        logViewerFrame.setSize(LOG_SCROLL_PANE_DIMENSIONS);
+        logViewerFrame.setVisible(false);
+
+        logViewerTextArea = new JTextArea();
+        JScrollPane logScrollPane = new JScrollPane(logViewerTextArea);
+        logViewerTextArea.setLineWrap(true);
+        logViewerTextArea.setWrapStyleWord(true);
+        logViewerTextArea.setCaretPosition(0);
+        logScrollPane.setPreferredSize(LOG_SCROLL_PANE_DIMENSIONS);
+        logViewerFrame.add(logScrollPane);
+        logViewerFrame.add(logViewerTextArea);
+
+        logViewerFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        logViewerFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent we) {
+                // TODO allow close operation only when job finished/failed
+                logViewerFrame.setVisible(false);
+            }
+        });
+
+        Logger logger = Logger.getRootLogger();
+        LogViewerAppender logAppender = new LogViewerAppender(logViewerTextArea);
+        logger.addAppender(logAppender);
+    }
+
+    private void generatePreferencesWindow() {
+        prefsFrame = new JFrame("Preferences");
+        prefsFrame.setSize(PREFERENCES_FRAME_WIDTH, PREFERENCES_FRAME_HEIGHT);
+        prefsFrame.setVisible(false);
+        JPanel preferencesPanel = generatePreferencesPanel();
+        prefsFrame.add(preferencesPanel);
+        prefsFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        prefsFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent we) {
+                prefsFrame.setVisible(false);
+            }
+        });
+    }
+
+    /** Queries special Socrata dataset with DataSync metadata to
 	 *  determine if this is the most recent version. Alert user
 	 *  if a new version is available
 	 *   
@@ -245,35 +283,68 @@ public class SimpleIntegrationWizard {
     }
 
 	private class RunJobNowListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
+		public void actionPerformed(ActionEvent event) {
             // save authentication data (userPrefs)
 			saveAuthenticationInfoFromForm();
-			
-			// create a run integration job with data from form
-	        int selectedJobTabIndex = jobTabsPane.getSelectedIndex();
-            JobTab selectedJobTab = jobTabs.get(selectedJobTabIndex);
-            JobStatus jobStatus = selectedJobTab.runJobNow();
-	        
-	        // show popup with returned status
-            if(!jobStatus.isError() && selectedJobTab.getClass().equals(PortJobTab.class)) {
-                PortJobTab selectedPortJobTab = (PortJobTab) selectedJobTab;
-                Object[] options = {"Yes", "No"};
-                int n = JOptionPane.showOptionDialog(frame,
-                        "Port job completed successfully. Would you like to open the destination dataset?\n",
-                        "Port Job Successful",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE,
-                        null, options, options[0]);
-                if (n == JOptionPane.YES_OPTION) {
-                    IntegrationUtility.openWebpage(selectedPortJobTab.getURIToSinkDataset());
-                }
-            } else {
-	            JOptionPane.showMessageDialog(frame, jobStatus.getMessage());
-            }
+
+            // create a run integration job with data from form
+            showLogViewer();
+            runSelectedJob();
+
+            /*System.out.println("b: " + Thread.activeCount());
+            //Thread.currentThread().interrupt();
+            jobRunnerThread = new Thread(new JobRunner());
+            jobRunnerThread.start();
+            System.out.println("a: " + Thread.activeCount());*/
 		}
-	}
-	
-	private class SaveJobListener implements ActionListener {
+
+        private void showLogViewer() {
+            logViewerTextArea.setText("");
+            logViewerFrame.setVisible(true);
+        }
+    }
+
+    private JobTab getSelectedJobTab() {
+        int selectedJobTabIndex = jobTabsPane.getSelectedIndex();
+        return jobTabs.get(selectedJobTabIndex);
+    }
+
+    /*private class JobRunner implements Runnable
+    {
+        public void run() {
+            runSelectedJob();
+        }
+    }*/
+
+    private void runSelectedJob() {
+        JobTab selectedJobTab = getSelectedJobTab();
+        //Logger logger = Logger.getRootLogger();
+
+        JobStatus jobStatus = selectedJobTab.runJobNow();
+        if(!jobStatus.isError() && selectedJobTab.getClass().equals(PortJobTab.class)) {
+            logViewerFrame.setVisible(false);
+            PortJobTab selectedPortJobTab = (PortJobTab) selectedJobTab;
+            Object[] options = {"Yes", "No"};
+            int n = JOptionPane.showOptionDialog(frame,
+                    "Port job completed successfully. Would you like to open the destination dataset?\n",
+                    "Port Job Successful",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null, options, options[0]);
+            if (n == JOptionPane.YES_OPTION) {
+                IntegrationUtility.openWebpage(selectedPortJobTab.getURIToSinkDataset());
+            }
+        } else {
+            // TODO update
+            if(jobStatus.isError()) {
+                System.err.println("\nJOB FAILED: " + jobStatus.getMessage());
+            } else {
+                System.out.println("\nJOB COMPLETED SUCCESSFULLY");
+            }
+        }
+    }
+
+    private class SaveJobListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			// save authentication data (userPrefs)
 			saveAuthenticationInfoFromForm();
@@ -644,7 +715,7 @@ public class SimpleIntegrationWizard {
 	private class OpenPreferencesListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			// centers the window
-			prefsFrame.setLocationRelativeTo(null);
+			prefsFrame.setLocationRelativeTo(frame);
 			prefsFrame.setVisible(true);
 		}
 	}

@@ -8,5 +8,9 @@ target/
 .classpath
 .project
 DataSync.iml
-old_binaries/datasync_0.2.jar
+old_binaries/*
 *~
+config_ftp_dropbox_prod.json
+config_ftp_dropbox.json
+config_port_to_staging.json
+src/test/resources/basic_test_config_staging.json

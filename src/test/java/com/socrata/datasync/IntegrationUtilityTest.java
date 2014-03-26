@@ -183,6 +183,7 @@ public class IntegrationUtilityTest extends TestBase {
         final Soda2Producer producer = createProducer();
         final SodaDdl ddl = createSodaDdl();
 
+<<<<<<< Updated upstream
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
         IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
@@ -201,6 +202,8 @@ public class IntegrationUtilityTest extends TestBase {
         final Soda2Producer producer = createProducer();
         final SodaDdl ddl = createSodaDdl();
 
+=======
+>>>>>>> Stashed changes
         // Ensures dataset is in known state (3 rows)
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
         IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, true);

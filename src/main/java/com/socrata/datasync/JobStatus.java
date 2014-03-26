@@ -3,6 +3,7 @@ package com.socrata.datasync;
 /**
  * @author Adrian Laurenzi
  */
+//TODO error correctly public class ErrorThing(JobStatus status, String message)
 public enum JobStatus {
 	/**
      * Job completed 

@@ -10,9 +10,20 @@ import java.io.ObjectInputStream;
 import java.util.Arrays;
 import java.util.List;
 
+<<<<<<< Updated upstream
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaImporter;
 import com.socrata.datasync.*;
+=======
+import com.socrata.datasync.*;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
+import com.socrata.api.Soda2Producer;
+import com.socrata.api.SodaImporter;
+>>>>>>> Stashed changes
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.datasync.preferences.UserPreferencesFile;
 import com.socrata.datasync.preferences.UserPreferencesJava;
@@ -314,8 +325,78 @@ public class IntegrationJob implements Job {
 
 		return runStatus;
 	}
+<<<<<<< Updated upstream
 	
 	/**
+=======
+
+    private JobStatus doPublishViaFTPv2(SodaImporter importer, File fileToPublishFile) {
+        if((pathToFTPControlFile != null && !pathToFTPControlFile.equals(""))) {
+            return FTPUtility.publishViaFTPDropboxV2(
+                    userPrefs, importer,
+                    datasetID, fileToPublishFile, new File(pathToFTPControlFile));
+        } else {
+            return FTPUtility.publishViaFTPDropboxV2(
+                    userPrefs, importer,
+                    datasetID, fileToPublishFile, ftpControlFileContent);
+        }
+    }
+
+    private void sendErrorNotificationEmail(final String adminEmail, final SocrataConnectionInfo connectionInfo, final JobStatus runStatus, final String runErrorMessage, final String logDatasetID, final JobStatus logStatus) {
+        String errorEmailMessage = "";
+        String urlToLogDataset = connectionInfo.getUrl() + "/d/" + logDatasetID;
+        if(runStatus.isError()) {
+            errorEmailMessage += "There was an error updating a dataset.\n"
+                    + "\nDataset: " + connectionInfo.getUrl() + "/d/" + getDatasetID()
+                    + "\nFile to publish: " + fileToPublish
++ "\nFile to publish has header row: " + fileToPublishHasHeaderRow
+                    + "\nPublish method: " + publishMethod
+                    + "\nJob File: " + pathToSavedJobFile
+                    + "\nError message: " + runErrorMessage
+                    + "\nLog dataset: " + urlToLogDataset + "\n\n";
+        }
+        if(logStatus.isError()) {
+            errorEmailMessage += "There was an error updating the log dataset: "
+                    + urlToLogDataset + "\n"
+                    + "Error message: " + logStatus.getMessage() + "\n\n";
+        }
+        if(runStatus.isError() || logStatus.isError()) {
+            try {
+                SMTPMailer.send(adminEmail, "Socrata DataSync Error", errorEmailMessage);
+            } catch (Exception e) {
+                System.out.println("Error sending email to: " + adminEmail + "\n" + e.getMessage());
+            }
+        }
+    }
+
+    private UpsertResult doAppendOrUpsertViaHTTP(Soda2Producer producer, SodaImporter importer, File fileToPublishFile, int filesizeChunkingCutoffBytes, int numRowsPerChunk) throws SodaError, InterruptedException, IOException {
+        int numberOfRows = numRowsPerChunk(fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+        UpsertResult result = IntegrationUtility.appendUpsert(
+                producer, importer, datasetID, fileToPublishFile, numberOfRows, fileToPublishHasHeaderRow);
+        return result;
+    }
+
+    private UpsertResult doDeleteViaHTTP(
+            Soda2Producer producer, SodaImporter importer, File fileToPublishFile, int filesizeChunkingCutoffBytes, int numRowsPerChunk)
+            throws SodaError, InterruptedException, IOException {
+        int numberOfRows = numRowsPerChunk(fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+        UpsertResult result = IntegrationUtility.deleteRows(
+                producer, importer, datasetID, fileToPublishFile, numberOfRows, fileToPublishHasHeaderRow);
+        return result;
+    }
+
+    private int numRowsPerChunk(File fileToPublishFile, int filesizeChunkingCutoffBytes, int numRowsPerChunk) {
+        int numberOfRows;
+        if(fileToPublishFile.length() > filesizeChunkingCutoffBytes) {
+            numberOfRows = numRowsPerChunk;
+        } else {
+            numberOfRows = UPLOAD_SINGLE_CHUNK;
+        }
+        return numberOfRows;
+    }
+
+    /**
+>>>>>>> Stashed changes
 	 * Saves this object as a file at given filepath
 	 */
 	public void writeToFile(String filepath) throws IOException {
