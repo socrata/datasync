@@ -184,7 +184,7 @@ public class FTPUtility {
                 }
 
                 logger.info("Publishing entire file via FTPS...");
-                // set request Id for
+                // set request Id for this job
                 String csvOrTsvFileRequestId = setFTPRequestId(ftp, pathToDomainRoot + "/" + FTP_REQUEST_ID_FILENAME);
                 if(csvOrTsvFileRequestId.startsWith(FAILURE_PREFIX)) {
                     closeFTPConnection(ftp);
@@ -208,7 +208,7 @@ public class FTPUtility {
                     dataFilePathFTP = pathToDatasetDir + "/" + csvOrTsvFile.getName();
                 }
 
-                // upload data file
+                // upload CSV/TSV file
                 long dataFileSizeBytes = fileToUpload.length();
                 InputStream inputDataFile = new FileInputStream(fileToUpload);
                 String dataFileResponse = uploadAndEnqueue(ftp, inputDataFile, dataFilePathFTP, dataFileSizeBytes);
@@ -355,7 +355,7 @@ public class FTPUtility {
     private static String getPathToDomainRoot(FTPSClient ftp, SocrataConnectionInfo connectionInfo) throws IOException {
         Logger logger = Logger.getRootLogger();
         String pathToDomainRoot = "";
-        logger.info("ftp.listFiles(FTP_REQUEST_ID_FILENAME);"); // TODO remove
+        logger.info("Obtaining login role - ftp.listFiles(" + FTP_REQUEST_ID_FILENAME + ")");
         FTPFile[] checkRequestIdFile = ftp.listFiles(FTP_REQUEST_ID_FILENAME);
         if(checkRequestIdFile.length == 0) { // user is a SuperAdmin or has multi-domain access
             String domainWithoutHTTP = connectionInfo.getUrl().replaceAll("https://", "");
@@ -401,7 +401,7 @@ public class FTPUtility {
                 lastPollFailed = false;
                 System.out.print("\rPolling upload status..." + uploadStatus);
             } catch (IOException e) {
-                System.out.print("\rFailed upload status...retrying");
+                System.out.print("\rFailed polling upload status...retrying");
                 numSubsequentFailedPolls = (lastPollFailed) ? numSubsequentFailedPolls + 1 : 1;
                 lastPollFailed = true;
             }
@@ -423,7 +423,7 @@ public class FTPUtility {
         Logger logger = Logger.getRootLogger();
         String requestId = IntegrationUtility.generateRequestId();
         InputStream inputRequestId = new ByteArrayInputStream(requestId.getBytes("UTF-8"));
-        logger.info("ftp.storeFile(pathToRequestIdFile, inputRequestId)"); // TODO remove
+        logger.info("Setting job request ID - ftp.storeFile(" + pathToRequestIdFile + ", " + inputRequestId + ")");
         if (!ftp.storeFile(pathToRequestIdFile, inputRequestId)) {
             return FAILURE_PREFIX + ": " + ftp.getReplyString();
         }
@@ -469,6 +469,7 @@ public class FTPUtility {
 
             if(filesize != 0) {
                 // verify the uploaded filesize == given filesize
+                System.out.println("Verifying uploaded filesize of " + path + "...");
                 long uploadedFilesize = getFTPFilesize(ftp, path);
                 if(filesize != uploadedFilesize) {
                     return String.format(FAILURE_PREFIX + ": uploaded filesize (%d B) " +
@@ -479,11 +480,13 @@ public class FTPUtility {
             // upload to enqueue directory
             File fileFromPath = new File(path);
             String datasetDirPath = fileFromPath.getParent();
-            System.out.println("ftp.rename(path, datasetDirPath + \"/\" + FTP_ENQUEUE_JOB_DIRNAME);"); // TODO remove
-            ftp.rename(path, datasetDirPath + "/" + FTP_ENQUEUE_JOB_DIRNAME);
+            System.out.println("Enqueing job - ftp.rename("
+                    + path + ", " + datasetDirPath + "/" + FTP_ENQUEUE_JOB_DIRNAME + ")");
+            issueFtpCommandWithRetries(ftp, "rename", path, datasetDirPath + "/" + FTP_ENQUEUE_JOB_DIRNAME);
+            /*ftp.rename(path, datasetDirPath + "/" + FTP_ENQUEUE_JOB_DIRNAME);
             if(!FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
                 return FAILURE_PREFIX + ": " + ftp.getReplyString();
-            }
+            }*/
         } catch (IOException e) {
             e.printStackTrace();
             return FAILURE_PREFIX + ": " + e.getMessage();
@@ -498,14 +501,58 @@ public class FTPUtility {
      * @return filesize of file in bytes
      */
     private static long getFTPFilesize(FTPClient ftp, final String path) throws IOException {
-        System.out.println("ftp.sendCommand(\"SIZE\", path);"); // TODO remove
-        ftp.sendCommand("SIZE", path);
+        System.out.println("ftp.sendCommand(\"SIZE\"," + path + ")");
+
+        String replyString = issueFtpCommandWithRetries(ftp, "sendCommand", "SIZE", path);
+        /*ftp.sendCommand("SIZE", path);
         String replyString = ftp.getReplyString();
         if(!FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
             throw new IOException(String.format(replyString));
-        }
+        }*/
         String[] replySplit = replyString.trim().split(" ");
         return Long.parseLong(replySplit[1]);
+    }
+
+    private static String issueFtpCommandWithRetries(FTPClient ftp, String ftpCommand, String arg1, String arg2) throws IOException {
+        int numTries = 0;
+        int maxTries = 3;
+        boolean commandSucceeded = false;
+        int secBetweenRetries = 1;
+        do {
+            if(numTries > 0) {
+                try {
+                    Thread.sleep(secBetweenRetries * 1000);
+                } catch (InterruptedException e) { }
+            }
+            numTries += 1;
+            try {
+                if(ftpCommand.equals("sendCommand")) {
+                    ftp.sendCommand(arg1, arg2);
+                } else if(ftpCommand.equals("rename")) {
+                    ftp.rename(arg1, arg2);
+                } else {
+                    throw new IllegalArgumentException("'" + ftpCommand + "' is not a valid FTP command");
+                }
+
+                if(!FTPReply.isPositiveCompletion(ftp.getReplyCode()))
+                    throw new IOException(FAILURE_PREFIX + ": " + String.format(ftp.getReplyString()));
+                else
+                    commandSucceeded = true;
+
+            } catch (IOException e) {
+                if(numTries >= maxTries) {
+                    e.printStackTrace();
+                    throw new IOException(e);
+                } else {
+                    System.out.println("FTP command failed (" + e.getMessage() +
+                            ")...retrying in " + secBetweenRetries + " secs");
+                }
+            }
+
+            secBetweenRetries = (int) Math.pow(2, numTries);
+        } while(numTries < maxTries && !commandSucceeded);
+
+        return ftp.getReplyString();
     }
 
     /**

@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.util.Arrays;
 import java.util.List;
 
+import com.socrata.datasync.*;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -17,11 +18,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaImporter;
-import com.socrata.datasync.IntegrationUtility;
-import com.socrata.datasync.JobStatus;
-import com.socrata.datasync.PublishMethod;
-import com.socrata.datasync.SMTPMailer;
-import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.socrata.exceptions.SodaError;
@@ -348,11 +344,11 @@ public class IntegrationJob implements Job {
 
     private JobStatus doPublishViaFTPv2(SodaImporter importer, File fileToPublishFile) {
         if((pathToFTPControlFile != null && !pathToFTPControlFile.equals(""))) {
-            return IntegrationUtility.publishViaFTPDropboxV2(
-                userPrefs, importer,
-                datasetID, fileToPublishFile, new File(pathToFTPControlFile));
+            return FTPUtility.publishViaFTPDropboxV2(
+                    userPrefs, importer,
+                    datasetID, fileToPublishFile, new File(pathToFTPControlFile));
         } else {
-            return IntegrationUtility.publishViaFTPDropboxV2(
+            return FTPUtility.publishViaFTPDropboxV2(
                     userPrefs, importer,
                     datasetID, fileToPublishFile, ftpControlFileContent);
         }
