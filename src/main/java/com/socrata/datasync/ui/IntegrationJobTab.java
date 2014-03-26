@@ -453,7 +453,7 @@ public class IntegrationJobTab implements JobTab {
                             "you must enter valid Dataset ID";
                 } else {
                     try {
-                        controlFileContent = IntegrationUtility.generateControlFileContent(
+                        controlFileContent = FTPUtility.generateControlFileContent(
                                 getSodaDdl(),
                                 fileToPublishTextField.getText(),
                                 (PublishMethod) publishMethodComboBox.getSelectedItem(),
