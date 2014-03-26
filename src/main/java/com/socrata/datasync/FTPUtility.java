@@ -8,7 +8,6 @@ import com.socrata.exceptions.SodaError;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.ftp.*;
-import org.apache.log4j.Logger;
 
 import javax.net.ssl.SSLContext;
 import java.io.*;
@@ -106,7 +105,6 @@ public class FTPUtility {
     private static JobStatus publishViaFTPDropboxV2(final UserPreferences userPrefs, final SodaDdl ddl,
                                                    final String datasetId, final File csvOrTsvFile,
                                                    final InputStream inputControlFile) {
-        Logger logger = Logger.getRootLogger();
         JobStatus status = JobStatus.PUBLISH_ERROR;
 
         String ftpHost;
@@ -122,32 +120,32 @@ public class FTPUtility {
         try {
             ftp = new FTPSClient(false, SSLContext.getDefault());
 
-            logger.info("Connecting to " + ftpHost + ":" + FTP_HOST_PORT);
+            System.out.println("Connecting to " + ftpHost + ":" + FTP_HOST_PORT);
             ftp.connect(ftpHost, FTP_HOST_PORT);
             SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
             ftp.login(connectionInfo.getUser(), connectionInfo.getPassword());
 
             // verify connection was successful
             if(FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
-                logger.info("ftp.setFileType(FTP.BINARY_FILE_TYPE)");
+                System.out.println("ftp.setFileType(FTP.BINARY_FILE_TYPE)");
                 ftp.setFileType(FTP.BINARY_FILE_TYPE);
-                logger.info("ftp.enterLocalPassiveMode()");
+                System.out.println("ftp.enterLocalPassiveMode()");
                 ftp.enterLocalPassiveMode();
 
                 // Set protection buffer size (what does this do??)
                 //ftp.execPBSZ(0);
                 // Set data channel protection to private
-                logger.info("ftp.execPROT(\"P\")");
+                System.out.println("ftp.execPROT(\"P\")");
                 ftp.execPROT("P");
 
                 String pathToDomainRoot = getPathToDomainRoot(ftp, connectionInfo);
                 String pathToDatasetDir = pathToDomainRoot + "/" + datasetId;
 
                 // if datasetId does not exist then create the directory
-                logger.info("ftp.listFiles(" + pathToDatasetDir + "/" + FTP_STATUS_FILENAME + ")");
+                System.out.println("ftp.listFiles(" + pathToDatasetDir + "/" + FTP_STATUS_FILENAME + ")");
                 FTPFile[] checkDatasetDirExists = ftp.listFiles(pathToDatasetDir + "/" + FTP_STATUS_FILENAME);
                 if(checkDatasetDirExists.length == 0) {
-                    logger.info("ftp.makeDirectory(" + pathToDatasetDir + ")");
+                    System.out.println("ftp.makeDirectory(" + pathToDatasetDir + ")");
                     boolean datasetDirCreated = ftp.makeDirectory(pathToDatasetDir);
                     if(!datasetDirCreated) {
                         closeFTPConnection(ftp);
@@ -183,7 +181,7 @@ public class FTPUtility {
                     return status;
                 }
 
-                logger.info("Publishing entire file via FTPS...");
+                System.out.println("Publishing entire file via FTPS...");
                 // set request Id for this job
                 String csvOrTsvFileRequestId = setFTPRequestId(ftp, pathToDomainRoot + "/" + FTP_REQUEST_ID_FILENAME);
                 if(csvOrTsvFileRequestId.startsWith(FAILURE_PREFIX)) {
@@ -197,13 +195,13 @@ public class FTPUtility {
                 File fileToUpload;
                 String dataFilePathFTP;
                 try {
-                    logger.info("Gzipping file before uploading...");
+                    System.out.println("Gzipping file before uploading...");
                     fileToUpload = createTempGzippedFile(csvOrTsvFile);
                     dataFilePathFTP = pathToDatasetDir + "/" + csvOrTsvFile.getName() + ".gz";
                     deleteFileToUpload = true;
                 } catch (IOException ex) {
                     // if gzipping fails revert to sending raw CSV
-                    logger.info("Gzipping failed, uploading CSV directly");
+                    System.out.println("Gzipping failed, uploading CSV directly");
                     fileToUpload = csvOrTsvFile;
                     dataFilePathFTP = pathToDatasetDir + "/" + csvOrTsvFile.getName();
                 }
@@ -353,9 +351,8 @@ public class FTPUtility {
      * @throws java.io.IOException
      */
     private static String getPathToDomainRoot(FTPSClient ftp, SocrataConnectionInfo connectionInfo) throws IOException {
-        Logger logger = Logger.getRootLogger();
         String pathToDomainRoot = "";
-        logger.info("Obtaining login role - ftp.listFiles(" + FTP_REQUEST_ID_FILENAME + ")");
+        System.out.println("Obtaining login role - ftp.listFiles(" + FTP_REQUEST_ID_FILENAME + ")");
         FTPFile[] checkRequestIdFile = ftp.listFiles(FTP_REQUEST_ID_FILENAME);
         if(checkRequestIdFile.length == 0) { // user is a SuperAdmin or has multi-domain access
             String domainWithoutHTTP = connectionInfo.getUrl().replaceAll("https://", "");
@@ -420,10 +417,9 @@ public class FTPUtility {
      * @throws java.io.IOException
      */
     private static String setFTPRequestId(FTPSClient ftp, String pathToRequestIdFile) throws IOException {
-        Logger logger = Logger.getRootLogger();
         String requestId = IntegrationUtility.generateRequestId();
         InputStream inputRequestId = new ByteArrayInputStream(requestId.getBytes("UTF-8"));
-        logger.info("Setting job request ID - ftp.storeFile(" + pathToRequestIdFile + ", " + inputRequestId + ")");
+        System.out.println("Setting job request ID - ftp.storeFile(" + pathToRequestIdFile + ", " + inputRequestId + ")");
         if (!ftp.storeFile(pathToRequestIdFile, inputRequestId)) {
             return FAILURE_PREFIX + ": " + ftp.getReplyString();
         }

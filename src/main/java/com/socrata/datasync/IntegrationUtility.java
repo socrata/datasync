@@ -3,35 +3,23 @@ package com.socrata.datasync;
 import java.awt.*;
 import java.io.*;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URLDecoder;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPOutputStream;
 
 import au.com.bytecode.opencsv.CSVReader;
 
 import com.google.common.collect.ImmutableMap;
-import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
 import com.socrata.datasync.job.IntegrationJob;
-import com.socrata.datasync.preferences.UserPreferences;
-import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
-import com.sun.jersey.api.client.ClientResponse;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.net.ftp.*;
-import org.apache.log4j.Logger;
-
-import javax.net.ssl.SSLContext;
 
 public class IntegrationUtility {
     /**
@@ -39,18 +27,7 @@ public class IntegrationUtility {
      *
      * A utility class for the Integration Job Type
      */
-    private static final String VERSION_API_ENDPOINT = "/api/version.json";
-    private static final String FTP_HOST_SUFFIX = ".ftp.socrata.net";
-    private static final String X_SOCRATA_REGION = "X-Socrata-Region";
-    private static final int FTP_HOST_PORT = 22222;
-    private static final String FTP_CONTROL_FILENAME = "control.json";
-    private static final String FTP_ENQUEUE_JOB_DIRNAME = "move-files-here-to-enqueue-job";
-    private static final String SUCCESS_PREFIX = "SUCCESS";
-    private static final String FAILURE_PREFIX = "FAILURE";
-    private static final String FTP_STATUS_FILENAME = "status.txt";
-    private static final String FTP_REQUEST_ID_FILENAME = "requestId";
     private static final int NUM_BYTES_OUT_BUFFER = 1024;
-    private static final int TIME_BETWEEN_FTP_STATUS_POLLS_MS = 1000;
 
     private IntegrationUtility() {
         throw new AssertionError("Never instantiate utility classes!");
@@ -143,11 +120,9 @@ public class IntegrationUtility {
                                                int numRowsPerChunk, final boolean containsHeaderRow)
             throws IOException, SodaError, InterruptedException
     {
-        Logger logger = Logger.getRootLogger();
-
         // If doing a replace force it to upload all data as a single chunk
         if(method.equals(PublishMethod.replace)) {
-            logger.warn("WARNING: replace does not support chunking.");
+            System.out.println("WARNING: replace does not support chunking.");
             numRowsPerChunk = 0;
         }
 
@@ -200,9 +175,9 @@ public class IntegrationUtility {
                 }
                 if(upsertObjectsChunk.size() == numRowsPerChunk || currLine == null) {
                     if(numRowsPerChunk == 0) {
-                        logger.info("Publishing entire file via HTTP...");
+                        System.out.println("Publishing entire file via HTTP...");
                     } else {
-                        logger.info("Publishing file in chunks via HTTP (" + numUploadedChunks * numRowsPerChunk + " rows uploaded so far)...");
+                        System.out.println("Publishing file in chunks via HTTP (" + numUploadedChunks * numRowsPerChunk + " rows uploaded so far)...");
                     }
 
                     // upsert or replace current chunk
@@ -225,7 +200,7 @@ public class IntegrationUtility {
                         if(numRowsPerChunk != 0) {
                             for (UpsertError upsertErr : chunkResult.getErrors()) {
                                 int lineIndexOffset = (containsHeaderRow) ? 2 : 1;
-                                logger.info("Error uploading chunk " + numUploadedChunks + ": " +
+                                System.err.println("Error uploading chunk " + numUploadedChunks + ": " +
                                         upsertErr.getError() + " (line " +
                                         (upsertErr.getIndex() + lineIndexOffset + ((numUploadedChunks-1) * numRowsPerChunk)) + " of file)");
                             }
@@ -234,7 +209,7 @@ public class IntegrationUtility {
                     }
 
                     if(numRowsPerChunk != 0) {
-                        logger.info("Chunk " + numUploadedChunks + " uploaded: " + chunkResult.getRowsCreated() + " rows created; " +
+                        System.out.println("Chunk " + numUploadedChunks + " uploaded: " + chunkResult.getRowsCreated() + " rows created; " +
                             chunkResult.getRowsUpdated() + " rows updated; " + chunkResult.getRowsDeleted() +
                             " rows deleted; " + chunkResult.errorCount() + " rows omitted");
                     }
