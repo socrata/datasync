@@ -36,15 +36,16 @@ public class SimpleIntegrationWizard {
 	 * 
 	 * GUI interface to DataSync
 	 */
-	
-	private final String VERSION = "0.3";
-	private final String METADATA_DOMAIN = "https://adrian.demo.socrata.com";
-	private final String METADATA_DATASET_ID = "7w7i-q9n6";
+
+    private final String VERSION = DataSyncMetadata.getVersion();
+    private final String METADATA_DOMAIN = DataSyncMetadata.getMetadataDomain();
+    private final String METADATA_DATASET_ID = DataSyncMetadata.getMetadataDatasetId();
 	
 	private final String TITLE = "Socrata DataSync " + VERSION;
-	private final String LOGO_FILE_PATH = "/datasync_logo.png";
+    private final String LOGO_FILE_PATH = "/datasync_logo.png";
+	private final String LOADING_SPINNER_FILE_PATH = "/loading_spinner.gif";
 	private final int FRAME_WIDTH = 800;
-	private final int FRAME_HEIGHT = 440;
+	private final int FRAME_HEIGHT = 450;
 	private final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 265);
     private final Dimension BUTTON_PANEL_DIMENSION = new Dimension(780, 40);
     private final int SSL_PORT_TEXTFIELD_HEIGHT = 26;
@@ -79,7 +80,7 @@ public class SimpleIntegrationWizard {
 	private JPasswordField smtpPasswordField;
 	private JCheckBox useSSLCheckBox;
 	private JCheckBox emailUponErrorCheckBox;
-	
+
 	/**
 	 * Stores a list of open JobTabs. Each JobTab object contains
      * the UI content of a single job tab. The indices of the
@@ -95,8 +96,10 @@ public class SimpleIntegrationWizard {
 	private JTabbedPane jobTabsPane;
 	private JFrame frame;
 	private JFrame prefsFrame;
-	
-	/*
+    private JPanel loadingNoticePanel;
+    private JButton runJobNowButton;
+
+    /*
 	 * Constructs the GUI and displays it on the screen.
 	 */
 	public SimpleIntegrationWizard() {
@@ -124,20 +127,7 @@ public class SimpleIntegrationWizard {
 		
 		JPanel mainPanel = generateMainPanel();
 		loadAuthenticationInfoIntoForm();
-		
-		// Create preferences popup window
-		prefsFrame = new JFrame("Preferences");
-		prefsFrame.setSize(PREFERENCES_FRAME_WIDTH, PREFERENCES_FRAME_HEIGHT);
-		prefsFrame.setVisible(false);
-		JPanel preferencesPanel = generatePreferencesPanel();
-		prefsFrame.add(preferencesPanel);
-		prefsFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		prefsFrame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent we) {
-            	prefsFrame.setVisible(false);
-            }
-        });
+		generatePreferencesFrame();
 		
         frame.add(mainPanel);
 		
@@ -153,8 +143,23 @@ public class SimpleIntegrationWizard {
 			// do nothing upon failure
 		}
 	}
-	
-	/** Queries special Socrata dataset with DataSync metadata to 
+
+    private void generatePreferencesFrame() {
+        prefsFrame = new JFrame("Preferences");
+        prefsFrame.setSize(PREFERENCES_FRAME_WIDTH, PREFERENCES_FRAME_HEIGHT);
+        prefsFrame.setVisible(false);
+        JPanel preferencesPanel = generatePreferencesPanel();
+        prefsFrame.add(preferencesPanel);
+        prefsFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        prefsFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent we) {
+                prefsFrame.setVisible(false);
+            }
+        });
+    }
+
+    /** Queries special Socrata dataset with DataSync metadata to
 	 *  determine if this is the most recent version. Alert user
 	 *  if a new version is available
 	 *   
@@ -246,17 +251,58 @@ public class SimpleIntegrationWizard {
 
 	private class RunJobNowListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-            // save authentication data (userPrefs)
 			saveAuthenticationInfoFromForm();
 			
-			// create a run integration job with data from form
+			// run integration job with data from form
 	        int selectedJobTabIndex = jobTabsPane.getSelectedIndex();
             JobTab selectedJobTab = jobTabs.get(selectedJobTabIndex);
-            JobStatus jobStatus = selectedJobTab.runJobNow();
-	        
-	        // show popup with returned status
-            if(!jobStatus.isError() && selectedJobTab.getClass().equals(PortJobTab.class)) {
-                PortJobTab selectedPortJobTab = (PortJobTab) selectedJobTab;
+
+            SwingWorker jobWorker = new RunJobWorker(selectedJobTab);
+            jobWorker.execute();
+		}
+	}
+
+    private class RunJobWorker extends SwingWorker<Void, String> {
+        private JobTab jobTabToRun;
+        private JobStatus jobStatus;
+
+        public RunJobWorker(JobTab jobTabToRun){
+            loadingNoticePanel.setVisible(true);
+            runJobNowButton.setEnabled(false);
+            this.jobTabToRun = jobTabToRun;
+        }
+
+        @Override
+        protected Void doInBackground() {
+            try {
+                jobStatus = jobTabToRun.runJobNow();
+            } catch (OutOfMemoryError err) {
+                jobStatus = JobStatus.PUBLISH_ERROR;
+                jobStatus.setMessage("Error: ran out of memory " +
+                        "(try decreasing the chunking size and/or threshold by going to Edit -> Preferences)");
+            }
+            return null;
+        }
+
+        /*
+        @Override
+        protected void process(List<String> chunks) {
+            StringBuilder sb = new StringBuilder();
+            for(String chunk : chunks){
+                sb.append(chunk).append("\n");
+            }
+            labelToUpdate.setText(sb.toString());
+        }*/
+
+        //Executed on the Event Dispatch Thread after the doInBackground method is finished
+        @Override
+        protected void done() {
+            loadingNoticePanel.setVisible(false);
+            runJobNowButton.setEnabled(true);
+
+            // show popup with returned status
+            if(!jobStatus.isError() && jobTabToRun.getClass().equals(PortJobTab.class)) {
+                PortJobTab selectedPortJobTab = (PortJobTab) jobTabToRun;
                 Object[] options = {"Yes", "No"};
                 int n = JOptionPane.showOptionDialog(frame,
                         "Port job completed successfully. Would you like to open the destination dataset?\n",
@@ -268,16 +314,14 @@ public class SimpleIntegrationWizard {
                     IntegrationUtility.openWebpage(selectedPortJobTab.getURIToSinkDataset());
                 }
             } else {
-	            JOptionPane.showMessageDialog(frame, jobStatus.getMessage());
+                JOptionPane.showMessageDialog(frame, jobStatus.getMessage());
             }
-		}
-	}
+        }
+    }
 	
 	private class SaveJobListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			// save authentication data (userPrefs)
 			saveAuthenticationInfoFromForm();
-
             int selectedJobTabIndex = jobTabsPane.getSelectedIndex();
             JobTab selectedJobTab = jobTabs.get(selectedJobTabIndex);
             selectedJobTab.saveJob();
@@ -433,9 +477,13 @@ public class SimpleIntegrationWizard {
         
         JPanel jobButtonContainer = new JPanel(new GridLayout(1,2));
         JPanel leftButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton runJobNowButton = new JButton("Run Job Now");
+        runJobNowButton = new JButton("Run Job Now");
         runJobNowButton.addActionListener(new RunJobNowListener());
         leftButtonPanel.add(runJobNowButton);
+
+        generateLoadingNotice();
+        leftButtonPanel.add(loadingNoticePanel);
+
         JPanel rightButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton saveJobButton = new JButton("Save Job");
         saveJobButton.addActionListener(new SaveJobListener());
@@ -449,24 +497,35 @@ public class SimpleIntegrationWizard {
 
         JPanel authenticationDetailsPanel = generateAuthenticationDetailsFormPanel();
 		mainContainer.add(authenticationDetailsPanel);
-		
-		URL imageURL = getClass().getResource(LOGO_FILE_PATH);
-		if(imageURL != null) {
-			// Add Socrata logo (only works when running from .jar file)
-			JLabel logoLabel = new JLabel(
-					new ImageIcon(getClass().getResource(LOGO_FILE_PATH)));
-			Border paddingBorder = BorderFactory.createEmptyBorder(15,15,15,15);
-			logoLabel.setBorder(paddingBorder);
-			mainContainer.add(logoLabel);
-		}
+
+        URL logoImageURL = getClass().getResource(LOGO_FILE_PATH);
+        if(logoImageURL != null) {
+            JLabel logoLabel = new JLabel(new ImageIcon(logoImageURL));
+            Border paddingBorder = BorderFactory.createEmptyBorder(15,15,15,15);
+            logoLabel.setBorder(paddingBorder);
+            mainContainer.add(logoLabel);
+        }
 
         // TODO populate job tabs w/ previously opened tabs or [if none] a new job tab
         addJobTab(getNewIntegrationJob());
 
-		return mainContainer;
+        return mainContainer;
 	}
-	
-	private JPanel generatePreferencesPanel() {
+
+    private void generateLoadingNotice() {
+        loadingNoticePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        URL spinnerImageURL = getClass().getResource(LOADING_SPINNER_FILE_PATH);
+        if(spinnerImageURL != null) {
+            JLabel loadingImageLabel = new JLabel(new ImageIcon(spinnerImageURL));
+            loadingNoticePanel.add(loadingImageLabel);
+        }
+        JPanel loadingTextLabel = UIUtility.generateLabelWithHelpBubble(
+                " Job is in progress...", "TODO", 0);
+        loadingNoticePanel.add(loadingTextLabel);
+        loadingNoticePanel.setVisible(false);
+    }
+
+    private JPanel generatePreferencesPanel() {
 		JPanel prefsPanel = new JPanel(new GridLayout(0,2));
 
         // File chunking settings

@@ -1,14 +1,11 @@
 package com.socrata.datasync;
 
-import com.google.common.collect.ImmutableMap;
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
-import com.socrata.datasync.job.*;
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.datasync.preferences.UserPreferencesFile;
-import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.sun.jersey.api.client.ClientResponse;
@@ -18,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**

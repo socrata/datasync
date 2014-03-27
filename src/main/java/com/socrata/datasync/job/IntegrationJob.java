@@ -280,7 +280,7 @@ public class IntegrationJob implements Job {
 			} 
 			catch (SodaError sodaError) {
                 sodaError.printStackTrace();
-                runErrorMessage = "SODA error: " + sodaError.getMessage();
+                runErrorMessage = sodaError.getMessage();
 			} 
 			catch (InterruptedException intrruptException) {
                 intrruptException.printStackTrace();
