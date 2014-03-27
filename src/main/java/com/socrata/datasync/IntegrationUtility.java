@@ -300,11 +300,6 @@ public class IntegrationUtility {
         return columnsValue;
     }
 
-    private static void setStatusMessage(String datasetId, JobStatus status, String error) {
-        status.setMessage("Error retrieving column names from dataset" +
-                " with uid '" + datasetId + "': " + error);
-    }
-
     /**
      * Adds an entry to specified log dataset with given job run information
      * 
@@ -390,7 +385,7 @@ public class IntegrationUtility {
             if(jarPath.contains(":") && (jarPath.startsWith("/") || jarPath.startsWith("\\"))) {
                 jarPath = jarPath.substring(1, jarPath.length());
             }
-            return "java -jar " + jarPath + " " + pathToSaveJobFile;
+            return "java -jar \"" + jarPath + "\" \"" + pathToSaveJobFile + "\"";
         } catch (UnsupportedEncodingException unsupportedEncoding) {
             return "Error getting path to this executeable: " + unsupportedEncoding.getMessage();
         }

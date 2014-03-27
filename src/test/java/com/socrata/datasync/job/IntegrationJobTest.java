@@ -68,14 +68,31 @@ public class IntegrationJobTest extends TestBase {
     @Test
     public void testDataSyncJSONv0dot4ControlContentJobFileDeserialization() throws IOException {
         IntegrationJob job = new IntegrationJob(PATH_TO_SAVED_JOB_FILE_V0dot4_CONTROL_CONTENT);
-        TestCase.assertEquals("test", job.getFileToPublish());
-        TestCase.assertEquals("kwgk-zc5k", job.getDatasetID());
+        TestCase.assertEquals("/Users/file.csv", job.getFileToPublish());
+        TestCase.assertEquals("geue-g9cw", job.getDatasetID());
         TestCase.assertEquals(PublishMethod.replace, job.getPublishMethod());
         TestCase.assertEquals("src/test/resources/job_saved_v0.4_control_content.sij", job.getPathToSavedFile());
-        TestCase.assertEquals(true, job.getFileToPublishHasHeaderRow());
+        TestCase.assertEquals(false, job.getFileToPublishHasHeaderRow());
         TestCase.assertEquals(true, job.getPublishViaFTP());
         TestCase.assertEquals("", job.getPathToFTPControlFile());
-        TestCase.assertEquals("{json}", job.getFtpControlFileContent());
+        TestCase.assertEquals("{\n" +
+                "  \"action\" : \"Replace\", \n" +
+                "  \"csv\" :\n" +
+                "    {\n" +
+                "      \"columns\" : [\"id\",\"name\",\"another_name\",\"date\"],\n" +
+                "      \"skip\" : 0,\n" +
+                "      \"fixedTimestampFormat\" : \"ISO8601\",\n" +
+                "      \"floatingTimestampFormat\" : \"ISO8601\",\n" +
+                "      \"timezone\" : \"UTC\",\n" +
+                "      \"separator\" : \",\",\n" +
+                "      \"quote\" : \"\\\"\",\n" +
+                "      \"encoding\" : \"utf-8\",\n" +
+                "      \"emptyTextIsNull\" : true,\n" +
+                "      \"trimWhitespace\" : true,\n" +
+                "      \"trimServerWhitespace\" : true,\n" +
+                "      \"overrides\" : {}\n" +
+                "    }\n" +
+                "}", job.getFtpControlFileContent());
         TestCase.assertEquals("job_saved_v0.4_control_content.sij", job.getJobFilename());
     }
 
