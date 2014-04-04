@@ -37,40 +37,46 @@ public class SimpleIntegrationWizard {
 	 * GUI interface to DataSync
 	 */
 
-    private final String VERSION = DataSyncMetadata.getVersion();
-    private final String METADATA_DOMAIN = DataSyncMetadata.getMetadataDomain();
-    private final String METADATA_DATASET_ID = DataSyncMetadata.getMetadataDatasetId();
+    private static final String VERSION = DataSyncMetadata.getVersion();
+    private static final String METADATA_DOMAIN = DataSyncMetadata.getMetadataDomain();
+    private static final String METADATA_DATASET_ID = DataSyncMetadata.getMetadataDatasetId();
 	
-	private final String TITLE = "Socrata DataSync " + VERSION;
-    private final String LOGO_FILE_PATH = "/datasync_logo.png";
-	private final String LOADING_SPINNER_FILE_PATH = "/loading_spinner.gif";
-	private final int FRAME_WIDTH = 800;
-	private final int FRAME_HEIGHT = 450;
-	private final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 265);
-    private final Dimension BUTTON_PANEL_DIMENSION = new Dimension(780, 40);
-    private final int SSL_PORT_TEXTFIELD_HEIGHT = 26;
-	private final int DEFAULT_TEXTFIELD_COLS = 25;
-	private final Dimension AUTH_DETAILS_DIMENSION = new Dimension(465, 100);
-	private final int PREFERENCES_FRAME_WIDTH = 475;
-	private final int PREFERENCES_FRAME_HEIGHT = 475;
+	private static final String TITLE = "Socrata DataSync " + VERSION;
+    private static final String LOGO_FILE_PATH = "/datasync_logo.png";
+	private static final String LOADING_SPINNER_FILE_PATH = "/loading_spinner.gif";
+	private static final int FRAME_WIDTH = 800;
+	private static final int FRAME_HEIGHT = 450;
+	private static final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 265);
+    private static final Dimension BUTTON_PANEL_DIMENSION = new Dimension(780, 40);
+    private static final int SSL_PORT_TEXTFIELD_HEIGHT = 26;
+	private static final int DEFAULT_TEXTFIELD_COLS = 25;
+	private static final Dimension AUTH_DETAILS_DIMENSION = new Dimension(465, 100);
+	private static final int PREFERENCES_FRAME_WIDTH = 475;
+	private static final int PREFERENCES_FRAME_HEIGHT = 475;
 	
 	private static UserPreferencesJava userPrefs;
 
     // TODO remove these declarations from this file (duplicates...)
-	private final String STANDARD_JOB_FILE_EXTENSION = "sij";
-    private final String PORT_JOB_FILE_EXTENSION = "spj";
+	private static final String STANDARD_JOB_FILE_EXTENSION = "sij";
+    private static final String PORT_JOB_FILE_EXTENSION = "spj";
 
     // help icon balloon tip text
-    private final String FILE_CHUNKING_THRESHOLD_TIP_TEXT = "<html><body style='width: 300px'>When a CSV/TSV file to be published is larger than this value (in megabytes), " +
+    private static final String FILE_CHUNKING_THRESHOLD_TIP_TEXT = "<html><body style='width: 300px'>When a CSV/TSV file to be published is larger than this value (in megabytes), " +
             "the file is automatically split up and published in chunks (because it is problematic to publish large files all at once). " +
             "Usually chunking is necessary when a file is larger than about 64 MB.</body></html>";
-    private final String CHUNK_SIZE_THRESHOLD_TIP_TEXT = "<html><body style='width: 300px'>The number of rows to publish in each chunk " +
+    private static final String CHUNK_SIZE_THRESHOLD_TIP_TEXT = "<html><body style='width: 300px'>The number of rows to publish in each chunk " +
             "(in cases where filesize exceeds above filesize threshold). Higher values usually means faster upload time but setting the value too " +
             "high could crash the program, depending on your computer's memory limits.</body></html>";
-    private final String DOMAIN_TIP_TEXT = "The domain of the Socrata data site you wish to publish data to (e.g. https://explore.data.gov/)";
-    private final String USERNAME_TIP_TEXT = "Socrata account username (account must have Publisher or Administrator permissions)";
-    private final String PASSWORD_TIP_TEXT = "Socrata account password";
-    private final String APP_TOKEN_TIP_TEXT = "You can create an app token free at http://dev.socrata.com/register";
+    private static final String DOMAIN_TIP_TEXT = "The domain of the Socrata data site you wish to publish data to (e.g. https://explore.data.gov/)";
+    private static final String USERNAME_TIP_TEXT = "Socrata account username (account must have Publisher or Administrator permissions)";
+    private static final String PASSWORD_TIP_TEXT = "Socrata account password";
+    private static final String APP_TOKEN_TIP_TEXT = "You can create an app token free at http://dev.socrata.com/register";
+    private static final String RUN_JOB_NOW_TIP_TEXT = "<html><body style='width: 300px'>" +
+            "To view detailed logging information run the job by copying the" +
+            " 'Command to execute with scheduler' and running it in your Terminal/Command Prompt</body></html>";
+
+    private static final String GETTING_STARTED_GUIDE_URL = "TODO";
+    private static final String DEV_GUIDE_URL = "TODO";
 
     private JTextField domainTextField, usernameTextField, apiKeyTextField;
 	private JPasswordField passwordField;
@@ -450,9 +456,15 @@ public class SimpleIntegrationWizard {
 		
 		JMenu editMenu = new JMenu("Edit");
 		menuBar.add(editMenu);
-		
 		JMenuItem prefsItem = new JMenuItem("Preferences");
 		editMenu.add(prefsItem);
+
+        JMenu helpMenu = new JMenu("Help");
+        menuBar.add(helpMenu);
+        JMenuItem gettingStartedGuideItem = new JMenuItem("Getting started guide");
+        JMenuItem devDocumentationItem = new JMenuItem("FTP control file configuration");
+        helpMenu.add(gettingStartedGuideItem);
+        helpMenu.add(devDocumentationItem);
 
         newStandardJobItem.addActionListener(new NewStandardJobListener());
         newPortJobItem.addActionListener(new NewPortJobListener());
@@ -460,6 +472,22 @@ public class SimpleIntegrationWizard {
 		saveJobItem.addActionListener(new SaveJobListener());
 		runJobItem.addActionListener(new RunJobNowListener());
 		prefsItem.addActionListener(new OpenPreferencesListener());
+        gettingStartedGuideItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    IntegrationUtility.openWebpage(new URI(GETTING_STARTED_GUIDE_URL));
+                } catch (URISyntaxException e1) { e1.printStackTrace(); }
+            }
+        });
+        devDocumentationItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    IntegrationUtility.openWebpage(new URI(DEV_GUIDE_URL));
+                } catch (URISyntaxException e1) { e1.printStackTrace(); }
+            }
+        });
 		
 		return menuBar;
 	}
@@ -520,7 +548,7 @@ public class SimpleIntegrationWizard {
             loadingNoticePanel.add(loadingImageLabel);
         }
         JPanel loadingTextLabel = UIUtility.generateLabelWithHelpBubble(
-                " Job is in progress...", "TODO", 0);
+                " Job is in progress...", RUN_JOB_NOW_TIP_TEXT, 0);
         loadingNoticePanel.add(loadingTextLabel);
         loadingNoticePanel.setVisible(false);
     }
@@ -766,7 +794,6 @@ public class SimpleIntegrationWizard {
      * Saves user authentication data input into form
      */
     private void saveAuthenticationInfoFromForm() {
-    	// TODO make this more secure...
     	userPrefs.saveDomain(domainTextField.getText()); 
     	userPrefs.saveUsername(usernameTextField.getText());
 		String password = new String(passwordField.getPassword());

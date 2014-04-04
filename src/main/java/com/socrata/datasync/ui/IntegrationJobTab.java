@@ -21,7 +21,7 @@ import java.io.IOException;
  */
 public class IntegrationJobTab implements JobTab {
 
-    private static final int JOB_TEXTFIELD_WIDTH = 370;
+    private static final int DATASET_ID_TEXTFIELD_WIDTH = 160;
     private static final int JOB_COMMAND_TEXTFIELD_WIDTH = 212;
     private static final int JOB_FILE_TEXTFIELD_WIDTH = 263;
     private static final int JOB_TEXTFIELD_HEIGHT = 26;
@@ -54,14 +54,26 @@ public class IntegrationJobTab implements JobTab {
             "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; " +
             "NOTE: requires dataset to have Row Identifier." +
             "</body></html>";
-    private static final String PUBLISH_VIA_FTP_SMARTUPDATE_ROW_TIP_TEXT = "TODO...";
-    private static final String FTP_CONTROL_FILE_TIP_TEXT = "TODO...";
+    private static final String PUBLISH_VIA_FTP_ROW_TIP_TEXT = "<html><body style='width: 400px'>The preferred " +
+            "and most efficient option for replace operations. Sends CSV/TSV file over FTP and automatically detects " +
+            "changes since previous update.<br>" +
+            "<strong>NOTE</strong>: your firewall may need to be configured to allow FTP traffic through ports " +
+            "22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)</body></html>";
+    private static final String FTP_CONTROL_FILE_TIP_TEXT = "<html><body style='width: 300px'>" +
+            "Establishes import configuration such as date formatting and Location column being populated" +
+            " from existing columns (for more information refer to Help -> FTP control file configuration)</body></html>";
+    private static final String GET_COLUMN_IDS_TIP_TEXT = "<html><body style='width: 400px'>" +
+            "Displays a comma-separated list of the column identifiers (API field names) for the" +
+            " dataset with the given ID (should be used as the header row of the CSV/TSV)" +
+            "</body></html>";
     private static final String RUN_COMMAND_TIP_TEXT = "<html><body style='width: 300px'>After saving the job this field will be populated with a command-line command that can be used to run the job." +
-            " This command can be input into tools such as the Windows Scheduler or ETL tools to run the job automatically.</body></html>";
+            " This command can be input into tools such as the Windows Task Scheduler or ETL tools to run the job automatically.</body></html>";
     public static final String CONTAINS_A_HEADER_ROW_CHECKBOX_TEXT = "File to publish contains a header row";
-    public static final String PUBLISH_VIA_FTP_CHECKBOX_TEXT = "Publish via FTP \"SmartUpdate\"";
+    public static final String PUBLISH_VIA_FTP_CHECKBOX_TEXT = "Publish via FTP";
     public static final String COPY_TO_CLIPBOARD_BUTTON_TEXT = "Copy to clipboard";
     public static final String GENERATE_EDIT_CONTROL_FILE_BUTTON_TEXT = "Generate/Edit";
+    public static final String GET_COLUMN_IDS_BUTTON_TEXT = "Get Column ID List";
+    public static final int COPY_TO_CLIPBOARD_OPTION_INDEX = 1;
 
     private JFrame mainFrame;
     private JPanel jobPanel;
@@ -73,7 +85,7 @@ public class IntegrationJobTab implements JobTab {
     private JTextField fileToPublishTextField;
     private JCheckBox fileToPublishHasHeaderCheckBox;
     private JComboBox publishMethodComboBox;
-    private JCheckBox publishViaFTPSmartUpdateCheckBox;
+    private JCheckBox publishViaFTPCheckBox;
     private JTextField ftpControlFileTextField;
     private JButton browseForControlFileButton;
     private JPanel ftpControlFileLabelContainer;
@@ -101,7 +113,7 @@ public class IntegrationJobTab implements JobTab {
 
     private void addFtpControlFileFieldToJobPanel() {
         ftpControlFileLabelContainer = UIUtility.generateLabelWithHelpBubble(
-                "FTP SmartUpdate control file", FTP_CONTROL_FILE_TIP_TEXT, HELP_ICON_TOP_PADDING);
+                "FTP control file", FTP_CONTROL_FILE_TIP_TEXT, HELP_ICON_TOP_PADDING);
         jobPanel.add(ftpControlFileLabelContainer);
 
         ftpControlFileSelectorContainer = new JPanel(FLOW_RIGHT);
@@ -152,14 +164,14 @@ public class IntegrationJobTab implements JobTab {
 
         publishMethodTextFieldContainer.add(publishMethodComboBox);
 
-        publishViaFTPSmartUpdateCheckBox = new JCheckBox(PUBLISH_VIA_FTP_CHECKBOX_TEXT);
-        publishViaFTPSmartUpdateCheckBox.addActionListener(
-                new PublishViaFTPSmartUpdateCheckBoxListener());
-        JPanel publishViaFTPSmartUpdateLabelContainer = new JPanel(FLOW_LEFT);
-        publishViaFTPSmartUpdateLabelContainer.add(publishViaFTPSmartUpdateCheckBox);
-        publishViaFTPSmartUpdateLabelContainer.add(
-                UIUtility.generateHelpBubble(PUBLISH_VIA_FTP_SMARTUPDATE_ROW_TIP_TEXT));
-        publishMethodTextFieldContainer.add(publishViaFTPSmartUpdateLabelContainer);
+        publishViaFTPCheckBox = new JCheckBox(PUBLISH_VIA_FTP_CHECKBOX_TEXT);
+        publishViaFTPCheckBox.addActionListener(
+                new PublishViaFTPCheckBoxListener());
+        JPanel publishViaFTPLabelContainer = new JPanel(FLOW_LEFT);
+        publishViaFTPLabelContainer.add(publishViaFTPCheckBox);
+        publishViaFTPLabelContainer.add(
+                UIUtility.generateHelpBubble(PUBLISH_VIA_FTP_ROW_TIP_TEXT));
+        publishMethodTextFieldContainer.add(publishViaFTPLabelContainer);
 
         jobPanel.add(publishMethodTextFieldContainer);
     }
@@ -170,8 +182,14 @@ public class IntegrationJobTab implements JobTab {
         JPanel datasetIDTextFieldContainer = new JPanel(FLOW_RIGHT);
         datasetIDTextField = new JTextField();
         datasetIDTextField.setPreferredSize(new Dimension(
-                JOB_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
+                DATASET_ID_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
         datasetIDTextFieldContainer.add(datasetIDTextField);
+
+        JButton getColumnIdsButton = new JButton(GET_COLUMN_IDS_BUTTON_TEXT);
+        getColumnIdsButton.addActionListener(new GetColumnIdsButtonListener());
+        datasetIDTextFieldContainer.add(getColumnIdsButton);
+        datasetIDTextFieldContainer.add(UIUtility.generateHelpBubble(GET_COLUMN_IDS_TIP_TEXT));
+
         jobPanel.add(datasetIDTextFieldContainer);
     }
 
@@ -208,7 +226,7 @@ public class IntegrationJobTab implements JobTab {
         publishMethodComboBox.setSelectedItem(jobPublishMethod);
         fileToPublishHasHeaderCheckBox.setSelected(job.getFileToPublishHasHeaderRow());
 
-        updatePublishViaFTPSmartUpdateUIFields(job.getPublishMethod(),
+        updatePublishViaFTPUIFields(job.getPublishMethod(),
                 job.getPublishViaFTP());
 
         updateControlFileInputs(job.getPathToFTPControlFile(), job.getFtpControlFileContent());
@@ -249,10 +267,10 @@ public class IntegrationJobTab implements JobTab {
         generateEditControlFileButton.setEnabled(setEditGenerateFtpControlFileEnabled);
     }
 
-    private void updatePublishViaFTPSmartUpdateUIFields(PublishMethod publishMethod,
+    private void updatePublishViaFTPUIFields(PublishMethod publishMethod,
                                                         boolean publishViaFTP) {
-        publishViaFTPSmartUpdateCheckBox.setSelected(publishViaFTP);
-        publishViaFTPSmartUpdateCheckBox.setVisible(
+        publishViaFTPCheckBox.setSelected(publishViaFTP);
+        publishViaFTPCheckBox.setVisible(
                 publishMethod.equals(PublishMethod.replace));
         if(publishViaFTP) {
             ftpControlFileLabelContainer.setVisible(true);
@@ -275,7 +293,7 @@ public class IntegrationJobTab implements JobTab {
         jobToRun.setPublishMethod(
                 (PublishMethod) publishMethodComboBox.getSelectedItem());
         jobToRun.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
-        jobToRun.setPublishViaFTP(publishViaFTPSmartUpdateCheckBox.isSelected());
+        jobToRun.setPublishViaFTP(publishViaFTPCheckBox.isSelected());
         jobToRun.setPathToFTPControlFile(ftpControlFileTextField.getText());
         jobToRun.setFtpControlFileContent(ftpControlFileContentTextArea.getText());
         return jobToRun.run();
@@ -289,7 +307,7 @@ public class IntegrationJobTab implements JobTab {
         newIntegrationJob.setPublishMethod(
                 (PublishMethod) publishMethodComboBox.getSelectedItem());
         newIntegrationJob.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
-        newIntegrationJob.setPublishViaFTP(publishViaFTPSmartUpdateCheckBox.isSelected());
+        newIntegrationJob.setPublishViaFTP(publishViaFTPCheckBox.isSelected());
         newIntegrationJob.setPathToFTPControlFile(ftpControlFileTextField.getText());
         newIntegrationJob.setFtpControlFileContent(ftpControlFileContentTextArea.getText());
         newIntegrationJob.setPathToSavedFile(jobFileLocation);
@@ -401,15 +419,15 @@ public class IntegrationJobTab implements JobTab {
                     (PublishMethod) publishMethodComboBox.getSelectedItem();
             boolean setPublishViaFTPAsChecked = 
                     selectedPublishMethod.equals(PublishMethod.replace);
-            updatePublishViaFTPSmartUpdateUIFields(selectedPublishMethod, setPublishViaFTPAsChecked);
+            updatePublishViaFTPUIFields(selectedPublishMethod, setPublishViaFTPAsChecked);
         }
     }
 
-    private class PublishViaFTPSmartUpdateCheckBoxListener implements ActionListener {
+    private class PublishViaFTPCheckBoxListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            updatePublishViaFTPSmartUpdateUIFields(
+            updatePublishViaFTPUIFields(
                     (PublishMethod) publishMethodComboBox.getSelectedItem(),
-                    publishViaFTPSmartUpdateCheckBox.isSelected());
+                    publishViaFTPCheckBox.isSelected());
         }
     }
 
@@ -432,10 +450,18 @@ public class IntegrationJobTab implements JobTab {
     private class CopyJobCommandListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             String runJobCommand = runCommandTextField.getText();
-            StringSelection stringSelection = new StringSelection(runJobCommand);
-            Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clpbrd.setContents(stringSelection, null);
+            copyToClipboard(runJobCommand);
         }
+    }
+
+    /**
+     * Copies given text to clipboard
+     * @param textToCopy text to copy to clipboard
+     */
+    private void copyToClipboard(String textToCopy) {
+        StringSelection stringSelection = new StringSelection(textToCopy);
+        Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clpbrd.setContents(stringSelection, null);
     }
 
     private class EditGenerateControlFileListener implements ActionListener {
@@ -485,11 +511,6 @@ public class IntegrationJobTab implements JobTab {
             return !fileToPublish.equals("");
         }
 
-        private boolean datasetIdValid() {
-            String datasetId = datasetIDTextField.getText();
-            return IntegrationUtility.uidIsValid(datasetId);
-        }
-
         /**
          * Display dialog with scrollable text area allowing editing
          * of given control file content
@@ -510,6 +531,58 @@ public class IntegrationJobTab implements JobTab {
                     JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.PLAIN_MESSAGE);
         }
+    }
+
+    private class GetColumnIdsButtonListener implements ActionListener {
+        public void actionPerformed(ActionEvent evnt) {
+            String errorMessage = null;
+            String datasetFieldNames = null;
+            if(datasetIdValid()) {
+                try {
+                    datasetFieldNames = IntegrationUtility.getDatasetFieldNames(
+                            getSodaDdl(), datasetIDTextField.getText());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    errorMessage = "Error getting column IDs for dataset with ID" +
+                            " '" + datasetIDTextField.getText() + "': " + e.getMessage();
+                }
+            } else {
+                errorMessage = "You must enter a valid Dataset ID";
+            }
+
+            if(errorMessage == null) {
+                int selectedOption = showGetColumnIdsDialog(datasetFieldNames);
+                if(selectedOption == COPY_TO_CLIPBOARD_OPTION_INDEX) {
+                    copyToClipboard(datasetFieldNames);
+                }
+            } else {
+                JOptionPane.showMessageDialog(mainFrame, errorMessage);
+            }
+        }
+
+        private int showGetColumnIdsDialog(String textAreaContent) {
+            JTextArea columnIdTextArea = new JTextArea(textAreaContent);
+            JScrollPane scrollPane = new JScrollPane(columnIdTextArea);
+            columnIdTextArea.setLineWrap(true);
+            columnIdTextArea.setWrapStyleWord(true);
+            columnIdTextArea.setCaretPosition(0);
+            columnIdTextArea.setEditable(false);
+            scrollPane.setPreferredSize(CONTROL_FILE_EDITOR_DIMENSIONS);
+            String[] selectionValues = {"Close", COPY_TO_CLIPBOARD_BUTTON_TEXT};
+            return JOptionPane.showOptionDialog(mainFrame,
+                    scrollPane,
+                    "Column ID List",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    selectionValues,
+                    selectionValues[COPY_TO_CLIPBOARD_OPTION_INDEX]);
+        }
+    }
+
+    private boolean datasetIdValid() {
+        String datasetId = datasetIDTextField.getText();
+        return IntegrationUtility.uidIsValid(datasetId);
     }
 
     private SodaDdl getSodaDdl() {
