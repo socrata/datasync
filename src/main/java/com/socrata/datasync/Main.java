@@ -54,7 +54,7 @@ public class Main {
         options.addOption("f", FILE_TO_PUBLISH_FLAG, true, "CSV or TSV file to publish [IntegrationJob]");
         options.addOption("m", PUBLISH_METHOD_FLAG, true, "Publish method (" + IntegrationUtility.getValidPublishMethods() + ") [IntegrationJob]");
         options.addOption("h", HAS_HEADER_ROW_FLAG, true, "File to publish has header row (true or false) [IntegrationJob]");
-        options.addOption("pf", PUBLISH_VIA_FTP_FLAG, true, "Use FTP/SmartUpdate (instead of HTTP) for publishing (true or false) (default: " + DEFAULT_VALUE_publishViaFTP + ") [IntegrationJob]");
+        options.addOption("pf", PUBLISH_VIA_FTP_FLAG, true, "Use FTP (instead of HTTP) for publishing (true or false) (default: " + DEFAULT_VALUE_publishViaFTP + ") [IntegrationJob]");
         options.addOption("sc", PATH_TO_FTP_CONTROL_FILE_FLAG, true, "FTP control.json file, if set overrides job parameters (optional) [IntegrationJob]");
 
         // TODO fill in flags with FINAL VARS like above
@@ -138,6 +138,34 @@ public class Main {
                 Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()));
         newUserPrefs.saveNumRowsPerChunk(
                 Integer.parseInt(userPrefs.getNumRowsPerChunk()));
+
+        System.out.println("Preferences saved:\n\n" + getSavedPreferences());
+    }
+
+    private static String getSavedPreferences() {
+        UserPreferences curUserPrefs = new UserPreferencesJava();
+        return "domain: " + curUserPrefs.getDomain() +
+               "username: " + curUserPrefs.getUsername() +
+               "password: " + passwordToStars(curUserPrefs.getPassword()) +
+               "appToken: " + curUserPrefs.getAPIKey() +
+               "adminEmail: " + curUserPrefs.getAdminEmail() +
+               "emailUponError: " + curUserPrefs.emailUponError() +
+               "logDatasetID: " + curUserPrefs.getLogDatasetID() +
+               "outgoingMailServer: " + curUserPrefs.getOutgoingMailServer() +
+               "smtpPort: " + curUserPrefs.getSmtpPort() +
+               "sslPort: " + curUserPrefs.getSslPort() +
+               "smtpUsername: " + curUserPrefs.getSmtpUsername() +
+               "smtpPassword: " + passwordToStars(curUserPrefs.getSmtpPassword()) +
+               "filesizeChunkingCutoffMB: " + curUserPrefs.getFilesizeChunkingCutoffMB() +
+               "numRowsPerChunk: " + curUserPrefs.getNumRowsPerChunk();
+    }
+
+    private static String passwordToStars(String password) {
+        String stars = "";
+        for(int i = 0; i < password.length(); i++) {
+            stars += "*";
+        }
+        return stars;
     }
 
     private static void runIntegrationJob(CommandLine cmd, UserPreferences userPrefs) {

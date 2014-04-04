@@ -41,7 +41,7 @@ public class FTPUtility {
 
     /**
      * Publishes the given CSV/TSV file to the dataset with given datasetId
-     * using FTP Dropbox v2.0 (a.k.a. "SmartUpdate").
+     * using FTP Dropbox v2.0
      *
      * @param userPrefs object containing the user preferences
      * @param ddl Soda 2 ddl object
@@ -68,7 +68,7 @@ public class FTPUtility {
 
     /**
      * Publishes the given CSV/TSV file to the dataset with given datasetId
-     * using FTP Dropbox v2.0 (a.k.a. "SmartUpdate").
+     * using FTP Dropbox v2.0
      *
      * @param userPrefs object containing the user preferences
      * @param ddl Soda 2 ddl object
@@ -93,7 +93,7 @@ public class FTPUtility {
 
     /**
      * Publishes the given CSV/TSV file to the dataset with given datasetId
-     * using FTP Dropbox v2.0 (a.k.a. "SmartUpdate").
+     * using FTP Dropbox v2.0
      *
      * @param userPrefs object containing the user preferences
      * @param ddl Soda 2 ddl object
@@ -298,7 +298,7 @@ public class FTPUtility {
         String columnsValue = "null";
         if(!containsHeaderRow) {
             // if no header row get API field names for each column in dataset
-            columnsValue = IntegrationUtility.getDatasetFieldNames(ddl, datasetId);
+            columnsValue = "[" + IntegrationUtility.getDatasetFieldNames(ddl, datasetId) + "]";
         }
 
         // In FTP Dropbox v2 there is only Append (append == upsert)

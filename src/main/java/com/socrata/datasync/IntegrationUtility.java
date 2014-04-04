@@ -281,7 +281,7 @@ public class IntegrationUtility {
     }
 
     /**
-     * Returns list of dataset field names in the form '[col1, col2,...]'
+     * Returns list of dataset field names in the form: "col1","col2",...
      *
      * @param ddl
      * @param datasetId
@@ -289,14 +289,13 @@ public class IntegrationUtility {
      */
     public static String getDatasetFieldNames(SodaDdl ddl, String datasetId) throws SodaError, InterruptedException {
         Dataset info = (Dataset) ddl.loadDatasetInfo(datasetId);
-        String columnsValue = "[";
+        String columnsValue = "";
         List<Column> columns = info.getColumns();
         for(int i = 0; i < columns.size(); i++) {
             if(i > 0)
                 columnsValue += ",";
             columnsValue += "\"" + columns.get(i).getFieldName() + "\"";
         }
-        columnsValue += "]";
         return columnsValue;
     }
 
