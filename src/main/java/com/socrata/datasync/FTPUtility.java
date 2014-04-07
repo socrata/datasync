@@ -211,14 +211,13 @@ public class FTPUtility {
                 InputStream inputDataFile = new FileInputStream(fileToUpload);
                 String dataFileResponse = uploadAndEnqueue(ftp, inputDataFile, dataFilePathFTP, dataFileSizeBytes);
                 inputDataFile.close();
+                if(deleteFileToUpload)
+                    fileToUpload.delete();
                 if(!dataFileResponse.equals(SUCCESS_PREFIX)) {
                     closeFTPConnection(ftp);
                     status.setMessage(dataFileResponse);
                     return status;
                 }
-                inputDataFile.close();
-                if(deleteFileToUpload)
-                    fileToUpload.delete();
 
                 // Poll upload status until complete
                 String dataFileUploadStatus = pollUploadStatus(
@@ -254,18 +253,23 @@ public class FTPUtility {
      */
     private static File createTempGzippedFile(File fileToZip) throws IOException {
         File tempGzippedFile = File.createTempFile("DataSyncTemp_", "_" + fileToZip.getName() + ".gz");
-        byte[] buffer = new byte[NUM_BYTES_OUT_BUFFER];
-        FileOutputStream fileOutputStream = new FileOutputStream(tempGzippedFile);
-        GZIPOutputStream gzipOuputStream = new GZIPOutputStream(fileOutputStream);
-        FileInputStream fileInput = new FileInputStream(fileToZip);
-        int bytes_read;
-        while ((bytes_read = fileInput.read(buffer)) > 0) {
-            gzipOuputStream.write(buffer, 0, bytes_read);
+        try {
+            byte[] buffer = new byte[NUM_BYTES_OUT_BUFFER];
+            FileOutputStream fileOutputStream = new FileOutputStream(tempGzippedFile);
+            GZIPOutputStream gzipOuputStream = new GZIPOutputStream(fileOutputStream);
+            FileInputStream fileInput = new FileInputStream(fileToZip);
+            int bytes_read;
+            while ((bytes_read = fileInput.read(buffer)) > 0) {
+                gzipOuputStream.write(buffer, 0, bytes_read);
+            }
+            fileInput.close();
+            gzipOuputStream.finish();
+            gzipOuputStream.close();
+            return tempGzippedFile;
+        } catch (IOException e) {
+            tempGzippedFile.delete();
+            throw new IOException(e);
         }
-        fileInput.close();
-        gzipOuputStream.finish();
-        gzipOuputStream.close();
-        return tempGzippedFile;
     }
 
     public static String getFTPHost(String domain, SodaDdl ddl) throws URISyntaxException, LongRunningQueryException, SodaError {
