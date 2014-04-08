@@ -1,5 +1,10 @@
-For information on using DataSync in GUI (Graphical User Interface) mode refer to:
-LINK
+---
+layout: with-sidebar
+title: Setup a Standard Job (GUI)
+bodyclass: homepage
+---
+
+For information on using DataSync in GUI (Graphical User Interface) mode which we recommend reading first in any case refer to the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
 
 DataSync jobs can be run in headless/command-line mode in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was saved using the user interface which contains the job parameters. This guide focuses on (1) which enables configuring and running a DataSync job without any usage of the GUI. This enables complete control to integrate DataSync into ETL code or software systems. It is recommended that you first familiarize yourself with DataSync by using the GUI because it is often easier to start there and then move to using the tool headlessly.
 
@@ -35,7 +40,7 @@ You must fill in at least the following:
 `<YOUR DOMAIN>` is the root domain of your data site and must begin with https:// (e.g. https://data.cityofchicago.org). The username and password are those of a Socrata account that has a Publisher role or Owner rights to at least one dataset. Enter your App token or if you have not yet created one read [how to obtain an App token](http://beta.dev.socrata.com/docs/app-tokens.html). We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tie DataSync to a particular person’s primary account.
 
 
-******** For details on the other global configuration settings refer to: <LINK TO PREFS DOC>
+For details on the other global configuration settings refer to: `LINK TO PREFS DOC`
 
 There are two ways to establish the “global” DataSync configuration:
 
@@ -72,16 +77,16 @@ To run a job that uses global configuration previously saved in DataSync “memo
 Explanation of flags:
 `*` = required flag
 
-| Flag - Short Name  | Flag - Long Name  | Example Values | Description |
-| ------------------ |:----------------- |:-------------- |:-----------|
-| -c                 | --config          | /Users/home/config.json    | Points to the config.json file you created in Step 3 or if not supplied configuration inDataSync 'memory' is used |
-| -t                 | --jobType         | IntegrationJob | Specifies that a standard IntegrationJob should be run (‘IntegrationJob’ is the default so in this case this flag is optional) |
-| -f `*`              | --fileToPublish   | /Users/home/data_file.csv | CSV or TSV file to publish (e.g. ‘/Users/home/data_file.csv’) | 
-| -h `*`              | --fileToPublishHasHeaderRow | true | Set this to `true` if the file to publish has a header row, otherwise set it to `false` (`true` and `false` are the only acceptable values) | 
-| -i `*`              | --datasetID      | m985-ywaw | The identifier of the dataset to publish to obtained in Step 2|
-| -m `*`              | --publishMethod | replace | Specifies the publish method to use (`replace`, `upsert`, `append`, and `delete` are the only acceptable values, for details on the publishing methods refer to Step 3 of the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
-|-pf                  | --publishViaFTP | true | Set this to `true` to use FTP (only works for `replace`), which is the preferred option because is highly efficient and can reliably handle very large files (1 million+ rows). If `false`perform the dataset update using HTTPS (`false` is the default value) |
-| -sc                 | --pathToFTPControlFile | /Users/home/control.json | Specifies a Control file that configures 'replace via FTP' jobs, and therefore should only be set if -pf,--publishViaFTP is set to `true`. When this flag is set the *-h,--fileToPublishHasHeaderRow* and *-m,--publishMethod* flags are overridden by the settings in the supplied Control.json file. | 
+| Flag - Short Name  | Flag - Long Name            | Example Values | Description |
+| ------------------ |:--------------------------- |:--------------------- |:-----------|
+| -c                 | --config                    | /Users/home/config.json | Points to the config.json file you created in Step 3 or if not supplied configuration inDataSync 'memory' is used |
+| -t                 | --jobType                   | IntegrationJob | Specifies that a standard IntegrationJob should be run (‘IntegrationJob’ is the default so in this case this flag is optional) |
+| -f `*`             | --fileToPublish             | /Users/home/data_file.csv | CSV or TSV file to publish |
+| -h `*`             | --fileToPublishHasHeaderRow | true | Set this to `true` if the file to publish has a header row, otherwise set it to `false` (`true` and `false` are the only acceptable values) | 
+| -i `*`             | --datasetID                 | m985-ywaw | The identifier of the dataset to publish to obtained in Step 2 |
+| -m `*`             | --publishMethod             | replace | Specifies the publish method to use (`replace`, `upsert`, `append`, and `delete` are the only acceptable values, for details on the publishing methods refer to Step 3 of the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html) |
+|-pf                 | --publishViaFTP             | true | Set this to `true` to use FTP (currently only works for `replace`), which is the preferred update method because is highly efficient and can reliably handle very large files (1 million+ rows). If `false` perform the dataset update using HTTPS (`false` is the default value) |
+| -sc                | --pathToFTPControlFile      | /Users/home/control.json | Specifies a Control file that configures 'replace via FTP' jobs, and therefore should only be set if -pf,--publishViaFTP is set to `true`. When this flag is set the *-h,--fileToPublishHasHeaderRow* and *-m,--publishMethod* flags are overridden by the settings in the supplied Control.json file. | 
 
 
 **'Replace via FTP' Configuration (via the Control file)**  
@@ -115,7 +120,7 @@ Here are the contents of an example control.json file configured to do a 'replac
     }
 }
 ```
-If the file you are publishing is a TSV file, simply change the 3rd line above from `"csv" :` to `"tsv" :`.
+If the file you are publishing is a TSV file, simply change the 3rd line above from `"csv" :` to `"tsv" :`
 
 ### Step 6: Running a job
 
