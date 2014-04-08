@@ -1,6 +1,6 @@
 ---
 layout: with-sidebar
-title: Setup a Standard Job (GUI)
+title: Setup a standard job (headless)
 bodyclass: homepage
 ---
 
@@ -74,7 +74,7 @@ To run a job that uses the settings in config.json as the global configuration r
 
 To run a job that uses global configuration previously saved in DataSync “memory” (either via a LoadPreferences job or using the DataSync GUI) simply omit the `-c config.json` flag.
 
-Explanation of flags:
+Explanation of flags:  
 `*` = required flag
 
 | Flag - Short Name  | Flag - Long Name            | Example Values | Description |
