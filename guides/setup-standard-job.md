@@ -8,7 +8,7 @@ bodyclass: homepage
 This guide covers how to set up a job using Socrata DataSync with its graphical user interface. DataSync can also be run [headlessly (in command-line mode)](#). 
 
 ### Step 1: Enter authentication details
-Enter your authentication details at the bottom left of DataSync (domain, username, password, and app token). The domain is the root domain of your data site and must begin with https:// (i.e. [https://data.cityofchicago.org](https://data.cityofchicago.org)). The username and password are those of a Socrata account that has a Publishier role. Enter your App token or if you have not yet created one read [how to obtain an App token](http://beta.dev.socrata.com/docs/app-tokens.html). After you enter these details they will be saved and used to run every job you save using DataSync. We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tie DataSync to a particular person’s account. 
+Enter your authentication details at the bottom left of DataSync (domain, username, password, and app token). The domain is the root domain of your data site and must begin with https:// (i.e. [https://data.cityofchicago.org](https://data.cityofchicago.org)). The username and password are those of a Socrata account that has a Publishier role. Enter your App token or if you have not yet created one read [how to obtain an App token](http://beta.dev.socrata.com/docs/app-tokens.html). After you enter these details they will be saved and used to run every job you save using DataSync. We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tie DataSync to a particular person’s primary account. 
 
 **NOTICE:** DataSync stores the authentication details unencrypted in the Registry on Windows platforms (in the following location: HKEY_CURRENT_USER\Software\JavaSoft\Prefs) and in analogous locations on Mac and Linux. If you are concerned about this as a potential security issue you may want to look into alternative publishing methods. Please contact support if you have questions.
 
@@ -33,21 +33,18 @@ If the TSV/CSV file does not contain a header row then uncheck "File to publish 
 
 Next, enter the dataset ID from Step 4. Select the 'Publish method' by selecting one of the following options:
 
-<ul>
-<li><strong>replace:</strong> simply replaces the dataset with the data in the CSV/TSV file to publish which can be performed in on of two ways:
-<ol>
-    <li><strong>via FTP (keep 'Publish via FTP' checked):</strong> this is the preferred option because is highly efficient (it automatically determines the changes since the last update and only publishes those). It can reliably handle very large files (1 million+ rows).</li>
-    <li><strong>via HTTP (uncheck 'Publish via FTP'):</strong> currently replace over HTTP is not recommended for, especially with large datasets. However, if your dataset is small (less than 5 MB) and updated frequently it may be a preferable option.</li>
-</ol><br>
-</li>
+- **replace:** simply replaces the dataset with the data in the CSV/TSV file to publish which can be performed in on of two ways:  
+**via FTP (keep 'Publish via FTP' checked):** this is the preferred option because is highly efficient (it automatically determines the changes since the last update and only publishes those). It can reliably handle very large files (1 million+ rows).  
+**via HTTP (uncheck 'Publish via FTP'):** currently replace over HTTP is not recommended for, especially with large datasets. However, if your dataset is small (less than 5 MB) and updated frequently it may be a preferable option.
 
-<li><strong>upsert:</strong> updates any rows that already exist and appends any new rows. This option is ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic. 
-IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then all rows in the CSV/TSV file will be appended to the dataset. [Learn more about Row Identifiers and how to establish them](http://support.socrata.com/entries/24247983-Understanding-and-establishing-row-identifiers)<br><br></li>
+<!--
+<li><strong>upsert:</strong> updates any rows that already exist and appends any new rows. This option is ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.<br> 
+IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then all rows in the CSV/TSV file will be appended to the dataset. <a href="http://support.socrata.com/entries/24247983-Understanding-and-establishing-row-identifiers">Learn more about Row Identifiers and how to establish them</a><br><br></li>
 
 <li><strong>append:</strong> adds all rows in the CSV/TSV as new rows. The append method cannot be used if a Row Identifier has been established on the dataset.<br><br></li>
 
 <li><strong>delete:</strong> delete all rows matching Row Identifiers given in CSV/TSV file (delete will not work unless the dataset has a Row Identifier established.<br><br></li>
-</ul>
+</ul>-->
 
 <div class="well">
 If you are using replace over HTTPS ('publish via FTP' is unchecked), upsert, or append methods and your TSV/CSV has a header row then you do not need to supply all columns in the CSV/TSV and the order of columns does not need to match that of the Socrata dataset. 
