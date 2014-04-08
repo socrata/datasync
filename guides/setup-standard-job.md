@@ -37,14 +37,12 @@ Next, enter the dataset ID from Step 4. Select the 'Publish method' by selecting
 **via FTP (keep 'Publish via FTP' checked):** this is the preferred option because is highly efficient (it automatically determines the changes since the last update and only publishes those). It can reliably handle very large files (1 million+ rows).  
 **via HTTP (uncheck 'Publish via FTP'):** currently replace over HTTP is not recommended for, especially with large datasets. However, if your dataset is small (less than 5 MB) and updated frequently it may be a preferable option.
 
-<!--
-<li><strong>upsert:</strong> updates any rows that already exist and appends any new rows. This option is ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.<br> 
-IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then all rows in the CSV/TSV file will be appended to the dataset. <a href="http://support.socrata.com/entries/24247983-Understanding-and-establishing-row-identifiers">Learn more about Row Identifiers and how to establish them</a><br><br></li>
+- **upsert:** updates any rows that already exist and appends any new rows. This option is ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.<br> 
+IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then all rows in the CSV/TSV file will be appended to the dataset. [Learn more about Row Identifiers and how to establish them](http://support.socrata.com/entries/24247983-Understanding-and-establishing-row-identifiers)
 
-<li><strong>append:</strong> adds all rows in the CSV/TSV as new rows. The append method cannot be used if a Row Identifier has been established on the dataset.<br><br></li>
+- **append:** adds all rows in the CSV/TSV as new rows. The append method cannot be used if a Row Identifier has been established on the dataset.
 
-<li><strong>delete:</strong> delete all rows matching Row Identifiers given in CSV/TSV file (delete will not work unless the dataset has a Row Identifier established.<br><br></li>
-</ul>-->
+- **delete:** delete all rows matching Row Identifiers given in CSV/TSV file (delete will not work unless the dataset has a Row Identifier established.
 
 <div class="well">
 If you are using replace over HTTPS ('publish via FTP' is unchecked), upsert, or append methods and your TSV/CSV has a header row then you do not need to supply all columns in the CSV/TSV and the order of columns does not need to match that of the Socrata dataset. 
