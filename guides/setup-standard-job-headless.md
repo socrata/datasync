@@ -47,12 +47,16 @@ There are two ways to establish the “global” DataSync configuration:
 **1) Load configuration from a .json file when running each job**  
 This method of loading configuration requires supplying a flag pointing DataSync to config.json each time you run a job in headless/command-line mode. For example, you would run (`<OTHER FLAGS>` is where the other flags discussed in Step 5 are passed):
 
-`java -jar datasync.jar -c config.json <OTHER FLAGS> ...`
+```
+java -jar datasync.jar -c config.json <OTHER FLAGS> ...
+```
 
 **2) Load configuration into the DataSync “memory”**  
 If you load configuration this way you only need to load the configuration once and DataSync will remember the configuration (instead of passing config.json as a flag with every job). After loading configuration settings they will be saved and used to connect to the publisher API for every job you run using DataSync. To load configuration into DataSync “memory” run this command once:
 
-`java -jar datasync.jar -t LoadPreferences -c config.json`
+```
+java -jar datasync.jar -t LoadPreferences -c config.json
+```
 
 **NOTICE:** DataSync stores the authentication details unencrypted in the Registry on Windows platforms (in the following location: HKEY_CURRENT_USER\Software\JavaSoft\Prefs) and in analogous locations on Mac and Linux. If you are concerned about this as a potential security issue you may want to look into alternative publishing methods. Please contact support if you have questions.
 
@@ -66,11 +70,15 @@ The dataset ID is: m985-ywaw
 ### Step 3: Configure job details
 For general help using DataSync in headless/command-line mode run:
 
-`java -jar datasync.jar --help`
+```
+java -jar datasync.jar --help
+```
 
 To run a job that uses the settings in config.json as the global configuration run the following command, replacing `<..>` with the appropriate values (flags explained below): 
 
-`java -jar datasync.jar -c config.json -t IntegrationJob -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -sc <FTP CONTROL FILE>`
+```
+java -jar datasync.jar -c config.json -t IntegrationJob -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -sc <FTP CONTROL FILE>
+```
 
 To run a job that uses global configuration previously saved in DataSync “memory” (either via a LoadPreferences job or using the DataSync GUI) simply omit the `-c config.json` flag.
 
@@ -78,16 +86,15 @@ Explanation of flags:
 `*` = required flag
 
 | Flag - Short Name  | Flag - Long Name            | Example Values | Description |
-| ------------------ |:--------------------------- |:--------------------- |:-----------|
+|:------------------ |:--------------------------- |:----------------------- |:---------- |
+| -h `*`             | --fileToPublishHasHeaderRow | true            | Set this to `true` if the file to publish has a header row, otherwise set it to `false` (`true` and `false` are the only acceptable values) | 
 | -c                 | --config                    | /Users/home/config.json | Points to the config.json file you created in Step 3 or if not supplied configuration inDataSync 'memory' is used |
 | -t                 | --jobType                   | IntegrationJob | Specifies that a standard IntegrationJob should be run (‘IntegrationJob’ is the default so in this case this flag is optional) |
 | -f `*`             | --fileToPublish             | /Users/home/data_file.csv | CSV or TSV file to publish |
-| -h `*`             | --fileToPublishHasHeaderRow | true | Set this to `true` if the file to publish has a header row, otherwise set it to `false` (`true` and `false` are the only acceptable values) | 
 | -i `*`             | --datasetID                 | m985-ywaw | The identifier of the dataset to publish to obtained in Step 2 |
 | -m `*`             | --publishMethod             | replace | Specifies the publish method to use (`replace`, `upsert`, `append`, and `delete` are the only acceptable values, for details on the publishing methods refer to Step 3 of the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html) |
 |-pf                 | --publishViaFTP             | true | Set this to `true` to use FTP (currently only works for `replace`), which is the preferred update method because is highly efficient and can reliably handle very large files (1 million+ rows). If `false` perform the dataset update using HTTPS (`false` is the default value) |
-| -sc                | --pathToFTPControlFile      | /Users/home/control.json | Specifies a Control file that configures 'replace via FTP' jobs, and therefore should only be set if -pf,--publishViaFTP is set to `true`. When this flag is set the *-h,--fileToPublishHasHeaderRow* and *-m,--publishMethod* flags are overridden by the settings in the supplied Control.json file. | 
-
+| -sc                | --pathToFTPControlFile      | /Users/home/control.json | Specifies a Control file that configures 'replace via FTP' jobs, and therefore should only be set if -pf,--publishViaFTP is set to `true`. When this flag is set the *-h,--fileToPublishHasHeaderRow* and *-m,--publishMethod* flags are overridden by the settings in the supplied Control.json file. |
 
 **'Replace via FTP' Configuration (via the Control file)**  
 Currently to use SmartUpdate you must supply a control.json file with the *-sc,----pathToFTPControlFile* flag that contains configuration specific to the dataset you are updating. Create a file called control.json according to the Control.json section in this document:
@@ -177,11 +184,15 @@ control.json contents:
 
 Simply run: 
 
-`java -jar datasync.jar <.sij FILE TO RUN>`
+```
+java -jar datasync.jar <.sij FILE TO RUN>
+```
 
 For example:
 
-`java -jar datasync.jar /Users/john/Desktop/business_licenses.sij`
+```
+java -jar datasync.jar /Users/john/Desktop/business_licenses.sij
+```
 
 **NOTE:** you can also create an .sij file directly (rather than saving a job using the DataSync UI) which stores the job details in JSON format. Here is an example:
 
