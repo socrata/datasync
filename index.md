@@ -28,5 +28,5 @@ DataSync source code is available [on GitHub](https://github.com/socrata/datasyn
 - **IMPORTANT:** To take advantage of the most up-to-date and efficient publishing method (replace via FTP), if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection). 
 
 
-[Continue to guide for setting up a standard job ](/guides/setup-standard-job.html)
+[Continue to guide for setting up a standard job]({{ site.root }}/guides/setup-standard-job.html)
 

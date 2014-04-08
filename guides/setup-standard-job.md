@@ -8,7 +8,7 @@ bodyclass: homepage
 This guide covers how to set up a job using Socrata DataSync with its graphical user interface. DataSync can also be run [headlessly (in command-line mode)](#). 
 
 ### Step 1: Enter authentication details
-Enter your authentication details at the bottom left (boxed in red in diagram). The domain is the root domain of your datasite and must begin with https:// (i.e. [https://data.cityofchicago.org](https://data.cityofchicago.org)). The username and password are those of a Socrata account that has publishing privileges. Enter the App token you got from Step 2. After you enter these details they will be saved and used to connect to the publisher API for every job you save using DataSync. It is advisable to create a dedicated Socrata account (with publishing privileges) to use with DataSync rather than tie DataSync to a particular person’s account. 
+Enter your authentication details at the bottom left of DataSync (domain, username, password, and app token). The domain is the root domain of your data site and must begin with https:// (i.e. [https://data.cityofchicago.org](https://data.cityofchicago.org)). The username and password are those of a Socrata account that has a Publishier role. Enter your App token or if you have not yet created one read [how to obtain an App token](http://beta.dev.socrata.com/docs/app-tokens.html). After you enter these details they will be saved and used to run every job you save using DataSync. We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tie DataSync to a particular person’s account. 
 
 **NOTICE:** DataSync stores the authentication details unencrypted in the Registry on Windows platforms (in the following location: HKEY_CURRENT_USER\Software\JavaSoft\Prefs) and in analogous locations on Mac and Linux. If you are concerned about this as a potential security issue you may want to look into alternative publishing methods. Please contact support if you have questions.
 
@@ -81,8 +81,7 @@ When running jobs in the UI DataSync does not display detailed logging informati
 ### Step 5: Scheduling your jobs to run at a specified interval
 
 Follow this guide to use the Windows Task Scheduler to schedule a saved job to run at a specific interval (i.e once per day):
-
-http://support.socrata.com/entries/24234461-Scheduling-a-DataSync-job-using-Windows-Task-Scheduler
+[http://support.socrata.com/entries/24234461-Scheduling-a-DataSync-job-using-Windows-Task-Scheduler](http://support.socrata.com/entries/24234461-Scheduling-a-DataSync-job-using-Windows-Task-Scheduler)
 
 To take advantage of job logging, automatic email error notification, and file chunking in DataSync refer to:
 LINK TO COME
