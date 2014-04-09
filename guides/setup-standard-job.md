@@ -75,10 +75,12 @@ When running jobs in the UI DataSync does not display detailed logging informati
 
 ### Step 5: Scheduling your jobs to run at a specified interval
 
-Follow this guide to use the Windows Task Scheduler to schedule a saved job to run at a specific interval (i.e once per day):
-[http://support.socrata.com/entries/24234461-Scheduling-a-DataSync-job-using-Windows-Task-Scheduler](http://support.socrata.com/entries/24234461-Scheduling-a-DataSync-job-using-Windows-Task-Scheduler)
+To automate updating a dataset you must schedule the DataSync job to run automatically at a specified interval (i.e once per day). This can be done with standard tools such as the Windows Task Scheduler or Cron. 
 
-To take advantage of job logging, automatic email error notification, and file chunking in DataSync refer to:
-LINK TO COME
+[Read the documentation for how to schedule a saved job]({{ site.root }}/resources/schedule-job.html)
+
+### Additional configuration
+
+To take advantage of job logging, automatic email error notification, and file chunking (for publishing large files) in DataSync refer to [Preferences configuration documentation]({{ site.root }}/resources/preferences-config.html).
 
 

@@ -7,7 +7,7 @@ bodyclass: homepage
 For information on using DataSync in GUI (Graphical User Interface) mode which we recommend reading first in any case refer to the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
 
 <div class="well">
-** NOTICE: this guide only pertains to the DataSync version 0.4 Prerelease, which will be formally released mid-April.**
+<strong>NOTICE: this guide only pertains to the DataSync version 0.4 Prerelease, which will be formally released mid-April.</strong>
 </div>
 
 DataSync jobs can be run in headless/command-line mode in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was saved using the user interface which contains the job parameters. This guide focuses on (1) which enables configuring and running a DataSync job without any usage of the GUI. This enables complete control to integrate DataSync into ETL code or software systems. It is recommended that you first familiarize yourself with DataSync by using the GUI because it is often easier to start there and then move to using the tool headlessly.
