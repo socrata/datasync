@@ -5,7 +5,7 @@ bodyclass: homepage
 ---
 
 
-This guide covers how to set up a job using Socrata DataSync with its graphical user interface. DataSync can also be run [headlessly (in command-line mode)](#). 
+This guide covers how to set up a job using Socrata DataSync with its graphical user interface. DataSync can also be run [headlessly (in command-line mode)]({{ site.root }}/guides/setup-standard-job-headless.html). 
 
 ### Step 1: Enter authentication details
 Enter your authentication details at the bottom left of DataSync (domain, username, password, and app token). The domain is the root domain of your data site and must begin with https:// (i.e. [https://data.cityofchicago.org](https://data.cityofchicago.org)). The username and password are those of a Socrata account that has a Publishier role. Enter your App token or if you have not yet created one read [how to obtain an App token](http://beta.dev.socrata.com/docs/app-tokens.html). After you enter these details they will be saved and used to run every job you save using DataSync. We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tie DataSync to a particular person’s primary account. 
@@ -61,7 +61,7 @@ When using 'replace via FTP' you must supply or generate a control file. In most
 * If you wish to set the timezone of the dates being imported
 * If you have a Location column that will be populated from existing columns (e.g. address, city, state, zipcode) 
 
-For more detailed information on establishing configuration in the Control file refer to [Control file configuration](#)
+For more detailed information on establishing configuration in the Control file refer to [Control file configuration](https://docs.google.com/a/socrata.com/document/d/1ddB0pvxEo6pylLtECW2XE9mYYzaW8hA7qlzPgSOQ0wg/edit#heading=h.m3u3dqp3qac3)
 
 ### Step 4: Test run and save the job
 
