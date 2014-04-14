@@ -34,6 +34,7 @@ public class TestBase
             "EKCJmWioetV1B3roSNIQfb7Z7" : "D8Atrg62F2j017ZTdkMpuZ9vY";
     public static final String UNITTEST_DATASET_ID = (testOnStaging) ? "33re-zxku" : "geue-g9cw";
     public static final String UNITTEST_PORT_RESULT_DATASET_ID = (testOnStaging) ? "8cfm-nx8q" : "szbe-ez5m";
+    public static final String UNITTEST_LOG_DATASET_ID = (testOnStaging) ? "7mxj-sxrh" : "ufmq-enj6";
 
     public static final String PATH_TO_STAGING_CONFIG_FILE = "src/test/resources/basic_test_config_staging.json";
     public static final String PATH_TO_PROD_CONFIG_FILE = "src/test/resources/basic_test_config.json";

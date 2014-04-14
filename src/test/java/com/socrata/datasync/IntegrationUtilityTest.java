@@ -2,15 +2,19 @@ package com.socrata.datasync;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
+import com.socrata.datasync.job.*;
+import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
+import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import junit.framework.TestCase;
 import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 /**
  * Author: Adrian Laurenzi
@@ -267,8 +271,33 @@ public class IntegrationUtilityTest extends TestBase {
     }
 
     @Test
-    public void testAddLogEntry() {
+    public void testAddLogEntry() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
+        final Soda2Producer producer = createProducer();
+        final SodaDdl ddl = createSodaDdl();
 
+        // Ensures dataset is in known state (1 row)
+        File oneRowFile = new File("src/test/resources/log_dataset_one_row.csv");
+        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_LOG_DATASET_ID, oneRowFile, true);
+
+        IntegrationJob job = new IntegrationJob();
+        UpsertResult result = new UpsertResult(1, 1, 1, new ArrayList<UpsertError>());
+        SocrataConnectionInfo connectionInfo = new SocrataConnectionInfo(DOMAIN, USERNAME, PASSWORD, API_KEY);
+        String logPublishingErrorMessage = IntegrationUtility.addLogEntry(
+                UNITTEST_LOG_DATASET_ID, connectionInfo, job, JobStatus.INVALID_DATASET_ID, result);
+
+        TestCase.assertEquals(null, logPublishingErrorMessage);
+        TestCase.assertEquals(2, getTotalRows(UNITTEST_LOG_DATASET_ID));
+    }
+
+    @Test
+    public void testAddLogEntryInvalidLogDatasetId() {
+        IntegrationJob job = new IntegrationJob();
+        UpsertResult result = new UpsertResult(1, 1, 1, new ArrayList<UpsertError>());
+        SocrataConnectionInfo connectionInfo = new SocrataConnectionInfo(DOMAIN, USERNAME, PASSWORD, API_KEY);
+        String logPublishingErrorMessage = IntegrationUtility.addLogEntry(
+                "xxxx-xxxx", connectionInfo, job, JobStatus.SUCCESS, result);
+
+        TestCase.assertEquals("Not found", logPublishingErrorMessage);
     }
 
     @Test
@@ -277,7 +306,7 @@ public class IntegrationUtilityTest extends TestBase {
         //System.out.println(IntegrationUtility.getDatasetFieldNames(ddl, "6qkn-8xvw"));
         final SodaDdl ddl = createSodaDdl();
         String datasetFieldNames = IntegrationUtility.getDatasetFieldNames(ddl, UNITTEST_DATASET_ID);
-        TestCase.assertEquals("[\"id\",\"name\",\"another_name\",\"date\"]", datasetFieldNames);
+        TestCase.assertEquals("\"id\",\"name\",\"another_name\",\"date\"", datasetFieldNames);
     }
 
 

@@ -302,9 +302,9 @@ public class IntegrationUtility {
     /**
      * Adds an entry to specified log dataset with given job run information
      * 
-     * @return status for action to create row in log dataset
+     * @return null if log entry was added successfully, otherwise return an error message as a String
      */
-    public static JobStatus addLogEntry(final String logDatasetID, final SocrataConnectionInfo connectionInfo,
+    public static String addLogEntry(final String logDatasetID, final SocrataConnectionInfo connectionInfo,
                                         final IntegrationJob job, final JobStatus status, final UpsertResult result) {
         final Soda2Producer producer = Soda2Producer.newProducer(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
 
@@ -328,33 +328,27 @@ public class IntegrationUtility {
         } else {
             newCols.put("Success", (Object) true);
         }
+        newCols.put("DataSyncVersion", (Object) DataSyncMetadata.getVersion());
         upsertObjects.add(ImmutableMap.copyOf(newCols));
 
-        JobStatus logStatus = JobStatus.SUCCESS;
-        String errorMessage = "";
-        boolean noPublishExceptions = false;
+        System.out.println("Adding row to logging dataset (" + connectionInfo.getUrl() + "/d/" + logDatasetID + ")...");
+        String logPublishingErrorMessage = null;
         try {
             producer.upsert(logDatasetID, upsertObjects);
-            noPublishExceptions = true;
         }
         catch (SodaError sodaError) {
             sodaError.printStackTrace();
-            errorMessage = sodaError.getMessage();
+            logPublishingErrorMessage = sodaError.getMessage();
         }
         catch (InterruptedException intrruptException) {
             intrruptException.printStackTrace();
-            errorMessage = intrruptException.getMessage();
+            logPublishingErrorMessage = intrruptException.getMessage();
         }
         catch (Exception other) {
             other.printStackTrace();
-            errorMessage = other.toString() + ": " + other.getMessage();
-        } finally {
-            if(!noPublishExceptions) {
-                logStatus = JobStatus.PUBLISH_ERROR;
-                logStatus.setMessage(errorMessage);
-            }
+            logPublishingErrorMessage = other.toString() + ": " + other.getMessage();
         }
-        return logStatus;
+        return logPublishingErrorMessage;
     }
 
     /**

@@ -315,29 +315,28 @@ public class IntegrationJob implements Job {
 			}
 		}
 
+        // TODO NEED to make this cleaner by turning JobStatus into regular class (rather than enum)
+        if(runErrorMessage != null)
+            runStatus.setMessage(runErrorMessage);
+
 		String adminEmail = userPrefs.getAdminEmail();
 		String logDatasetID = userPrefs.getLogDatasetID();
-		JobStatus logStatus = JobStatus.SUCCESS;
-		if(!logDatasetID.equals("")) {
+        String logPublishingErrorMessage = null;
+        if(logDatasetID != null && !logDatasetID.equals("")) {
             String logDatasetUrl = userPrefs.getDomain() + "/d/" + userPrefs.getLogDatasetID();
             System.out.println("Publishing results to logging dataset (" + logDatasetUrl + ")...");
-            // TODO refactor this once JobStatus is a normal class
-            if(runErrorMessage != null)
-                runStatus.setMessage(runErrorMessage);
-			logStatus = IntegrationUtility.addLogEntry(logDatasetID, connectionInfo, this, runStatus, result);
-            if(logStatus.isError())
-                System.out.println("Error publishing results to logging dataset (" + logDatasetUrl + "): " + logStatus.getMessage());
+            logPublishingErrorMessage = IntegrationUtility.addLogEntry(
+                    logDatasetID, connectionInfo, this, runStatus, result);
+            if(logPublishingErrorMessage != null) {
+                System.out.println("Error publishing results to logging dataset (" + logDatasetUrl + "): " +
+                        logPublishingErrorMessage);
+            }
 		}
 
 		if(userPrefs.emailUponError() && !adminEmail.equals("")) {
             sendErrorNotificationEmail(
-                    adminEmail, connectionInfo, runStatus, runErrorMessage, logDatasetID, logStatus);
+                    adminEmail, connectionInfo, runStatus, runErrorMessage, logDatasetID, logPublishingErrorMessage);
 		}
-
-        // TODO NEED to make this cleaner by turning JobStatus into regular class (rather than enum)
-        // IMPORTANT because setMessage from Logging dataset interferes with enum
-        if(runErrorMessage != null)
-            runStatus.setMessage(runErrorMessage);
 
         return runStatus;
 	}
@@ -354,7 +353,7 @@ public class IntegrationJob implements Job {
         }
     }
 
-    private void sendErrorNotificationEmail(final String adminEmail, final SocrataConnectionInfo connectionInfo, final JobStatus runStatus, final String runErrorMessage, final String logDatasetID, final JobStatus logStatus) {
+    private void sendErrorNotificationEmail(final String adminEmail, final SocrataConnectionInfo connectionInfo, final JobStatus runStatus, final String runErrorMessage, final String logDatasetID, final String logPublishingErrorMessage) {
         String errorEmailMessage = "";
         String urlToLogDataset = connectionInfo.getUrl() + "/d/" + logDatasetID;
         if(runStatus.isError()) {
@@ -367,12 +366,12 @@ public class IntegrationJob implements Job {
                     + "\nError message: " + runErrorMessage
                     + "\nLog dataset: " + urlToLogDataset + "\n\n";
         }
-        if(logStatus.isError()) {
+        if(logPublishingErrorMessage != null) {
             errorEmailMessage += "There was an error updating the log dataset: "
                     + urlToLogDataset + "\n"
-                    + "Error message: " + logStatus.getMessage() + "\n\n";
+                    + "Error message: " + logPublishingErrorMessage + "\n\n";
         }
-        if(runStatus.isError() || logStatus.isError()) {
+        if(runStatus.isError() || logPublishingErrorMessage != null) {
             try {
                 SMTPMailer.send(adminEmail, "Socrata DataSync Error", errorEmailMessage);
             } catch (Exception e) {
