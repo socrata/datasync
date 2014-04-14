@@ -327,8 +327,8 @@ public class FTPUtility {
                 "    {\n" +
                 "      \"columns\" : " + columnsValue + ",\n" +
                 "      \"skip\" : " + skipValue + ",\n" +
-                "      \"fixedTimestampFormat\" : \"ISO8601\",\n" +
-                "      \"floatingTimestampFormat\" : \"ISO8601\",\n" +
+                "      \"fixedTimestampFormat\" : [\"ISO8601\",\"MM/dd/yyyy\",\"MM/dd/yy\"],\n" +
+                "      \"floatingTimestampFormat\" : [\"ISO8601\",\"MM/dd/yyyy\",\"MM/dd/yy\"],\n" +
                 "      \"timezone\" : \"UTC\",\n" +
                 "      \"separator\" : \"" + separator + "\",\n" +
                 "      \"quote\" : \"" + quote + "\",\n" +

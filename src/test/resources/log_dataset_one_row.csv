@@ -1,0 +1,2 @@
+Date,DatasetID,FileToPublish,PublishMethod,JobFile,RowsUpdated,RowsCreated,RowsDeleted,Success,Errors,DataSyncVersion
+04/13/2014 09:21:54 PM,2bw7-dr67,/Users/adrian/Desktop/Socrata_U_Students.csv,upsert,,14,0,0,true,,

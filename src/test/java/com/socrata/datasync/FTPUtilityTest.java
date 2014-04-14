@@ -48,25 +48,28 @@ public class FTPUtilityTest extends TestBase {
                 "  \"action\" : \"Replace\", \n" +
                 "  \"csv\" :\n" +
                 "    {\n" +
-                "      \"fixedTimestampFormat\" : \"ISO8601\",\n" +
-                "      \"separator\" : \",\",\n" +
-                "      \"timezone\" : \"UTC\",\n" +
-                "      \"encoding\" : \"utf-8\",\n" +
-                "      \"overrides\" : {},\n" +
-                "      \"quote\" : \"\\\"\",\n" +
-                "      \"emptyTextIsNull\" : true,\n" +
                 "      \"columns\" : null,\n" +
                 "      \"skip\" : 0,\n" +
-                "      \"floatingTimestampFormat\" : \"MM/dd/yyyy\"\n" +
+                "      \"fixedTimestampFormat\" : [\"ISO8601\",\"MM/dd/yyyy\",\"MM/dd/yy\"],\n" +
+                "      \"floatingTimestampFormat\" : [\"ISO8601\",\"MM/dd/yyyy\",\"MM/dd/yy\"],\n" +
+                "      \"timezone\" : \"UTC\",\n" +
+                "      \"separator\" : \",\",\n" +
+                "      \"quote\" : \"\\\"\",\n" +
+                "      \"encoding\" : \"utf-8\",\n" +
+                "      \"emptyTextIsNull\" : true,\n" +
+                "      \"trimWhitespace\" : true,\n" +
+                "      \"trimServerWhitespace\" : true,\n" +
+                "      \"overrides\" : {}\n" +
                 "    }\n" +
                 "}";
-        File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_id_header.csv");
+
+        File threeRowsFile = new File("src/test/resources/datasync_unit_test_four_rows_multidate.csv");
         JobStatus result = FTPUtility.publishViaFTPDropboxV2(
                 userPrefs, ddl, UNITTEST_DATASET_ID, threeRowsFile,
                 controlFileContent);
 
         TestCase.assertEquals(JobStatus.SUCCESS, result);
-        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
+        TestCase.assertEquals(4, getTotalRows(UNITTEST_DATASET_ID));
     }
 
     @Test
