@@ -61,7 +61,7 @@ When using 'replace via FTP' you must supply or generate a control file. In most
 * If you wish to set the timezone of the dates being imported
 * If you have a Location column that will be populated from existing columns (e.g. address, city, state, zipcode) 
 
-For more detailed information on establishing configuration in the Control file refer to [Control file configuration](https://docs.google.com/a/socrata.com/document/d/1ddB0pvxEo6pylLtECW2XE9mYYzaW8hA7qlzPgSOQ0wg#heading=h.tv94b18nb18f)
+For more detailed information on establishing configuration in the Control file refer to [Control file configuration](https://docs.google.com/document/d/1ddB0pvxEo6pylLtECW2XE9mYYzaW8hA7qlzPgSOQ0wg/#heading=h.tv94b18nb18f)
 
 ### Step 4: Test run and save the job
 
