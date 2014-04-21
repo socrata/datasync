@@ -9,8 +9,11 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import com.socrata.datasync.*;
+import com.socrata.datasync.preferences.UserPreferencesFile;
+import com.socrata.exceptions.LongRunningQueryException;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -145,7 +148,7 @@ public class IntegrationJob implements Job {
 	 * @return an error JobStatus if any input is invalid, otherwise JobStatus.VALID
 	 */
 	public JobStatus validate(SocrataConnectionInfo connectionInfo) {
-		if(connectionInfo.getUrl().equals("")
+        if(connectionInfo.getUrl().equals("")
 				|| connectionInfo.getUrl().equals("https://")) {
 			return JobStatus.INVALID_DOMAIN;
 		}
@@ -203,9 +206,31 @@ public class IntegrationJob implements Job {
             }
         }
 		
-		// TODO add more validation? (e.g. validation of File To Publish header row
-		
-		return JobStatus.VALID;
+		// TODO add more validation? (e.g. validation of File To Publish header row)
+
+        // Check if version is up-to-date (ONLY if running headlessly)
+        try {
+            Map<String, String> dataSyncVersionMetadata = DataSyncMetadata.getDataSyncMetadata();
+            String newVersionDownloadMessage = "Download the new version (" +
+                    DataSyncMetadata.getCurrentVersion(dataSyncVersionMetadata) + ") here:\n" +
+                    DataSyncMetadata.getCurrentVersionDownloadUrl(dataSyncVersionMetadata) + "\n";
+
+            if(!DataSyncMetadata.isLatestMajorVersion(dataSyncVersionMetadata)) {
+                // Fail job if major version out-of-date
+                JobStatus versionOutOfDate = JobStatus.VERSION_OUT_OF_DATE;
+                versionOutOfDate.setMessage("DataSync critical update required: job cannot be run until " +
+                        " DataSync is updated. " + newVersionDownloadMessage);
+                return versionOutOfDate;
+            } else if(!DataSyncMetadata.isLatestVersion(dataSyncVersionMetadata)) {
+                // Warn user if version out of date at all
+                System.err.println("\nWARNING: DataSync is out-of-date. " + newVersionDownloadMessage + "\n");
+            }
+        } catch (Exception e) {
+            // do nothing upon failure
+            System.out.println("WARNING: checking DataSync version failed.");
+        }
+
+        return JobStatus.VALID;
 	}
 	
 	public JobStatus run() {
@@ -222,11 +247,8 @@ public class IntegrationJob implements Job {
 		} else {
 			// attach a requestId to all Producer API calls (for error tracking purposes)
             String jobRequestId = IntegrationUtility.generateRequestId();
-            // TODO swap this out...
-            //final Soda2Producer producer = Soda2Producer.newProducerWithRequestId(
-            //        connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken(), jobRequestId);
-            final Soda2Producer producer = Soda2Producer.newProducer(
-                    connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
+            final Soda2Producer producer = Soda2Producer.newProducerWithRequestId(
+                    connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken(), jobRequestId);
             final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
 	
 			File fileToPublishFile = new File(fileToPublish);
@@ -337,6 +359,12 @@ public class IntegrationJob implements Job {
             sendErrorNotificationEmail(
                     adminEmail, connectionInfo, runStatus, runErrorMessage, logDatasetID, logPublishingErrorMessage);
 		}
+
+        if(runStatus.isError()) {
+            System.err.println("Job completed with errors: " + runStatus.getMessage());
+        } else {
+            System.out.println("Job completed successfully");
+        }
 
         return runStatus;
 	}

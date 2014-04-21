@@ -29,7 +29,8 @@ public class PortUtility {
         if(destinationDatasetTitle != null && !destinationDatasetTitle.equals(""))
             sourceSet.setName(destinationDatasetTitle);
 
-		DatasetInfo sinkSet = creator.createDataset(sourceSet, useNewBackend);
+		//DatasetInfo sinkSet = creator.createDataset(sourceSet, useNewBackend);
+        DatasetInfo sinkSet = creator.createDataset(sourceSet);
 
         String sinkSetID = sinkSet.getId();
 		return sinkSetID;

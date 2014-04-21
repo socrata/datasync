@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>DataSync</groupId>
     <artifactId>DataSync</artifactId>
-    <version>0.4.6-SNAPSHOT</version>
+    <version>0.4.7-SNAPSHOT</version>
     <developers>
         <developer>
             <name>Adrian Laurenzi</name>
@@ -55,8 +55,8 @@
     <dependencies>
         <dependency>
             <groupId>com.socrata</groupId>
-            <artifactId>soda-api-java-NBE</artifactId>
-            <version>0.9.8.2-NBE</version>
+            <artifactId>soda-api-java</artifactId>
+            <version>0.9.11</version>
         </dependency>
         <dependency>
             <groupId>javax.mail</groupId>

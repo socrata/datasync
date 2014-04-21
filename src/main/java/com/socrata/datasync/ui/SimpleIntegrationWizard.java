@@ -12,14 +12,9 @@ import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.Job;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.preferences.UserPreferencesJava;
-import com.sun.jersey.api.client.GenericType;
 
-import com.socrata.api.HttpLowLevel;
-import com.socrata.api.Soda2Consumer;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
-import com.socrata.model.soql.SoqlQuery;
-import com.sun.jersey.api.client.ClientResponse;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -36,12 +31,7 @@ public class SimpleIntegrationWizard {
 	 * 
 	 * GUI interface to DataSync
 	 */
-
-    private static final String VERSION = DataSyncMetadata.getVersion();
-    private static final String METADATA_DOMAIN = DataSyncMetadata.getMetadataDomain();
-    private static final String METADATA_DATASET_ID = DataSyncMetadata.getMetadataDatasetId();
-	
-	private static final String TITLE = "Socrata DataSync " + VERSION;
+	private static final String TITLE = "Socrata DataSync " + DataSyncMetadata.getDatasyncVersion();
     private static final String LOGO_FILE_PATH = "/datasync_logo.png";
 	private static final String LOADING_SPINNER_FILE_PATH = "/loading_spinner.gif";
 	private static final int FRAME_WIDTH = 800;
@@ -61,7 +51,8 @@ public class SimpleIntegrationWizard {
     private static final String PORT_JOB_FILE_EXTENSION = "spj";
 
     // help icon balloon tip text
-    private static final String FILE_CHUNKING_THRESHOLD_TIP_TEXT = "<html><body style='width: 300px'>When a CSV/TSV file to be published is larger than this value (in megabytes), " +
+    private static final String FILE_CHUNKING_THRESHOLD_TIP_TEXT = "<html><body style='width: 300px'>If using the upsert, append, or " +
+            "delete methods (over HTTP) and the CSV/TSV file to be published is larger than this value (in megabytes), " +
             "the file is automatically split up and published in chunks (because it is problematic to publish large files all at once). " +
             "Usually chunking is necessary when a file is larger than about 64 MB.</body></html>";
     private static final String CHUNK_SIZE_THRESHOLD_TIP_TEXT = "<html><body style='width: 300px'>The number of rows to publish in each chunk " +
@@ -75,8 +66,9 @@ public class SimpleIntegrationWizard {
             "To view detailed logging information run the job by copying the" +
             " 'Command to execute with scheduler' and running it in your Terminal/Command Prompt</body></html>";
 
-    private static final String GETTING_STARTED_GUIDE_URL = "TODO";
-    private static final String DEV_GUIDE_URL = "TODO";
+    private static final String GETTING_STARTED_GUIDE_URL = "http://socrata.github.io/datasync/";
+    private static final String CONTROL_GUIDE_URL = "TODO";
+    private static final String SCHEDULING_GUIDE_URL = "http://socrata.github.io/datasync/resources/schedule-job.html";
 
     private JTextField domainTextField, usernameTextField, apiKeyTextField;
 	private JPasswordField passwordField;
@@ -168,26 +160,19 @@ public class SimpleIntegrationWizard {
     /** Queries special Socrata dataset with DataSync metadata to
 	 *  determine if this is the most recent version. Alert user
 	 *  if a new version is available
-	 *   
-	 * @throws LongRunningQueryException 
-	 * @throws SodaError 
-	 * @throws MalformedURLException 
+	 *
+	 * @throws LongRunningQueryException
+	 * @throws SodaError
+	 * @throws MalformedURLException
 	 * @throws URISyntaxException
 	 */
 	private void checkVersion() throws LongRunningQueryException, SodaError, URISyntaxException {
-		final Soda2Consumer consumer = Soda2Consumer.newConsumer(METADATA_DOMAIN);
-		
-		ClientResponse response = consumer.query(METADATA_DATASET_ID, HttpLowLevel.JSON_TYPE, SoqlQuery.SELECT_ALL);
-        final List<Object> results = response.getEntity(new GenericType<List<Object>>() {
-        });
-        final Map<String, String> allMetadata = (Map<String, String>) results.get(0);
-
-	    String currentVersion = allMetadata.get("current_version");
-	    
-	    if(!currentVersion.equals(VERSION)) {
+		Map<String, String> dataSyncVersionMetadata = DataSyncMetadata.getDataSyncMetadata();
+        String currentVersion = DataSyncMetadata.getCurrentVersion(dataSyncVersionMetadata);
+        if(!!DataSyncMetadata.isLatestVersion(dataSyncVersionMetadata)) {
 	    	Object[] options = {"Download Now", "No Thanks"};
             int n = JOptionPane.showOptionDialog(frame,
-            				"A new version of DataSync is available (version " 
+            				"A new version of DataSync is available (version "
         	    	    	+ currentVersion + ").\nDo you want to download it now?\n",
         	    	    	"Alert: New Version Available",
                             JOptionPane.YES_NO_OPTION,
@@ -195,7 +180,7 @@ public class SimpleIntegrationWizard {
                             null, options, options[0]);
             if (n == JOptionPane.YES_OPTION) {
             	URI currentVersionDownloadURI = new URI(
-    	    			allMetadata.get("current_version_download_url").toString());
+                        DataSyncMetadata.getCurrentVersionDownloadUrl(dataSyncVersionMetadata));
             	IntegrationUtility.openWebpage(currentVersionDownloadURI);
             }
 	    }
@@ -289,16 +274,6 @@ public class SimpleIntegrationWizard {
             }
             return null;
         }
-
-        /*
-        @Override
-        protected void process(List<String> chunks) {
-            StringBuilder sb = new StringBuilder();
-            for(String chunk : chunks){
-                sb.append(chunk).append("\n");
-            }
-            labelToUpdate.setText(sb.toString());
-        }*/
 
         //Executed on the Event Dispatch Thread after the doInBackground method is finished
         @Override
@@ -462,9 +437,11 @@ public class SimpleIntegrationWizard {
         JMenu helpMenu = new JMenu("Help");
         menuBar.add(helpMenu);
         JMenuItem gettingStartedGuideItem = new JMenuItem("Getting started guide");
-        JMenuItem devDocumentationItem = new JMenuItem("FTP control file configuration");
+        JMenuItem controlDocumentationItem = new JMenuItem("FTP control file configuration");
+        JMenuItem schedulingItem = new JMenuItem("Scheduling a job");
         helpMenu.add(gettingStartedGuideItem);
-        helpMenu.add(devDocumentationItem);
+        helpMenu.add(controlDocumentationItem);
+        helpMenu.add(schedulingItem);
 
         newStandardJobItem.addActionListener(new NewStandardJobListener());
         newPortJobItem.addActionListener(new NewPortJobListener());
@@ -480,11 +457,19 @@ public class SimpleIntegrationWizard {
                 } catch (URISyntaxException e1) { e1.printStackTrace(); }
             }
         });
-        devDocumentationItem.addActionListener(new ActionListener() {
+        controlDocumentationItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    IntegrationUtility.openWebpage(new URI(DEV_GUIDE_URL));
+                    IntegrationUtility.openWebpage(new URI(CONTROL_GUIDE_URL));
+                } catch (URISyntaxException e1) { e1.printStackTrace(); }
+            }
+        });
+        schedulingItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    IntegrationUtility.openWebpage(new URI(SCHEDULING_GUIDE_URL));
                 } catch (URISyntaxException e1) { e1.printStackTrace(); }
             }
         });

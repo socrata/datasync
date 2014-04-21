@@ -164,6 +164,6 @@ public class IntegrationJobTest extends TestBase {
         JobStatus status = jobToRun.run();
         TestCase.assertEquals(JobStatus.PUBLISH_ERROR, status);
         TestCase.assertTrue(status.isError());
-        TestCase.assertEquals("FAILURE: Processing datasync_unit_test_invalid_date.csv failed: Uninterpretable value in CSV at record 2: Cannot parse invalid as any of [ \"MM/dd/yyyy\" ]\n", status.getMessage());
+        TestCase.assertEquals("FAILURE: Processing datasync_unit_test_invalid_date.csv failed: Value in column \"date\" uninterpretable as calendar_date in input at record 2: \"invalid\"\n", status.getMessage());
     }
 }

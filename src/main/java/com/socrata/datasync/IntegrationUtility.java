@@ -328,7 +328,7 @@ public class IntegrationUtility {
         } else {
             newCols.put("Success", (Object) true);
         }
-        newCols.put("DataSyncVersion", (Object) DataSyncMetadata.getVersion());
+        newCols.put("DataSyncVersion", (Object) DataSyncMetadata.getDatasyncVersion());
         upsertObjects.add(ImmutableMap.copyOf(newCols));
 
         System.out.println("Adding row to logging dataset (" + connectionInfo.getUrl() + "/d/" + logDatasetID + ")...");
