@@ -29,6 +29,7 @@ public class PortUtility {
         if(destinationDatasetTitle != null && !destinationDatasetTitle.equals(""))
             sourceSet.setName(destinationDatasetTitle);
 
+        // TODO uncomment (after soda-java is updated to support this)
 		//DatasetInfo sinkSet = creator.createDataset(sourceSet, useNewBackend);
         DatasetInfo sinkSet = creator.createDataset(sourceSet);
 

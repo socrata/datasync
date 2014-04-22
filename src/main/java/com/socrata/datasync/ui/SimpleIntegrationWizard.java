@@ -64,10 +64,10 @@ public class SimpleIntegrationWizard {
     private static final String APP_TOKEN_TIP_TEXT = "You can create an app token free at http://dev.socrata.com/register";
     private static final String RUN_JOB_NOW_TIP_TEXT = "<html><body style='width: 300px'>" +
             "To view detailed logging information run the job by copying the" +
-            " 'Command to execute with scheduler' and running it in your Terminal/Command Prompt</body></html>";
+            " 'Command to execute with scheduler' and running it in your Terminal/Command Prompt (instead of clicking 'Run Job Now' button)</body></html>";
 
     private static final String GETTING_STARTED_GUIDE_URL = "http://socrata.github.io/datasync/";
-    private static final String CONTROL_GUIDE_URL = "TODO";
+    private static final String CONTROL_GUIDE_URL = "ADD THIS";
     private static final String SCHEDULING_GUIDE_URL = "http://socrata.github.io/datasync/resources/schedule-job.html";
 
     private JTextField domainTextField, usernameTextField, apiKeyTextField;
@@ -493,6 +493,7 @@ public class SimpleIntegrationWizard {
         runJobNowButton = new JButton("Run Job Now");
         runJobNowButton.addActionListener(new RunJobNowListener());
         leftButtonPanel.add(runJobNowButton);
+        leftButtonPanel.add(UIUtility.generateHelpBubble(RUN_JOB_NOW_TIP_TEXT));
 
         generateLoadingNotice();
         leftButtonPanel.add(loadingNoticePanel);
@@ -532,8 +533,7 @@ public class SimpleIntegrationWizard {
             JLabel loadingImageLabel = new JLabel(new ImageIcon(spinnerImageURL));
             loadingNoticePanel.add(loadingImageLabel);
         }
-        JPanel loadingTextLabel = UIUtility.generateLabelWithHelpBubble(
-                " Job is in progress...", RUN_JOB_NOW_TIP_TEXT, 0);
+        JLabel loadingTextLabel = new JLabel(" Job is in progress...");
         loadingNoticePanel.add(loadingTextLabel);
         loadingNoticePanel.setVisible(false);
     }
