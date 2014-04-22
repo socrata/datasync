@@ -32,6 +32,7 @@ public class FTPUtility {
     private static final String FAILURE_PREFIX = "FAILURE";
     private static final String FTP_STATUS_FILENAME = "status.txt";
     private static final String FTP_REQUEST_ID_FILENAME = "requestId";
+    private static final String FTP_DATASYNC_VERSION_FILENAME = "datasync-version";
     private static final int NUM_BYTES_OUT_BUFFER = 1024;
     private static final int TIME_BETWEEN_FTP_STATUS_POLLS_MS = 1000;
 
@@ -162,6 +163,8 @@ public class FTPUtility {
                     status.setMessage("Error setting request Id: " + controlFileRequestId);
                     return status;
                 }
+                // for tracking DataSync version
+                recordDataSyncVersion(ftp, pathToDomainRoot + "/" + FTP_DATASYNC_VERSION_FILENAME);
 
                 // upload control.json file content
                 String controlFilePathFTP = pathToDatasetDir + "/" + FTP_CONTROL_FILENAME;
@@ -432,6 +435,28 @@ public class FTPUtility {
     }
 
     /**
+     * Records the DataSync version of this JAR/code (for tracking purposes). If setting the version
+     * fails just print a message and do nothing else.
+     *
+     * @param ftp authenticated ftps object
+     * @param pathToDataSyncVersionFile absolute path on FTP server where 'datasync-version' file is located
+     */
+    private static void recordDataSyncVersion(FTPSClient ftp, String pathToDataSyncVersionFile) {
+        try {
+            String currentDataSyncVersion = DataSyncMetadata.getDatasyncVersion();
+            System.out.println("Recording DataSync version being used (" + currentDataSyncVersion + ")");
+            InputStream inputDataSyncVersion = new ByteArrayInputStream(currentDataSyncVersion.getBytes("UTF-8"));
+            System.out.println("Setting job request ID - ftp.storeFile(" + pathToDataSyncVersionFile + ", " + inputDataSyncVersion + ")");
+            if (!ftp.storeFile(pathToDataSyncVersionFile, inputDataSyncVersion)) {
+                System.out.println("Failed to record DataSync version: " + ftp.getReplyString() + " Continuing...");
+            }
+            inputDataSyncVersion.close();
+        } catch (Exception e) {
+            System.out.println("Failed to record DataSync version: " + e.getMessage() + ". Continuing...");
+        }
+    }
+
+    /**
      * Closes the given FTPS connection (if one is open)
      *
      * @param ftp authenticated ftps object
@@ -502,13 +527,7 @@ public class FTPUtility {
      */
     private static long getFTPFilesize(FTPClient ftp, final String path) throws IOException {
         System.out.println("ftp.sendCommand(\"SIZE\"," + path + ")");
-
         String replyString = issueFtpCommandWithRetries(ftp, "sendCommand", "SIZE", path);
-        /*ftp.sendCommand("SIZE", path);
-        String replyString = ftp.getReplyString();
-        if(!FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
-            throw new IOException(String.format(replyString));
-        }*/
         String[] replySplit = replyString.trim().split(" ");
         return Long.parseLong(replySplit[1]);
     }
