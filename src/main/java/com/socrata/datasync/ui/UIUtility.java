@@ -42,4 +42,24 @@ public class UIUtility {
         ToolTipUtils.balloonToToolTip(chunkSizeTip, 100, 100000);
         return chunkSizeHelp;
     }
+    
+    public static GridBagConstraints getGridBagLabelConstraints(int xpos, int ypos) {
+        GridBagConstraints labelConstraints = new GridBagConstraints();        
+        labelConstraints.gridx = xpos;
+        labelConstraints.gridy = ypos;
+        labelConstraints.weightx = 1.0;
+        labelConstraints.anchor = GridBagConstraints.LINE_START;
+        return labelConstraints;
+    }
+    
+    public static GridBagConstraints getGridBagFieldConstraints(int xpos, int ypos) {
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = xpos;
+        constraints.gridy = ypos; 
+        constraints.weightx = 0;
+        constraints.anchor = GridBagConstraints.LINE_START;
+        constraints.ipadx = 10;    
+        return constraints;
+    }
+    
 }

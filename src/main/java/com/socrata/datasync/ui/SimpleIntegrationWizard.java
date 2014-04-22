@@ -10,6 +10,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import com.socrata.datasync.*;
 import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.Job;
+import com.socrata.datasync.job.MetadataJob;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.sun.jersey.api.client.GenericType;
@@ -58,6 +59,7 @@ public class SimpleIntegrationWizard {
     // TODO remove these declarations from this file (duplicates...)
 	private final String STANDARD_JOB_FILE_EXTENSION = "sij";
     private final String PORT_JOB_FILE_EXTENSION = "spj";
+    private final String METADATA_JOB_FILE_EXTENSION = "smj";
 
     // help icon balloon tip text
     private final String FILE_CHUNKING_THRESHOLD_TIP_TEXT = "<html><body style='width: 300px'>When a CSV/TSV file to be published is larger than this value (in megabytes), " +
@@ -196,10 +198,12 @@ public class SimpleIntegrationWizard {
             newJobTab = new IntegrationJobTab((IntegrationJob) job, frame);
         } else if(job.getClass().equals(PortJob.class)) {
             newJobTab = new PortJobTab((PortJob) job, frame);
+        } else if(job.getClass().equals(MetadataJob.class)) {
+        	newJobTab = new MetadataJobTab((MetadataJob) job, frame);
         } else {
             throw new IllegalArgumentException("Given job is invalid: unrecognized class '" + job.getClass() + "'");
         }
-        JPanel newJobPanel = newJobTab.getTabPanel();
+        JPanel newJobPanel = newJobTab.getTabPanel();        
 
 		// Build the tab with close button
 	    FlowLayout tabLayout = new FlowLayout(FlowLayout.CENTER, 5, 0);
@@ -223,8 +227,14 @@ public class SimpleIntegrationWizard {
 	    tabPanel.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
 
 		// Put tab with close button into tabbed pane 
-        jobTabsPane.addTab(null, newJobPanel);
-	    int pos = jobTabsPane.indexOfComponent(newJobPanel);
+	    //TODO: BW: Possibly implement way to keep other tabs from being scrollable?	    
+	    JScrollPane scroller = new JScrollPane(newJobPanel);
+	    scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        jobTabsPane.addTab(null, scroller);
+	    int pos = jobTabsPane.indexOfComponent(scroller);
+	    
+	    //jobTabsPane.addTab(null, newJobPanel);	    
+	    //int pos = jobTabsPane.indexOfComponent(newJobPanel);
 	    
 	    // Now assign the component for the tab
 	    jobTabsPane.setTabComponentAt(pos, tabPanel);
@@ -287,10 +297,10 @@ public class SimpleIntegrationWizard {
 	private class OpenJobListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			JFileChooser savedJobFileChooser = new JFileChooser();
-            String fileExtensionsAllowed = "*." + STANDARD_JOB_FILE_EXTENSION + ", *." + PORT_JOB_FILE_EXTENSION;
+            String fileExtensionsAllowed = "*." + STANDARD_JOB_FILE_EXTENSION + ", *." + PORT_JOB_FILE_EXTENSION + ", *." + METADATA_JOB_FILE_EXTENSION;
         	FileNameExtensionFilter filter = new FileNameExtensionFilter(
                     "Socrata Job File (" + fileExtensionsAllowed + ")",
-                    STANDARD_JOB_FILE_EXTENSION, PORT_JOB_FILE_EXTENSION);
+                    STANDARD_JOB_FILE_EXTENSION, PORT_JOB_FILE_EXTENSION, METADATA_JOB_FILE_EXTENSION);
         	savedJobFileChooser.setFileFilter(filter);
         	int returnVal = savedJobFileChooser.showOpenDialog(frame);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -316,6 +326,8 @@ public class SimpleIntegrationWizard {
                                     addJobTab(new IntegrationJob(openedFileLocation));
                                 } else if(openedFileExtension.equals(PORT_JOB_FILE_EXTENSION)) {
                                     addJobTab(new PortJob(openedFileLocation));
+                                } else if (openedFileExtension.equals(METADATA_JOB_FILE_EXTENSION)) {
+                                	addJobTab(new MetadataJob(openedFileLocation));
                                 } else {
                                     throw new Exception("unrecognized file extension (" + openedFileExtension + ")");
                                 }
@@ -347,6 +359,13 @@ public class SimpleIntegrationWizard {
             jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
         }
     }
+    
+    private class NewMetadataJobListener implements ActionListener {
+    	public void actionPerformed(ActionEvent e) {
+    		addJobTab(new MetadataJob());
+    		jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
+    	}
+    }
 
 	/**
 	 * Listen for action to close currently selected tab
@@ -371,6 +390,8 @@ public class SimpleIntegrationWizard {
         newJobMenu.add(newStandardJobItem);
         JMenuItem newPortJobItem = new JMenuItem("Port Job");
         newJobMenu.add(newPortJobItem);
+        JMenuItem newMetadataJobItem = new JMenuItem("Metadata Job");
+        newJobMenu.add(newMetadataJobItem);
 		fileMenu.add(newJobMenu);
 		
 		JMenuItem openJobItem = new JMenuItem("Open Job");
@@ -396,6 +417,7 @@ public class SimpleIntegrationWizard {
 
         newStandardJobItem.addActionListener(new NewStandardJobListener());
         newPortJobItem.addActionListener(new NewPortJobListener());
+        newMetadataJobItem.addActionListener(new NewMetadataJobListener());
 		openJobItem.addActionListener(new OpenJobListener());
 		saveJobItem.addActionListener(new SaveJobListener());
 		runJobItem.addActionListener(new RunJobNowListener());
@@ -446,7 +468,6 @@ public class SimpleIntegrationWizard {
 
         // TODO populate job tabs w/ previously opened tabs or [if none] a new job tab
         addJobTab(new IntegrationJob());
-
 		return mainContainer;
 	}
 	
