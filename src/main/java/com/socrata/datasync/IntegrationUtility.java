@@ -26,6 +26,7 @@ public class IntegrationUtility {
      * A utility class for the Integration Job Type
      */
     private static final int NUM_BYTES_OUT_BUFFER = 1024;
+    private static final String LOCATION_DATATYPE_NAME = "location";
 
     private IntegrationUtility() {
         throw new AssertionError("Never instantiate utility classes!");
@@ -286,15 +287,37 @@ public class IntegrationUtility {
      * @return list of field names or null if there
      */
     public static String getDatasetFieldNames(SodaDdl ddl, String datasetId) throws SodaError, InterruptedException {
-        Dataset info = (Dataset) ddl.loadDatasetInfo(datasetId);
+        Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(datasetId);
+        return getDatasetFieldNames(datasetInfo);
+    }
+
+    /**
+     * Returns list of dataset field names in the form: "col1","col2",...
+     *
+     * @param datasetInfo
+     * @return list of field names or null if there
+     */
+    public static String getDatasetFieldNames(Dataset datasetInfo) {
         String columnsValue = "";
-        List<Column> columns = info.getColumns();
+        List<Column> columns = datasetInfo.getColumns();
         for(int i = 0; i < columns.size(); i++) {
             if(i > 0)
                 columnsValue += ",";
             columnsValue += "\"" + columns.get(i).getFieldName() + "\"";
         }
         return columnsValue;
+    }
+
+    /**
+     * @return true if given dataset has one or more Location columns, false otherwise
+     */
+    public static boolean datasetHasLocationColumn(Dataset datasetInfo) {
+        List<Column> columns = datasetInfo.getColumns();
+        for(int i = 0; i < columns.size(); i++) {
+            if(columns.get(i).getDataTypeName().equals(LOCATION_DATATYPE_NAME))
+                return true;
+        }
+        return false;
     }
 
     /**

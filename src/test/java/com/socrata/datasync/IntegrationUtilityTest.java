@@ -9,6 +9,7 @@ import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
+import com.socrata.model.importer.Dataset;
 import junit.framework.TestCase;
 import org.junit.Test;
 import java.io.File;
@@ -307,6 +308,15 @@ public class IntegrationUtilityTest extends TestBase {
         final SodaDdl ddl = createSodaDdl();
         String datasetFieldNames = IntegrationUtility.getDatasetFieldNames(ddl, UNITTEST_DATASET_ID);
         TestCase.assertEquals("\"id\",\"name\",\"another_name\",\"date\"", datasetFieldNames);
+    }
+
+    @Test
+    public void testGetDatasetHasLocationColumn() throws IOException, SodaError, InterruptedException {
+        final SodaDdl ddl = createSodaDdl();
+        Dataset datasetInfoNoLocation = (Dataset) ddl.loadDatasetInfo(UNITTEST_DATASET_ID);
+        Dataset datasetInfoWithLocation = (Dataset) ddl.loadDatasetInfo(UNITTEST_DATASET_ID_LOCATION_COL);
+        TestCase.assertFalse(IntegrationUtility.datasetHasLocationColumn(datasetInfoNoLocation));
+        TestCase.assertTrue(IntegrationUtility.datasetHasLocationColumn(datasetInfoWithLocation));
     }
 
 

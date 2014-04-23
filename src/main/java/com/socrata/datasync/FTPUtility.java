@@ -5,6 +5,7 @@ import com.socrata.api.SodaDdl;
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
+import com.socrata.model.importer.Dataset;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.ftp.*;
@@ -301,11 +302,18 @@ public class FTPUtility {
     public static String generateControlFileContent(final SodaDdl ddl,
                                                     final String fileToPublish, final PublishMethod publishMethod,
                                                     final String datasetId, final boolean containsHeaderRow) throws SodaError, InterruptedException {
+        Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(datasetId);
+
+        String useSocrataGeocodingField = "";
         String skipValue = "0";
         String columnsValue = "null";
         if(!containsHeaderRow) {
             // if no header row get API field names for each column in dataset
-            columnsValue = "[" + IntegrationUtility.getDatasetFieldNames(ddl, datasetId) + "]";
+            columnsValue = "[" + IntegrationUtility.getDatasetFieldNames(datasetInfo) + "]";
+        }
+        if(IntegrationUtility.datasetHasLocationColumn(datasetInfo)) {
+            // if there is a Location column include flag to useSocrataGeocoding
+            useSocrataGeocodingField = "      \"useSocrataGeocoding\" : true,\n";
         }
 
         // In FTP Dropbox v2 there is only Append (append == upsert)
@@ -328,6 +336,7 @@ public class FTPUtility {
                 "  \"action\" : \"" + capitalizeFirstLetter(ftpDropboxPublishMethod) + "\", \n" +
                 "  \"" + fileType + "\" :\n" +
                 "    {\n" +
+                useSocrataGeocodingField +
                 "      \"columns\" : " + columnsValue + ",\n" +
                 "      \"skip\" : " + skipValue + ",\n" +
                 "      \"fixedTimestampFormat\" : [\"ISO8601\",\"MM/dd/yyyy\",\"MM/dd/yy\"],\n" +
@@ -508,10 +517,6 @@ public class FTPUtility {
             System.out.println("Enqueing job - ftp.rename("
                     + path + ", " + datasetDirPath + "/" + FTP_ENQUEUE_JOB_DIRNAME + ")");
             issueFtpCommandWithRetries(ftp, "rename", path, datasetDirPath + "/" + FTP_ENQUEUE_JOB_DIRNAME);
-            /*ftp.rename(path, datasetDirPath + "/" + FTP_ENQUEUE_JOB_DIRNAME);
-            if(!FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
-                return FAILURE_PREFIX + ": " + ftp.getReplyString();
-            }*/
         } catch (IOException e) {
             e.printStackTrace();
             return FAILURE_PREFIX + ": " + e.getMessage();
