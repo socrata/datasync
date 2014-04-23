@@ -16,7 +16,7 @@ import java.util.Map;
  * Date: 3/25/14
  */
 public class DataSyncMetadata {
-    private static final String DATASYNC_VERSION = "0.4";
+    private static final String DATASYNC_VERSION = "1.0";
     private static final String METADATA_DOMAIN = "https://adrian.demo.socrata.com";
     private static final String METADATA_DATASET_ID = "7w7i-q9n6";
 
