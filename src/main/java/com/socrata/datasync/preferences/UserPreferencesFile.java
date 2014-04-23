@@ -1,10 +1,9 @@
 package com.socrata.datasync.preferences;
 
+import com.socrata.datasync.SocrataConnectionInfo;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-import com.socrata.datasync.SocrataConnectionInfo;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)

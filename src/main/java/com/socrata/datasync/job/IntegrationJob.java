@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.socrata.datasync.*;
-import com.socrata.datasync.preferences.UserPreferencesFile;
-import com.socrata.exceptions.LongRunningQueryException;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;

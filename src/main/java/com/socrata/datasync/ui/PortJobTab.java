@@ -25,7 +25,7 @@ public class PortJobTab implements JobTab {
 
     private final int JOB_TEXTFIELD_WIDTH = 370;
     private final int JOB_TEXTFIELD_HEIGHT = 24;
-    private final int JOB_FIELD_VGAP = 8;
+    private final int JOB_FIELD_VGAP = 7;
     private final int SINK_DATASET_ID_TEXTFIELD_WIDTH = 210;
     private final int OPEN_SINK_DATASET_BUTTON_HEIGHT = 22;
     private final String DEFAULT_DESTINATION_SET_ID = "(Generates after running job)";

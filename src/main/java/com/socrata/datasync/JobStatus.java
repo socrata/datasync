@@ -42,7 +42,9 @@ public enum JobStatus {
 
     INVALID_SCHEMAS("Schemas do not match; cannot port rows.", true),
 
-    VERSION_OUT_OF_DATE("Must download new version of DataSync before jobs can be run (critical update)", true);
+    VERSION_OUT_OF_DATE("Must download new version of DataSync before jobs can be run (critical update)", true),
+
+    MISSING_METADATA_TITLE("Title is Required", true);
 
     /**
      * The human-readable message to store.

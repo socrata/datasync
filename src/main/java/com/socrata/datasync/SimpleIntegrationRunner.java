@@ -3,6 +3,8 @@ package com.socrata.datasync;
 import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.Job;
 import com.socrata.datasync.job.PortJob;
+import com.socrata.datasync.job.MetadataJob;
+import com.socrata.datasync.ui.MetadataJobTab;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +20,14 @@ public class SimpleIntegrationRunner {
         File jobFile = new File(jobFileToRun);
         if(jobFile.exists()) {
             try {
-                IntegrationJob job = new IntegrationJob(jobFileToRun);
+            	Job job = null;
+            	//TODO BW: Follow how port jobs are run from command line?
+            	if (jobFileToRun.endsWith(MetadataJobTab.JOB_FILE_EXTENSION)) {
+            		job = new MetadataJob(jobFileToRun);
+            	}
+            	else {
+            		job = new IntegrationJob(jobFileToRun);
+            	}
                 JobStatus status = job.run();
                 if(status.isError()) {
                     System.err.println(status.getMessage());

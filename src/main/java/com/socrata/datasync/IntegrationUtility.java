@@ -1,16 +1,14 @@
 package com.socrata.datasync;
 
-import java.awt.*;
+import java.awt.Desktop;
 import java.io.*;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.util.*;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import au.com.bytecode.opencsv.CSVReader;
-
 import com.google.common.collect.ImmutableMap;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;

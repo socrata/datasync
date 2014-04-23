@@ -10,8 +10,6 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.event.*;
 import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
 
@@ -25,7 +23,7 @@ public class IntegrationJobTab implements JobTab {
     private static final int JOB_COMMAND_TEXTFIELD_WIDTH = 212;
     private static final int JOB_FILE_TEXTFIELD_WIDTH = 263;
     private static final int JOB_TEXTFIELD_HEIGHT = 26;
-    private static final int JOB_FIELD_VGAP = 8;
+    private static final int JOB_FIELD_VGAP = 5;
     private static final int CONTROL_FILE_TEXTFIELD_WIDTH = 102;
     private static final Dimension CONTROL_FILE_EDITOR_DIMENSIONS = new Dimension(350, 200);
     private static final FlowLayout FLOW_LEFT = new FlowLayout(FlowLayout.LEFT, 0, 0);
@@ -450,18 +448,8 @@ public class IntegrationJobTab implements JobTab {
     private class CopyJobCommandListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             String runJobCommand = runCommandTextField.getText();
-            copyToClipboard(runJobCommand);
+            UIUtility.copyToClipboard(runJobCommand);
         }
-    }
-
-    /**
-     * Copies given text to clipboard
-     * @param textToCopy text to copy to clipboard
-     */
-    private void copyToClipboard(String textToCopy) {
-        StringSelection stringSelection = new StringSelection(textToCopy);
-        Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
-        clpbrd.setContents(stringSelection, null);
     }
 
     private class EditGenerateControlFileListener implements ActionListener {
@@ -553,7 +541,7 @@ public class IntegrationJobTab implements JobTab {
             if(errorMessage == null) {
                 int selectedOption = showGetColumnIdsDialog(datasetFieldNames);
                 if(selectedOption == COPY_TO_CLIPBOARD_OPTION_INDEX) {
-                    copyToClipboard(datasetFieldNames);
+                    UIUtility.copyToClipboard(datasetFieldNames);
                 }
             } else {
                 JOptionPane.showMessageDialog(mainFrame, errorMessage);

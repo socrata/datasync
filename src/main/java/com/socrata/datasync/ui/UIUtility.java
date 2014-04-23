@@ -8,6 +8,8 @@ import net.java.balloontip.utils.ToolTipUtils;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.util.*;
 
 /**
@@ -58,5 +60,34 @@ public class UIUtility {
         FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 extensionsMsg, allowedFileExtensions);
         return filter;
+    }
+    
+    public static GridBagConstraints getGridBagLabelConstraints(int xpos, int ypos) {
+        GridBagConstraints labelConstraints = new GridBagConstraints();        
+        labelConstraints.gridx = xpos;
+        labelConstraints.gridy = ypos;
+        labelConstraints.weightx = 1.0;
+        labelConstraints.anchor = GridBagConstraints.LINE_START;
+        return labelConstraints;
+    }
+    
+    public static GridBagConstraints getGridBagFieldConstraints(int xpos, int ypos) {
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = xpos;
+        constraints.gridy = ypos; 
+        constraints.weightx = 0;
+        constraints.anchor = GridBagConstraints.LINE_START;
+        constraints.ipadx = 10;    
+        return constraints;
+    }
+
+    /**
+     * Copies given text to clipboard
+     * @param textToCopy text to copy to clipboard
+     */
+    static void copyToClipboard(String textToCopy) {
+        StringSelection stringSelection = new StringSelection(textToCopy);
+        Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clpbrd.setContents(stringSelection, null);
     }
 }
