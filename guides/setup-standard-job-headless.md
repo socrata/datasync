@@ -4,7 +4,7 @@ title: Setup a standard job (headless)
 bodyclass: homepage
 ---
 
-For information on using DataSync in GUI (Graphical User Interface) mode which we recommend reading first in any case refer to the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
+yrdyFor information on using DataSync in GUI (Graphical User Interface) mode which we recommend reading first in any case refer to the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
 
 <div class="well">
 <strong>NOTICE: this guide only pertains to the DataSync version 0.4 Prerelease, which will be formally released mid-April.</strong>
@@ -89,16 +89,24 @@ To run a job that uses global configuration previously saved in DataSync “memo
 Explanation of flags:  
 `*` = required flag
 
-| Flag - Short Name  | Flag - Long Name            | Example Values | Description |
-|:------------------ |:--------------------------- |:----------------------- |:---------- |
-| -h `*`             | --fileToPublishHasHeaderRow | true            | Set this to `true` if the file to publish has a header row, otherwise set it to `false` (`true` and `false` are the only acceptable values) | 
-| -c                 | --config                    | /Users/home/config.json | Points to the config.json file you created in Step 3 or if not supplied configuration inDataSync 'memory' is used |
-| -t                 | --jobType                   | IntegrationJob | Specifies that a standard IntegrationJob should be run (‘IntegrationJob’ is the default so in this case this flag is optional) |
-| -f `*`             | --fileToPublish             | /Users/home/data_file.csv | CSV or TSV file to publish |
-| -i `*`             | --datasetID                 | m985-ywaw | The identifier of the dataset to publish to obtained in Step 2 |
-| -m `*`             | --publishMethod             | replace | Specifies the publish method to use (`replace`, `upsert`, `append`, and `delete` are the only acceptable values, for details on the publishing methods refer to Step 3 of the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html) |
-|-pf                 | --publishViaFTP             | true | Set this to `true` to use FTP (currently only works for `replace`), which is the preferred update method because is highly efficient and can reliably handle very large files (1 million+ rows). If `false` perform the dataset update using HTTPS (`false` is the default value) |
-| -sc                | --pathToFTPControlFile      | /Users/home/control.json | Specifies a Control file that configures 'replace via FTP' jobs, and therefore should only be set if -pf,--publishViaFTP is set to `true`. When this flag is set the *-h,--fileToPublishHasHeaderRow* and *-m,--publishMethod* flags are overridden by the settings in the supplied Control.json file. |
+<table><thead>
+<tr>
+<th>Flag - Short Name</th>
+<th>Flag - Long Name</th>
+<th>Example Values</th>
+<th>Description</th>
+</tr>
+</thead><tbody>
+<tr><td style='text-align: left;'><code>-t</code></td><td style='text-align: left;'><code>--jobType</code></td><td style='text-align: left;'>PortJob</td><td style='text-align: left;'>Specifies that a standard IntegrationJob should be run (&#8216;IntegrationJob&#8217; is the default so in this case this flag is optional)</td>
+</tr><tr><td style='text-align: left;'><code>-c</code></td><td style='text-align: left;'><code>--config</code></td><td style='text-align: left;'>/Users/home/config.json</td><td style='text-align: left;'>Points to the config.json file you created in Step 3 or if not supplied configuration inDataSync &#8216;memory&#8217; is used</td>
+</tr><tr><td style='text-align: left;'><code>-f *</code></td><td style='text-align: left;'><code>--fileToPublish</code></td><td style='text-align: left;'>/Users/home/data_file.csv</td><td style='text-align: left;'>CSV or TSV file to publish</td>
+</tr><tr><td style='text-align: left;'><code>-h *</code></td><td style='text-align: left;'><code>--fileToPublishHasHeaderRow</code></td><td style='text-align: left;'>true</td><td style='text-align: left;'>Set this to <code>true</code> if the file to publish has a header row, otherwise set it to <code>false</code> (<code>true</code> and <code>false</code> are the only acceptable values)</td>
+</tr><tr><td style='text-align: left;'><code>-i *</code></td><td style='text-align: left;'><code>--datasetID</code></td><td style='text-align: left;'>m985-ywaw</td><td style='text-align: left;'>The identifier of the dataset to publish to obtained in Step 2</td>
+</tr><tr><td style='text-align: left;'><code>-m *</code></td><td style='text-align: left;'><code>--publishMethod</code></td><td style='text-align: left;'>replace</td><td style='text-align: left;'>Specifies the publish method to use (<code>replace</code>, <code>upsert</code>, <code>append</code>, and <code>delete</code> are the only acceptable values, for details on the publishing methods refer to Step 3 of the <a href='http://socrata.github.io/datasync/guides/setup-standard-job.html'>Setup a Standard Job (GUI)</a></td>
+</tr><tr><td style='text-align: left;'><code>-pf</code></td><td style='text-align: left;'><code>--publishViaFTP</code></td><td style='text-align: left;'>true</td><td style='text-align: left;'>Set this to <code>true</code> to use FTP (currently only works for <code>replace</code>), which is the preferred update method because is highly efficient and can reliably handle very large files (1 million+ rows). If <code>false</code> perform the dataset update using HTTPS (<code>false</code> is the default value)</td>
+</tr><tr><td style='text-align: left;'><code>-sc</code></td><td style='text-align: left;'><code>--pathToFTPControlFile</code></td><td style='text-align: left;'>/Users/home/control.json</td><td style='text-align: left;'>Specifies a Control file that configures &#8216;replace via FTP&#8217; jobs, and therefore should only be set if <code>-pf</code>,<code>--publishViaFTP</code> is set to <code>true</code>. When this flag is set the <em><code>-h</code>,<code>--fileToPublishHasHeaderRow</code></em> and <em><code>-m</code>,<code>--publishMethod</code></em> flags are overridden by the settings in the supplied Control.json file. Learn how to <a href='http://socrata.github.io/datasync/resources/ftp-control-config.html'>configure the FTP control file</a></td>
+</tr>
+</tbody></table>
 
 **'Replace via FTP' Configuration (via the Control file)**  
 Currently to use SmartUpdate you must supply a control.json file with the *-sc,----pathToFTPControlFile* flag that contains configuration specific to the dataset you are updating. Create a file called control.json according to the Control.json section in this document:
