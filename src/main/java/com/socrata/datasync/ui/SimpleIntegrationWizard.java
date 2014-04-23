@@ -69,7 +69,7 @@ public class SimpleIntegrationWizard {
             " 'Command to execute with scheduler' and running it in your Terminal/Command Prompt (instead of clicking 'Run Job Now' button)</body></html>";
 
     private static final String GETTING_STARTED_GUIDE_URL = "http://socrata.github.io/datasync/";
-    private static final String CONTROL_GUIDE_URL = "ADD THIS";
+    private static final String CONTROL_GUIDE_URL = "http://socrata.github.io/datasync/resources/ftp-control-config.html";
     private static final String SCHEDULING_GUIDE_URL = "http://socrata.github.io/datasync/resources/schedule-job.html";
 
     private JTextField domainTextField, usernameTextField, apiKeyTextField;

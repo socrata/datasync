@@ -1,16 +1,24 @@
 Socrata Datasync
 ================
 
-Last updated: November 14, 2013
+Last updated: April 23, 2014
 
 Authors: [Adrian Laurenzi](http://www.github.com/alaurenz) & [Louis Fettet](http://www.github.com/LouisFettet)
 
 Looking for the latest release? Get it here: https://github.com/socrata/datasync/releases
 
 ## General Information
-DataSync is a lightweight desktop client that makes automated publishing of data to Socrata datasets easy. The simple, clean, graphical interface (GUI) can be used to configure various jobs to publish your data. DataSync runs on any platform with Java (1.6 or higher) installed, so it will work on Windows, Mac, and Linux.
+DataSync is an executable Java application which serves as a general solution to automate publishing data on the
+Socrata platform. It can be used through a easy-to-use graphical interface or as a command-line tool ('headless mode').
+Whether you are a non-technical user, developer, or ETL specialist DataSync makes data publishing simple and reliable.
+DataSync takes a CSV or TSV file on a local machine or networked hard drive and publishes it to a Socrata dataset so
+that the Socrata dataset stays up-to-date. DataSync jobs can be integrated into an ETL process, scheduled using a tool
+such as the Windows Task Scheduler or Cron, or used to perform updates or create new datasets in batches. DataSync
+works on any platform that runs Java version 1.6 or higher (i.e. Windows, Mac, and Linux). This simple, yet powerful
+publishing tool lets you easily update Socrata datasets programmatically and automatically (scheduled), without
+writing a single line of code.
 
-Guide on how to use Datasync: [Setting Up a Basic DataSync Job](http://support.socrata.com/entries/24241271-Setting-up-a-basic-DataSync-job)
+[Comprehensive DataSync Documentation](http://socrata.github.io/datasync/)
 
 The Socrata University Class: [Socrata Introduction to Integration](http://socrata.wistia.com/medias/q4pwut6s56)
 
