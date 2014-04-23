@@ -25,7 +25,7 @@ public class IntegrationJobTab implements JobTab {
     private static final int JOB_TEXTFIELD_HEIGHT = 26;
     private static final int JOB_FIELD_VGAP = 5;
     private static final int CONTROL_FILE_TEXTFIELD_WIDTH = 102;
-    private static final Dimension CONTROL_FILE_EDITOR_DIMENSIONS = new Dimension(350, 200);
+    private static final Dimension CONTROL_FILE_EDITOR_DIMENSIONS = new Dimension(500, 350);
     private static final FlowLayout FLOW_LEFT = new FlowLayout(FlowLayout.LEFT, 0, 0);
     private static final FlowLayout FLOW_RIGHT = new FlowLayout(FlowLayout.LEFT, 0, JOB_FIELD_VGAP);
 

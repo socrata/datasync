@@ -589,7 +589,7 @@ public class FTPUtility {
         /*pathToFTPFile = "/incoming/PD/PDCrimeData/pdcrimedata.csv";
         String ftpHost = "dsfsdf";
         try {
-            pathToFTPFile = new URI("ftp://ftp.kcmo.org/incoming/PD/PDCrimeData/pdcrimedata.csv");
+            pathToFTPFile = new URI("ftp://ftp.something.com/file.csv");
             System.out.println(pathToFTPFile.getScheme());
         } catch (URISyntaxException e) {
             e.printStackTrace();
