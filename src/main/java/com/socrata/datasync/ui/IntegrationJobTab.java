@@ -38,23 +38,25 @@ public class IntegrationJobTab implements JobTab {
 
     private static final int HELP_ICON_TOP_PADDING = 12;
     private static final String FILE_TO_PUBLISH_TIP_TEXT = "CSV or TSV file containing the data to be published";
-    private static final String HAS_HEADER_ROW_TIP_TEXT = "<html><body style='width: 300px'>Check this box if the first row in the CSV/TSV contains the column names in the dataset.<br>" +
+    private static final String HAS_HEADER_ROW_TIP_TEXT = "<html><body style='width: 300px'>Check this box if the first row in the CSV/TSV " +
+            "contains the column identifiers (API field names) in the dataset.<br>" +
             "If the CSV/TSV does not have a header row the order of rows must exactly match the order in the dataset.</body></html>";
     private static final String DATASET_ID_TIP_TEXT = "<html><body style='width: 300px'>The identifier in the form of xxxx-xxxx (e.g. n38h-y5wp) " +
             "of the Socrata dataset where the data will be published</body></html>";
     private static final String PUBLISH_METHOD_TIP_TEXT = "<html><body style='width: 400px'>Method used to publish data:<br>" +
+            "<strong>replace</strong>: simply replaces the dataset with the data in the CSV/TSV file to publish.<br>" +
             "<strong>upsert</strong>: update rows that already exist and append any new rows.<br>" +
             "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; " +
             "NOTE: updating rows requires the dataset to have Row Identifier<br>" +
             "<strong>append</strong>: adds all rows in the CSV/TSV as new rows.<br>" +
-            "<strong>replace</strong>: simply replaces the dataset with the data in the CSV/TSV file to publish.<br>" +
-            "<strong>delete</strong>: delete all rows matching Row Identifiers given in CSV/TSV file.<br>" +
+            "<strong>delete</strong>: delete all rows matching Row Identifiers given in CSV/TSV file. " +
+            "CSV/TSV should only contain a single column listing the Row Identifiers to delete.<br>" +
             "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; " +
             "NOTE: requires dataset to have Row Identifier." +
             "</body></html>";
-    private static final String PUBLISH_VIA_FTP_ROW_TIP_TEXT = "<html><body style='width: 400px'>The preferred " +
-            "and most efficient option for replace operations. Sends CSV/TSV file over FTP and automatically detects " +
-            "changes since previous update.<br>" +
+    private static final String PUBLISH_VIA_FTP_ROW_TIP_TEXT = "<html><body style='width: 400px'>'replace via FTP' is the preferred " +
+            "and most efficient publishing method. Sends CSV/TSV file over FTP, automatically detects " +
+            "changes since last update, and only updates new/changed rows.<br>" +
             "<strong>NOTE</strong>: your firewall may need to be configured to allow FTP traffic through ports " +
             "22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)</body></html>";
     private static final String FTP_CONTROL_FILE_TIP_TEXT = "<html><body style='width: 300px'>" +
@@ -84,6 +86,7 @@ public class IntegrationJobTab implements JobTab {
     private JCheckBox fileToPublishHasHeaderCheckBox;
     private JComboBox publishMethodComboBox;
     private JCheckBox publishViaFTPCheckBox;
+    private JPanel publishViaFTPLabelContainer;
     private JTextField ftpControlFileTextField;
     private JButton browseForControlFileButton;
     private JPanel ftpControlFileLabelContainer;
@@ -165,7 +168,7 @@ public class IntegrationJobTab implements JobTab {
         publishViaFTPCheckBox = new JCheckBox(PUBLISH_VIA_FTP_CHECKBOX_TEXT);
         publishViaFTPCheckBox.addActionListener(
                 new PublishViaFTPCheckBoxListener());
-        JPanel publishViaFTPLabelContainer = new JPanel(FLOW_LEFT);
+        publishViaFTPLabelContainer = new JPanel(FLOW_LEFT);
         publishViaFTPLabelContainer.add(publishViaFTPCheckBox);
         publishViaFTPLabelContainer.add(
                 UIUtility.generateHelpBubble(PUBLISH_VIA_FTP_ROW_TIP_TEXT));
@@ -268,7 +271,7 @@ public class IntegrationJobTab implements JobTab {
     private void updatePublishViaFTPUIFields(PublishMethod publishMethod,
                                                         boolean publishViaFTP) {
         publishViaFTPCheckBox.setSelected(publishViaFTP);
-        publishViaFTPCheckBox.setVisible(
+        publishViaFTPLabelContainer.setVisible(
                 publishMethod.equals(PublishMethod.replace));
         if(publishViaFTP) {
             ftpControlFileLabelContainer.setVisible(true);
