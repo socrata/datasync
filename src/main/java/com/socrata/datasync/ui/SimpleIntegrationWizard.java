@@ -171,7 +171,7 @@ public class SimpleIntegrationWizard {
 	private void checkVersion() throws LongRunningQueryException, SodaError, URISyntaxException {
 		Map<String, String> dataSyncVersionMetadata = DataSyncMetadata.getDataSyncMetadata();
         String currentVersion = DataSyncMetadata.getCurrentVersion(dataSyncVersionMetadata);
-        if(!!DataSyncMetadata.isLatestVersion(dataSyncVersionMetadata)) {
+        if(!DataSyncMetadata.isLatestVersion(dataSyncVersionMetadata)) {
 	    	Object[] options = {"Download Now", "No Thanks"};
             int n = JOptionPane.showOptionDialog(frame,
             				"A new version of DataSync is available (version "
