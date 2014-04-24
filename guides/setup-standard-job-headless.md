@@ -4,10 +4,10 @@ title: Setup a standard job (headless)
 bodyclass: homepage
 ---
 
-yrdyFor information on using DataSync in GUI (Graphical User Interface) mode which we recommend reading first in any case refer to the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
+For information on using DataSync in GUI (Graphical User Interface) mode which we recommend reading first in any case refer to the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
 
 <div class="well">
-<strong>NOTICE: this guide only pertains to the DataSync version 0.4 Prerelease, which will be formally released mid-April.</strong>
+<strong>NOTICE: this guide only pertains to DataSync versions 1.0</strong>
 </div>
 
 DataSync jobs can be run in headless/command-line mode in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was saved using the user interface which contains the job parameters. This guide focuses on (1) which enables configuring and running a DataSync job without any usage of the GUI. This enables complete control to integrate DataSync into ETL code or software systems. It is recommended that you first familiarize yourself with DataSync by using the GUI because it is often easier to start there and then move to using the tool headlessly.
@@ -41,10 +41,10 @@ You must fill in at least the following:
 `<YOUR PASSWORD>` (e.g. secret_password)  
 `<YOUR APP TOKEN>` (e.g. fPsJQRDYN9KqZOgEZWyjoa1SG)
 
-`<YOUR DOMAIN>` is the root domain of your data site and must begin with https:// (e.g. https://data.cityofchicago.org). The username and password are those of a Socrata account that has a Publisher role or Owner rights to at least one dataset. Enter your App token or if you have not yet created one read [how to obtain an App token](http://beta.dev.socrata.com/docs/app-tokens.html). We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tie DataSync to a particular person’s primary account.
+`<YOUR DOMAIN>` is the root domain of your data site and must begin with https:// (e.g. https://data.cityofchicago.org). The username and password are those of a Socrata account that has a Publisher role or Owner rights to at least one dataset. Enter your App token or if you have not yet created one read [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html). We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tie DataSync to a particular person’s primary account.
 
 
-For details on the other global configuration settings refer to: `LINK TO PREFS DOC`
+For details on the other global configuration settings refer to: [Preferences configuration](http://socrata.github.io/datasync/resources/ftp-control-config.html)
 
 There are two ways to establish the “global” DataSync configuration:
 
@@ -67,7 +67,8 @@ java -jar datasync.jar -t LoadPreferences -c config.json
 
 ### Step 2: Obtain the Dataset ID
 You will need the dataset ID of the dataset you wish to publish to. To obtain the dataset ID navigate to the dataset in your web browser and in the address bar the dataset ID is the code at the end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
-https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw
+
+https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw  
 The dataset ID is: m985-ywaw
 
 
@@ -81,7 +82,7 @@ java -jar datasync.jar --help
 To run a job that uses the settings in config.json as the global configuration run the following command, replacing `<..>` with the appropriate values (flags explained below): 
 
 ```
-java -jar datasync.jar -c config.json -t IntegrationJob -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -sc <FTP CONTROL FILE>
+java -jar datasync.jar -c <CONFIG.json FILE> -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -sc <FTP CONTROL.json FILE>
 ```
 
 To run a job that uses global configuration previously saved in DataSync “memory” (either via a LoadPreferences job or using the DataSync GUI) simply omit the `-c config.json` flag.
@@ -109,33 +110,31 @@ Explanation of flags:
 </tbody></table>
 
 **'Replace via FTP' Configuration (via the Control file)**  
-Currently to use SmartUpdate you must supply a control.json file with the *-sc,----pathToFTPControlFile* flag that contains configuration specific to the dataset you are updating. Create a file called control.json according to the Control.json section in this document:
-
-TEMP LINK TO GOOGLE DOC:
-[https://docs.google.com/a/socrata.com/document/d/1ddB0pvxEo6pylLtECW2XE9mYYzaW8hA7qlzPgSOQ0wg](https://docs.google.com/a/socrata.com/document/d/1ddB0pvxEo6pylLtECW2XE9mYYzaW8hA7qlzPgSOQ0wg)
+Currently to use SmartUpdate you must supply a control.json file with the *`-sc`,`--pathToFTPControlFile`* flag that contains configuration specific to the dataset you are updating. Create a file called control.json according to the [FTP / Control file configuration documentation](http://socrata.github.io/datasync/resources/ftp-control-config.html).
 
 <div class="well">
-NOTE: the GUI enables generating the Control file with settings appropriate for the dataset you are publishing to. It may be easiest to use the GUI to generate the default Control file content and then make any necessary modifications before saving the file and including it with -sc,--pathToFTPControlFile flag. 
+<strong>NOTE:</strong> the GUI enables generating the Control file with settings appropriate for the dataset you are publishing to. It may be easiest to use the GUI to generate the default Control file content and then make any necessary modifications before saving the file and including it with `-sc`,`--pathToFTPControlFile` flag. 
 </div>
 
-Here are the contents of an example control.json file configured to do a 'replace via FTP' operation from a CSV file that has a header row containing the column identifiers (API field names) of the columns and dates in ISO8601 format (e.g. 2014-03-25):
+Here are the contents of an example control.json file configured to do a 'replace via FTP' operation from a CSV file that has a header row containing the column identifiers (API field names) of the columns and dates in any of the following formats: ISO8601 (e.g. 2014-03-25), MM/dd/yyyy, or MM/dd/yy:
 ```json
 {
   "action" : "Replace", 
   "csv" :
     {
-      "fixedTimestampFormat" : "ISO8601",
-      "separator" : ",",
-      "timezone" : "UTC",
-      "encoding" : "utf-8",
-      "overrides" : {},
-      "quote" : "\"",
-      "emptyTextIsNull" : true,
+      "useSocrataGeocoding" : true,
       "columns" : null,
       "skip" : 0,
-      "floatingTimestampFormat" : "ISO8601",
+      "fixedTimestampFormat" : ["ISO8601","MM/dd/yyyy","MM/dd/yy"],
+      "floatingTimestampFormat" : ["ISO8601","MM/dd/yyyy","MM/dd/yy"],
+      "timezone" : "UTC",
+      "separator" : ",",
+      "quote" : "\"",
+      "encoding" : "utf-8",
+      "emptyTextIsNull" : true,
       "trimWhitespace" : true,
-      "trimServerWhitespace" : true
+      "trimServerWhitespace" : true,
+      "overrides" : {}
     }
 }
 ```
@@ -148,7 +147,7 @@ Execute the `java -jar  datasync.jar ...` command and logging information will b
 ### Complete example job
 
 ```
-java -jar datasync.jar -c config.json -t IntegrationJob -m replace -i 7tgi-grrk -f business_licenses_2014-02-10.csv -h true -pf true -sc control.json
+java -jar datasync.jar -c config.json -f business_licenses_2014-02-10.csv -h true -i 7tgi-grrk -m replace -pf true -sc control.json
 ```
 
 config.json contents:
@@ -177,17 +176,19 @@ control.json contents:
   "action" : "Replace", 
   "csv" :
     {
-      "fixedTimestampFormat" : "ISO8601",
-      "separator" : ",",
-      "timezone" : "UTC",
-      "encoding" : "utf-8",
-      "overrides" : {},
-      "quote" : "\"",
-      "emptyTextIsNull" : true,
+      "useSocrataGeocoding" : true,
       "columns" : null,
       "skip" : 0,
-      "floatingTimestampFormat" : "ISO8601",
-      "trimWhitespace" : true
+      "fixedTimestampFormat" : ["ISO8601","MM/dd/yyyy","MM/dd/yy"],
+      "floatingTimestampFormat" : ["ISO8601","MM/dd/yyyy","MM/dd/yy"],
+      "timezone" : "UTC",
+      "separator" : ",",
+      "quote" : "\"",
+      "encoding" : "utf-8",
+      "emptyTextIsNull" : true,
+      "trimWhitespace" : true,
+      "trimServerWhitespace" : true,
+      "overrides" : {}
     }
 }
 ```
