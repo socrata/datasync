@@ -339,8 +339,8 @@ public class FTPUtility {
                 useSocrataGeocodingField +
                 "      \"columns\" : " + columnsValue + ",\n" +
                 "      \"skip\" : " + skipValue + ",\n" +
-                "      \"fixedTimestampFormat\" : [\"ISO8601\",\"MM/dd/yyyy\",\"MM/dd/yy\"],\n" +
-                "      \"floatingTimestampFormat\" : [\"ISO8601\",\"MM/dd/yyyy\",\"MM/dd/yy\"],\n" +
+                "      \"fixedTimestampFormat\" : [\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\"],\n" +
+                "      \"floatingTimestampFormat\" : [\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\"],\n" +
                 "      \"timezone\" : \"UTC\",\n" +
                 "      \"separator\" : \"" + separator + "\",\n" +
                 "      \"quote\" : \"" + quote + "\",\n" +
