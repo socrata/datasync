@@ -21,6 +21,34 @@ TEMP DOCUMENTATION:
 
 ### Setting up FTP Control file
 
+The control file is a JSON-formatted file that is used to configure a Standard DataSync job that uses the 'replace via FTP' method. Control files are specific to the dataset you are updating.
+
+An example of a typical control file:
+```json
+{
+  "action" : "Replace", 
+  "csv" :
+    {
+      "useSocrataGeocoding" : true,
+      "columns" : null,
+      "skip" : 0,
+      "fixedTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy"],
+      "floatingTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy"],
+      "timezone" : "UTC",
+      "separator" : ",",
+      "quote" : "\"",
+      "encoding" : "utf-8",
+      "emptyTextIsNull" : true,
+      "trimWhitespace" : true,
+      "trimServerWhitespace" : true,
+      "overrides" : {}
+    }
+}
+```
+
+This guide will describe how to use the different options within the control file.
+
+
 #### Header row/column list
 
 The `columns` and `skip` options enable configuration of how the columns within the CSV/TSV aligns with those of the dataset.
@@ -35,22 +63,24 @@ The `columns` and `skip` options enable configuration of how the columns within 
 If the first line of the CSV/TSV is the list of column identifiers:
 ```
 "columns": null,
-"skip": 0
+"skip": 0,
 ```
 
 If the first line of the CSV is the columns incorrectly formatted, for example with human-readable names instead of column identifiers, for example:  
 ```
 "columns": ["first_name","last_name","age"], 
-"skip": 1
+"skip": 1,
 ```
 
 If the first line of the CSV/TSV is data (there is no header row), for example you would use:  
 ```
 "columns": ["first_name","last_name","age"], 
-"skip": 0
+"skip": 0,
 ```
 
 ### Date/time formatting
+
+#### Timestamp Format Options
 
 The `floatingTimestampFormat` and `fixedTimestampFormat` options specify how date/time data is formatted in the CSV/TSV file. `floatingTimestampFormat` applies to ("Date & Time" datatype columns) and `fixedTimestampFormat` functions in the same way but applies to Fixed Timestamps ("Date & Time (with timezone)" datatype columns). If the format does not specify a time zone, the zone named by the `timezone` option.
 
@@ -65,16 +95,49 @@ Example syntax to accept three of the most common date/time formats:
 This would accept any of the following example date/time data values: "2014-04-22", "2014-04-22T05:44:38", "04/22/2014", "4/22/2014", and "4/22/14".
 
 If you want to allow multiple formats to be accepted, then you can specify a list of values rather than a single value. This can be helpful in accepting both "2014-04-22" and "2014-04-22 9:30:00". For example, you would use:
+```
+"fixedTimestampFormat" : ["yyyy-MM-dd", "yyyy-MM-dd hh:mm:ss"],
+"floatingTimestampFormat" : ["yyyy-MM-dd", "yyyy-MM-dd hh:mm:ss"],
+```
 
-["yyyy-MM-dd", "yyyy-MM-dd hh:mm:ss"]
+#### Timezone option 
+`timezone` specifies the timezones for FixedTimestamps ("Date & Time (with timezone)" columns). This only has an effect if the timestamp format does not specify a time zone.
 
+Set it to "UTC"  
+OR an offset (ex "-0800")  
+OR a timezone name (ex "US/Pacific").  The list of accepted names is in timezones.txt in the root directory of the FTP server (instructions for logging into the FTP server is in the section below "Checking the logs and downloading CSV 'snapshots'").
 
 
 ### Location column and geocoding configuration
 
+The the `syntheticLocations` option allows transformation of multiple columns into a single Location column during insert. 
 
+For example: 
+```
+ "syntheticLocations" : {
+   "location_col_id" : {
+     "address" : "address_col_id",
+     "city" : "city_col_id",
+     "state" : "state_col_id",
+     "zip" : "zipcode_col_id",
+     "latitude" : "lat_col_id",
+     "longitude" : "lng_col_id"
+   }
+ }
+```
+
+All of the following are optional "address", "city", "state", "zip", "latitude", and "longitude" are optional. 
+Those that are are not provided are not filled in on the generated location.  The values are field names of columns
+that must exist in the CSV.
+
+<div class="well">
+If you are using Socrata's geocoding you must set the `useSocrataGeocoding` option to `true`. If you are providing 
+latitude and longitude data directly (rather than using gecoding) you should set the `useSocrataGeocoding` option to `false`.
+</div>
 
 ### Other options
+
+Comming soon!
 
 | Option name   | Explanation                    | Example value |
 | ------------- | ------------------------------ | ------------- |
