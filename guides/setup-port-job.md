@@ -1,6 +1,6 @@
 ---
 layout: with-sidebar
-title: Setup a Standard Job (GUI)
+title: Setup a Port Job (GUI and Headlessly)
 bodyclass: homepage
 ---
 
