@@ -1,4 +1,8 @@
-
+---
+layout: with-sidebar
+title: Setup a Standard Job (GUI)
+bodyclass: homepage
+---
 
 Port jobs are used for moving data around that is already on the Socrata platform. Users that have publisher rights can make copies of existing datasets using this this tool. Port jobs allow the copying of both dataset schemas (metadata and columns) and data (rows).
 
