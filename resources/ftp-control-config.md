@@ -6,14 +6,11 @@ bodyclass: homepage
 
 ### Contents
 - Setting up FTP Control file
-    - Header row/column list
+    - Header row / column list
     - Date/time formatting
     - Location column and geocoding configuration
     - Other options
 - Checking the logs and downloading CSV "snapshots" 
-
-TEMP DOCUMENTATION:
-[https://docs.google.com/a/socrata.com/document/d/1ddB0pvxEo6pylLtECW2XE9mYYzaW8hA7qlzPgSOQ0wg/edit#heading=h.m3u3dqp3qac3](https://docs.google.com/a/socrata.com/document/d/1ddB0pvxEo6pylLtECW2XE9mYYzaW8hA7qlzPgSOQ0wg/edit#heading=h.m3u3dqp3qac3)
 
 <div class="well">
 <strong>NOTICE: this guide only pertains to using the 'replace via FTP' method available in DataSync version 1.0</strong>
@@ -136,6 +133,9 @@ latitude and longitude data directly (rather than using gecoding) you should set
 </div>
 
 ### Other options
+
+TEMP DOCUMENTATION:
+[https://docs.google.com/a/socrata.com/document/d/1ddB0pvxEo6pylLtECW2XE9mYYzaW8hA7qlzPgSOQ0wg/edit#heading=h.m3u3dqp3qac3](https://docs.google.com/a/socrata.com/document/d/1ddB0pvxEo6pylLtECW2XE9mYYzaW8hA7qlzPgSOQ0wg/edit#heading=h.m3u3dqp3qac3)
 
 Comming soon!
 
