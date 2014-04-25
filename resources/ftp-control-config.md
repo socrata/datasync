@@ -85,11 +85,11 @@ This option accepts a string (e.g. "ISO8601") or a JSON-formatted list of format
 
 Example syntax to accept three of the most common date/time formats:
 ```
-"fixedTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy"],
-"floatingTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy"],
+"fixedTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy","dd-MMM-yyyy"],
+"floatingTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy","dd-MMM-yyyy"],
 ```
 
-This would accept any of the following example date/time data values: "2014-04-22", "2014-04-22T05:44:38", "04/22/2014", "4/22/2014", and "4/22/14".
+This would accept any of the following example date/time data values: "2014-04-22", "2014-04-22T05:44:38", "04/22/2014", "4/22/2014", "4/22/14", and "22-Apr-2014".
 
 If you want to allow multiple formats to be accepted, then you can specify a list of values rather than a single value. This can be helpful in accepting both "2014-04-22" and "2014-04-22 9:30:00". For example, you would use:
 ```

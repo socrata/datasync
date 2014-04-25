@@ -32,16 +32,16 @@ If the TSV/CSV file does not contain a header row then uncheck "File to publish 
 
 Next, enter the dataset ID from Step 4. Select the 'Publish method' by selecting one of the following options:
 
-- **replace:** simply replaces the dataset with the data in the CSV/TSV file to publish which can be performed in one of two ways:  
-**1) via FTP** (keep 'Publish via FTP' checked): **NOTICE: 'Publish via FTP' is only available in the DataSync version 0.4 Prerelease, which will be formally released mid-April.**  This is the preferred option because is highly efficient (it automatically determines the changes since the last update and only publishes those). It can reliably handle very large files (1 million+ rows).  
-**2) via HTTP** (uncheck 'Publish via FTP'): currently replace over HTTP is not recommended for, especially with large datasets. However, if your dataset is small (less than 5 MB) and updated frequently it may be a preferable option.
+- replace: simply replaces the dataset with the data in the CSV/TSV file to publish which can be performed in one of two ways:  
+    - 1) via FTP (keep 'Publish via FTP' checked): *NOTICE: 'Publish via FTP' is only available in the DataSync version 1.0*  This is the preferred option because is highly efficient (it automatically determines the changes since the last update and only publishes those). It can reliably handle very large files (1 million+ rows).  
+    - 2) via HTTP(uncheck 'Publish via FTP'): currently replace over HTTP is not recommended for, especially with large datasets. However, if your dataset is small (less than 5 MB) and updated frequently it may be a preferable option.
 
-- **upsert:** updates any rows that already exist and appends any new rows. This option is ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.  
+- upsert: updates any rows that already exist and appends any new rows. This option is ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.  
 *IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then all rows in the CSV/TSV file will be appended to the dataset. [Learn more about Row Identifiers and how to establish them](http://support.socrata.com/entries/24247983-Understanding-and-establishing-row-identifiers)*
 
-- **append:** adds all rows in the CSV/TSV as new rows. The append method cannot be used if a Row Identifier has been established on the dataset.
+- append: adds all rows in the CSV/TSV as new rows. The append method cannot be used if a Row Identifier has been established on the dataset.
 
-- **delete:** delete all rows matching Row Identifiers given in CSV/TSV file. Given CSV/TSV should only contain a single column listing the Row Identifiers to delete.  
+- delete: delete all rows matching Row Identifiers given in CSV/TSV file. Given CSV/TSV should only contain a single column listing the Row Identifiers to delete.  
 *IMPORTANT NOTE: delete will not work unless the dataset has a Row Identifier established.*
 
 <div class="well">
@@ -57,7 +57,7 @@ If you are using 'replace via FTP' and the dataset you are publishing to has a R
 **Control File Configuration (only needed for 'replace via FTP')**  
 When using 'replace via FTP' you must supply or generate a control file. In most cases simply clicking the 'Generate/Edit' and using the default configuration will be sufficient for the job to run successfully. Do not click 'Generate/Edit' if you want to use a Control file that is saved as a file, instead click 'Browse...' and select the file. The cases where you will need to modify the Control file content include, but are not limited to:
 
-* If your CSV contains date/time data in a format other than: ISO8601, MM/dd/yyyy, or MM/dd/yy
+* If your CSV contains date/time data in a format other than: [ISO8601](http://en.wikipedia.org/wiki/ISO_8601), MM/dd/yyyy, MM/dd/yy, or dd-MMM-yyyy (e.g. "2014-04-22", "2014-04-22T05:44:38", "04/22/2014", "4/22/2014", "4/22/14", and "22-Apr-2014" would all be fine).
 * Dataset has a Location column that will be populated from existing columns (e.g. address, city, state, zipcode) 
 * Dataset has a Location column but you are not using Socrata's geocoding (you provide latitude/longitude in CSV/TSV file)
 * If you wish to set the timezone of the dates being imported
