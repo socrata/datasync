@@ -5,10 +5,10 @@ bodyclass: homepage
 ---
 
 ### Contents
-- Setting up FTP Control file
+- [Setting up FTP Control file](#setup-ftp-control)
     - Header row / column list
     - Date/time formatting
-    -[Location column and geocoding configuration](#location_col_geocoding)
+    - [Location column and geocoding configuration](#location_col_geocoding)
     - Other options
 - Checking the logs and downloading CSV "snapshots" 
 
@@ -16,7 +16,7 @@ bodyclass: homepage
 <strong>NOTICE: this guide only pertains to using the 'replace via FTP' method available in DataSync version 1.0</strong>
 </div>
 
-### Setting up FTP Control file
+### Setting up FTP Control file {#setup-ftp-control}
 
 The control file is a JSON-formatted file that is used to configure a Standard DataSync job that uses the 'replace via FTP' method. Control files are specific to the dataset you are updating.
 
@@ -105,8 +105,8 @@ You can set this to one of the following:
 2. An offset (ex "-0800")  
 3. A timezone name (e.g. "US/Pacific").  The list of accepted names is in timezones.txt in the root directory of the FTP server (instructions for logging into the FTP server is in the section below "Checking the logs and downloading CSV 'snapshots'").
 
-<a name="location_col_geocoding"></a>
-### Location column and geocoding configuration 
+
+### Location column and geocoding configuration {#location_col_geocoding}
 
 The the `syntheticLocations` option allows configuring a Location datatype column to "pull" or populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV. 
 
