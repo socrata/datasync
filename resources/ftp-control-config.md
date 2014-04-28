@@ -8,7 +8,7 @@ bodyclass: homepage
 - Setting up FTP Control file
     - Header row / column list
     - Date/time formatting
-    - Location column and geocoding configuration
+    -[Location column and geocoding configuration](#location_col_geocoding)
     - Other options
 - Checking the logs and downloading CSV "snapshots" 
 
@@ -81,7 +81,7 @@ If the first line of the CSV/TSV is data (there is no header row), for example y
 
 The `floatingTimestampFormat` and `fixedTimestampFormat` options specify how date/time data is formatted in the CSV/TSV file. `floatingTimestampFormat` applies to ("Date & Time" datatype columns) and `fixedTimestampFormat` functions in the same way but applies to Fixed Timestamps ("Date & Time (with timezone)" datatype columns). If the format does not specify a time zone, the zone named by the `timezone` option.
 
-This option accepts a string (e.g. "ISO8601") or a JSON-formatted list of formats including "ISO8601" and any date/time "Joda time" format-string. Joda time syntax is documented in detail here: [http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html)
+Both `floatingTimestampFormat` and `fixedTimestampFormat` accept a string (e.g. "ISO8601") or a JSON-formatted list of formats including "ISO8601" and any date/time "Joda time" format-string. Joda time syntax is documented in detail here: [http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html)
 
 Example syntax to accept three of the most common date/time formats:
 ```
@@ -91,7 +91,7 @@ Example syntax to accept three of the most common date/time formats:
 
 This would accept any of the following example date/time data values: "2014-04-22", "2014-04-22T05:44:38", "04/22/2014", "4/22/2014", "4/22/14", and "22-Apr-2014".
 
-If you want to allow multiple formats to be accepted, then you can specify a list of values rather than a single value. This can be helpful in accepting both "2014-04-22" and "2014-04-22 9:30:00". For example, you would use:
+If you want to allow a date with or without a time value (e.g. both "2014-04-22" and "2014-04-22 9:30:00"), you would use:
 ```
 "fixedTimestampFormat" : ["yyyy-MM-dd", "yyyy-MM-dd hh:mm:ss"],
 "floatingTimestampFormat" : ["yyyy-MM-dd", "yyyy-MM-dd hh:mm:ss"],
@@ -100,14 +100,15 @@ If you want to allow multiple formats to be accepted, then you can specify a lis
 #### Timezone option 
 `timezone` specifies the timezones for FixedTimestamps ("Date & Time (with timezone)" columns). This only has an effect if the timestamp format does not specify a time zone.
 
-Set it to "UTC"  
-OR an offset (ex "-0800")  
-OR a timezone name (ex "US/Pacific").  The list of accepted names is in timezones.txt in the root directory of the FTP server (instructions for logging into the FTP server is in the section below "Checking the logs and downloading CSV 'snapshots'").
+You can set this to one of the following:
+1. "UTC"  
+2. An offset (ex "-0800")  
+3. A timezone name (e.g. "US/Pacific").  The list of accepted names is in timezones.txt in the root directory of the FTP server (instructions for logging into the FTP server is in the section below "Checking the logs and downloading CSV 'snapshots'").
 
+<a name="location_col_geocoding"></a>
+### Location column and geocoding configuration 
 
-### Location column and geocoding configuration
-
-The the `syntheticLocations` option allows transformation of multiple columns into a single Location column during insert. 
+The the `syntheticLocations` option allows configuring a Location datatype column to "pull" or populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV. 
 
 For example: 
 ```
