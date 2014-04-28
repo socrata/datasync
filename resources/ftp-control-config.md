@@ -7,7 +7,7 @@ bodyclass: homepage
 ### Contents
 - [Setting up FTP Control file](#setup-ftp-control)
     - [Header row / column list](#header-row)
-    - [Date/time formatting](#date-time)
+    - [Date/time formatting](#date-time) 
     - [Location column and geocoding configuration](#location-geocoding)
     - [Other options](#other-options)
 - [Checking the logs and downloading CSV "snapshots"](#check-logs)
