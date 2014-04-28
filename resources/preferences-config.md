@@ -5,9 +5,11 @@ bodyclass: homepage
 ---
 
 ### Contents
-- Set up logging (using a dataset)
-- Error Notification Auto-Email Setup
-- Chunking Configuration
+- [Set up logging (using a dataset)](#setup-logging)
+- [Error Notification Auto-Email Setup](#error-notification)
+- [Chunking Configuration](#chunking-config)
+
+{#setup-logging}
 
 ### Set up logging (using a dataset)
 
@@ -41,6 +43,7 @@ Be sure that you set the column data types to match those listed below:
 
 After you have created the log dataset, In DataSync go to Edit -> Preferences. In the popup window enter the dataset ID of the log dataset you just uploaded or created via DataSync Port Job.
 
+{#error-notification}
 
 ### Error Notification Auto-Email Setup
 
@@ -61,6 +64,7 @@ Check the “Use SSL” box
 
 Once you have entered all the SMTP settings, you should test they are valid by clicking “Test SMTP Settings”. If all goes well click “Save” in the preferences window. Finally, test running your job to make sure both the target dataset and the log dataset get properly updated (one new row will be created in the log dataset each time a job is run).
 
+{#chunking-config}
 
 ### Chunking Configuration 
 

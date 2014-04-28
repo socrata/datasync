@@ -6,17 +6,20 @@ bodyclass: homepage
 
 ### Contents
 - [Setting up FTP Control file](#setup-ftp-control)
-    - Header row / column list
-    - Date/time formatting
-    - [Location column and geocoding configuration](#location_col_geocoding)
-    - Other options
-- Checking the logs and downloading CSV "snapshots" 
+    - [Header row / column list](#header-row)
+    - [Date/time formatting](#date-time)
+    - [Location column and geocoding configuration](#location-geocoding)
+    - [Other options](#other-options)
+- [Checking the logs and downloading CSV "snapshots"](#check-logs)
+
+
+{#setup-ftp-control}
 
 <div class="well">
-<strong>NOTICE: this guide only pertains to using the 'replace via FTP' method available in DataSync version 1.0</strong>
+<strong>NOTICE:</strong> this guide only pertains to using the 'replace via FTP' method available in DataSync version 1.0
 </div>
 
-### Setting up FTP Control file {#setup-ftp-control}
+### Setting up FTP Control file 
 
 The control file is a JSON-formatted file that is used to configure a Standard DataSync job that uses the 'replace via FTP' method. Control files are specific to the dataset you are updating.
 
@@ -45,6 +48,7 @@ An example of a typical control file:
 
 This guide will describe how to use the different options within the control file.
 
+{#header-row}
 
 #### Header row/column list
 
@@ -74,6 +78,8 @@ If the first line of the CSV/TSV is data (there is no header row), for example y
 "columns": ["first_name","last_name","age"], 
 "skip": 0,
 ```
+
+{#date-time}
 
 ### Date/time formatting
 
@@ -105,8 +111,9 @@ You can set this to one of the following:
 2. An offset (ex "-0800")  
 3. A timezone name (e.g. "US/Pacific").  The list of accepted names is in timezones.txt in the root directory of the FTP server (instructions for logging into the FTP server is in the section below "Checking the logs and downloading CSV 'snapshots'").
 
+{#location-col-geocoding}
 
-### Location column and geocoding configuration {#location_col_geocoding}
+### Location column and geocoding configuration 
 
 The the `syntheticLocations` option allows configuring a Location datatype column to "pull" or populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV. 
 
@@ -124,14 +131,15 @@ For example:
  }
 ```
 
-All of the following are optional "address", "city", "state", "zip", "latitude", and "longitude" are optional. 
-Those that are are not provided are not filled in on the generated location.  The values are field names of columns
-that must exist in the CSV.
+All of the following are optional: "address", "city", "state", "zip", "latitude", and "longitude". 
+Those that are are not provided are not filled in on the generated location.  The values are 
+field names of columns that must exist in the CSV. In the above example, a Location datatype column with the identifier `location_col_id` would pull in the "address" from the column with identifier `address_col_id`, the "city" from column with identifier `city_col_id`, etc. 
 
 <div class="well">
-If you are using Socrata's geocoding you must set the `useSocrataGeocoding` option to `true`. If you are providing 
-latitude and longitude data directly (rather than using gecoding) you should set the `useSocrataGeocoding` option to `false`.
+If you are using Socrata's geocoding you must set the `useSocrataGeocoding` option to `true` (i.e. if you provide only the address, city and state information). If you are providing latitude and longitude data directly (rather than using gecoding to generate latitude/longitude) you need to set the `useSocrataGeocoding` option to `false`.
 </div>
+
+{#other-options}
 
 ### Other options
 
@@ -145,6 +153,7 @@ Comming soon!
 |               |                                |               |
 
 
+{#check-logs}
 
 ### Checking the logs and downloading CSV "snapshots" 
 
