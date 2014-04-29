@@ -44,7 +44,7 @@ After you have created the log dataset, In DataSync go to Edit -> Preferences. I
 
 {#error-notification}  
 ### Error Notification Auto-Email Setup
-
+ 
 If you wish for emails to be automatically sent to an administrator if an error occurs when any DataSync job is run enter the administrator’s email address and check the box check the box labeled "Auto-email admin email upon error". The same log dataset and administrator email is used for all DataSync jobs (i.e. it is a global setting like the authentication details). For auto-emailing to work you must configure the SMTP settings to point to a server you have access to.
 
 **NOTICE:** Just like with the the authentication details, the SMTP password is stored unencrypted in the Registry on Windows platforms and in analogous locations on Mac and Linux.
