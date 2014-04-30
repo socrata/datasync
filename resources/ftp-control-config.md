@@ -5,12 +5,12 @@ bodyclass: homepage
 ---
 
 ### Contents
-- [Setting up FTP Control file](#setup-ftp-control)
-    - [Header row / column list](#header-row)
-    - [Date/time formatting](#date-time) 
-    - [Location column and geocoding configuration](#location-geocoding)
-    - [Other options](#other-options)
-- [Checking the logs and downloading CSV "snapshots"](#check-logs)
+- [1. Setting up FTP Control file](#setup-ftp-control)
+    - [1a. Header row / column list](#header-row)
+    - [1b. Date/time formatting](#date-time) 
+    - [1c. Location column and geocoding configuration](#location-geocoding)
+    - [1d. Other options](#other-options)
+- [2. Checking the logs and downloading CSV "snapshots"](#check-logs)
 
 
 {#setup-ftp-control}
@@ -19,7 +19,7 @@ bodyclass: homepage
 <strong>NOTICE:</strong> this guide only pertains to using the 'replace via FTP' method available in DataSync version 1.0
 </div>
 
-### Setting up FTP Control file 
+### 1. Setting up FTP Control file 
 
 The control file is a JSON-formatted file that is used to configure a Standard DataSync job that uses the 'replace via FTP' method. Control files are specific to the dataset you are updating.
 
@@ -46,10 +46,12 @@ An example of a typical control file:
 }
 ```
 
-This guide will describe how to use the different options within the control file.
+This guide will describe how to use the different options within the control file. 
 
-{#header-row}  
-#### Header row/column list 
+{#header-row}.
+
+
+### 1a. Header row/column list 
 
 The `columns` and `skip` options enable configuration of how the columns within the CSV/TSV aligns with those of the dataset.
 
@@ -79,7 +81,7 @@ If the first line of the CSV/TSV is data (there is no header row), for example y
 ```
 
 {#date-time}  
-### Date/time formatting
+### 1b. Date/time formatting
 
 #### Timestamp Format Options
 
@@ -110,7 +112,7 @@ You can set this to one of the following:
 3. A timezone name (e.g. "US/Pacific").  The list of accepted names is in timezones.txt in the root directory of the FTP server (instructions for logging into the FTP server is in the section below "Checking the logs and downloading CSV 'snapshots'").
 
 {#location-geocoding}  
-### Location column and geocoding configuration 
+### 1c. Location column and geocoding configuration 
 
 The the `syntheticLocations` option allows configuring a Location datatype column to "pull" or populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV. 
 
@@ -137,7 +139,7 @@ If you are using Socrata's geocoding you must set the `useSocrataGeocoding` opti
 </div>
 
 {#other-options}  
-### Other options
+### 1d. Other options
 
 TEMP DOCUMENTATION:
 [https://docs.google.com/a/socrata.com/document/d/1ddB0pvxEo6pylLtECW2XE9mYYzaW8hA7qlzPgSOQ0wg/edit#heading=h.m3u3dqp3qac3](https://docs.google.com/a/socrata.com/document/d/1ddB0pvxEo6pylLtECW2XE9mYYzaW8hA7qlzPgSOQ0wg/edit#heading=h.m3u3dqp3qac3)
@@ -150,7 +152,7 @@ Comming soon!
 
 
 {#check-logs}  
-### Checking the logs and downloading CSV "snapshots" 
+### 2. Checking the logs and downloading CSV "snapshots" 
 
 #### Connecting to the FTP server
 You can use [Filezilla](https://filezilla-project.org/) or any other FTP client that supports FTPS to connect to the FTP server.
