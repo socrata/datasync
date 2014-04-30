@@ -48,8 +48,7 @@ An example of a typical control file:
 
 This guide will describe how to use the different options within the control file. 
 
-{#header-row}.
-
+{#header-row}<p>&nbsp;</p>
 
 ### 1a. Header row/column list 
 
@@ -80,7 +79,8 @@ If the first line of the CSV/TSV is data (there is no header row), for example y
 "skip": 0,
 ```
 
-{#date-time}  
+{#date-time}<p>&nbsp;</p>
+
 ### 1b. Date/time formatting
 
 #### Timestamp Format Options
@@ -111,7 +111,8 @@ You can set this to one of the following:
 2. An offset (ex "-0800")  
 3. A timezone name (e.g. "US/Pacific").  The list of accepted names is in timezones.txt in the root directory of the FTP server (instructions for logging into the FTP server is in the section below "Checking the logs and downloading CSV 'snapshots'").
 
-{#location-geocoding}  
+{#location-geocoding}<p>&nbsp;</p>
+
 ### 1c. Location column and geocoding configuration 
 
 The the `syntheticLocations` option allows configuring a Location datatype column to "pull" or populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV. 
@@ -138,7 +139,8 @@ field names of columns that must exist in the CSV. In the above example, a Locat
 If you are using Socrata's geocoding you must set the `useSocrataGeocoding` option to `true` (i.e. if you provide only the address, city and state information). If you are providing latitude and longitude data directly (rather than using gecoding to generate latitude/longitude) you need to set the `useSocrataGeocoding` option to `false`.
 </div>
 
-{#other-options}  
+{#other-options}<p>&nbsp;</p>
+
 ### 1d. Other options
 
 TEMP DOCUMENTATION:
@@ -151,7 +153,8 @@ Comming soon!
 |               |                                |               |
 
 
-{#check-logs}  
+{#check-logs}<p>&nbsp;</p>
+
 ### 2. Checking the logs and downloading CSV "snapshots" 
 
 #### Connecting to the FTP server

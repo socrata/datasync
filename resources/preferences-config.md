@@ -42,7 +42,8 @@ Be sure that you set the column data types to match those listed below:
 
 After you have created the log dataset, In DataSync go to Edit -> Preferences. In the popup window enter the dataset ID of the log dataset you just uploaded or created via DataSync Port Job.
 
-{#error-notification}  
+{#error-notification}<p>&nbsp;</p>
+
 ### Error Notification Auto-Email Setup
  
 If you wish for emails to be automatically sent to an administrator if an error occurs when any DataSync job is run enter the administrator’s email address and check the box check the box labeled "Auto-email admin email upon error". The same log dataset and administrator email is used for all DataSync jobs (i.e. it is a global setting like the authentication details). For auto-emailing to work you must configure the SMTP settings to point to a server you have access to.
@@ -62,7 +63,8 @@ Check the “Use SSL” box
 
 Once you have entered all the SMTP settings, you should test they are valid by clicking “Test SMTP Settings”. If all goes well click “Save” in the preferences window. Finally, test running your job to make sure both the target dataset and the log dataset get properly updated (one new row will be created in the log dataset each time a job is run).
 
-{#chunking-config}
+{#chunking-config}<p>&nbsp;</p>
+
 ### Chunking Configuration 
 
 Chunking is useful when sending large amounts of data over HTTP. In most cases if the CSV/TSV file is very large you should use the replace via FTP method to upload it. However, in some cases it may be necessary or preferable to use chunking over HTTP. The upsert, append, and delete methods (over HTTP) will automatically split the CSV/TSV file into chunks if the file is above the 'Chunking filesize threshold'. It will automatically break the file up into chunks of rows where each chunk will contain the number of rows set by the 'Chunk size'. The default/recommended settings are a 'Chunking filesize threshold' of 10 MB and a 'Chunk size' of 10,000 rows. To modify the defaults go to Edit -> Preferences and modify the numbers.
