@@ -114,7 +114,7 @@ Explanation of flags:
 Currently to use SmartUpdate you must supply a control.json file with the *`-sc`,`--pathToFTPControlFile`* flag that contains configuration specific to the dataset you are updating. Create a file called control.json according to the [FTP / Control file configuration documentation](http://socrata.github.io/datasync/resources/ftp-control-config.html).
 
 <div class="well">
-<strong>NOTE:</strong> the GUI enables generating the Control file with settings appropriate for the dataset you are publishing to. It may be easiest to use the GUI to generate the default Control file content and then make any necessary modifications before saving the file and including it with `-sc`,`--pathToFTPControlFile` flag. 
+<strong>NOTE:</strong> the GUI enables generating the Control file with settings appropriate for the dataset you are publishing to. It may be easiest to use the GUI to generate the default Control file content and then make any necessary modifications before saving the file and including it with -sc,--pathToFTPControlFile flag. 
 </div>
 
 Here are the contents of an example control.json file configured to do a 'replace via FTP' operation from a CSV file that has a header row containing the column identifiers (API field names) of the columns and dates in any of the following formats: ISO8601 (e.g. 2014-03-25), MM/dd/yyyy, or MM/dd/yy:

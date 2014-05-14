@@ -12,7 +12,7 @@ insert screenshot
 
 ## Download DataSync
 
-Download the latest release of the DataSync .jar file from here (requires Java 1.7 or higher):
+Download the latest release of the DataSync .jar file from here (requires Java 1.6 or higher):
 [https://github.com/socrata/datasync/releases](https://github.com/socrata/datasync/releases)
 
 Save the JAR file you downloaded in a permanent location on your computer or server. Double-click the JAR file you just downloaded to open the program in GUI mode.

@@ -133,10 +133,12 @@ For example:
 
 All of the following are optional: "address", "city", "state", "zip", "latitude", and "longitude". 
 Those that are are not provided are not filled in on the generated location.  The values are 
-field names of columns that must exist in the CSV. In the above example, a Location datatype column with the identifier `location_col_id` would pull in the "address" from the column with identifier `address_col_id`, the "city" from column with identifier `city_col_id`, etc. 
+field names of columns that must exist in the CSV. In the above example, a Location datatype column with the identifier `location_col_id` would pull in the "address" from the column with identifier `address_col_id`, the "city" from column with identifier `city_col_id`, and so on.
+
+When you provide any combination of location information but do not fill in latitude or longitude then Socrata will do geocoding automatically to generate the latitude and longitude values. Read [this guide](http://support.socrata.com/entries/27849363-Location-Information-Data-which-can-be-geocoded) for more detailed information on the Location column.  
 
 <div class="well">
-If you are using Socrata's geocoding you must set the `useSocrataGeocoding` option to `true` (i.e. if you provide only the address, city and state information). If you are providing latitude and longitude data directly (rather than using gecoding to generate latitude/longitude) you need to set the `useSocrataGeocoding` option to `false`.
+<strong>IMPORTANT:</strong> If you are NOT using Socrata's geocoding (i.e. if you are providing the latitude and longitude values directly to the Location column) you need to set the `useSocrataGeocoding` option to `false`.
 </div>
 
 {#other-options}<p>&nbsp;</p>
