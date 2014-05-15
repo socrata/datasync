@@ -26,7 +26,7 @@ DataSync source code is available [on GitHub](https://github.com/socrata/datasyn
 - A computer/server running Java 1.6 (a.k.a version 1.6) or higher.
 - A Socrata account with a Publisher role or Owner rights to at least one dataset.
 - An App Token. If you have not yet created one read [how to obtain an App token](http://beta.dev.socrata.com/docs/app-tokens.html)
-- **IMPORTANT:** To take advantage of the most up-to-date and efficient publishing method (replace via FTP), if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection). 
+- **IMPORTANT:** To take advantage of the most up-to-date and efficient publishing method (replace via FTP), if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection). The other publishing methods (append, upsert, delete, and replace (not using FTP)) use HTTP to send data and would *not* require firewall configuration changes.
 
 
 [Continue to guide for setting up a standard job]({{ site.root }}/guides/setup-standard-job.html)
