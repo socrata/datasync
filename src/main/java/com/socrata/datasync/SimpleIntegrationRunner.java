@@ -47,24 +47,17 @@ public class SimpleIntegrationRunner {
         }
 	}
 
-    public SimpleIntegrationRunner(PortJob job) {
-        JobStatus status = job.run();
-        if(status.isError()) {
-            System.err.println(status.getMessage());
-            System.exit(1);
-        } else {
-            System.out.println(status.getMessage() + ". " +
-                    "Your newly created dataset is at:\n" +
-                    job.getSinkSiteDomain() + "/d/" + job.getSinkSetID());
-        }
-    }
-
     public SimpleIntegrationRunner(Job job) {
         JobStatus status = job.run();
         if(status.isError()) {
             System.err.println(status.getMessage());
             System.exit(1);
         } else {
+            if(job.getClass() == PortJob.class) {
+                System.out.println(status.getMessage() + ". " +
+                    "Your newly created dataset is at:\n" +
+                    ((PortJob)job).getSinkSiteDomain() + "/d/" + ((PortJob)job).getSinkSetID());
+                }
             System.out.println(status.getMessage());
         }
     }

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.socrata.datasync.*;
+import org.apache.commons.cli.CommandLine;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -29,7 +30,19 @@ import com.socrata.model.importer.Dataset;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
-public class IntegrationJob implements Job {
+public class IntegrationJob extends Job {
+
+    // in order to keep these refactorings smallish, I'm not yet tackling the options in main
+    // so I'm temporarily replacing some things here:
+    private static final String DATASET_ID_FLAG = "datasetID";
+    private static final String FILE_TO_PUBLISH_FLAG = "fileToPublish";
+    private static final String PUBLISH_METHOD_FLAG = "publishMethod";
+    private static final String HAS_HEADER_ROW_FLAG = "fileToPublishHasHeaderRow";
+    private static final String PUBLISH_VIA_FTP_FLAG = "publishViaFTP";
+    private static final String PATH_TO_FTP_CONTROL_FILE_FLAG = "pathToFTPControlFile";
+    private static final String DEFAULT_VALUE_publishViaFTP = "false";
+
+
     /**
 	 * @author Adrian Laurenzi
 	 *
@@ -49,18 +62,18 @@ public class IntegrationJob implements Job {
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
     private static final long fileVersionUID = 3L;
 
-	private String datasetID;
-	private String fileToPublish;
-	private PublishMethod publishMethod;
-    private boolean fileToPublishHasHeaderRow;
-	private String pathToSavedJobFile;
-    private String pathToFTPControlFile;
-    private String ftpControlFileContent;
-    private boolean publishViaFTP;
-	
-	public IntegrationJob() {
+	private String datasetID = "";
+	private String fileToPublish = "";
+	private PublishMethod publishMethod = PublishMethod.replace;
+    private boolean fileToPublishHasHeaderRow = true;
+	private String pathToFTPControlFile = null;
+    private String ftpControlFileContent = null;
+    private boolean publishViaFTP = false;
+
+
+
+    public IntegrationJob() {
         userPrefs = new UserPreferencesJava();
-        setDefaultParams();
 	}
 
     /*
@@ -70,27 +83,14 @@ public class IntegrationJob implements Job {
      */
     public IntegrationJob(UserPreferences userPrefs) {
         this.userPrefs = userPrefs;
-        setDefaultParams();
     }
 
-    private void setDefaultParams() {
-        pathToSavedJobFile = "";
-        datasetID = "";
-        fileToPublish = "";
-        publishMethod = PublishMethod.replace;
-        fileToPublishHasHeaderRow = true;
-        pathToFTPControlFile = null;
-        ftpControlFileContent = null;
-        publishViaFTP = false;
-    }
-	
 	/**
 	 * Loads integration job data from a file and
 	 * uses the saved data to populate the fields
 	 * of this object
 	 */
 	public IntegrationJob(String pathToFile) throws IOException {
-        setDefaultParams();
         userPrefs = new UserPreferencesJava();
         // first try reading the 'current' format
         ObjectMapper mapper = new ObjectMapper();
@@ -110,34 +110,105 @@ public class IntegrationJob implements Job {
         }
 	}
 
-    /**
-     * This allows backward compatability with DataSync 0.1 .sij file format
-     *
-     * @param pathToFile .sij file that uses old serialization format (Java native)
-     * @throws IOException
-     */
-    private void loadOldSijFile(String pathToFile) throws IOException {
-        try {
-            InputStream file = new FileInputStream(pathToFile);
-            InputStream buffer = new BufferedInputStream(file);
-            ObjectInput input = new ObjectInputStream (buffer);
-            try{
-                com.socrata.datasync.IntegrationJob loadedJobOld = (com.socrata.datasync.IntegrationJob) input.readObject();
-                setDatasetID(loadedJobOld.getDatasetID());
-                setFileToPublish(loadedJobOld.getFileToPublish());
-                setPublishMethod(loadedJobOld.getPublishMethod());
-                setPathToSavedFile(pathToFile);
-                setFileToPublishHasHeaderRow(true);
-                setPublishViaFTP(false);
-                setPathToFTPControlFile(null);
-                setFtpControlFileContent(null);
-            }
-            finally{
-                input.close();
-            }
-        } catch(Exception e) {
-            // TODO add log entry?
-            throw new IOException(e.toString());
+    @JsonProperty("fileVersionUID")
+    public long getFileVersionUID() {
+        return fileVersionUID;
+    }
+
+    @JsonProperty("datasetID")
+    public void setDatasetID(String newDatasetID) {
+        datasetID = newDatasetID;
+    }
+
+    @JsonProperty("datasetID")
+    public String getDatasetID() {
+        return datasetID;
+    }
+
+    @JsonProperty("fileToPublish")
+    public void setFileToPublish(String newFileToPublish) {
+        fileToPublish = newFileToPublish;
+    }
+
+    @JsonProperty("fileToPublish")
+    public String getFileToPublish() {
+        return fileToPublish;
+    }
+
+    @JsonProperty("publishMethod")
+    public void setPublishMethod(PublishMethod newPublishMethod) {
+        publishMethod = newPublishMethod;
+    }
+
+    @JsonProperty("publishMethod")
+    public PublishMethod getPublishMethod() {
+        return publishMethod;
+    }
+
+    @JsonProperty("fileToPublishHasHeaderRow")
+    public boolean getFileToPublishHasHeaderRow() {
+        return fileToPublishHasHeaderRow;
+    }
+
+    @JsonProperty("fileToPublishHasHeaderRow")
+    public void setFileToPublishHasHeaderRow(boolean newFileToPublishHasHeaderRow) {
+        fileToPublishHasHeaderRow = newFileToPublishHasHeaderRow;
+    }
+
+    @JsonProperty("pathToFTPControlFile")
+    public String getPathToFTPControlFile() { return pathToFTPControlFile; }
+
+    @JsonProperty("pathToFTPControlFile")
+    public void setPathToFTPControlFile(String newPathToFTPControlFile) {
+        pathToFTPControlFile = newPathToFTPControlFile;
+    }
+
+    @JsonProperty("ftpControlFileContent")
+    public String getFtpControlFileContent() { return ftpControlFileContent; }
+
+    @JsonProperty("ftpControlFileContent")
+    public void setFtpControlFileContent(String newFtpControlFileContent) {
+        ftpControlFileContent = newFtpControlFileContent;
+    }
+
+    @JsonProperty("publishViaFTP")
+    public boolean getPublishViaFTP() { return publishViaFTP; }
+
+    @JsonProperty("publishViaFTP")
+    public void setPublishViaFTP(boolean newPublishViaFTP) {
+        publishViaFTP = newPublishViaFTP;
+    }
+
+
+    public boolean validateArgs(CommandLine cmd) {
+        return  validateDatasetIdArg(cmd) &&
+                validateFileToPublishArg(cmd) &&
+                validatePublishMethodArg(cmd) &&
+                validateHeaderRowArg(cmd) &&
+                validatePublishViaFtpArg(cmd) &&
+                validatePathToControlFileArg(cmd);
+    }
+
+    public void configure(CommandLine cmd) {
+        // Set required parameters
+        setDatasetID(cmd.getOptionValue(DATASET_ID_FLAG));
+        setFileToPublish(cmd.getOptionValue(FILE_TO_PUBLISH_FLAG));
+        setPublishMethod(PublishMethod.valueOf(cmd.getOptionValue(PUBLISH_METHOD_FLAG)));
+        if(cmd.getOptionValue(HAS_HEADER_ROW_FLAG).equalsIgnoreCase("true")) {
+            setFileToPublishHasHeaderRow(true);
+        } else { // cmd.getOptionValue(HAS_HEADER_ROW_FLAG) == "false"
+            setFileToPublishHasHeaderRow(false);
+        }
+
+        // Set optional parameters
+        if(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG) != null) {
+            setPathToFTPControlFile(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG));
+        }
+        String publishViaFTP = cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG, DEFAULT_VALUE_publishViaFTP);
+        if(publishViaFTP.equalsIgnoreCase("true")) {
+            setPublishViaFTP(true);
+        } else { // cmd.getOptionValue("pf") == "false"
+            setPublishViaFTP(false);
         }
     }
 
@@ -386,7 +457,7 @@ public class IntegrationJob implements Job {
             errorEmailMessage += "There was an error updating a dataset.\n"
                     + "\nDataset: " + connectionInfo.getUrl() + "/d/" + getDatasetID()
                     + "\nFile to publish: " + fileToPublish
-+ "\nFile to publish has header row: " + fileToPublishHasHeaderRow
+                    + "\nFile to publish has header row: " + fileToPublishHasHeaderRow
                     + "\nPublish method: " + publishMethod
                     + "\nJob File: " + pathToSavedJobFile
                     + "\nError message: " + runErrorMessage
@@ -432,94 +503,115 @@ public class IntegrationJob implements Job {
         return numberOfRows;
     }
 
+    private boolean validatePathToControlFileArg(CommandLine cmd) {
+        if(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG) != null
+                && cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("false")) {
+            System.err.println("Invalid argument: -sc,--" + PATH_TO_FTP_CONTROL_FILE_FLAG + " cannot be supplied " +
+                    "unless -pf,--" + PUBLISH_VIA_FTP_FLAG + " is 'true'");
+            return false;
+        }
+
+        if(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG) != null) {
+            // TODO remove this when flags override other parameters
+            if(cmd.getOptionValue(PUBLISH_METHOD_FLAG) != null) {
+                System.out.println("WARNING: -m,--" + PUBLISH_METHOD_FLAG + " is being ignored because " +
+                        "-sc,--" + PATH_TO_FTP_CONTROL_FILE_FLAG + " is supplied");
+            }
+            if(cmd.getOptionValue(HAS_HEADER_ROW_FLAG) != null) {
+                System.out.println("WARNING: -h,--" + HAS_HEADER_ROW_FLAG + " is being ignored because " +
+                        "-sc,--" + PATH_TO_FTP_CONTROL_FILE_FLAG + " is supplied");
+            }
+        }
+        return true;
+    }
+
+    private boolean validatePublishViaFtpArg(CommandLine cmd) {
+        if(cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG) != null && !cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("true")
+                && !cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("false")) {
+            System.err.println("Invalid argument: -pf,--" + PUBLISH_VIA_FTP_FLAG + " must be 'true' or 'false'");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateHeaderRowArg(CommandLine cmd) {
+        if(cmd.getOptionValue(HAS_HEADER_ROW_FLAG) == null) {
+            System.err.println("Missing required argument: -h,--" + HAS_HEADER_ROW_FLAG + " is required");
+            return false;
+        }
+        if(!cmd.getOptionValue(HAS_HEADER_ROW_FLAG).equalsIgnoreCase("true")
+                && !cmd.getOptionValue(HAS_HEADER_ROW_FLAG).equalsIgnoreCase("false")) {
+            System.err.println("Invalid argument: -h,--" + HAS_HEADER_ROW_FLAG + " must be 'true' or 'false'");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateFileToPublishArg(CommandLine cmd) {
+        if(cmd.getOptionValue(FILE_TO_PUBLISH_FLAG) == null) {
+            System.err.println("Missing required argument: -f,--" + FILE_TO_PUBLISH_FLAG + " is required");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateDatasetIdArg(CommandLine cmd) {
+        if(cmd.getOptionValue(DATASET_ID_FLAG) == null) {
+            System.err.println("Missing required argument: -i,--" + DATASET_ID_FLAG + " is required");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validatePublishMethodArg(CommandLine cmd) {
+        String method = cmd.getOptionValue("m");
+        if(method == null) {
+            System.err.println("Missing required argument: -m,--publishMethod is required");
+            return false;
+        }
+        boolean publishMethodValid = false;
+        final String inputPublishMethod = method;
+        for(PublishMethod m : PublishMethod.values()) {
+            if(inputPublishMethod.equals(m.name()))
+                publishMethodValid = true;
+        }
+        if(!publishMethodValid) {
+            System.err.println("Invalid argument: -m,--publishMethod must be " +
+                    IntegrationUtility.getValidPublishMethods());
+            return false;
+        }
+        return true;
+    }
+
     /**
-	 * Saves this object as a file at given filepath
-	 */
-	public void writeToFile(String filepath) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File(filepath), this);
-	}
-
-    @JsonProperty("fileVersionUID")
-    public long getFileVersionUID() {
-        return fileVersionUID;
+     * This allows backward compatability with DataSync 0.1 .sij file format
+     *
+     * @param pathToFile .sij file that uses old serialization format (Java native)
+     * @throws IOException
+     */
+    private void loadOldSijFile(String pathToFile) throws IOException {
+        try {
+            InputStream file = new FileInputStream(pathToFile);
+            InputStream buffer = new BufferedInputStream(file);
+            ObjectInput input = new ObjectInputStream (buffer);
+            try{
+                com.socrata.datasync.IntegrationJob loadedJobOld = (com.socrata.datasync.IntegrationJob) input.readObject();
+                setDatasetID(loadedJobOld.getDatasetID());
+                setFileToPublish(loadedJobOld.getFileToPublish());
+                setPublishMethod(loadedJobOld.getPublishMethod());
+                setPathToSavedFile(pathToFile);
+                setFileToPublishHasHeaderRow(true);
+                setPublishViaFTP(false);
+                setPathToFTPControlFile(null);
+                setFtpControlFileContent(null);
+            }
+            finally{
+                input.close();
+            }
+        } catch(Exception e) {
+            // TODO add log entry?
+            throw new IOException(e.toString());
+        }
     }
 
-    @JsonProperty("datasetID")
-	public void setDatasetID(String newDatasetID) {
-		datasetID = newDatasetID;
-	}
-
-    @JsonProperty("datasetID")
-	public String getDatasetID() {
-		return datasetID;
-	}
-
-    @JsonProperty("fileToPublish")
-	public void setFileToPublish(String newFileToPublish) {
-		fileToPublish = newFileToPublish;
-	}
-
-    @JsonProperty("fileToPublish")
-	public String getFileToPublish() {
-		return fileToPublish;
-	}
-
-    @JsonProperty("publishMethod")
-	public void setPublishMethod(PublishMethod newPublishMethod) {
-		publishMethod = newPublishMethod;
-	}
-
-    @JsonProperty("publishMethod")
-	public PublishMethod getPublishMethod() {
-		return publishMethod;
-	}
-
-    @JsonProperty("fileToPublishHasHeaderRow")
-    public boolean getFileToPublishHasHeaderRow() {
-        return fileToPublishHasHeaderRow;
-    }
-
-    @JsonProperty("fileToPublishHasHeaderRow")
-    public void setFileToPublishHasHeaderRow(boolean newFileToPublishHasHeaderRow) {
-
-        fileToPublishHasHeaderRow = newFileToPublishHasHeaderRow;
-    }
-
-    @JsonProperty("pathToFTPControlFile")
-    public String getPathToFTPControlFile() { return pathToFTPControlFile; }
-
-    @JsonProperty("pathToFTPControlFile")
-    public void setPathToFTPControlFile(String newPathToFTPControlFile) {
-        pathToFTPControlFile = newPathToFTPControlFile; }
-
-    @JsonProperty("ftpControlFileContent")
-    public String getFtpControlFileContent() { return ftpControlFileContent; }
-
-    @JsonProperty("ftpControlFileContent")
-    public void setFtpControlFileContent(String newFtpControlFileContent) {
-        ftpControlFileContent = newFtpControlFileContent; }
-
-    @JsonProperty("publishViaFTP")
-    public boolean getPublishViaFTP() { return publishViaFTP; }
-
-    @JsonProperty("publishViaFTP")
-    public void setPublishViaFTP(boolean newPublishViaFTP) {
-        publishViaFTP = newPublishViaFTP;
-    }
-
-    public void setPathToSavedFile(String newPath) {
-        pathToSavedJobFile = newPath;
-    }
-
-    public String getPathToSavedFile() {
-        return pathToSavedJobFile;
-    }
-
-	public String getJobFilename() {
-		if(pathToSavedJobFile.equals("")) {
-			return DEFAULT_JOB_NAME;
-		}
-		return new File(pathToSavedJobFile).getName();
-	}
 }

@@ -1,47 +1,33 @@
 package com.socrata.datasync.job;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableMap;
-import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
-import com.socrata.api.SodaImporter;
 import com.socrata.api.SodaWorkflow;
 import com.socrata.datasync.*;
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.datasync.preferences.UserPreferencesFile;
 import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.socrata.exceptions.SodaError;
-import com.socrata.model.UpsertError;
-import com.socrata.model.UpsertResult;
-import com.socrata.model.importer.Column;
-import com.socrata.model.importer.Dataset;
 import com.socrata.model.importer.DatasetInfo;
-import com.socrata.model.importer.License;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
-public class MetadataJob implements Job {
+public class MetadataJob extends Job {
 	/**
 	 * @author Brian Williamson
 	 *
@@ -55,23 +41,21 @@ public class MetadataJob implements Job {
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
     private static final long fileVersionUID = 1L;
 
-	private String datasetID;
-	private String title;
-	private String description;
-	private String category;
-	private List<String> keywords;
-	private LicenseType licenseType;
-	private String dataProvidedBy;
-	private String sourceLink;
-	private String contactInfo;
-	private String pathToSavedJobFile;
-	
-	private static final String DEFAULT_JOB_NAME = "Untitled Metadata Job";
+	private String datasetID = "";
+	private String title = "";
+	private String description = "";
+	private String category = "";
+	private List<String> keywords = new ArrayList<String>();
+	private LicenseType licenseType = LicenseType.no_license;
+	private String dataProvidedBy = "";
+	private String sourceLink = "";
+	private String contactInfo = "";
+
+    private static final String DEFAULT_JOB_NAME = "Untitled Metadata Job";
     public static final List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
 	
 	public MetadataJob() {
         userPrefs = new UserPreferencesJava();
-        setDefaultParams();
 	}
 
     /*
@@ -86,28 +70,12 @@ public class MetadataJob implements Job {
             // TODO add log entry???
             throw new IOException(e.toString());
         }
-        setDefaultParams();
     }
     
     public MetadataJob(UserPreferences userPreferences) {
     	userPrefs = userPreferences;
-    	setDefaultParams();
     }
 
-    private void setDefaultParams() {
-        pathToSavedJobFile = "";
-        datasetID = "";
-    	title = "";
-    	description = "";
-    	category = "";
-    	keywords = new ArrayList<String>();
-    	//licenseType = "";
-    	licenseType = LicenseType.no_license;
-    	dataProvidedBy = "";
-    	sourceLink = "";
-    	contactInfo = "";
-    }
-	
 	/**
 	 * Loads metadata job data from a file and
 	 * uses the saved data to populate the fields
@@ -133,7 +101,16 @@ public class MetadataJob implements Job {
         	throw new IOException(e.toString());
         }
 	}
-	
+
+    public void configure(CommandLine cmd) {
+        //TODO when a metadata job can work from the cmd line, not just a job file
+    }
+
+    public boolean validateArgs(CommandLine cmd) {
+        //TODO when a metadata job can work from the cmd line, not just a job file
+        return true;
+    }
+
 	/**
 	 * 
 	 * @return an error JobStatus if any input is invalid, otherwise JobStatus.VALID
@@ -299,14 +276,6 @@ public class MetadataJob implements Job {
 			return e.getMessage();
 		}
 	}
-	
-	/**
-	 * Saves this object as a file at given filepath
-	 */
-	public void writeToFile(String filepath) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File(filepath), this);
-	}
 
     @JsonProperty("fileVersionUID")
     public long getFileVersionUID() {
@@ -413,22 +382,7 @@ public class MetadataJob implements Job {
 	public void setContactInfo(String contactInfo) {
 		this.contactInfo = contactInfo;
 	}
-    
-    public void setPathToSavedFile(String newPath) {
-        pathToSavedJobFile = newPath;
-    }
 
-    public String getPathToSavedFile() {
-        return pathToSavedJobFile;
-    }    
-
-	public String getJobFilename() {
-		if(StringUtils.isBlank(pathToSavedJobFile)) {
-			return DEFAULT_JOB_NAME;
-		}
-		return new File(pathToSavedJobFile).getName();
-	}
-	
 	private void readDatasetInfo(DatasetInfo datasetInfo) {
 		if (datasetInfo == null) {
 			return;

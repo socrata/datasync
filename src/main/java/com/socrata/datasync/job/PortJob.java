@@ -9,6 +9,7 @@ import com.socrata.api.SodaDdl;
 import com.socrata.datasync.*;
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.datasync.preferences.UserPreferencesJava;
+import org.apache.commons.cli.CommandLine;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -16,19 +17,19 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
-public class PortJob implements Job {
+public class PortJob extends Job {
     private UserPreferences userPrefs;
 
-    private PortMethod portMethod;
-	private String sourceSiteDomain;
-	private String sourceSetID;
-	private String sinkSiteDomain;
-	private String sinkSetID;
-	private PublishMethod publishMethod;
-    private PublishDataset publishDataset;
-	private String portResult;
-	private String pathToSavedJobFile;
-    private String destinationDatasetTitle;
+    private PortMethod portMethod = PortMethod.copy_all;
+	private String sourceSiteDomain ="https://";
+	private String sourceSetID = "";
+	private String sinkSiteDomain= "https://";
+	private String sinkSetID = "";
+	private PublishMethod publishMethod = PublishMethod.upsert;
+    private PublishDataset publishDataset = PublishDataset.working_copy;
+	private String portResult = "";
+	private String destinationDatasetTitle = "";
+
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
     private static final long fileVersionUID = 2L;
@@ -37,8 +38,7 @@ public class PortJob implements Job {
 
 	public PortJob() {
         userPrefs = new UserPreferencesJava();
-        setDefaultParams();
-	}
+    }
 
     /*
      * This is a method that enables DataSync preferences to be established
@@ -47,20 +47,132 @@ public class PortJob implements Job {
      */
     public PortJob(UserPreferences userPrefs) {
         this.userPrefs = userPrefs;
-        setDefaultParams();
     }
 
-    private void setDefaultParams() {
-        portMethod = PortMethod.copy_all;
-        sourceSiteDomain = "https://";
-        sourceSetID = "";
-        sinkSiteDomain = "https://";
-        sinkSetID = "";
-        publishMethod = PublishMethod.upsert;
-        publishDataset = PublishDataset.working_copy;
-        portResult = "";
-        pathToSavedJobFile = "";
-        destinationDatasetTitle = "";
+    @JsonProperty("fileVersionUID")
+    public long getFileVersionUID() {
+        return fileVersionUID;
+    }
+
+    @JsonProperty("sinkSetID")
+    public String getSinkSetID() {
+        return sinkSetID;
+    }
+
+    @JsonProperty("sinkSetID")
+    public void setSinkSetID(String sinkSetID) {
+        this.sinkSetID = sinkSetID;
+    }
+
+    @JsonProperty("sourceSiteDomain")
+    public String getSourceSiteDomain() {
+        return sourceSiteDomain;
+    }
+
+    @JsonProperty("sourceSiteDomain")
+    public void setSourceSiteDomain(String sourceSiteDomain) {
+        this.sourceSiteDomain = sourceSiteDomain;
+    }
+
+    @JsonProperty("sourceSetID")
+    public String getSourceSetID() {
+        return sourceSetID;
+    }
+
+    @JsonProperty("sourceSetID")
+    public void setSourceSetID(String sourceSetID) {
+        this.sourceSetID = sourceSetID;
+    }
+
+    @JsonProperty("sinkSiteDomain")
+    public String getSinkSiteDomain() {
+        return sinkSiteDomain;
+    }
+
+    @JsonProperty("sinkSiteDomain")
+    public void setSinkSiteDomain(String sinkSiteDomain) {
+        this.sinkSiteDomain = sinkSiteDomain;
+    }
+
+    @JsonProperty("publishMethod")
+    public PublishMethod getPublishMethod() {
+        return publishMethod;
+    }
+
+    @JsonProperty("publishMethod")
+    public void setPublishMethod(PublishMethod publishMethod) {
+        this.publishMethod = publishMethod;
+    }
+
+    @JsonProperty("portMethod")
+    public PortMethod getPortMethod() {
+        return portMethod;
+    }
+
+    @JsonProperty("portMethod")
+    public void setPortMethod(PortMethod portMethod) {
+        this.portMethod = portMethod;
+    }
+
+    @JsonProperty("publishDataset")
+    public PublishDataset getPublishDataset() {
+        return publishDataset;
+    }
+
+    @JsonProperty("publishDataset")
+    public void setPublishDataset(PublishDataset publishDataset) {
+        this.publishDataset = publishDataset;
+    }
+
+    @JsonProperty("destinationDatasetTitle")
+    public String getDestinationDatasetTitle() {
+        return destinationDatasetTitle;
+    }
+
+    @JsonProperty("destinationDatasetTitle")
+    public void setDestinationDatasetTitle(String destinationDatasetTitle) {
+        this.destinationDatasetTitle = destinationDatasetTitle;
+    }
+
+    @JsonProperty("portResult")
+    public String getPortResult() {
+        return portResult;
+    }
+
+    @JsonProperty("portResult")
+    public void setPortResult(String portResult) {
+        this.portResult = portResult;
+    }
+
+
+    public boolean validateArgs(CommandLine cmd) {
+        // TODO Validate optional parameters
+        return validatePortMethodArg(cmd) &&
+                validateSourceDomainArg(cmd) &&
+                validateSourceIdArg(cmd) &&
+                validateDestinationDomainArg(cmd);
+    }
+
+    // TODO: when get around to fixing up cmd line options, should take out the hard-coding here.
+    public void configure(CommandLine cmd) {
+        setPortMethod(PortMethod.valueOf(cmd.getOptionValue("pm")));
+        setSourceSiteDomain(cmd.getOptionValue("pd1"));
+        setSourceSetID(cmd.getOptionValue("pi1"));
+        setSinkSiteDomain(cmd.getOptionValue("pd2"));
+
+        if (cmd.getOptionValue("pi2") != null)
+            setSinkSetID(cmd.getOptionValue("pi2"));
+        if (cmd.getOptionValue("ppm") != null)
+            setPublishMethod(PublishMethod.valueOf(cmd.getOptionValue("ppm")));
+        if (cmd.getOptionValue("pp") != null) {
+            if (cmd.getOptionValue("pp").equalsIgnoreCase("true")) {
+                setPublishDataset(PublishDataset.publish);
+            } else { // cmd.getOptionValue("pp") == "false"
+                setPublishDataset(PublishDataset.working_copy);
+            }
+        }
+        if (cmd.getOptionValue("pdt") != null)
+            setDestinationDatasetTitle(cmd.getOptionValue("pdt"));
     }
 
 	/**
@@ -198,119 +310,47 @@ public class PortJob implements Job {
 		return runStatus;
 	}
 
-    /**
-     * Saves this object as a file at given filepath
-     */
-    public void writeToFile(String filepath) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.writeValue(new File(filepath), this);
-    }
-
-    @JsonProperty("fileVersionUID")
-    public long getFileVersionUID() {
-        return fileVersionUID;
-    }
-
-    @JsonProperty("sinkSetID")
-    public String getSinkSetID() {
-        return sinkSetID;
-    }
-
-    @JsonProperty("sinkSetID")
-    public void setSinkSetID(String sinkSetID) {
-        this.sinkSetID = sinkSetID;
-    }
-
-    @JsonProperty("sourceSiteDomain")
-    public String getSourceSiteDomain() {
-        return sourceSiteDomain;
-    }
-
-    @JsonProperty("sourceSiteDomain")
-    public void setSourceSiteDomain(String sourceSiteDomain) {
-        this.sourceSiteDomain = sourceSiteDomain;
-    }
-
-    @JsonProperty("sourceSetID")
-    public String getSourceSetID() {
-        return sourceSetID;
-    }
-
-    @JsonProperty("sourceSetID")
-    public void setSourceSetID(String sourceSetID) {
-        this.sourceSetID = sourceSetID;
-    }
-
-    @JsonProperty("sinkSiteDomain")
-    public String getSinkSiteDomain() {
-        return sinkSiteDomain;
-    }
-
-    @JsonProperty("sinkSiteDomain")
-    public void setSinkSiteDomain(String sinkSiteDomain) {
-        this.sinkSiteDomain = sinkSiteDomain;
-    }
-
-    @JsonProperty("publishMethod")
-    public PublishMethod getPublishMethod() {
-        return publishMethod;
-    }
-
-    @JsonProperty("publishMethod")
-    public void setPublishMethod(PublishMethod publishMethod) {
-        this.publishMethod = publishMethod;
-    }
-
-    @JsonProperty("portMethod")
-    public PortMethod getPortMethod() {
-        return portMethod;
-    }
-
-    @JsonProperty("portMethod")
-    public void setPortMethod(PortMethod portMethod) {
-        this.portMethod = portMethod;
-    }
-
-    @JsonProperty("publishDataset")
-    public PublishDataset getPublishDataset() {
-        return publishDataset;
-    }
-
-    @JsonProperty("publishDataset")
-    public void setPublishDataset(PublishDataset publishDataset) {
-        this.publishDataset = publishDataset;
-    }
-
-    @JsonProperty("destinationDatasetTitle")
-    public String getDestinationDatasetTitle() {
-        return destinationDatasetTitle;
-    }
-
-    @JsonProperty("destinationDatasetTitle")
-    public void setDestinationDatasetTitle(String destinationDatasetTitle) {
-        this.destinationDatasetTitle = destinationDatasetTitle;
-    }
-
-    public String getPortResult() {
-        return portResult;
-    }
-
-    public void setPortResult(String portResult) {
-        this.portResult = portResult;
-    }
-
-    public void setPathToSavedFile(String newPath) {
-        pathToSavedJobFile = newPath;
-    }
-
-    public String getPathToSavedFile() {
-        return pathToSavedJobFile;
-    }
-
-    public String getJobFilename() {
-        if (pathToSavedJobFile.equals("")) {
-            return DEFAULT_JOB_NAME;
+    private boolean validateDestinationDomainArg(CommandLine cmd) {
+        if(cmd.getOptionValue("pd2") == null) {
+            System.err.println("Missing required argument: -pd2,--destinationDomain is required");
+            return false;
         }
-        return new File(pathToSavedJobFile).getName();
+        return true;
+    }
+
+    private boolean validateSourceIdArg(CommandLine cmd) {
+        if(cmd.getOptionValue("pi1") == null) {
+            System.err.println("Missing required argument: -pi1,--sourceDatasetId is required");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateSourceDomainArg(CommandLine cmd) {
+        if(cmd.getOptionValue("pd1") == null) {
+            System.err.println("Missing required argument: -pd1,--sourceDomain is required");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validatePortMethodArg(CommandLine cmd) {
+        String portMethod = cmd.getOptionValue("pm");
+        if(portMethod == null) {
+            System.err.println("Missing required argument: -pm,--portMethod is required");
+            return false;
+        }
+
+        boolean portMethodValid = false;
+        for(PortMethod m : PortMethod.values()) {
+            if(portMethod.equals(m.name()))
+                portMethodValid = true;
+        }
+        if(!portMethodValid) {
+            System.err.println("Invalid argument: -pm,--portMethod must be: " +
+                    IntegrationUtility.getValidPortMethods());
+            return false;
+        }
+        return true;
     }
 }

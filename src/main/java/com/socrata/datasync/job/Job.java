@@ -1,22 +1,43 @@
 package com.socrata.datasync.job;
 
 import com.socrata.datasync.JobStatus;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.lang3.StringUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
  * Author: Adrian Laurenzi
  * Date: 9/18/13
  */
-public interface Job {
+public abstract class Job {
 
-    public JobStatus run();
+    String pathToSavedJobFile = "";
+    String defaultJobName = "";
 
-    public void writeToFile(String filepath) throws IOException;
+    public abstract boolean validateArgs(CommandLine cmd);
+    public abstract void configure(CommandLine cmd);
+    public abstract JobStatus run();
 
-    public void setPathToSavedFile(String newPath);
+    public void writeToFile(String filepath) throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.writeValue(new File(filepath), this);
+    }
 
-    public String getPathToSavedFile();
+    public void setPathToSavedFile(String newPath) {
+        pathToSavedJobFile = newPath;
+    }
 
-    public String getJobFilename();
+    public String getPathToSavedFile() {
+        return pathToSavedJobFile;
+    }
+
+    public String getJobFilename() {
+        if(StringUtils.isBlank(pathToSavedJobFile)) {
+            return defaultJobName;
+        }
+        return new File(pathToSavedJobFile).getName();
+    }
 }

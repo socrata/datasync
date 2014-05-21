@@ -1,26 +1,70 @@
 package com.socrata.datasync.job;
 
 import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.Main;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.TestBase;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
 import junit.framework.TestCase;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
 
-/**
- * Author: Adrian Laurenzi
- * Date: 10/18/13
- */
 public class IntegrationJobTest extends TestBase {
+
+    private IntegrationJob job;
+    CommandLineParser parser;
 
     public static final String PATH_TO_SAVED_JOB_FILE_V0dot1 = "src/test/resources/job_saved_v0.1.sij";
     public static final String PATH_TO_SAVED_JOB_FILE_V0dot3 = "src/test/resources/job_saved_v0.3.sij";
     public static final String PATH_TO_SAVED_JOB_FILE_V0dot4 = "src/test/resources/job_saved_v0.4.sij";
     public static final String PATH_TO_SAVED_JOB_FILE_V0dot4_CONTROL_CONTENT =
             "src/test/resources/job_saved_v0.4_control_content.sij";
+
+    @Before
+    public void initialize() {
+        job = new IntegrationJob();
+        parser = new PosixParser();
+    }
+
+    @Test
+    public void testValidationOfArgs() throws ParseException {
+
+        String[] goodArgs = {"-i", "some-four", "-f", " ~/././.", "-m", "replace", "-h", "true"};
+        String[] incompleteArgs1 = {"-f", " ~/././.", "-m", "replace", "-h", "true"};
+        String[] incompleteArgs2 = {"-i", "some-four", "-m", "replace", "-h", "true"};
+        String[] incompleteArgs3 = {"-i", "some-four", "-f", " ~/././.", "-h", "true"};
+        String[] incompleteArgs4 = {"-i", "some-four", "-f", " ~/././.", "-m", "replace"};
+        String[] invalidArgs1 = {"-i", "some-four", "-f", " ~/././.", "-m", "replace", "-h", "true", "-pf", "invalid"};
+        String[] invalidArgs2 = {"-i", "4x4", "-f", " ~/.", "-m", "replace", "-h", "true", "-pf", "false", "-sc", "/./."};
+        String[] invalidArgs3 = {"-i", "4x4", "-f", " ~/././.", "-m", "invalid", "-h", "true"};
+
+        TestCase.assertTrue(job.validateArgs(parser.parse(Main.options, goodArgs)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs1)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs2)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs3)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs4)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, invalidArgs1)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, invalidArgs2)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, invalidArgs3)));
+    }
+
+    @Test
+    public void testConfiguration() throws ParseException {
+        String[] args = {"-i", "some-four", "-f", " ~/././.", "-m", "replace", "-h", "true"};
+        job.configure(parser.parse(Main.options, args));
+
+        TestCase.assertEquals(job.getDatasetID(), args[1]);
+        TestCase.assertEquals(job.getFileToPublish(), args[3]);
+        TestCase.assertEquals(job.getPublishMethod().toString(), args[5]);
+        TestCase.assertTrue(job.getFileToPublishHasHeaderRow());
+    }
 
     @Test
     public void testDataSyncV0dot1JobFileDeserialization() throws IOException {
@@ -139,7 +183,7 @@ public class IntegrationJobTest extends TestBase {
     }
 
     @Test
-     public void testIntegrationJobPublishError() throws IOException, LongRunningQueryException, SodaError {
+    public void testIntegrationJobPublishError() throws IOException, LongRunningQueryException, SodaError {
         IntegrationJob jobToRun = getIntegrationJobWithUserPrefs();
         jobToRun.setDatasetID(UNITTEST_DATASET_ID);
         jobToRun.setFileToPublish("src/test/resources/datasync_unit_test_invalid_date.csv");

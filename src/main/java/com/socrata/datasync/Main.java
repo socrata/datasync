@@ -1,11 +1,13 @@
 package com.socrata.datasync;
 
+import com.socrata.datasync.job.Job;
+import com.socrata.datasync.job.LoadPreferencesJob;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.datasync.preferences.UserPreferencesFile;
 import com.socrata.datasync.preferences.UserPreferencesJava;
 import com.socrata.datasync.ui.SimpleIntegrationWizard;
-import org.codehaus.jackson.map.ObjectMapper;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -15,6 +17,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.codehaus.jackson.map.ObjectMapper;
 
 public class Main {
 	/**
@@ -80,145 +83,53 @@ public class Main {
             new SimpleIntegrationWizard();
         } else if(args.length == 1) {
     		if(args[0].equals("-?") || args[0].equals("--help")) {
-                HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("DataSync", options);
+                printHelp();
             } else {
                 // Run a job file (.sij) in command-line mode
                 String jobFileToRun = args[0];
 			    new SimpleIntegrationRunner(jobFileToRun);
             }
 		} else {
-            if(!commandArgsValid(cmd)) {
-                HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp("DataSync", options);
+            // generate & run job from command line args
+            UserPreferences userPrefs = null;
+            try {
+                userPrefs = loadUserPreferences(cmd);
+            } catch (IOException e) {
+                System.err.println("Failed to load configuration: " + e.toString());
                 System.exit(1);
+            }
+
+            String jobType = cmd.getOptionValue(JOB_TYPE_FLAG, DEFAULT_VALUE_jobType);
+
+            Job jobToRun = new com.socrata.datasync.job.IntegrationJob(userPrefs);
+            if(jobType.equals(PORT_JOB)) {
+                jobToRun = new PortJob(userPrefs);
+            } else if(jobType.equals(LOAD_PREFERENCES_JOB)) {
+                jobToRun = new LoadPreferencesJob(userPrefs);
+            } else if (!jobType.equals(INTEGRATION_JOB)){
+                System.err.println("Invalid " + JOB_TYPE_FLAG + ": " + cmd.getOptionValue(JOB_TYPE_FLAG) +
+                        " (must be " + IntegrationUtility.getArrayAsQuotedList(VALID_JOB_TYPES) + ")");
+                System.exit(1);
+            }
+
+            if (jobToRun.validateArgs(cmd)) {
+                jobToRun.configure(cmd);
+                new SimpleIntegrationRunner(jobToRun);
             } else {
-                // generate & run job from command line args
-                UserPreferences userPrefs = null;
-                try {
-                    userPrefs = loadUserPreferences(cmd);
-                } catch (IOException e) {
-                    System.err.println("Failed to load configuration: " + e.toString());
-                    System.exit(1);
-                }
-
-                String jobType = cmd.getOptionValue(JOB_TYPE_FLAG, DEFAULT_VALUE_jobType);
-                if(jobType.equals(INTEGRATION_JOB)) {
-                    runIntegrationJob(cmd, userPrefs);
-                } else if(jobType.equals(PORT_JOB)) {
-                    runPortJob(cmd, userPrefs);
-                } else if(jobType.equals(LOAD_PREFERENCES_JOB)) {
-                    loadUserPreferences(userPrefs);
-                }
-            }
-		}
-    }
-
-    /**
-     * Loads given userPrefs into the saved global DataSync preferences (using
-     * Java Preferences class).
-     *
-     * @param userPrefs object containing user preferences to be loaded
-     */
-    private static void loadUserPreferences(UserPreferences userPrefs) {
-        UserPreferencesJava newUserPrefs = new UserPreferencesJava();
-        newUserPrefs.saveDomain(userPrefs.getDomain());
-        newUserPrefs.saveUsername(userPrefs.getUsername());
-        newUserPrefs.savePassword(userPrefs.getPassword());
-        newUserPrefs.saveAPIKey(userPrefs.getAPIKey());
-        newUserPrefs.saveAdminEmail(userPrefs.getAdminEmail());
-        newUserPrefs.saveEmailUponError(userPrefs.emailUponError());
-        newUserPrefs.saveLogDatasetID(userPrefs.getLogDatasetID());
-        newUserPrefs.saveOutgoingMailServer(userPrefs.getOutgoingMailServer());
-        newUserPrefs.saveSMTPPort(userPrefs.getSmtpPort());
-        newUserPrefs.saveSSLPort(userPrefs.getSslPort());
-        newUserPrefs.saveSMTPUsername(userPrefs.getSmtpUsername());
-        newUserPrefs.saveSMTPPassword(userPrefs.getSmtpPassword());
-        newUserPrefs.saveFilesizeChunkingCutoffMB(
-                Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()));
-        newUserPrefs.saveNumRowsPerChunk(
-                Integer.parseInt(userPrefs.getNumRowsPerChunk()));
-
-        System.out.println("Preferences saved:\n\n" + getSavedPreferences());
-    }
-
-    private static String getSavedPreferences() {
-        UserPreferences curUserPrefs = new UserPreferencesJava();
-        return "domain: " + curUserPrefs.getDomain() +
-               "username: " + curUserPrefs.getUsername() +
-               "password: " + passwordToStars(curUserPrefs.getPassword()) +
-               "appToken: " + curUserPrefs.getAPIKey() +
-               "adminEmail: " + curUserPrefs.getAdminEmail() +
-               "emailUponError: " + curUserPrefs.emailUponError() +
-               "logDatasetID: " + curUserPrefs.getLogDatasetID() +
-               "outgoingMailServer: " + curUserPrefs.getOutgoingMailServer() +
-               "smtpPort: " + curUserPrefs.getSmtpPort() +
-               "sslPort: " + curUserPrefs.getSslPort() +
-               "smtpUsername: " + curUserPrefs.getSmtpUsername() +
-               "smtpPassword: " + passwordToStars(curUserPrefs.getSmtpPassword()) +
-               "filesizeChunkingCutoffMB: " + curUserPrefs.getFilesizeChunkingCutoffMB() +
-               "numRowsPerChunk: " + curUserPrefs.getNumRowsPerChunk();
-    }
-
-    private static String passwordToStars(String password) {
-        String stars = "";
-        for(int i = 0; i < password.length(); i++) {
-            stars += "*";
-        }
-        return stars;
-    }
-
-    private static void runIntegrationJob(CommandLine cmd, UserPreferences userPrefs) {
-        com.socrata.datasync.job.IntegrationJob jobToRun =
-                new com.socrata.datasync.job.IntegrationJob(userPrefs);
-
-        // Set required parameters
-        jobToRun.setDatasetID(cmd.getOptionValue(DATASET_ID_FLAG));
-        jobToRun.setFileToPublish(cmd.getOptionValue(FILE_TO_PUBLISH_FLAG));
-        jobToRun.setPublishMethod(PublishMethod.valueOf(cmd.getOptionValue(PUBLISH_METHOD_FLAG)));
-        if(cmd.getOptionValue(HAS_HEADER_ROW_FLAG).equalsIgnoreCase("true")) {
-            jobToRun.setFileToPublishHasHeaderRow(true);
-        } else { // cmd.getOptionValue(HAS_HEADER_ROW_FLAG) == "false"
-            jobToRun.setFileToPublishHasHeaderRow(false);
-        }
-
-        // Set optional parameters
-        if(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG) != null) {
-            jobToRun.setPathToFTPControlFile(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG));
-        }
-        String publishViaFTP = cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG, DEFAULT_VALUE_publishViaFTP);
-        if(publishViaFTP.equalsIgnoreCase("true")) {
-            jobToRun.setPublishViaFTP(true);
-        } else { // cmd.getOptionValue("pf") == "false"
-            jobToRun.setPublishViaFTP(false);
-        }
-
-        new SimpleIntegrationRunner(jobToRun);
-    }
-
-    private static void runPortJob(CommandLine cmd, UserPreferences userPrefs) {
-        PortJob jobToRun = new PortJob(userPrefs);
-        // TODO FINISH
-        jobToRun.setPortMethod(PortMethod.valueOf(cmd.getOptionValue("pm")));
-        jobToRun.setSourceSiteDomain(cmd.getOptionValue("pd1"));
-        jobToRun.setSourceSetID(cmd.getOptionValue("pi1"));
-        jobToRun.setSinkSiteDomain(cmd.getOptionValue("pd2"));
-
-        if(cmd.getOptionValue("pi2") != null)
-            jobToRun.setSinkSetID(cmd.getOptionValue("pi2"));
-        if(cmd.getOptionValue("ppm") != null)
-            jobToRun.setPublishMethod(PublishMethod.valueOf(cmd.getOptionValue("ppm")));
-        if(cmd.getOptionValue("pp") != null) {
-            if(cmd.getOptionValue("pp").equalsIgnoreCase("true")) {
-                jobToRun.setPublishDataset(PublishDataset.publish);
-            } else { // cmd.getOptionValue("pp") == "false"
-                jobToRun.setPublishDataset(PublishDataset.working_copy);
+                printHelp();
+                System.exit(1);
             }
         }
-        if(cmd.getOptionValue("pdt") != null)
-            jobToRun.setDestinationDatasetTitle(cmd.getOptionValue("pdt"));
-        new SimpleIntegrationRunner(jobToRun);
     }
+
+    private static void printHelp() {
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("DataSync", options);
+    }
+
+
+
+    // TODO: move the method below to UserPreferences when I get those set of interfaces/classes consolidated.
 
     /**
      * Returns a UserPreferences object which either loads User Prefs from a JSON file
@@ -240,140 +151,5 @@ public class Main {
             userPrefs = new UserPreferencesJava();
         }
         return userPrefs;
-    }
-
-    public static boolean commandArgsValid(CommandLine cmd) {
-        if(cmd.getOptionValue(JOB_TYPE_FLAG, INTEGRATION_JOB).equals(INTEGRATION_JOB)) {
-            return integrationJobArgsValid(cmd);
-        } else if(cmd.getOptionValue(JOB_TYPE_FLAG).equals(PORT_JOB)) {
-            return portJobArgsValid(cmd);
-        } else if(cmd.getOptionValue(JOB_TYPE_FLAG).equals(LOAD_PREFERENCES_JOB)) {
-            return loadPreferencesJobArgsValid(cmd);
-        } else {
-            System.err.println("Invalid " + JOB_TYPE_FLAG + ": " + cmd.getOptionValue(JOB_TYPE_FLAG) +
-                    " (must be " + IntegrationUtility.getArrayAsQuotedList(VALID_JOB_TYPES) + ")");
-            return false;
-        }
-    }
-
-    private static boolean loadPreferencesJobArgsValid(CommandLine cmd) {
-        if(cmd.getOptionValue(CONFIG_FLAG) == null) {
-            System.err.println("Missing required argument: " +
-                    "-c,--"+ CONFIG_FLAG +" is required when " + JOB_TYPE_FLAG + " is '" + LOAD_PREFERENCES_JOB + "'");
-            return false;
-        }
-        return true;
-    }
-
-    // TODO finish validation of PortJob params
-    private static boolean portJobArgsValid(CommandLine cmd) {
-        // Validate required parameters
-        if(cmd.getOptionValue("pm") == null) {
-            System.err.println("Missing required argument: -pm,--portMethod is required");
-            return false;
-        }
-        if(!portMethodIsValid(cmd)) {
-            System.err.println("Invalid argument: -pm,--portMethod must be: " +
-                    IntegrationUtility.getValidPortMethods());
-            return false;
-        }
-
-        if(cmd.getOptionValue("pd1") == null) {
-            System.err.println("Missing required argument: -pd1,--sourceDomain is required");
-            return false;
-        }
-        if(cmd.getOptionValue("pi1") == null) {
-            System.err.println("Missing required argument: -pi1,--sourceDatasetId is required");
-            return false;
-        }
-        if(cmd.getOptionValue("pd2") == null) {
-            System.err.println("Missing required argument: -pd2,--destinationDomain is required");
-            return false;
-        }
-
-        // TODO Validate optional parameters
-
-        return true;
-    }
-
-    private static boolean integrationJobArgsValid(CommandLine cmd) {
-        // Validate required parameters
-        if(cmd.getOptionValue(DATASET_ID_FLAG) == null) {
-            System.err.println("Missing required argument: -i,--" + DATASET_ID_FLAG + " is required");
-            return false;
-        }
-        if(cmd.getOptionValue(FILE_TO_PUBLISH_FLAG) == null) {
-            System.err.println("Missing required argument: -f,--" + FILE_TO_PUBLISH_FLAG + " is required");
-            return false;
-        }
-        if(!publishMethodIsValid(cmd)) {
-            return false;
-        }
-        if(cmd.getOptionValue(HAS_HEADER_ROW_FLAG) == null) {
-            System.err.println("Missing required argument: -h,--" + HAS_HEADER_ROW_FLAG + " is required");
-            return false;
-        }
-        if(!cmd.getOptionValue(HAS_HEADER_ROW_FLAG).equalsIgnoreCase("true")
-                && !cmd.getOptionValue(HAS_HEADER_ROW_FLAG).equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -h,--" + HAS_HEADER_ROW_FLAG + " must be 'true' or 'false'");
-            return false;
-        }
-
-        // Validate optional parameters
-        if(cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG) != null && !cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("true")
-                && !cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -pf,--" + PUBLISH_VIA_FTP_FLAG + " must be 'true' or 'false'");
-            return false;
-        }
-
-        if(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG) != null
-                && cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG).equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -sc,--" + PATH_TO_FTP_CONTROL_FILE_FLAG + " cannot be supplied " +
-                    "unless -pf,--" + PUBLISH_VIA_FTP_FLAG + " is 'true'");
-            return false;
-        }
-
-        if(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG) != null) {
-            // TODO remove this when flags override other parameters
-            if(cmd.getOptionValue(PUBLISH_METHOD_FLAG) != null) {
-                System.out.println("WARNING: -m,--" + PUBLISH_METHOD_FLAG + " is being ignored because " +
-                        "-sc,--" + PATH_TO_FTP_CONTROL_FILE_FLAG + " is supplied");
-            }
-            if(cmd.getOptionValue(HAS_HEADER_ROW_FLAG) != null) {
-                System.out.println("WARNING: -h,--" + HAS_HEADER_ROW_FLAG + " is being ignored because " +
-                        "-sc,--" + PATH_TO_FTP_CONTROL_FILE_FLAG + " is supplied");
-            }
-        }
-
-        return true;
-    }
-
-    private static boolean publishMethodIsValid(CommandLine cmd) {
-        if(cmd.getOptionValue("m") == null) {
-            System.err.println("Missing required argument: -m,--publishMethod is required");
-            return false;
-        }
-        boolean publishMethodValid = false;
-        final String inputPublishMethod = cmd.getOptionValue("m");
-        for(PublishMethod m : PublishMethod.values()) {
-            if(inputPublishMethod.equals(m.name()))
-                publishMethodValid = true;
-        }
-        if(!publishMethodValid) {
-            System.err.println("Invalid argument: -m,--publishMethod must be " +
-                    IntegrationUtility.getValidPublishMethods());
-            return false;
-        }
-        return true;
-    }
-
-    private static boolean portMethodIsValid(CommandLine cmd) {
-        String inputPortMethod = cmd.getOptionValue("pm");
-        boolean portMethodValid = false;
-        for(PortMethod m : PortMethod.values()) {
-            if(inputPortMethod.equals(m.name()))
-                portMethodValid = true;
-        }
-        return portMethodValid;
     }
 }

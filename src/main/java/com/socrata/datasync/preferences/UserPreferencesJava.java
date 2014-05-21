@@ -1,7 +1,10 @@
 package com.socrata.datasync.preferences;
 
 import com.socrata.datasync.SocrataConnectionInfo;
+import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.prefs.Preferences;
 
 public class UserPreferencesJava implements UserPreferences {
@@ -187,5 +190,23 @@ public class UserPreferencesJava implements UserPreferences {
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(
                 this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());
+    }
+
+    @Override
+    public String toString() {
+        return "domain: " + getDomain() +
+                "username: " + getUsername() +
+                "password: " + getPassword().replaceAll(".", "*") +
+                "appToken: " + getAPIKey() +
+                "adminEmail: " + getAdminEmail() +
+                "emailUponError: " + emailUponError() +
+                "logDatasetID: " + getLogDatasetID() +
+                "outgoingMailServer: " + getOutgoingMailServer() +
+                "smtpPort: " + getSmtpPort() +
+                "sslPort: " + getSslPort() +
+                "smtpUsername: " + getSmtpUsername() +
+                "smtpPassword: " + getSmtpPassword().replaceAll(".", "*") +
+                "filesizeChunkingCutoffMB: " + getFilesizeChunkingCutoffMB() +
+                "numRowsPerChunk: " + getNumRowsPerChunk();
     }
 }
