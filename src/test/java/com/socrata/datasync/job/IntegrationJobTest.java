@@ -1,13 +1,12 @@
 package com.socrata.datasync.job;
 
 import com.socrata.datasync.JobStatus;
-import com.socrata.datasync.Main;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.TestBase;
+import com.socrata.datasync.preferences.CommandLineOptions;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import junit.framework.TestCase;
@@ -20,6 +19,7 @@ public class IntegrationJobTest extends TestBase {
 
     private IntegrationJob job;
     CommandLineParser parser;
+    CommandLineOptions cmd = new CommandLineOptions();
 
     public static final String PATH_TO_SAVED_JOB_FILE_V0dot1 = "src/test/resources/job_saved_v0.1.sij";
     public static final String PATH_TO_SAVED_JOB_FILE_V0dot3 = "src/test/resources/job_saved_v0.3.sij";
@@ -45,20 +45,20 @@ public class IntegrationJobTest extends TestBase {
         String[] invalidArgs2 = {"-i", "4x4", "-f", " ~/.", "-m", "replace", "-h", "true", "-pf", "false", "-sc", "/./."};
         String[] invalidArgs3 = {"-i", "4x4", "-f", " ~/././.", "-m", "invalid", "-h", "true"};
 
-        TestCase.assertTrue(job.validateArgs(parser.parse(Main.options, goodArgs)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs1)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs2)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs3)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs4)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, invalidArgs1)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, invalidArgs2)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, invalidArgs3)));
+        TestCase.assertTrue(job.validateArgs(parser.parse(cmd.options, goodArgs)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, incompleteArgs1)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, incompleteArgs2)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, incompleteArgs3)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, incompleteArgs4)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, invalidArgs1)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, invalidArgs2)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, invalidArgs3)));
     }
 
     @Test
     public void testConfiguration() throws ParseException {
         String[] args = {"-i", "some-four", "-f", " ~/././.", "-m", "replace", "-h", "true"};
-        job.configure(parser.parse(Main.options, args));
+        job.configure(parser.parse(cmd.options, args));
 
         TestCase.assertEquals(job.getDatasetID(), args[1]);
         TestCase.assertEquals(job.getFileToPublish(), args[3]);

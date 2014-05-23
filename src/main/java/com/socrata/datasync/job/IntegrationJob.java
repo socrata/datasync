@@ -11,13 +11,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.socrata.datasync.*;
 import org.apache.commons.cli.CommandLine;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import com.socrata.datasync.DataSyncMetadata;
+import com.socrata.datasync.FTPUtility;
+import com.socrata.datasync.IntegrationUtility;
+import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.SMTPMailer;
+import com.socrata.datasync.SocrataConnectionInfo;
+import com.socrata.datasync.preferences.CommandLineOptions;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaImporter;
 import com.socrata.datasync.preferences.UserPreferences;
@@ -32,20 +39,7 @@ import com.socrata.model.importer.Dataset;
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 public class IntegrationJob extends Job {
 
-    // in order to keep these refactorings smallish, I'm not yet tackling the options in main
-    // so I'm temporarily replacing some things here:
-    private static final String DATASET_ID_FLAG = "datasetID";
-    private static final String FILE_TO_PUBLISH_FLAG = "fileToPublish";
-    private static final String PUBLISH_METHOD_FLAG = "publishMethod";
-    private static final String HAS_HEADER_ROW_FLAG = "fileToPublishHasHeaderRow";
-    private static final String PUBLISH_VIA_FTP_FLAG = "publishViaFTP";
-    private static final String PATH_TO_FTP_CONTROL_FILE_FLAG = "pathToFTPControlFile";
-    private static final String DEFAULT_VALUE_publishViaFTP = "false";
-
-
     /**
-	 * @author Adrian Laurenzi
-	 *
 	 * Stores a single integration job that can be opened/run in the GUI
 	 * or in command-line mode.
 	 */
@@ -55,7 +49,6 @@ public class IntegrationJob extends Job {
     private static final int UPLOAD_SINGLE_CHUNK = 0;
 
     public static final int NUM_BYTES_PER_MB = 1048576;
-    private static final String DEFAULT_JOB_NAME = "Untitled Standard Job";
     public static final List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
     public static final List<String> allowedFtpControlFileExtensions = Arrays.asList("json");
 
@@ -69,7 +62,6 @@ public class IntegrationJob extends Job {
 	private String pathToFTPControlFile = null;
     private String ftpControlFileContent = null;
     private boolean publishViaFTP = false;
-
 
 
     public IntegrationJob() {
@@ -190,21 +182,22 @@ public class IntegrationJob extends Job {
     }
 
     public void configure(CommandLine cmd) {
+        CommandLineOptions options = new CommandLineOptions();
         // Set required parameters
-        setDatasetID(cmd.getOptionValue(DATASET_ID_FLAG));
-        setFileToPublish(cmd.getOptionValue(FILE_TO_PUBLISH_FLAG));
-        setPublishMethod(PublishMethod.valueOf(cmd.getOptionValue(PUBLISH_METHOD_FLAG)));
-        if(cmd.getOptionValue(HAS_HEADER_ROW_FLAG).equalsIgnoreCase("true")) {
+        setDatasetID(cmd.getOptionValue(options.DATASET_ID_FLAG));
+        setFileToPublish(cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG));
+        setPublishMethod(PublishMethod.valueOf(cmd.getOptionValue(options.PUBLISH_METHOD_FLAG)));
+        if(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG).equalsIgnoreCase("true")) {
             setFileToPublishHasHeaderRow(true);
         } else { // cmd.getOptionValue(HAS_HEADER_ROW_FLAG) == "false"
             setFileToPublishHasHeaderRow(false);
         }
 
         // Set optional parameters
-        if(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG) != null) {
-            setPathToFTPControlFile(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG));
+        if(cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG) != null) {
+            setPathToFTPControlFile(cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG));
         }
-        String publishViaFTP = cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG, DEFAULT_VALUE_publishViaFTP);
+        String publishViaFTP = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG, options.DEFAULT_PUBLISH_VIA_FTP);
         if(publishViaFTP.equalsIgnoreCase("true")) {
             setPublishViaFTP(true);
         } else { // cmd.getOptionValue("pf") == "false"
@@ -504,69 +497,76 @@ public class IntegrationJob extends Job {
     }
 
     private boolean validatePathToControlFileArg(CommandLine cmd) {
-        if(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG) != null
-                && cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -sc,--" + PATH_TO_FTP_CONTROL_FILE_FLAG + " cannot be supplied " +
-                    "unless -pf,--" + PUBLISH_VIA_FTP_FLAG + " is 'true'");
+        CommandLineOptions options = new CommandLineOptions();
+        if(cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG) != null
+                && cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("false")) {
+            System.err.println("Invalid argument: -sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG + " cannot be supplied " +
+                    "unless -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is 'true'");
             return false;
         }
 
-        if(cmd.getOptionValue(PATH_TO_FTP_CONTROL_FILE_FLAG) != null) {
+        if(cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG) != null) {
             // TODO remove this when flags override other parameters
-            if(cmd.getOptionValue(PUBLISH_METHOD_FLAG) != null) {
-                System.out.println("WARNING: -m,--" + PUBLISH_METHOD_FLAG + " is being ignored because " +
-                        "-sc,--" + PATH_TO_FTP_CONTROL_FILE_FLAG + " is supplied");
+            if(cmd.getOptionValue(options.PUBLISH_METHOD_FLAG) != null) {
+                System.out.println("WARNING: -m,--" + options.PUBLISH_METHOD_FLAG + " is being ignored because " +
+                        "-sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG + " is supplied");
             }
-            if(cmd.getOptionValue(HAS_HEADER_ROW_FLAG) != null) {
-                System.out.println("WARNING: -h,--" + HAS_HEADER_ROW_FLAG + " is being ignored because " +
-                        "-sc,--" + PATH_TO_FTP_CONTROL_FILE_FLAG + " is supplied");
+            if(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG) != null) {
+                System.out.println("WARNING: -h,--" + options.HAS_HEADER_ROW_FLAG + " is being ignored because " +
+                        "-sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG + " is supplied");
             }
         }
         return true;
     }
 
     private boolean validatePublishViaFtpArg(CommandLine cmd) {
-        if(cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG) != null && !cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("true")
-                && !cmd.getOptionValue(PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -pf,--" + PUBLISH_VIA_FTP_FLAG + " must be 'true' or 'false'");
+        CommandLineOptions options = new CommandLineOptions();
+        if(cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG) != null &&
+                !cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("true") &&
+                !cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("false")) {
+            System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " must be 'true' or 'false'");
             return false;
         }
         return true;
     }
 
     private boolean validateHeaderRowArg(CommandLine cmd) {
-        if(cmd.getOptionValue(HAS_HEADER_ROW_FLAG) == null) {
-            System.err.println("Missing required argument: -h,--" + HAS_HEADER_ROW_FLAG + " is required");
+        CommandLineOptions options = new CommandLineOptions();
+        if(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG) == null) {
+            System.err.println("Missing required argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " is required");
             return false;
         }
-        if(!cmd.getOptionValue(HAS_HEADER_ROW_FLAG).equalsIgnoreCase("true")
-                && !cmd.getOptionValue(HAS_HEADER_ROW_FLAG).equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -h,--" + HAS_HEADER_ROW_FLAG + " must be 'true' or 'false'");
+        if(!cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG).equalsIgnoreCase("true")
+                && !cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG).equalsIgnoreCase("false")) {
+            System.err.println("Invalid argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " must be 'true' or 'false'");
             return false;
         }
         return true;
     }
 
     private boolean validateFileToPublishArg(CommandLine cmd) {
-        if(cmd.getOptionValue(FILE_TO_PUBLISH_FLAG) == null) {
-            System.err.println("Missing required argument: -f,--" + FILE_TO_PUBLISH_FLAG + " is required");
+        CommandLineOptions options = new CommandLineOptions();
+        if(cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG) == null) {
+            System.err.println("Missing required argument: -f,--" + options.FILE_TO_PUBLISH_FLAG + " is required");
             return false;
         }
         return true;
     }
 
     private boolean validateDatasetIdArg(CommandLine cmd) {
-        if(cmd.getOptionValue(DATASET_ID_FLAG) == null) {
-            System.err.println("Missing required argument: -i,--" + DATASET_ID_FLAG + " is required");
+        CommandLineOptions options = new CommandLineOptions();
+        if(cmd.getOptionValue(options.DATASET_ID_FLAG) == null) {
+            System.err.println("Missing required argument: -i,--" + options.DATASET_ID_FLAG + " is required");
             return false;
         }
         return true;
     }
 
     private boolean validatePublishMethodArg(CommandLine cmd) {
+        CommandLineOptions options = new CommandLineOptions();
         String method = cmd.getOptionValue("m");
         if(method == null) {
-            System.err.println("Missing required argument: -m,--publishMethod is required");
+            System.err.println("Missing required argument: -m,--" + options.PUBLISH_METHOD_FLAG + " is required");
             return false;
         }
         boolean publishMethodValid = false;
@@ -576,7 +576,7 @@ public class IntegrationJob extends Job {
                 publishMethodValid = true;
         }
         if(!publishMethodValid) {
-            System.err.println("Invalid argument: -m,--publishMethod must be " +
+            System.err.println("Invalid argument: -m,--" + options.PUBLISH_METHOD_FLAG + " must be " +
                     IntegrationUtility.getValidPublishMethods());
             return false;
         }

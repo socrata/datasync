@@ -7,6 +7,7 @@ import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
 import com.socrata.datasync.*;
+import com.socrata.datasync.preferences.CommandLineOptions;
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.datasync.preferences.UserPreferencesJava;
 import org.apache.commons.cli.CommandLine;
@@ -311,33 +312,37 @@ public class PortJob extends Job {
 	}
 
     private boolean validateDestinationDomainArg(CommandLine cmd) {
-        if(cmd.getOptionValue("pd2") == null) {
-            System.err.println("Missing required argument: -pd2,--destinationDomain is required");
+        CommandLineOptions options = new CommandLineOptions();
+        if(cmd.getOptionValue(options.DESTINATION_DOMAIN_FLAG) == null) {
+            System.err.println("Missing required argument: -pd2,--" + options.DESTINATION_DOMAIN_FLAG + " is required");
             return false;
         }
         return true;
     }
 
     private boolean validateSourceIdArg(CommandLine cmd) {
-        if(cmd.getOptionValue("pi1") == null) {
-            System.err.println("Missing required argument: -pi1,--sourceDatasetId is required");
+        CommandLineOptions options = new CommandLineOptions();
+        if(cmd.getOptionValue(options.SOURCE_DATASET_ID_FLAG) == null) {
+            System.err.println("Missing required argument: -pi1,--" + options.SOURCE_DATASET_ID_FLAG + " is required");
             return false;
         }
         return true;
     }
 
     private boolean validateSourceDomainArg(CommandLine cmd) {
-        if(cmd.getOptionValue("pd1") == null) {
-            System.err.println("Missing required argument: -pd1,--sourceDomain is required");
+        CommandLineOptions options = new CommandLineOptions();
+        if(cmd.getOptionValue(options.SOURCE_DOMAIN_FLAG) == null) {
+            System.err.println("Missing required argument: -pd1,--" + options.SOURCE_DOMAIN_FLAG + " is required");
             return false;
         }
         return true;
     }
 
     private boolean validatePortMethodArg(CommandLine cmd) {
-        String portMethod = cmd.getOptionValue("pm");
+        CommandLineOptions options = new CommandLineOptions();
+        String portMethod = cmd.getOptionValue(options.PORT_METHOD_FLAG);
         if(portMethod == null) {
-            System.err.println("Missing required argument: -pm,--portMethod is required");
+            System.err.println("Missing required argument: -pm,--" + options.PORT_METHOD_FLAG + " is required");
             return false;
         }
 
@@ -347,7 +352,7 @@ public class PortJob extends Job {
                 portMethodValid = true;
         }
         if(!portMethodValid) {
-            System.err.println("Invalid argument: -pm,--portMethod must be: " +
+            System.err.println("Invalid argument: -pm,--" + options.PORT_METHOD_FLAG + " must be: " +
                     IntegrationUtility.getValidPortMethods());
             return false;
         }

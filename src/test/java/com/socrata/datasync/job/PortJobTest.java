@@ -1,8 +1,8 @@
 package com.socrata.datasync.job;
 
-import com.socrata.datasync.Main;
 import com.socrata.datasync.PortMethod;
 import com.socrata.datasync.PublishDataset;
+import com.socrata.datasync.preferences.CommandLineOptions;
 import junit.framework.TestCase;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.ParseException;
@@ -16,6 +16,7 @@ public class PortJobTest {
 
     private PortJob job;
     CommandLineParser parser;
+    CommandLineOptions cmd;
 
     public static final String PATH_TO_SAVED_SPJ_V0dot3 = "src/test/resources/job_saved_v0.3.spj";
 
@@ -23,6 +24,7 @@ public class PortJobTest {
     public void initialize() {
         job = new PortJob();
         parser = new PosixParser();
+        cmd = new CommandLineOptions();
     }
 
 
@@ -47,18 +49,18 @@ public class PortJobTest {
         String[] incompleteArgs4 = {"-pm", "copy_all", "-pd1", "srcDomain", "-pi1", "4x4"};
         String[] invalidArgs1 = {"-pm", "invalid", "-pd1", "srcDomain", "-pi1", "4x4", "-pd2", "sinkDomain"};
 
-        TestCase.assertTrue(job.validateArgs(parser.parse(Main.options, goodArgs)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs1)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs2)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs3)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs4)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, invalidArgs1)));
+        TestCase.assertTrue(job.validateArgs(parser.parse(cmd.options, goodArgs)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, incompleteArgs1)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, incompleteArgs2)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, incompleteArgs3)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, incompleteArgs4)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, invalidArgs1)));
     }
 
     @Test
     public void testConfiguration() throws ParseException {
         String[] args = {"-pm", "copy_all", "-pd1", "srcDomain", "-pi1", "4x4", "-pd2", "sinkDomain"};
-        job.configure(parser.parse(Main.options, args));
+        job.configure(parser.parse(cmd.options, args));
 
         TestCase.assertEquals(job.getPortMethod().toString(), PortMethod.copy_all.toString());
         TestCase.assertEquals(job.getSourceSiteDomain(), args[3]);

@@ -1,6 +1,7 @@
 package com.socrata.datasync.job;
 
 import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.preferences.CommandLineOptions;
 import com.socrata.datasync.preferences.UserPreferences;
 import com.socrata.datasync.preferences.UserPreferencesFile;
 import com.socrata.datasync.preferences.UserPreferencesJava;
@@ -11,13 +12,8 @@ import java.io.File;
 import java.io.IOException;
 
 public class LoadPreferencesJob extends Job {
-    // in order to keep changes small, I'm not yet tackling the options in main
-    // so I'm temporarily replacing some things here:
-    private static final String LOAD_PREFERENCES_JOB = "LoadPreferences";
-    private static final String JOB_TYPE_FLAG = "jobType";
-    private static final String CONFIG_FLAG = "config";
-
     private UserPreferences userPrefs;
+    private CommandLineOptions options = new CommandLineOptions();
 
     public LoadPreferencesJob() {}
     public LoadPreferencesJob(UserPreferences userPrefs) {
@@ -25,19 +21,19 @@ public class LoadPreferencesJob extends Job {
     }
 
     public boolean validateArgs(CommandLine cmd){
-        if(cmd.getOptionValue(CONFIG_FLAG) == null) {
+        if(cmd.getOptionValue(options.CONFIG_FLAG) == null) {
             System.err.println("Missing required argument: " +
-                "-c,--"+ CONFIG_FLAG +" is required when " + JOB_TYPE_FLAG + " is '" + LOAD_PREFERENCES_JOB + "'");
+                "-c,--"+ options.CONFIG_FLAG +" is required when " + options.JOB_TYPE_FLAG + " is '" + Jobs.LOAD_PREFERENCES_JOB.toString() + "'");
             return false;
         }
         return true;
     }
 
     public void configure(CommandLine cmd) {
-        if (cmd.getOptionValue(CONFIG_FLAG) != null) {
+        if (cmd.getOptionValue(options.CONFIG_FLAG) != null) {
             try {
                 // load user preferences from given JSON config file
-                File configFile = new File(cmd.getOptionValue(CONFIG_FLAG));
+                File configFile = new File(cmd.getOptionValue(options.CONFIG_FLAG));
                 ObjectMapper mapper = new ObjectMapper();
                 userPrefs = mapper.readValue(configFile, UserPreferencesFile.class);
             } catch (IOException e) {

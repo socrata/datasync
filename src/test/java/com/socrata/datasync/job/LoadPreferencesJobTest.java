@@ -1,8 +1,6 @@
 package com.socrata.datasync.job;
 
-import com.socrata.datasync.Main;
-import com.socrata.datasync.PortMethod;
-import com.socrata.datasync.PublishDataset;
+import com.socrata.datasync.preferences.CommandLineOptions;
 import com.socrata.datasync.preferences.UserPreferences;
 import junit.framework.TestCase;
 import org.apache.commons.cli.CommandLineParser;
@@ -11,12 +9,11 @@ import org.apache.commons.cli.PosixParser;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class LoadPreferencesJobTest {
 
     private LoadPreferencesJob job;
     CommandLineParser parser;
+    CommandLineOptions cmd = new CommandLineOptions();
 
     public static final String PATH_TO_SAVED_SPJ_V0dot3 = "src/test/resources/job_saved_v0.3.spj";
 
@@ -32,14 +29,14 @@ public class LoadPreferencesJobTest {
         String[] goodArgs = {"-c", "myConfig.json"};
         String[] incompleteArgs = {"-t", "LoadPreferences"};
 
-        TestCase.assertTrue(job.validateArgs(parser.parse(Main.options, goodArgs)));
-        TestCase.assertFalse(job.validateArgs(parser.parse(Main.options, incompleteArgs)));
+        TestCase.assertTrue(job.validateArgs(parser.parse(cmd.options, goodArgs)));
+        TestCase.assertFalse(job.validateArgs(parser.parse(cmd.options, incompleteArgs)));
     }
 
     @Test
     public void testConfiguration() throws ParseException {
         String[] args = {"-c", "src/test/resources/basic_test_config.json"};
-        job.configure(parser.parse(Main.options, args));
+        job.configure(parser.parse(cmd.options, args));
 
         UserPreferences userPrefs = job.getUserPrefs();
 
