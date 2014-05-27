@@ -1,4 +1,4 @@
-package com.socrata.datasync.preferences;
+package com.socrata.datasync.config;
 
 import com.socrata.datasync.IntegrationUtility;
 import com.socrata.datasync.PublishMethod;

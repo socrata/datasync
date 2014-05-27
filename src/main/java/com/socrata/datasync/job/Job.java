@@ -34,6 +34,7 @@ public abstract class Job {
         return pathToSavedJobFile;
     }
 
+    // TODO: why are we creating the file, just to throw it away?
     public String getJobFilename() {
         if(StringUtils.isBlank(pathToSavedJobFile)) {
             return defaultJobName;

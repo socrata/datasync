@@ -2,7 +2,7 @@ package com.socrata.datasync;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
-import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import junit.framework.TestCase;

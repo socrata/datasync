@@ -6,10 +6,17 @@ import java.io.IOException;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
-import com.socrata.datasync.*;
-import com.socrata.datasync.preferences.CommandLineOptions;
-import com.socrata.datasync.preferences.UserPreferences;
-import com.socrata.datasync.preferences.UserPreferencesJava;
+import com.socrata.datasync.IntegrationUtility;
+import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.PortMethod;
+import com.socrata.datasync.PortUtility;
+import com.socrata.datasync.PublishDataset;
+import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.SocrataConnectionInfo;
+import com.socrata.datasync.config.CommandLineOptions;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
+
 import org.apache.commons.cli.CommandLine;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -268,7 +275,7 @@ public class PortJob extends Job {
 			try {
 				if (portMethod.equals(PortMethod.copy_schema)) {
 					sinkSetID = PortUtility.portSchema(loader, creator,
-							sourceSetID, destinationDatasetTitle, userPrefs.getUseNewBackend());
+                            sourceSetID, destinationDatasetTitle, userPrefs.getUseNewBackend());
 					noPortExceptions = true;
 				} else if (portMethod.equals(PortMethod.copy_all)) {
 					sinkSetID = PortUtility.portSchema(loader, creator,

@@ -11,9 +11,9 @@ import java.util.Map;
 import com.socrata.api.SodaDdl;
 import com.socrata.api.SodaWorkflow;
 import com.socrata.datasync.*;
-import com.socrata.datasync.preferences.UserPreferences;
-import com.socrata.datasync.preferences.UserPreferencesFile;
-import com.socrata.datasync.preferences.UserPreferencesJava;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.DatasetInfo;
 

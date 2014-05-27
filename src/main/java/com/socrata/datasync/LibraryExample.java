@@ -1,8 +1,7 @@
 package com.socrata.datasync;
 
 import com.socrata.datasync.job.IntegrationJob;
-import com.socrata.datasync.preferences.UserPreferences;
-import com.socrata.datasync.preferences.UserPreferencesLib;
+import com.socrata.datasync.config.userpreferences.UserPreferencesLib;
 
 /**
  * Author: Adrian Laurenzi

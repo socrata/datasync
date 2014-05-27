@@ -2,9 +2,8 @@ package com.socrata.datasync;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
-import com.socrata.datasync.job.*;
 import com.socrata.datasync.job.IntegrationJob;
-import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
@@ -14,7 +13,6 @@ import junit.framework.TestCase;
 import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 /**

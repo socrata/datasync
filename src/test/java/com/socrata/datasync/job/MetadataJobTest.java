@@ -9,12 +9,10 @@ import java.util.List;
 import com.socrata.datasync.JobStatus;
 import com.socrata.datasync.LicenseType;
 import com.socrata.datasync.TestBase;
-import com.socrata.datasync.preferences.UserPreferences;
-import com.socrata.datasync.preferences.UserPreferencesJava;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 
 import junit.framework.TestCase;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class MetadataJobTest extends TestBase {

@@ -3,7 +3,7 @@ package com.socrata.datasync.job;
 import com.socrata.datasync.JobStatus;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.TestBase;
-import com.socrata.datasync.preferences.CommandLineOptions;
+import com.socrata.datasync.config.CommandLineOptions;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import org.apache.commons.cli.CommandLineParser;

@@ -2,7 +2,8 @@ package com.socrata.datasync;
 
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.SodaDdl;
-import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.config.controlfile.ControlFile;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.Dataset;
@@ -301,20 +302,9 @@ public class FTPUtility {
      */
     public static String generateControlFileContent(final SodaDdl ddl,
                                                     final String fileToPublish, final PublishMethod publishMethod,
-                                                    final String datasetId, final boolean containsHeaderRow) throws SodaError, InterruptedException {
+                                                    final String datasetId, final boolean containsHeaderRow) throws SodaError, InterruptedException, IOException {
         Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(datasetId);
-
-        String useSocrataGeocodingField = "";
-        String skipValue = "0";
-        String columnsValue = "null";
-        if(!containsHeaderRow) {
-            // if no header row get API field names for each column in dataset
-            columnsValue = "[" + IntegrationUtility.getDatasetFieldNames(datasetInfo) + "]";
-        }
-        if(IntegrationUtility.datasetHasLocationColumn(datasetInfo)) {
-            // if there is a Location column include flag to useSocrataGeocoding
-            useSocrataGeocodingField = "      \"useSocrataGeocoding\" : true,\n";
-        }
+        boolean useGeocoding = IntegrationUtility.datasetHasLocationColumn(datasetInfo);
 
         // In FTP Dropbox v2 there is only Append (append == upsert)
         PublishMethod ftpDropboxPublishMethod = publishMethod;
@@ -323,39 +313,11 @@ public class FTPUtility {
         }
 
         String fileToPublishExtension = IntegrationUtility.getFileExtension(fileToPublish);
-        String separator = ",";
-        String fileType = "csv";
-        String quote = "\\\"";
-        if(fileToPublishExtension.equalsIgnoreCase("tsv")) {
-            fileType = "tsv";
-            separator = "\\t";
-            quote = "\\u0000";
+        String[] columns = null;
+        if (!containsHeaderRow) {
+            columns = IntegrationUtility.getDatasetFieldNames(datasetInfo).split(",");
         }
-
-        return "{\n" +
-                "  \"action\" : \"" + capitalizeFirstLetter(ftpDropboxPublishMethod) + "\", \n" +
-                "  \"" + fileType + "\" :\n" +
-                "    {\n" +
-                useSocrataGeocodingField +
-                "      \"columns\" : " + columnsValue + ",\n" +
-                "      \"skip\" : " + skipValue + ",\n" +
-                "      \"fixedTimestampFormat\" : [\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\"],\n" +
-                "      \"floatingTimestampFormat\" : [\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\"],\n" +
-                "      \"timezone\" : \"UTC\",\n" +
-                "      \"separator\" : \"" + separator + "\",\n" +
-                "      \"quote\" : \"" + quote + "\",\n" +
-                "      \"encoding\" : \"utf-8\",\n" +
-                "      \"emptyTextIsNull\" : true,\n" +
-                "      \"trimWhitespace\" : true,\n" +
-                "      \"trimServerWhitespace\" : true,\n" +
-                "      \"overrides\" : {}\n" +
-                "    }\n" +
-                "}";
-    }
-
-    private static String capitalizeFirstLetter(PublishMethod ftpDropboxPublishMethod) {
-        return ftpDropboxPublishMethod.name().substring(0, 1).toUpperCase()
-                + ftpDropboxPublishMethod.name().substring(1);
+        return ControlFile.generateControlFileContent(fileToPublish, publishMethod, columns, useGeocoding);
     }
 
     /**
@@ -578,81 +540,4 @@ public class FTPUtility {
 
         return ftp.getReplyString();
     }
-
-    /**
-     * Creates a temporary file with the content of the remote file stored at
-     * the given FTP URI
-     *
-     * @param pathToFTPFile
-     * @return
-     * @throws java.io.IOException
-     */
-    /*public static File getFileFromFTP(URI pathToFTPFile) throws Exception {
-        if(!pathToFTPFile.getScheme().equals("ftp"))
-            throw new IllegalArgumentException("Given URI does not represent an FTP site (URI must begin with 'ftp://')");
-
-        /*pathToFTPFile = "/incoming/PD/PDCrimeData/pdcrimedata.csv";
-        String ftpHost = "dsfsdf";
-        try {
-            pathToFTPFile = new URI("ftp://ftp.something.com/file.csv");
-            System.out.println(pathToFTPFile.getScheme());
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }*/
-
-        /*
-        FTPClient ftp = new FTPClient();
-        System.out.println("Connecting to ftp://" + pathToFTPFile.getHost() + "...");
-        ftp.connect(pathToFTPFile.getHost());
-        if(FTPReply.isPositiveCompletion(ftp.getReplyCode())) {
-            ftp.setFileType(FTP.BINARY_FILE_TYPE);
-            ftp.enterLocalPassiveMode();
-            ftp.login("anonymous", "");
-
-            FTPFile[] checkRequestIdFile = ftp.listFiles();
-            //System.out.println(checkRequestIdFile.toString());
-
-            System.out.println("Downloading " + pathToFTPFile.toString() + "...");
-            String relativePathToFTPFile = pathToFTPFile.getPath();
-            InputStream ftpFileStream = ftp.retrieveFileStream(relativePathToFTPFile);
-            File ftpFile = new File(pathToFTPFile.getPath());
-
-            // verify the downloaded filesize == FTP filesize
-            long uploadedFilesize = getFTPFilesize(ftp, relativePathToFTPFile);
-            File tempFile = createFileFromStream(ftpFileStream, ftpFile.getName());
-            long tempFilesize = tempFile.length();
-            if(tempFilesize != uploadedFilesize) {
-                throw new Exception(String.format("Error downloading " + pathToFTPFile.toString() + ": uploaded filesize (%d B) " +
-                        "did not match local filesize (%d B)", uploadedFilesize, tempFilesize));
-            }
-            ftp.completePendingCommand();
-            closeFTPConnection(ftp);
-            return tempFile;
-        } else {
-            // TODO error
-            throw new Exception("Error downloading " + pathToFTPFile.toString()
-                    + ": could not connect to FTP server");
-        }
-    }
-    */
-
-    // TODO move to test class
-    //getFileFromFTP(URI pathToFTPFile)
-
-        /*final SodaDdl ddl = createSodaDdl();
-        final UserPreferences userPrefs = getUserPrefs();
-
-        URI ftpFile = new URI("ftp://ftp.kcmo.org/incoming/PD/PDCrimeData/pdcrimedata.csv");
-        File twoRowsFTPFile = IntegrationUtility.getFileFromFTP(ftpFile);
-
-        //System.out.println(twoRowsFTPFile.getName() + "--- " + twoRowsFTPFile.getAbsoluteFile() + "---");
-        //twoRowsFTPFile = new File("src/test/resources/datasync_unit_test_three_rows_ISO_dates.csv");
-        //System.out.println(twoRowsFTPFile.getName() + "--- " + twoRowsFTPFile.getAbsoluteFile() + "---");
-
-        JobStatus result = IntegrationUtility.publishViaFTPDropboxV2(
-                userPrefs, ddl, PublishMethod.replace, UNITTEST_DATASET_ID, twoRowsFTPFile, false, null);
-
-        TestCase.assertEquals(JobStatus.SUCCESS, result);
-        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));*/
-
 }

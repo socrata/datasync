@@ -2,7 +2,7 @@ package com.socrata.datasync.job;
 
 import com.socrata.datasync.PortMethod;
 import com.socrata.datasync.PublishDataset;
-import com.socrata.datasync.preferences.CommandLineOptions;
+import com.socrata.datasync.config.CommandLineOptions;
 import junit.framework.TestCase;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.ParseException;

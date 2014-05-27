@@ -1,10 +1,10 @@
 package com.socrata.datasync.job;
 
 import com.socrata.datasync.JobStatus;
-import com.socrata.datasync.preferences.CommandLineOptions;
-import com.socrata.datasync.preferences.UserPreferences;
-import com.socrata.datasync.preferences.UserPreferencesFile;
-import com.socrata.datasync.preferences.UserPreferencesJava;
+import com.socrata.datasync.config.CommandLineOptions;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import org.apache.commons.cli.CommandLine;
 import org.codehaus.jackson.map.ObjectMapper;
 

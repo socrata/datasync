@@ -1,7 +1,7 @@
 package com.socrata.datasync;
 
-import com.socrata.datasync.preferences.UserPreferences;
-import com.socrata.datasync.preferences.UserPreferencesJava;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import com.sun.mail.smtp.SMTPTransport;
 
 //import java.security.Security;

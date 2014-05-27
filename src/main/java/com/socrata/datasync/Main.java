@@ -4,10 +4,10 @@ import com.socrata.datasync.job.Job;
 import com.socrata.datasync.job.Jobs;
 import com.socrata.datasync.job.LoadPreferencesJob;
 import com.socrata.datasync.job.PortJob;
-import com.socrata.datasync.preferences.CommandLineOptions;
-import com.socrata.datasync.preferences.UserPreferences;
-import com.socrata.datasync.preferences.UserPreferencesFile;
-import com.socrata.datasync.preferences.UserPreferencesJava;
+import com.socrata.datasync.config.CommandLineOptions;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import com.socrata.datasync.ui.SimpleIntegrationWizard;
 
 import java.io.File;

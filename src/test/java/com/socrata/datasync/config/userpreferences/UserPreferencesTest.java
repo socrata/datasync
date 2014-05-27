@@ -1,4 +1,4 @@
-package com.socrata.datasync.preferences;
+package com.socrata.datasync.config.userpreferences;
 
 import com.socrata.datasync.TestBase;
 import junit.framework.TestCase;

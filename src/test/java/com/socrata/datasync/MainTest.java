@@ -1,6 +1,6 @@
 package com.socrata.datasync;
 
-import com.socrata.datasync.preferences.UserPreferencesJava;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import junit.framework.TestCase;

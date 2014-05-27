@@ -1,7 +1,7 @@
 package com.socrata.datasync.job;
 
-import com.socrata.datasync.preferences.CommandLineOptions;
-import com.socrata.datasync.preferences.UserPreferences;
+import com.socrata.datasync.config.CommandLineOptions;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
 import junit.framework.TestCase;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.ParseException;

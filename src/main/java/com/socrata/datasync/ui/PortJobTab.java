@@ -2,8 +2,8 @@ package com.socrata.datasync.ui;
 
 import com.socrata.datasync.*;
 import com.socrata.datasync.job.PortJob;
-import com.socrata.datasync.preferences.UserPreferences;
-import com.socrata.datasync.preferences.UserPreferencesJava;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;

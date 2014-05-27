@@ -1,10 +1,7 @@
-package com.socrata.datasync.preferences;
+package com.socrata.datasync.config.userpreferences;
 
 import com.socrata.datasync.SocrataConnectionInfo;
-import org.codehaus.jackson.map.ObjectMapper;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.prefs.Preferences;
 
 public class UserPreferencesJava implements UserPreferences {
