@@ -1,4 +1,4 @@
-package com.socrata.datasync;
+package com.socrata.datasync.utilities;
 
 import java.awt.Desktop;
 import java.io.*;
@@ -12,6 +12,12 @@ import au.com.bytecode.opencsv.CSVReader;
 import com.google.common.collect.ImmutableMap;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
+import com.socrata.datasync.DataSyncMetadata;
+import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.Main;
+import com.socrata.datasync.PortMethod;
+import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;

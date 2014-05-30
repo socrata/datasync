@@ -177,4 +177,13 @@ public class UserPreferencesLib implements UserPreferences {
         return new SocrataConnectionInfo(
                 this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());
     }
+
+    public String getHost() {
+        if (domain != null) {
+            String[] schemeAndHost = domain.split("//");
+            return schemeAndHost[schemeAndHost.length - 1];
+        } else {
+            return null;
+        }
+    }
 }

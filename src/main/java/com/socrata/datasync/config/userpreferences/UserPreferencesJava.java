@@ -184,6 +184,16 @@ public class UserPreferencesJava implements UserPreferences {
         return false;
     }
 
+    public String getHost() {
+        String domain = getDomain();
+        if (domain != null) {
+            String[] schemeAndHost = domain.split("//");
+            return schemeAndHost[schemeAndHost.length - 1];
+        } else {
+            return null;
+        }
+    }
+
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(
                 this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());

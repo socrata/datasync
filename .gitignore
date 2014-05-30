@@ -7,6 +7,7 @@ target/
 .checkstyle
 .classpath
 .project
+.DS_Store
 DataSync.iml
 old_binaries/*
 *~

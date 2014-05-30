@@ -1,4 +1,4 @@
-package com.socrata.datasync;
+package com.socrata.datasync.utilities;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -9,6 +9,8 @@ import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
+import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.PublishMethod;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.Column;

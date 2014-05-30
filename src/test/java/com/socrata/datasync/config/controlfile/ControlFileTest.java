@@ -35,6 +35,8 @@ public class ControlFileTest {
             "\"useSocrataGeocoding\":" + useGeocoding +
         "}";
 
+    ObjectMapper mapper = new ObjectMapper();
+
     @Test
     public void testDefaultControlFileGenerationCsv() throws SodaError, InterruptedException, IOException {
         String expectedJson = "{" +
@@ -46,7 +48,8 @@ public class ControlFileTest {
                     fileTypeInnardsEnd +
                 "}";
 
-        String actualJson = ControlFile.generateControlFileContent("some_file.csv", PublishMethod.replace, columns, true);
+        ControlFile control = ControlFile.generateControlFile("some_file.csv", PublishMethod.replace, columns, true);
+        String actualJson = mapper.writeValueAsString(control);
         TestCase.assertEquals(expectedJson, actualJson);
     }
 
@@ -61,14 +64,13 @@ public class ControlFileTest {
                 fileTypeInnardsEnd +
                 "}";
 
-        String actualJson = ControlFile.generateControlFileContent("some_file.tsv", PublishMethod.append, columns, true);
+        ControlFile control = ControlFile.generateControlFile("some_file.tsv", PublishMethod.append, columns, true);
+        String actualJson = mapper.writeValueAsString(control);
         TestCase.assertEquals(expectedJson, actualJson);
     }
 
     @Test
-    public void testSerializationDefaultControlFile() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-
+    public void testDeserializationDefaultControlFile() throws IOException {
         String controlFileJson = "{" +
                 "\"action\":\"Replace\"," +
                 "\"csv\":" +
@@ -96,8 +98,7 @@ public class ControlFileTest {
     }
 
     @Test
-    public void testSerializationCompleteControlFile() throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
+    public void testDeserializationCompleteControlFile() throws IOException {
         String state = "WA";
         String otherTimezone = "PDT";
 

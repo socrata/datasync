@@ -5,6 +5,8 @@ import com.socrata.datasync.*;
 import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
+import com.socrata.datasync.utilities.FTPUtility;
+import com.socrata.datasync.utilities.IntegrationUtility;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;

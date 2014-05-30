@@ -10,6 +10,8 @@ public interface UserPreferences {
 
     public String getDomain();
 
+    public String getHost();
+
     public String getUsername();
 
     public String getPassword();

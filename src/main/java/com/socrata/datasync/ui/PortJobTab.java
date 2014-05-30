@@ -1,6 +1,11 @@
 package com.socrata.datasync.ui;
 
-import com.socrata.datasync.*;
+import com.socrata.datasync.utilities.IntegrationUtility;
+import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.PortMethod;
+import com.socrata.datasync.PublishDataset;
+import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;

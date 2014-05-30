@@ -1,7 +1,11 @@
-package com.socrata.datasync;
+package com.socrata.datasync.utilities;
 
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.SodaDdl;
+import com.socrata.datasync.DataSyncMetadata;
+import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.exceptions.LongRunningQueryException;
@@ -10,6 +14,7 @@ import com.socrata.model.importer.Dataset;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.ftp.*;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import javax.net.ssl.SSLContext;
 import java.io.*;
@@ -317,7 +322,9 @@ public class FTPUtility {
         if (!containsHeaderRow) {
             columns = IntegrationUtility.getDatasetFieldNames(datasetInfo).split(",");
         }
-        return ControlFile.generateControlFileContent(fileToPublish, publishMethod, columns, useGeocoding);
+        ControlFile control = ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding);
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(control);
     }
 
     /**

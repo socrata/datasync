@@ -14,6 +14,7 @@ import com.socrata.datasync.*;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
+import com.socrata.datasync.utilities.MetadataUtility;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.DatasetInfo;
 

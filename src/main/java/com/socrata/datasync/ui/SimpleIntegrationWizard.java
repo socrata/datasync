@@ -14,6 +14,7 @@ import com.socrata.datasync.job.MetadataJob;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 
+import com.socrata.datasync.utilities.IntegrationUtility;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 

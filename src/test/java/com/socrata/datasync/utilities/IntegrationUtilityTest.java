@@ -1,9 +1,12 @@
-package com.socrata.datasync;
+package com.socrata.datasync.utilities;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
+import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.SocrataConnectionInfo;
+import com.socrata.datasync.TestBase;
 import com.socrata.datasync.job.IntegrationJob;
-import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.utilities.IntegrationUtility;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;

@@ -1,6 +1,6 @@
 package com.socrata.datasync.config;
 
-import com.socrata.datasync.IntegrationUtility;
+import com.socrata.datasync.utilities.IntegrationUtility;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.job.Jobs;
 

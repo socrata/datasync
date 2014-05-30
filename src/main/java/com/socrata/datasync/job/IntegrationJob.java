@@ -18,8 +18,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import com.socrata.datasync.DataSyncMetadata;
-import com.socrata.datasync.FTPUtility;
-import com.socrata.datasync.IntegrationUtility;
+import com.socrata.datasync.utilities.FTPUtility;
+import com.socrata.datasync.utilities.IntegrationUtility;
 import com.socrata.datasync.JobStatus;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.SMTPMailer;

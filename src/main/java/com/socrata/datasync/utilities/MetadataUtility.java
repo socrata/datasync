@@ -1,4 +1,4 @@
-package com.socrata.datasync;
+package com.socrata.datasync.utilities;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -10,6 +10,9 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 import com.socrata.api.Soda2Producer;
+import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.Main;
+import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.job.MetadataJob;
 import com.socrata.exceptions.SodaError;
 

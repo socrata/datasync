@@ -1,6 +1,6 @@
 package com.socrata.datasync.config.controlfile;
 
-import com.socrata.datasync.IntegrationUtility;
+import com.socrata.datasync.utilities.IntegrationUtility;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.exceptions.SodaError;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -27,8 +27,9 @@ public class ControlFile {
         this.tsv = tsvControl;
     }
 
+
     /**
-     * Generates default content of control.json based on given job parameters
+     * Generates the default ControlFile object based on given job parameters
      *
      * @param fileToPublish filename of file to publish (.tsv or .csv file)
      * @param publishMethod to use to publish (upsert, append, replace, or delete)
@@ -39,7 +40,7 @@ public class ControlFile {
      * @throws com.socrata.exceptions.SodaError
      * @throws InterruptedException
      */
-    public static String generateControlFileContent(final String fileToPublish,
+    public static ControlFile generateControlFile(final String fileToPublish,
                                                     final PublishMethod publishMethod,
                                                     final String[] columns,
                                                     final boolean useSocrataGeocoding) throws
@@ -66,15 +67,11 @@ public class ControlFile {
                 .trimServerWhitespace(true)
                 .useSocrataGeocoding(useSocrataGeocoding);
 
-        ControlFile cf;
         if (isCsv) {
-            cf = new ControlFile(capitalizeFirstLetter(publishMethod), ftc, null);
+            return new ControlFile(capitalizeFirstLetter(publishMethod), ftc, null);
         } else {
-            cf = new ControlFile(capitalizeFirstLetter(publishMethod), null, ftc);
+            return new ControlFile(capitalizeFirstLetter(publishMethod), null, ftc);
         }
-
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(cf);
     }
 
     private static String capitalizeFirstLetter(PublishMethod method) {
