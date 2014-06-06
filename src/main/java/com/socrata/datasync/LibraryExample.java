@@ -2,6 +2,7 @@ package com.socrata.datasync;
 
 import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.config.userpreferences.UserPreferencesLib;
+import com.socrata.datasync.job.JobStatus;
 
 /**
  * Author: Adrian Laurenzi

@@ -2,10 +2,11 @@ package com.socrata.datasync.utilities;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
+import com.socrata.datasync.PortUtility;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.TestBase;
-import com.socrata.datasync.utilities.IntegrationUtility;
-import com.socrata.datasync.utilities.PortUtility;
+import com.socrata.datasync.publishers.FTPDropbox2Publisher;
+import com.socrata.datasync.publishers.Soda2Publisher;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.Column;
@@ -167,14 +168,14 @@ public class PortUtilityTest extends TestBase {
     @Test
     public void testPortContentsReplace() throws SodaError, InterruptedException, IOException, LongRunningQueryException {
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
-        IntegrationUtility.replaceNew(sinkProducer, sinkDdl, UNITTEST_DATASET_ID, threeRowsFile, true);
+        Soda2Publisher.replaceNew(sinkProducer, sinkDdl, UNITTEST_DATASET_ID, threeRowsFile, true);
 
         // Query for the rows of the source dataset.
         int sourceTotalRows = getTotalRows(UNITTEST_DATASET_ID);
 
         // Use one of our CSVs from Integration tests to reset the dataset (in case it's been changed).
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        IntegrationUtility.replaceNew(sinkProducer, sinkDdl, UNITTEST_PORT_RESULT_DATASET_ID, twoRowsFile, true);
+        Soda2Publisher.replaceNew(sinkProducer, sinkDdl, UNITTEST_PORT_RESULT_DATASET_ID, twoRowsFile, true);
         // Query for the rows of the sink dataset
         int sinkTotalRows = getTotalRows(UNITTEST_PORT_RESULT_DATASET_ID);
         // Simple test before we proceed: we want to make sure that the datasets

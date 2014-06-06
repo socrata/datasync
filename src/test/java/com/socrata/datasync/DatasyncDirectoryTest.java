@@ -1,16 +1,9 @@
 package com.socrata.datasync;
 
-import com.socrata.datasync.config.userpreferences.UserPreferences;
-import com.socrata.exceptions.LongRunningQueryException;
-import com.socrata.exceptions.SodaError;
-import com.sun.jersey.api.client.ClientResponse;
 import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriBuilder;
-import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.text.ParseException;
@@ -18,9 +11,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-
-import com.socrata.datasync.utilities.HttpUtility;
 
 public class DatasyncDirectoryTest extends TestBase {
 

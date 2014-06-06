@@ -1,6 +1,5 @@
 package com.socrata.datasync.job;
 
-import com.socrata.datasync.JobStatus;
 import com.socrata.datasync.config.CommandLineOptions;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesFile;

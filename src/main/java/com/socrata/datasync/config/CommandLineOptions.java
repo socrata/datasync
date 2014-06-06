@@ -1,6 +1,6 @@
 package com.socrata.datasync.config;
 
-import com.socrata.datasync.utilities.IntegrationUtility;
+import com.socrata.datasync.PortMethod;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.job.Jobs;
 
@@ -21,7 +21,7 @@ public class CommandLineOptions {
     public static final String PUBLISH_METHOD_FLAG = "publishMethod";
     public static final String HAS_HEADER_ROW_FLAG = "fileToPublishHasHeaderRow";
     public static final String PUBLISH_VIA_FTP_FLAG = "publishViaFTP";
-    public static final String PATH_TO_FTP_CONTROL_FILE_FLAG = "pathToFTPControlFile";
+    public static final String PATH_TO_CONTROL_FILE_FLAG = "pathToControlFile";
 
     public static final String PORT_METHOD_FLAG = "portMethod";
     public static final String SOURCE_DOMAIN_FLAG = "sourceDomain";
@@ -47,13 +47,13 @@ public class CommandLineOptions {
         // IntegrationJob params
         options.addOption("i", DATASET_ID_FLAG, true, "Dataset ID to publish to [IntegrationJob]");
         options.addOption("f", FILE_TO_PUBLISH_FLAG, true, "CSV or TSV file to publish [IntegrationJob]");
-        options.addOption("m", PUBLISH_METHOD_FLAG, true, "Publish method (" + IntegrationUtility.getValidPublishMethods() + ") [IntegrationJob]");
+        options.addOption("m", PUBLISH_METHOD_FLAG, true, "Publish method (" + Arrays.toString(PublishMethod.values()) + ") [IntegrationJob]");
         options.addOption("h", HAS_HEADER_ROW_FLAG, true, "File to publish has header row (true or false) [IntegrationJob]");
         options.addOption("pf", PUBLISH_VIA_FTP_FLAG, true, "Use FTP (instead of HTTP) for publishing (true or false) (default: " + DEFAULT_PUBLISH_VIA_FTP + ") [IntegrationJob]");
-        options.addOption("sc", PATH_TO_FTP_CONTROL_FILE_FLAG, true, "FTP control.json file, if set overrides job parameters (optional) [IntegrationJob]");
+        options.addOption("sc", PATH_TO_CONTROL_FILE_FLAG, true, "control.json file, if set overrides job parameters (optional) [IntegrationJob]");
 
         // PortJob params
-        options.addOption("pm", PORT_METHOD_FLAG, true, "Port method (" + IntegrationUtility.getValidPortMethods() + ") [PortJob]");
+        options.addOption("pm", PORT_METHOD_FLAG, true, "Port method (" + Arrays.toString(PortMethod.values()) + ") [PortJob]");
         options.addOption("pd1", SOURCE_DOMAIN_FLAG, true, "Source Domain [PortJob]");
         options.addOption("pi1", SOURCE_DATASET_ID_FLAG, true, "Source Dataset ID [PortJob]");
         options.addOption("pd2", DESTINATION_DOMAIN_FLAG, true, " Destination Domain [PortJob]");

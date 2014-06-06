@@ -1,4 +1,4 @@
-package com.socrata.datasync;
+package com.socrata.datasync.job;
 
 /**
  * @author Adrian Laurenzi

@@ -1,23 +1,30 @@
-package com.socrata.datasync.utilities;
+package com.socrata.datasync.publishers;
 
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.SodaDdl;
 import com.socrata.datasync.DataSyncMetadata;
-import com.socrata.datasync.JobStatus;
-import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.SocrataConnectionInfo;
-import com.socrata.datasync.config.controlfile.ControlFile;
+import com.socrata.datasync.Utils;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
-import com.socrata.model.importer.Dataset;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.net.ftp.*;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPReply;
+import org.apache.commons.net.ftp.FTPSClient;
 
 import javax.net.ssl.SSLContext;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
@@ -28,7 +35,7 @@ import java.util.zip.GZIPOutputStream;
  *
  * A utility class for operations that make use of FTP
  */
-public class FTPUtility {
+public class FTPDropbox2Publisher {
     private static final String VERSION_API_ENDPOINT = "/api/version.json";
     private static final String FTP_HOST_SUFFIX = ".ftp.socrata.net";
     private static final String X_SOCRATA_REGION = "X-Socrata-Region";
@@ -43,7 +50,7 @@ public class FTPUtility {
     private static final int NUM_BYTES_OUT_BUFFER = 1024;
     private static final int TIME_BETWEEN_FTP_STATUS_POLLS_MS = 1000;
 
-    private FTPUtility() {
+    private FTPDropbox2Publisher() {
         throw new AssertionError("Never instantiate utility classes!");
     }
 
@@ -290,42 +297,6 @@ public class FTPUtility {
         return regionName + FTP_HOST_SUFFIX;
     }
 
-    /**
-     * Generates default content of control.json based on given job parameters
-     *
-     * @param ddl Soda 2 ddl object
-     * @param publishMethod to use to publish (upsert, append, replace, or delete)
-     *               NOTE: this option will be overriden if userPrefs has pathToFTPControlFile set
-     * @param datasetId id of the Socrata dataset to publish to
-     * @param fileToPublish filename of file to publish (.tsv or .csv file)
-     * @param containsHeaderRow if true assume the first row in CSV/TSV file is a list of the dataset columns,
-     *                          otherwise upload all rows as new rows (column order must exactly match that of
-     *                          Socrata dataset)
-     * @return content of control.json based on given job parameters
-     * @throws com.socrata.exceptions.SodaError
-     * @throws InterruptedException
-     */
-    public static String generateControlFileContent(final SodaDdl ddl,
-                                                    final String fileToPublish, final PublishMethod publishMethod,
-                                                    final String datasetId, final boolean containsHeaderRow) throws SodaError, InterruptedException, IOException {
-        Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(datasetId);
-        boolean useGeocoding = IntegrationUtility.datasetHasLocationColumn(datasetInfo);
-
-        // In FTP Dropbox v2 there is only Append (append == upsert)
-        PublishMethod ftpDropboxPublishMethod = publishMethod;
-        if(publishMethod.equals(PublishMethod.upsert)) {
-            ftpDropboxPublishMethod = PublishMethod.append;
-        }
-
-        String fileToPublishExtension = IntegrationUtility.getFileExtension(fileToPublish);
-        String[] columns = null;
-        if (!containsHeaderRow) {
-            columns = IntegrationUtility.getDatasetFieldNames(datasetInfo).split(",");
-        }
-        ControlFile control = ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding);
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(control);
-    }
 
     /**
      * Determines path on FTP server to domain root
@@ -402,7 +373,7 @@ public class FTPUtility {
      * @throws java.io.IOException
      */
     private static String setFTPRequestId(FTPSClient ftp, String pathToRequestIdFile) throws IOException {
-        String requestId = IntegrationUtility.generateRequestId();
+        String requestId = Utils.generateRequestId();
         InputStream inputRequestId = new ByteArrayInputStream(requestId.getBytes("UTF-8"));
         System.out.println("Setting job request ID - ftp.storeFile(" + pathToRequestIdFile + ", " + inputRequestId + ")");
         if (!ftp.storeFile(pathToRequestIdFile, inputRequestId)) {

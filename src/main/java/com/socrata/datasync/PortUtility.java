@@ -1,4 +1,4 @@
-package com.socrata.datasync.utilities;
+package com.socrata.datasync;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -9,8 +9,7 @@ import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
-import com.socrata.datasync.JobStatus;
-import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.job.JobStatus;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.Column;
@@ -73,8 +72,7 @@ public class PortUtility {
 			try {
 				try {
 					// Query using Soda2Consumer object
-					response = streamExporter.query(sourceSetID,
-							HttpLowLevel.JSON_TYPE, myQuery);
+					response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
 				} catch (SodaError sodaError) {
 					System.out.println("SODA error: " + sodaError.getMessage());
 				}

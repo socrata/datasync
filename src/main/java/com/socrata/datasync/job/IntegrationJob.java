@@ -7,10 +7,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
+import com.socrata.datasync.Utils;
+import com.socrata.datasync.publishers.FTPDropbox2Publisher;
+import com.socrata.datasync.publishers.Soda2Publisher;
 import org.apache.commons.cli.CommandLine;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -18,9 +25,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import com.socrata.datasync.DataSyncMetadata;
-import com.socrata.datasync.utilities.FTPUtility;
-import com.socrata.datasync.utilities.IntegrationUtility;
-import com.socrata.datasync.JobStatus;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.SMTPMailer;
 import com.socrata.datasync.SocrataConnectionInfo;
@@ -50,17 +54,17 @@ public class IntegrationJob extends Job {
 
     public static final int NUM_BYTES_PER_MB = 1048576;
     public static final List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
-    public static final List<String> allowedFtpControlFileExtensions = Arrays.asList("json");
+    public static final List<String> allowedControlFileExtensions = Arrays.asList("json");
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
-    private static final long fileVersionUID = 3L;
+    private static final long fileVersionUID = 4L;
 
 	private String datasetID = "";
 	private String fileToPublish = "";
 	private PublishMethod publishMethod = PublishMethod.replace;
     private boolean fileToPublishHasHeaderRow = true;
-	private String pathToFTPControlFile = null;
-    private String ftpControlFileContent = null;
+	private String pathToControlFile = null;
+    private String controlFileContent = null;
     private boolean publishViaFTP = false;
 
 
@@ -93,8 +97,8 @@ public class IntegrationJob extends Job {
             setPublishMethod(loadedJob.getPublishMethod());
             setFileToPublishHasHeaderRow(loadedJob.getFileToPublishHasHeaderRow());
             setPathToSavedFile(pathToFile);
-            setPathToFTPControlFile(loadedJob.getPathToFTPControlFile());
-            setFtpControlFileContent(loadedJob.getFtpControlFileContent());
+            setPathToControlFile(loadedJob.getPathToControlFile());
+            setControlFileContent(loadedJob.getControlFileContent());
             setPublishViaFTP(loadedJob.getPublishViaFTP());
         } catch (IOException e) {
             // if reading new format fails...try reading old format into this object
@@ -147,20 +151,36 @@ public class IntegrationJob extends Job {
         fileToPublishHasHeaderRow = newFileToPublishHasHeaderRow;
     }
 
-    @JsonProperty("pathToFTPControlFile")
-    public String getPathToFTPControlFile() { return pathToFTPControlFile; }
+    @JsonProperty("pathToControlFile")
+    public String getPathToControlFile() { return pathToControlFile; }
+
+    @JsonProperty("pathToControlFile")
+    public void setPathToControlFile(String newPathToControlFile) {
+        pathToControlFile = newPathToControlFile;
+    }
 
     @JsonProperty("pathToFTPControlFile")
-    public void setPathToFTPControlFile(String newPathToFTPControlFile) {
-        pathToFTPControlFile = newPathToFTPControlFile;
+    public String getFTPPathToControlFile() { return pathToControlFile; }
+
+    @JsonProperty("pathToFTPControlFile")
+    public void setPathToFTPControlFile(String newPathToControlFile) {
+        pathToControlFile = newPathToControlFile;
+    }
+
+    @JsonProperty("controlFileContent")
+    public String getControlFileContent() { return controlFileContent; }
+
+    @JsonProperty("controlFileContent")
+    public void setControlFileContent(String newcontrolFileContent) {
+        controlFileContent = newcontrolFileContent;
     }
 
     @JsonProperty("ftpControlFileContent")
-    public String getFtpControlFileContent() { return ftpControlFileContent; }
+    public String getFTPControlFileContent() { return controlFileContent; }
 
     @JsonProperty("ftpControlFileContent")
-    public void setFtpControlFileContent(String newFtpControlFileContent) {
-        ftpControlFileContent = newFtpControlFileContent;
+    public void setFTPControlFileContent(String newcontrolFileContent) {
+        controlFileContent = newcontrolFileContent;
     }
 
     @JsonProperty("publishViaFTP")
@@ -194,8 +214,8 @@ public class IntegrationJob extends Job {
         }
 
         // Set optional parameters
-        if(cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG) != null) {
-            setPathToFTPControlFile(cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG));
+        if(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null) {
+            setPathToControlFile(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG));
         }
         String publishViaFTP = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG, options.DEFAULT_PUBLISH_VIA_FTP);
         if(publishViaFTP.equalsIgnoreCase("true")) {
@@ -214,7 +234,7 @@ public class IntegrationJob extends Job {
 				|| connectionInfo.getUrl().equals("https://")) {
 			return JobStatus.INVALID_DOMAIN;
 		}
-        if(!IntegrationUtility.uidIsValid(datasetID)) {
+        if(!Utils.uidIsValid(datasetID)) {
 			return JobStatus.INVALID_DATASET_ID;
 		}
 		if(fileToPublish.equals("")) {
@@ -227,7 +247,7 @@ public class IntegrationJob extends Job {
 				return errorStatus;
 			}
             // Ensure file extension is an accepted format
-            String fileToPublishExtension = IntegrationUtility.getFileExtension(fileToPublish);
+            String fileToPublishExtension = Utils.getFileExtension(fileToPublish);
             if(!allowedFileToPublishExtensions.contains(fileToPublishExtension)) {
                 return JobStatus.FILE_TO_PUBLISH_INVALID_FORMAT;
             }
@@ -251,17 +271,17 @@ public class IntegrationJob extends Job {
             }
 		}
         if(publishViaFTP) {
-            if((pathToFTPControlFile == null || pathToFTPControlFile.equals("")) &&
-                    (ftpControlFileContent == null || ftpControlFileContent.equals(""))) {
+            if((pathToControlFile == null || pathToControlFile.equals("")) &&
+                    (controlFileContent == null || controlFileContent.equals(""))) {
                 JobStatus errorStatus = JobStatus.PUBLISH_ERROR;
                 errorStatus.setMessage("You must generate or select a Control file if publishing via FTP SmartUpdate");
                 return errorStatus;
             } else {
-                if(pathToFTPControlFile != null && !pathToFTPControlFile.equals("")) {
-                    File controlFile = new File(pathToFTPControlFile);
+                if(pathToControlFile != null && !pathToControlFile.equals("")) {
+                    File controlFile = new File(pathToControlFile);
                     if(!controlFile.exists() || controlFile.isDirectory()) {
                         JobStatus errorStatus = JobStatus.PUBLISH_ERROR;
-                        errorStatus.setMessage(pathToFTPControlFile + ": FTP control file does not exist");
+                        errorStatus.setMessage(pathToControlFile + ": Control file does not exist");
                         return errorStatus;
                     }
                 }
@@ -308,7 +328,7 @@ public class IntegrationJob extends Job {
             runErrorMessage = validationStatus.getMessage();
 		} else {
 			// attach a requestId to all Producer API calls (for error tracking purposes)
-            String jobRequestId = IntegrationUtility.generateRequestId();
+            String jobRequestId = Utils.generateRequestId();
             final Soda2Producer producer = Soda2Producer.newProducerWithRequestId(
                     connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken(), jobRequestId);
             final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
@@ -341,7 +361,7 @@ public class IntegrationJob extends Job {
                         }
                     } else {
                         // Publish via HTTP
-                        result = IntegrationUtility.replaceNew(
+                        result = Soda2Publisher.replaceNew(
                                 producer, importer, datasetID, fileToPublishFile, fileToPublishHasHeaderRow);
                         noPublishExceptions = true;
                     }
@@ -409,7 +429,7 @@ public class IntegrationJob extends Job {
         if(logDatasetID != null && !logDatasetID.equals("")) {
             String logDatasetUrl = userPrefs.getDomain() + "/d/" + userPrefs.getLogDatasetID();
             System.out.println("Publishing results to logging dataset (" + logDatasetUrl + ")...");
-            logPublishingErrorMessage = IntegrationUtility.addLogEntry(
+            logPublishingErrorMessage = addLogEntry(
                     logDatasetID, connectionInfo, this, runStatus, result);
             if(logPublishingErrorMessage != null) {
                 System.out.println("Error publishing results to logging dataset (" + logDatasetUrl + "): " +
@@ -431,15 +451,67 @@ public class IntegrationJob extends Job {
         return runStatus;
 	}
 
-    private JobStatus doPublishViaFTPv2(SodaImporter importer, File fileToPublishFile) {
-        if((pathToFTPControlFile != null && !pathToFTPControlFile.equals(""))) {
-            return FTPUtility.publishViaFTPDropboxV2(
-                    userPrefs, importer,
-                    datasetID, fileToPublishFile, new File(pathToFTPControlFile));
+    /**
+     * Adds an entry to specified log dataset with given job run information
+     *
+     * @return null if log entry was added successfully, otherwise return an error message as a String
+     */
+    public static String addLogEntry(final String logDatasetID, final SocrataConnectionInfo connectionInfo,
+                                     final IntegrationJob job, final JobStatus status, final UpsertResult result) {
+        final Soda2Producer producer = Soda2Producer.newProducer(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
+
+        List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
+        Map<String, Object> newCols = new HashMap<String,Object>();
+
+        // add standard log data
+        Date currentDateTime = new Date();
+        newCols.put("Date", (Object) currentDateTime);
+        newCols.put("DatasetID", (Object) job.getDatasetID());
+        newCols.put("FileToPublish", (Object) job.getFileToPublish());
+        newCols.put("PublishMethod", (Object) job.getPublishMethod());
+        newCols.put("JobFile", (Object) job.getPathToSavedFile());
+        if(result != null) {
+            newCols.put("RowsUpdated", (Object) result.rowsUpdated);
+            newCols.put("RowsCreated", (Object) result.rowsCreated);
+            newCols.put("RowsDeleted", (Object) result.rowsDeleted);
+        }
+        if(status.isError()) {
+            newCols.put("Errors", (Object) status.getMessage());
         } else {
-            return FTPUtility.publishViaFTPDropboxV2(
+            newCols.put("Success", (Object) true);
+        }
+        newCols.put("DataSyncVersion", (Object) DataSyncMetadata.getDatasyncVersion());
+        upsertObjects.add(ImmutableMap.copyOf(newCols));
+
+        System.out.println("Adding row to logging dataset (" + connectionInfo.getUrl() + "/d/" + logDatasetID + ")...");
+        String logPublishingErrorMessage = null;
+        try {
+            producer.upsert(logDatasetID, upsertObjects);
+        }
+        catch (SodaError sodaError) {
+            sodaError.printStackTrace();
+            logPublishingErrorMessage = sodaError.getMessage();
+        }
+        catch (InterruptedException intrruptException) {
+            intrruptException.printStackTrace();
+            logPublishingErrorMessage = intrruptException.getMessage();
+        }
+        catch (Exception other) {
+            other.printStackTrace();
+            logPublishingErrorMessage = other.toString() + ": " + other.getMessage();
+        }
+        return logPublishingErrorMessage;
+    }
+
+    private JobStatus doPublishViaFTPv2(SodaImporter importer, File fileToPublishFile) {
+        if((pathToControlFile != null && !pathToControlFile.equals(""))) {
+            return FTPDropbox2Publisher.publishViaFTPDropboxV2(
                     userPrefs, importer,
-                    datasetID, fileToPublishFile, ftpControlFileContent);
+                    datasetID, fileToPublishFile, new File(pathToControlFile));
+        } else {
+            return FTPDropbox2Publisher.publishViaFTPDropboxV2(
+                    userPrefs, importer,
+                    datasetID, fileToPublishFile, controlFileContent);
         }
     }
 
@@ -472,7 +544,7 @@ public class IntegrationJob extends Job {
 
     private UpsertResult doAppendOrUpsertViaHTTP(Soda2Producer producer, SodaImporter importer, File fileToPublishFile, int filesizeChunkingCutoffBytes, int numRowsPerChunk) throws SodaError, InterruptedException, IOException {
         int numberOfRows = numRowsPerChunk(fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
-        UpsertResult result = IntegrationUtility.appendUpsert(
+        UpsertResult result = Soda2Publisher.appendUpsert(
                 producer, importer, datasetID, fileToPublishFile, numberOfRows, fileToPublishHasHeaderRow);
         return result;
     }
@@ -481,7 +553,7 @@ public class IntegrationJob extends Job {
             Soda2Producer producer, SodaImporter importer, File fileToPublishFile, int filesizeChunkingCutoffBytes, int numRowsPerChunk)
             throws SodaError, InterruptedException, IOException {
         int numberOfRows = numRowsPerChunk(fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
-        UpsertResult result = IntegrationUtility.deleteRows(
+        UpsertResult result = Soda2Publisher.deleteRows(
                 producer, importer, datasetID, fileToPublishFile, numberOfRows, fileToPublishHasHeaderRow);
         return result;
     }
@@ -498,22 +570,22 @@ public class IntegrationJob extends Job {
 
     private boolean validatePathToControlFileArg(CommandLine cmd) {
         CommandLineOptions options = new CommandLineOptions();
-        if(cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG) != null
+        if(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null
                 && cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG + " cannot be supplied " +
+            System.err.println("Invalid argument: -sc,--" + options.PATH_TO_CONTROL_FILE_FLAG + " cannot be supplied " +
                     "unless -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is 'true'");
             return false;
         }
 
-        if(cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG) != null) {
+        if(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null) {
             // TODO remove this when flags override other parameters
             if(cmd.getOptionValue(options.PUBLISH_METHOD_FLAG) != null) {
                 System.out.println("WARNING: -m,--" + options.PUBLISH_METHOD_FLAG + " is being ignored because " +
-                        "-sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG + " is supplied");
+                        "-sc,--" + options.PATH_TO_CONTROL_FILE_FLAG + " is supplied");
             }
             if(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG) != null) {
                 System.out.println("WARNING: -h,--" + options.HAS_HEADER_ROW_FLAG + " is being ignored because " +
-                        "-sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG + " is supplied");
+                        "-sc,--" + options.PATH_TO_CONTROL_FILE_FLAG + " is supplied");
             }
         }
         return true;
@@ -577,11 +649,12 @@ public class IntegrationJob extends Job {
         }
         if(!publishMethodValid) {
             System.err.println("Invalid argument: -m,--" + options.PUBLISH_METHOD_FLAG + " must be " +
-                    IntegrationUtility.getValidPublishMethods());
+                    Arrays.toString(PublishMethod.values()));
             return false;
         }
         return true;
     }
+
 
     /**
      * This allows backward compatability with DataSync 0.1 .sij file format
@@ -602,8 +675,8 @@ public class IntegrationJob extends Job {
                 setPathToSavedFile(pathToFile);
                 setFileToPublishHasHeaderRow(true);
                 setPublishViaFTP(false);
-                setPathToFTPControlFile(null);
-                setFtpControlFileContent(null);
+                setPathToControlFile(null);
+                setControlFileContent(null);
             }
             finally{
                 input.close();

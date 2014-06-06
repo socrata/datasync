@@ -4,17 +4,19 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
+import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
 import com.socrata.api.SodaWorkflow;
 import com.socrata.datasync.*;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
-import com.socrata.datasync.utilities.MetadataUtility;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.DatasetInfo;
 
@@ -231,7 +233,7 @@ public class MetadataJob extends Job {
 		if(!logDatasetID.equals("")) {
             if(runErrorMessage != null)
                 runStatus.setMessage(runErrorMessage);
-			logStatus = MetadataUtility.addLogEntry(logDatasetID, connectionInfo, this, runStatus);
+			logStatus = addLogEntry(logDatasetID, connectionInfo, this, runStatus);
 		}
 		//Send email if there was an error updating log or target dataset
 		if(userPrefs.emailUponError() && !adminEmail.equals("")) {
@@ -277,6 +279,51 @@ public class MetadataJob extends Job {
 			return e.getMessage();
 		}
 	}
+
+    //Probably makes sense to make one generic addLogEntry() for all job types
+    public static JobStatus addLogEntry(String logDatasetID, SocrataConnectionInfo connectionInfo,
+                                        MetadataJob job, JobStatus status) {
+        final Soda2Producer producer = Soda2Producer.newProducer(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
+
+        List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
+        Map<String, Object> newCols = new HashMap<String,Object>();
+
+        // add standard log data
+        Date currentDateTime = new Date();
+        newCols.put("Date", (Object) currentDateTime);
+        newCols.put("DatasetID", (Object) job.getDatasetID());
+        newCols.put("JobFile", (Object) job.getPathToSavedFile());
+        if(status.isError()) {
+            newCols.put("Errors", (Object) status.getMessage());
+        } else {
+            newCols.put("Success", (Object) true);
+        }
+        upsertObjects.add(ImmutableMap.copyOf(newCols));
+
+        JobStatus logStatus = JobStatus.SUCCESS;
+        String errorMessage = "";
+        boolean noPublishExceptions = false;
+        try {
+            producer.upsert(logDatasetID, upsertObjects);
+            noPublishExceptions = true;
+        }
+        catch (SodaError sodaError) {
+            errorMessage = sodaError.getMessage();
+        }
+        catch (InterruptedException intrruptException) {
+            errorMessage = intrruptException.getMessage();
+        }
+        catch (Exception other) {
+            errorMessage = other.toString() + ": " + other.getMessage();
+        } finally {
+            if(!noPublishExceptions) {
+                logStatus = JobStatus.PUBLISH_ERROR;
+                logStatus.setMessage(errorMessage);
+            }
+        }
+        return logStatus;
+    }
+
 
     @JsonProperty("fileVersionUID")
     public long getFileVersionUID() {

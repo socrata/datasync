@@ -2,6 +2,7 @@ package com.socrata.datasync.utilities;
 
 
 import com.socrata.datasync.BlobId;
+import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.TestBase;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import junit.framework.TestCase;

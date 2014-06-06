@@ -2,11 +2,12 @@ package com.socrata.datasync.utilities;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
-import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.TestBase;
+import com.socrata.datasync.Utils;
 import com.socrata.datasync.job.IntegrationJob;
-import com.socrata.datasync.utilities.IntegrationUtility;
+import com.socrata.datasync.publishers.Soda2Publisher;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
@@ -14,6 +15,7 @@ import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Dataset;
 import junit.framework.TestCase;
 import org.junit.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +32,7 @@ public class IntegrationUtilityTest extends TestBase {
         final SodaDdl ddl = createSodaDdl();
 
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        UpsertResult result = IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+        UpsertResult result = Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsCreated());
@@ -43,7 +45,7 @@ public class IntegrationUtilityTest extends TestBase {
         final SodaDdl ddl = createSodaDdl();
 
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_no_header.csv");
-        UpsertResult result = IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, false);
+        UpsertResult result = Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, false);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(3, result.getRowsCreated());
@@ -56,7 +58,7 @@ public class IntegrationUtilityTest extends TestBase {
         final SodaDdl ddl = createSodaDdl();
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.tsv");
-        UpsertResult result = IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, true);
+        UpsertResult result = Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, true);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(3, result.getRowsCreated());
@@ -69,7 +71,7 @@ public class IntegrationUtilityTest extends TestBase {
         final SodaDdl ddl = createSodaDdl();
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_no_header.tsv");
-        UpsertResult result = IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, false);
+        UpsertResult result = Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, false);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(3, result.getRowsCreated());
@@ -84,7 +86,7 @@ public class IntegrationUtilityTest extends TestBase {
         int numRowsBegin = getTotalRows(UNITTEST_DATASET_ID);
 
         File zeroRowsFile = new File("src/test/resources/datasync_unit_test_zero_rows.csv");
-        UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, zeroRowsFile, 0, true);
+        UpsertResult result = Soda2Publisher.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, zeroRowsFile, 0, true);
 
         int numRowsAfter = getTotalRows(UNITTEST_DATASET_ID);
 
@@ -99,10 +101,10 @@ public class IntegrationUtilityTest extends TestBase {
 
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+        Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
-        UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, 0, true);
+        UpsertResult result = Soda2Publisher.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, 0, true);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
@@ -117,10 +119,10 @@ public class IntegrationUtilityTest extends TestBase {
 
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+        Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_no_header.csv");
-        UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, 0, false);
+        UpsertResult result = Soda2Publisher.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, 0, false);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
@@ -135,10 +137,10 @@ public class IntegrationUtilityTest extends TestBase {
 
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+        Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.tsv");
-        UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, 0, true);
+        UpsertResult result = Soda2Publisher.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, 0, true);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
@@ -153,10 +155,10 @@ public class IntegrationUtilityTest extends TestBase {
 
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+        Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_no_header.tsv");
-        UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, 0, false);
+        UpsertResult result = Soda2Publisher.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, 0, false);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
@@ -171,11 +173,11 @@ public class IntegrationUtilityTest extends TestBase {
 
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+        Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
         int numRowsPerChunk = 2;
-        UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, numRowsPerChunk, true);
+        UpsertResult result = Soda2Publisher.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, numRowsPerChunk, true);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
@@ -190,10 +192,10 @@ public class IntegrationUtilityTest extends TestBase {
 
         // Ensures dataset is in known state (3 rows)
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
-        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, true);
+        Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, true);
 
         File deleteTwoRowsFile = new File("src/test/resources/datasync_unit_test_delete_two_rows_no_header.csv");
-        UpsertResult result = IntegrationUtility.deleteRows(producer, ddl, UNITTEST_DATASET_ID, deleteTwoRowsFile, 0, false);
+        UpsertResult result = Soda2Publisher.deleteRows(producer, ddl, UNITTEST_DATASET_ID, deleteTwoRowsFile, 0, false);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsDeleted());
@@ -207,10 +209,10 @@ public class IntegrationUtilityTest extends TestBase {
 
         // Ensures dataset is in known state (3 rows)
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
-        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, true);
+        Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, true);
 
         File deleteTwoRowsFile = new File("src/test/resources/datasync_unit_test_delete_two_rows_with_header.csv");
-        UpsertResult result = IntegrationUtility.deleteRows(producer, ddl, UNITTEST_DATASET_ID, deleteTwoRowsFile, 0, true);
+        UpsertResult result = Soda2Publisher.deleteRows(producer, ddl, UNITTEST_DATASET_ID, deleteTwoRowsFile, 0, true);
 
         TestCase.assertEquals(0, result.errorCount());
         TestCase.assertEquals(2, result.getRowsDeleted());
@@ -234,11 +236,11 @@ public class IntegrationUtilityTest extends TestBase {
 
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+        Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_invalid_date.csv");
         int numRowsPerChunk = 0;
-        UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, numRowsPerChunk, true);
+        UpsertResult result = Soda2Publisher.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, numRowsPerChunk, true);
 
         TestCase.assertEquals(1, result.errorCount());
         TestCase.assertEquals(2, result.getRowsUpdated());
@@ -255,11 +257,11 @@ public class IntegrationUtilityTest extends TestBase {
 
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
+        Soda2Publisher.replaceNew(producer, ddl, UNITTEST_DATASET_ID, twoRowsFile, true);
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_multiple_invalid_dates.csv");
         int numRowsPerChunk = 2;
-        UpsertResult result = IntegrationUtility.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, numRowsPerChunk, true);
+        UpsertResult result = Soda2Publisher.appendUpsert(producer, ddl, UNITTEST_DATASET_ID, threeRowsFile, numRowsPerChunk, true);
 
         TestCase.assertEquals(2, result.errorCount());
         TestCase.assertEquals(1, result.getRowsUpdated());
@@ -279,12 +281,12 @@ public class IntegrationUtilityTest extends TestBase {
 
         // Ensures dataset is in known state (1 row)
         File oneRowFile = new File("src/test/resources/log_dataset_one_row.csv");
-        IntegrationUtility.replaceNew(producer, ddl, UNITTEST_LOG_DATASET_ID, oneRowFile, true);
+        Soda2Publisher.replaceNew(producer, ddl, UNITTEST_LOG_DATASET_ID, oneRowFile, true);
 
         IntegrationJob job = new IntegrationJob();
         UpsertResult result = new UpsertResult(1, 1, 1, new ArrayList<UpsertError>());
         SocrataConnectionInfo connectionInfo = new SocrataConnectionInfo(DOMAIN, USERNAME, PASSWORD, API_KEY);
-        String logPublishingErrorMessage = IntegrationUtility.addLogEntry(
+        String logPublishingErrorMessage = job.addLogEntry(
                 UNITTEST_LOG_DATASET_ID, connectionInfo, job, JobStatus.INVALID_DATASET_ID, result);
 
         TestCase.assertEquals(null, logPublishingErrorMessage);
@@ -296,7 +298,7 @@ public class IntegrationUtilityTest extends TestBase {
         IntegrationJob job = new IntegrationJob();
         UpsertResult result = new UpsertResult(1, 1, 1, new ArrayList<UpsertError>());
         SocrataConnectionInfo connectionInfo = new SocrataConnectionInfo(DOMAIN, USERNAME, PASSWORD, API_KEY);
-        String logPublishingErrorMessage = IntegrationUtility.addLogEntry(
+        String logPublishingErrorMessage = job.addLogEntry(
                 "xxxx-xxxx", connectionInfo, job, JobStatus.SUCCESS, result);
 
         TestCase.assertEquals("Not found", logPublishingErrorMessage);
@@ -307,7 +309,7 @@ public class IntegrationUtilityTest extends TestBase {
         //UserPreferences userPrefs = new UserPreferencesJava();
         //System.out.println(IntegrationUtility.getDatasetFieldNames(ddl, "6qkn-8xvw"));
         final SodaDdl ddl = createSodaDdl();
-        String datasetFieldNames = IntegrationUtility.getDatasetFieldNames(ddl, UNITTEST_DATASET_ID);
+        String datasetFieldNames = Utils.getDatasetFieldNames(ddl, UNITTEST_DATASET_ID);
         TestCase.assertEquals("\"id\",\"name\",\"another_name\",\"date\"", datasetFieldNames);
     }
 
@@ -316,19 +318,19 @@ public class IntegrationUtilityTest extends TestBase {
         final SodaDdl ddl = createSodaDdl();
         Dataset datasetInfoNoLocation = (Dataset) ddl.loadDatasetInfo(UNITTEST_DATASET_ID);
         Dataset datasetInfoWithLocation = (Dataset) ddl.loadDatasetInfo(UNITTEST_DATASET_ID_LOCATION_COL);
-        TestCase.assertFalse(IntegrationUtility.datasetHasLocationColumn(datasetInfoNoLocation));
-        TestCase.assertTrue(IntegrationUtility.datasetHasLocationColumn(datasetInfoWithLocation));
+        TestCase.assertFalse(Utils.datasetHasLocationColumn(datasetInfoNoLocation));
+        TestCase.assertTrue(Utils.datasetHasLocationColumn(datasetInfoWithLocation));
     }
 
 
     @Test
     public void testUidIsValid() {
-        TestCase.assertFalse(IntegrationUtility.uidIsValid("hello"));
-        TestCase.assertFalse(IntegrationUtility.uidIsValid("abcd/1234"));
-        TestCase.assertFalse(IntegrationUtility.uidIsValid("6thm1hz4z"));
+        TestCase.assertFalse(Utils.uidIsValid("hello"));
+        TestCase.assertFalse(Utils.uidIsValid("abcd/1234"));
+        TestCase.assertFalse(Utils.uidIsValid("6thm1hz4z"));
 
-        TestCase.assertTrue(IntegrationUtility.uidIsValid("abcd-1234"));
-        TestCase.assertTrue(IntegrationUtility.uidIsValid("vysc-frub"));
-        TestCase.assertTrue(IntegrationUtility.uidIsValid("6thm-hz4z"));
+        TestCase.assertTrue(Utils.uidIsValid("abcd-1234"));
+        TestCase.assertTrue(Utils.uidIsValid("vysc-frub"));
+        TestCase.assertTrue(Utils.uidIsValid("6thm-hz4z"));
     }
 }

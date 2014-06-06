@@ -10,11 +10,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import com.socrata.datasync.*;
 import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.Job;
+import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.job.MetadataJob;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 
-import com.socrata.datasync.utilities.IntegrationUtility;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 
@@ -184,7 +184,7 @@ public class SimpleIntegrationWizard {
             if (n == JOptionPane.YES_OPTION) {
             	URI currentVersionDownloadURI = new URI(
                         DataSyncMetadata.getCurrentVersionDownloadUrl(dataSyncVersionMetadata));
-            	IntegrationUtility.openWebpage(currentVersionDownloadURI);
+            	Utils.openWebpage(currentVersionDownloadURI);
             }
 	    }
 	}
@@ -300,7 +300,7 @@ public class SimpleIntegrationWizard {
                         JOptionPane.QUESTION_MESSAGE,
                         null, options, options[0]);
                 if (n == JOptionPane.YES_OPTION) {
-                    IntegrationUtility.openWebpage(selectedPortJobTab.getURIToSinkDataset());
+                    Utils.openWebpage(selectedPortJobTab.getURIToSinkDataset());
                 }
             } else {
                 JOptionPane.showMessageDialog(frame, jobStatus.getMessage());
@@ -473,7 +473,7 @@ public class SimpleIntegrationWizard {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    IntegrationUtility.openWebpage(new URI(GETTING_STARTED_GUIDE_URL));
+                    Utils.openWebpage(new URI(GETTING_STARTED_GUIDE_URL));
                 } catch (URISyntaxException e1) { e1.printStackTrace(); }
             }
         });
@@ -481,7 +481,7 @@ public class SimpleIntegrationWizard {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    IntegrationUtility.openWebpage(new URI(CONTROL_GUIDE_URL));
+                    Utils.openWebpage(new URI(CONTROL_GUIDE_URL));
                 } catch (URISyntaxException e1) { e1.printStackTrace(); }
             }
         });
@@ -489,7 +489,7 @@ public class SimpleIntegrationWizard {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    IntegrationUtility.openWebpage(new URI(SCHEDULING_GUIDE_URL));
+                    Utils.openWebpage(new URI(SCHEDULING_GUIDE_URL));
                 } catch (URISyntaxException e1) { e1.printStackTrace(); }
             }
         });

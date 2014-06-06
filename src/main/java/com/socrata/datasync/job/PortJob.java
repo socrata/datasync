@@ -2,14 +2,14 @@ package com.socrata.datasync.job;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
-import com.socrata.datasync.utilities.IntegrationUtility;
-import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.Utils;
 import com.socrata.datasync.PortMethod;
-import com.socrata.datasync.utilities.PortUtility;
+import com.socrata.datasync.PortUtility;
 import com.socrata.datasync.PublishDataset;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.SocrataConnectionInfo;
@@ -212,11 +212,11 @@ public class PortJob extends Job {
 				|| connectionInfo.getUrl().equals("https://")) {
 			return JobStatus.INVALID_DOMAIN;
 		}
-		if (!IntegrationUtility.uidIsValid(sourceSetID)) {
+		if (!Utils.uidIsValid(sourceSetID)) {
 			return JobStatus.INVALID_DATASET_ID;
 		}
 		if (portMethod.equals(PortMethod.copy_data)
-				&& !IntegrationUtility.uidIsValid(sinkSetID)) {
+				&& !Utils.uidIsValid(sinkSetID)) {
 			return JobStatus.INVALID_DATASET_ID;
 		}
 
@@ -360,7 +360,7 @@ public class PortJob extends Job {
         }
         if(!portMethodValid) {
             System.err.println("Invalid argument: -pm,--" + options.PORT_METHOD_FLAG + " must be: " +
-                    IntegrationUtility.getValidPortMethods());
+                    Arrays.toString(PortMethod.values()));
             return false;
         }
         return true;

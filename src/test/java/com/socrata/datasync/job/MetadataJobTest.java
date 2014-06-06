@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import com.socrata.datasync.JobStatus;
 import com.socrata.datasync.LicenseType;
 import com.socrata.datasync.TestBase;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;

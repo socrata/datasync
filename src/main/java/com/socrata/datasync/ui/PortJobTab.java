@@ -1,7 +1,7 @@
 package com.socrata.datasync.ui;
 
-import com.socrata.datasync.utilities.IntegrationUtility;
-import com.socrata.datasync.JobStatus;
+import com.socrata.datasync.Utils;
+import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.PortMethod;
 import com.socrata.datasync.PublishDataset;
 import com.socrata.datasync.PublishMethod;
@@ -366,7 +366,7 @@ public class PortJobTab implements JobTab {
         public void actionPerformed(ActionEvent e) {
             if (!sinkSetIDTextField.getText()
                     .equals(DEFAULT_DESTINATION_SET_ID)) {
-                IntegrationUtility.openWebpage(getURIToSinkDataset());
+                Utils.openWebpage(getURIToSinkDataset());
             }
         }
     }

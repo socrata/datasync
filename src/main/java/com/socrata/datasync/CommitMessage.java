@@ -1,6 +1,5 @@
 package com.socrata.datasync;
 
-
 import com.socrata.datasync.config.controlfile.ControlFile;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.annotate.JsonSerialize;

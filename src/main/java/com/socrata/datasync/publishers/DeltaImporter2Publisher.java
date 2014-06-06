@@ -1,12 +1,13 @@
-package com.socrata.datasync.utilities;
+package com.socrata.datasync.publishers;
 
 import com.socrata.datasync.BlobId;
 import com.socrata.datasync.JobId;
 import com.socrata.datasync.CommitMessage;
 import com.socrata.datasync.DatasyncDirectory;
-import com.socrata.datasync.JobStatus;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.HttpUtility;
+import com.socrata.datasync.job.JobStatus;
 import com.socrata.ssync.PatchComputer;
 import com.socrata.ssync.SignatureComputer;
 import com.socrata.ssync.SignatureTable;
@@ -36,7 +37,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
 
-public class PublishUtility {
+public class DeltaImporter2Publisher {
 
     private static String domain;
     private static HttpUtility http;
@@ -50,7 +51,7 @@ public class PublishUtility {
     private ObjectMapper mapper = new ObjectMapper();
     private File patchFile = null;
 
-    public PublishUtility(UserPreferences userPrefs) throws Exception {
+    public DeltaImporter2Publisher(UserPreferences userPrefs) throws Exception {
         http = new HttpUtility(userPrefs);
         domain = userPrefs.getHost();
         baseUri = new URIBuilder()

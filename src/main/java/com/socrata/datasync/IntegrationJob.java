@@ -1,5 +1,7 @@
 package com.socrata.datasync;
 
+import com.socrata.datasync.PublishMethod;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;

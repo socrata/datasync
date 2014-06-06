@@ -1,6 +1,5 @@
 package com.socrata.datasync.job;
 
-import com.socrata.datasync.JobStatus;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -8,10 +7,6 @@ import org.codehaus.jackson.map.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * Author: Adrian Laurenzi
- * Date: 9/18/13
- */
 public abstract class Job {
 
     String pathToSavedJobFile = "";

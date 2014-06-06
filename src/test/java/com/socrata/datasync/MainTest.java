@@ -1,7 +1,8 @@
 package com.socrata.datasync;
 
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
-import com.socrata.datasync.utilities.IntegrationUtility;
+import com.socrata.datasync.publishers.FTPDropbox2Publisher;
+import com.socrata.datasync.publishers.Soda2Publisher;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import junit.framework.TestCase;
@@ -23,7 +24,7 @@ public class MainTest extends TestBase {
     public void testHeadlessReplaceViaHTTP() throws ParseException, SodaError, InterruptedException, IOException, LongRunningQueryException {
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        IntegrationUtility.replaceNew(createProducer(), createSodaDdl(), UNITTEST_DATASET_ID, twoRowsFile, true);
+        Soda2Publisher.replaceNew(createProducer(), createSodaDdl(), UNITTEST_DATASET_ID, twoRowsFile, true);
 
         String[] args = {"-c", PATH_TO_CONFIG_FILE,
                          "-i", UNITTEST_DATASET_ID,
@@ -39,7 +40,7 @@ public class MainTest extends TestBase {
     public void testHeadlessReplaceViaFTP() throws ParseException, SodaError, InterruptedException, IOException, LongRunningQueryException {
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        IntegrationUtility.replaceNew(createProducer(), createSodaDdl(), UNITTEST_DATASET_ID, twoRowsFile, true);
+        Soda2Publisher.replaceNew(createProducer(), createSodaDdl(), UNITTEST_DATASET_ID, twoRowsFile, true);
 
         String[] args = {"-c", PATH_TO_CONFIG_FILE,
                          "-i", UNITTEST_DATASET_ID,

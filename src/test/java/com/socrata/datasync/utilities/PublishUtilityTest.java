@@ -16,7 +16,7 @@ import java.util.Arrays;
 public class PublishUtilityTest extends TestBase {
     ObjectMapper mapper = new ObjectMapper();
 
-    @Test
+   @Test
     public void testDeserializationReturnIds() throws IOException {
 
         String typicalBlobJson = "{\"blobId\":\"xxxx-xxxx\"}";

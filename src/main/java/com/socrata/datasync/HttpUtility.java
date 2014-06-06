@@ -1,4 +1,4 @@
-package com.socrata.datasync.utilities;
+package com.socrata.datasync;
 
 import com.google.common.net.HttpHeaders;
 import com.socrata.datasync.config.userpreferences.UserPreferences;

@@ -1,6 +1,5 @@
 package com.socrata.datasync;
 
-import com.socrata.datasync.utilities.HttpUtility;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;

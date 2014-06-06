@@ -1,9 +1,8 @@
 package com.socrata.datasync.config.controlfile;
 
-import com.socrata.datasync.utilities.IntegrationUtility;
+import com.socrata.datasync.Utils;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.exceptions.SodaError;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -33,7 +32,7 @@ public class ControlFile {
      *
      * @param fileToPublish filename of file to publish (.tsv or .csv file)
      * @param publishMethod to use to publish (upsert, append, replace, or delete)
-     *               NOTE: this option will be overriden if userPrefs has pathToFTPControlFile set
+     *               NOTE: this option will be overriden if this control file is for an ftp job
      * @param columns the column headers correcsponding to the filetoPublish, needed if it lacks headers
      * @param useSocrataGeocoding if true use Socrata's geocoding to geocode Location columns
      * @return content of control.json based on given job parameters
@@ -41,13 +40,13 @@ public class ControlFile {
      * @throws InterruptedException
      */
     public static ControlFile generateControlFile(final String fileToPublish,
-                                                    final PublishMethod publishMethod,
-                                                    final String[] columns,
-                                                    final boolean useSocrataGeocoding) throws
+                                                  final PublishMethod publishMethod,
+                                                  final String[] columns,
+                                                  final boolean useSocrataGeocoding) throws
             SodaError, InterruptedException, IOException {
 
         int skip = 0;
-        String fileToPublishExtension = IntegrationUtility.getFileExtension(fileToPublish);
+        String fileToPublishExtension = Utils.getFileExtension(fileToPublish);
         boolean isCsv = fileToPublishExtension.equalsIgnoreCase("csv");
         String separator = isCsv ? "," : "\t";
         String quote = isCsv ? "\"" : "\u0000";

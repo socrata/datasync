@@ -1,6 +1,5 @@
 package com.socrata.datasync.job;
 
-import com.socrata.datasync.JobStatus;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.TestBase;
 import com.socrata.datasync.config.CommandLineOptions;
@@ -105,11 +104,11 @@ public class IntegrationJobTest extends TestBase {
         TestCase.assertEquals("src/test/resources/job_saved_v0.4.sij", job.getPathToSavedFile());
         TestCase.assertEquals(true, job.getFileToPublishHasHeaderRow());
         TestCase.assertEquals(true, job.getPublishViaFTP());
-        TestCase.assertEquals("E:\\tm\\control.json", job.getPathToFTPControlFile());
+        TestCase.assertEquals("E:\\tm\\control.json", job.getPathToControlFile());
         TestCase.assertEquals("job_saved_v0.4.sij", job.getJobFilename());
     }
 
-    @Test
+   @Test
     public void testDataSyncJSONv0dot4ControlContentJobFileDeserialization() throws IOException {
         IntegrationJob job = new IntegrationJob(PATH_TO_SAVED_JOB_FILE_V0dot4_CONTROL_CONTENT);
         TestCase.assertEquals("/Users/file.csv", job.getFileToPublish());
@@ -118,7 +117,7 @@ public class IntegrationJobTest extends TestBase {
         TestCase.assertEquals("src/test/resources/job_saved_v0.4_control_content.sij", job.getPathToSavedFile());
         TestCase.assertEquals(false, job.getFileToPublishHasHeaderRow());
         TestCase.assertEquals(true, job.getPublishViaFTP());
-        TestCase.assertEquals("", job.getPathToFTPControlFile());
+        TestCase.assertEquals("", job.getPathToControlFile());
         TestCase.assertEquals("{\n" +
                 "  \"action\" : \"Replace\", \n" +
                 "  \"csv\" :\n" +
@@ -136,7 +135,7 @@ public class IntegrationJobTest extends TestBase {
                 "      \"trimServerWhitespace\" : true,\n" +
                 "      \"overrides\" : {}\n" +
                 "    }\n" +
-                "}", job.getFtpControlFileContent());
+                "}", job.getControlFileContent());
         TestCase.assertEquals("job_saved_v0.4_control_content.sij", job.getJobFilename());
     }
 
@@ -160,7 +159,7 @@ public class IntegrationJobTest extends TestBase {
         IntegrationJob jobToRun = getIntegrationJobWithUserPrefs();
         jobToRun.setDatasetID(UNITTEST_DATASET_ID);
         jobToRun.setFileToPublish("src/test/resources/datasync_unit_test_three_rows.csv");
-        jobToRun.setPathToFTPControlFile("src/test/resources/datasync_unit_test_three_rows_control.json");
+        jobToRun.setPathToControlFile("src/test/resources/datasync_unit_test_three_rows_control.json");
         jobToRun.setPublishMethod(PublishMethod.replace);
         jobToRun.setPublishViaFTP(true);
         jobToRun.setFileToPublishHasHeaderRow(false);
@@ -201,7 +200,7 @@ public class IntegrationJobTest extends TestBase {
         IntegrationJob jobToRun = getIntegrationJobWithUserPrefs();
         jobToRun.setDatasetID(UNITTEST_DATASET_ID);
         jobToRun.setFileToPublish("src/test/resources/datasync_unit_test_invalid_date.csv");
-        jobToRun.setPathToFTPControlFile("src/test/resources/datasync_unit_test_three_rows_control.json");
+        jobToRun.setPathToControlFile("src/test/resources/datasync_unit_test_three_rows_control.json");
         jobToRun.setFileToPublishHasHeaderRow(true);
         jobToRun.setPublishMethod(PublishMethod.replace);
         jobToRun.setPublishViaFTP(true);

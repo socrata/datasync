@@ -1,12 +1,12 @@
 package com.socrata.datasync.ui;
 
 import com.socrata.datasync.*;
+import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.job.MetadataJob;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import com.socrata.datasync.utilities.MetadataUtility;
 import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
@@ -263,7 +263,7 @@ public class MetadataJobTab implements JobTab {
 
             // Update the textfield with new command
             if(updateJobCommandTextField) {
-                String runJobCommand = MetadataUtility.getRunJobCommand(
+                String runJobCommand = Utils.getRunJobCommand(
                         metadataJob.getPathToSavedFile());
                 runCommandTextField.setText(runJobCommand);
             }
@@ -319,7 +319,7 @@ public class MetadataJobTab implements JobTab {
         // if this is an existing job (meaning the job was opened from a file)
         // then populate the scheduler command textfield
         if(!StringUtils.isBlank(jobFileLocation)) {
-            runCommandTextField.setText(MetadataUtility.getRunJobCommand(jobFileLocation));
+            runCommandTextField.setText(Utils.getRunJobCommand(jobFileLocation));
         }
     }
     
