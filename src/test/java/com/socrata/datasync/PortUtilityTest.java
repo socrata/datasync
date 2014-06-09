@@ -15,12 +15,11 @@ import test.model.UnitTestDataset;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-/**
- * Author: Louis Fettet
- * Date: 11/4/13
- */
 public class PortUtilityTest extends TestBase {
 
     static SodaDdl sourceDdl;
@@ -197,5 +196,56 @@ public class PortUtilityTest extends TestBase {
         }
     }
 
+    @Test
+    public void testSchemaAdaptation() {
+        // set up original dataset schema
+        String groupingKey = "grouping_aggregate";
+        Dataset schema = new Dataset();
+
+        Column colNoFormatting = new Column();
+        colNoFormatting.setFieldName("col_without_formatting");
+
+        Column colIgnorableFormatting = new Column();
+        colIgnorableFormatting.setFieldName("col_with_ignorable_formatting");
+        Map<String, String> ignorableFormatting = new HashMap<String,String>();
+        ignorableFormatting.put("drill_down", "true");
+        colIgnorableFormatting.setFormat(ignorableFormatting);
+
+        Column colAggregatedFormatting = new Column();
+        colAggregatedFormatting.setFieldName("col_with_aggregated_formatting");
+        Map<String, String> aggregateFormatting = new HashMap<String,String>();
+        aggregateFormatting.put(groupingKey, "count");
+        colAggregatedFormatting.setFormat(aggregateFormatting);
+
+        List<Column> columns = new ArrayList<Column>();
+        columns.add(colNoFormatting);
+        columns.add(colIgnorableFormatting);
+        columns.add(colAggregatedFormatting);
+        schema.setColumns(columns);
+
+        // edit schema
+        PortUtility.adaptSchemaForAggregates(schema);
+
+        // test that edits are as expected
+        List<Column> editedColumns = schema.getColumns();
+        Column col1 = editedColumns.get(0);
+        Column col2 = editedColumns.get(1);
+        Column col3 = editedColumns.get(2);
+
+        TestCase.assertNotNull(col1);
+        TestCase.assertNotNull(col2);
+        TestCase.assertNotNull(col3);
+
+        // columns without formatting should be left alone
+        TestCase.assertEquals(colNoFormatting, col1);
+
+        // columns with ignorable formatting should be left alone
+        TestCase.assertEquals(colIgnorableFormatting, col2);
+
+        // columns with aggregation info in the formatting should have the aggregation info removed
+        // and prepended to the field name:
+        TestCase.assertFalse(col3.getFormat().containsKey(groupingKey));
+        TestCase.assertEquals("count_col_with_aggregated_formatting", col3.getFieldName());
+    }
 }
 

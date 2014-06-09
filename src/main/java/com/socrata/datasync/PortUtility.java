@@ -3,6 +3,7 @@ package com.socrata.datasync;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
@@ -18,6 +19,8 @@ import com.sun.jersey.api.client.ClientResponse;
 
 public class PortUtility {
 
+    private static final String groupingKey = "grouping_aggregate";
+
 	private PortUtility() {
 		throw new AssertionError("Never instantiate utility classes!");
 	}
@@ -25,9 +28,11 @@ public class PortUtility {
 	public static String portSchema(SodaDdl loader, SodaDdl creator,
 			final String sourceSetID, final String destinationDatasetTitle,
             final boolean useNewBackend) throws SodaError, InterruptedException {
-		DatasetInfo sourceSet = loader.loadDatasetInfo(sourceSetID);
+		Dataset sourceSet = (Dataset) loader.loadDatasetInfo(sourceSetID);
         if(destinationDatasetTitle != null && !destinationDatasetTitle.equals(""))
             sourceSet.setName(destinationDatasetTitle);
+
+        adaptSchemaForAggregates(sourceSet);
 
         // TODO uncomment (after soda-java is updated to support this)
 		//DatasetInfo sinkSet = creator.createDataset(sourceSet, useNewBackend);
@@ -124,5 +129,30 @@ public class PortUtility {
                 return JobStatus.INVALID_SCHEMAS;
         }
         return JobStatus.SUCCESS;
+    }
+
+    /**
+     * Changes the columnar information in the given dataset to remove the "grouping_aggregate" field from "format",
+     * when present, and prepend its value to the column field name.  Removal of the field is necessary to
+     * successfully upload the schema to core (which would otherwise throw an error about refusing to create a column
+     * with a grouping_aggregrate but no group-by).  The editing of the field name is necessary for subsequent
+     * data loading, since the data from soda2 expectst aggregated columns to include the grouping_aggregate.
+     * @param schema the Dataset from soda-java representing the schema
+     */
+     public static void adaptSchemaForAggregates(Dataset schema) {
+        List<Column> columns = schema.getColumns();
+        for (int i = 0; i < columns.size(); i++) {
+            Column col = columns.get(i);
+            if (col != null) {
+                Map<String, String> format = col.getFormat();
+                if (format != null) {
+                    String aggregation = format.remove(groupingKey);
+                    if (aggregation != null) {
+                        String oldFieldName = col.getFieldName();
+                        col.setFieldName(aggregation + "_" + oldFieldName);
+                    }
+                }
+            }
+        }
     }
 }
