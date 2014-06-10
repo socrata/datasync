@@ -302,7 +302,13 @@ public class IntegrationJobTab implements JobTab {
         jobToRun.setPublishViaFTP(publishViaFTPCheckBox.isSelected());
         jobToRun.setPathToControlFile(controlFileTextField.getText());
         jobToRun.setControlFileContent(controlFileContentTextArea.getText());
-        return jobToRun.run();
+        try {
+            return jobToRun.run();
+        } catch (IOException e) {
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage(e.getMessage());
+            return status;
+        }
     }
 
     public void saveJob() {

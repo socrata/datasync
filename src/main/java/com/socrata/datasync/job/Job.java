@@ -14,7 +14,7 @@ public abstract class Job {
 
     public abstract boolean validateArgs(CommandLine cmd);
     public abstract void configure(CommandLine cmd);
-    public abstract JobStatus run();
+    public abstract JobStatus run() throws IOException;
 
     public void writeToFile(String filepath) throws IOException {
         ObjectMapper mapper = new ObjectMapper();

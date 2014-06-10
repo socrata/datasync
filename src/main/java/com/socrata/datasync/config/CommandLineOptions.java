@@ -21,6 +21,7 @@ public class CommandLineOptions {
     public static final String PUBLISH_METHOD_FLAG = "publishMethod";
     public static final String HAS_HEADER_ROW_FLAG = "fileToPublishHasHeaderRow";
     public static final String PUBLISH_VIA_FTP_FLAG = "publishViaFTP";
+    public static final String PUBLISH_VIA_DI2_FLAG = "publishViaDi2Http";
     public static final String PATH_TO_CONTROL_FILE_FLAG = "pathToControlFile";
 
     public static final String PORT_METHOD_FLAG = "portMethod";
@@ -34,6 +35,7 @@ public class CommandLineOptions {
 
     public static final String DEFAULT_JOBTYPE = Jobs.INTEGRATION_JOB.toString();
     public static final String DEFAULT_PUBLISH_VIA_FTP = "false";
+    public static final String DEFAULT_PUBLISH_VIA_DI2 = "false";
     public static final String DEFAULT_PORT_PUBLISH_METHOD = PublishMethod.upsert.toString();
     public static final String DEFAULT_PUBLISH_DESTINATION_DATASET = "false";
 
@@ -50,6 +52,7 @@ public class CommandLineOptions {
         options.addOption("m", PUBLISH_METHOD_FLAG, true, "Publish method (" + Arrays.toString(PublishMethod.values()) + ") [IntegrationJob]");
         options.addOption("h", HAS_HEADER_ROW_FLAG, true, "File to publish has header row (true or false) [IntegrationJob]");
         options.addOption("pf", PUBLISH_VIA_FTP_FLAG, true, "Use FTP (instead of HTTP) for publishing (true or false) (default: " + DEFAULT_PUBLISH_VIA_FTP + ") [IntegrationJob]");
+        options.addOption("di2", PUBLISH_VIA_DI2_FLAG, true, "Use delta-importer-2 over HTTP for publishing (true or false) (default: false) [IntegrationJob]");
         options.addOption("sc", PATH_TO_CONTROL_FILE_FLAG, true, "control.json file, if set overrides job parameters (optional) [IntegrationJob]");
 
         // PortJob params

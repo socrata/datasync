@@ -4,13 +4,15 @@ import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.config.userpreferences.UserPreferencesLib;
 import com.socrata.datasync.job.JobStatus;
 
+import java.io.IOException;
+
 /**
  * Author: Adrian Laurenzi
  * Date: 6/13/14
  */
 public class LibraryExample {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // Establish "global" configuration (User Preferences)
         UserPreferencesLib userPrefs = new UserPreferencesLib();
         userPrefs.setDomain("https://some.domain.org"); // must include the 'https://'

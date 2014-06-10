@@ -3,6 +3,7 @@ package com.socrata.datasync.job;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
@@ -16,11 +17,15 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 import com.socrata.datasync.Utils;
+import com.socrata.datasync.config.controlfile.ControlFile;
+import com.socrata.datasync.publishers.DeltaImporter2Publisher;
 import com.socrata.datasync.publishers.FTPDropbox2Publisher;
 import com.socrata.datasync.publishers.Soda2Publisher;
 import org.apache.commons.cli.CommandLine;
+import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -66,7 +71,8 @@ public class IntegrationJob extends Job {
 	private String pathToControlFile = null;
     private String controlFileContent = null;
     private boolean publishViaFTP = false;
-
+    private boolean publishViaDi2Http = false;
+    private ControlFile controlFile = null;
 
     public IntegrationJob() {
         userPrefs = new UserPreferencesJava();
@@ -100,6 +106,7 @@ public class IntegrationJob extends Job {
             setPathToControlFile(loadedJob.getPathToControlFile());
             setControlFileContent(loadedJob.getControlFileContent());
             setPublishViaFTP(loadedJob.getPublishViaFTP());
+            setPublishViaDi2Http(loadedJob.getPublishViaDi2Http());
         } catch (IOException e) {
             // if reading new format fails...try reading old format into this object
             loadOldSijFile(pathToFile);
@@ -187,9 +194,14 @@ public class IntegrationJob extends Job {
     public boolean getPublishViaFTP() { return publishViaFTP; }
 
     @JsonProperty("publishViaFTP")
-    public void setPublishViaFTP(boolean newPublishViaFTP) {
-        publishViaFTP = newPublishViaFTP;
-    }
+    public void setPublishViaFTP(boolean newPublishViaFTP) { publishViaFTP = newPublishViaFTP; }
+
+    @JsonProperty("publishViaDi2Http")
+    public boolean getPublishViaDi2Http() { return publishViaDi2Http; }
+
+    @JsonProperty("publishViaDi2Http")
+    public void setPublishViaDi2Http(boolean newPublishViaDi2Http) { publishViaDi2Http = newPublishViaDi2Http; }
+
 
 
     public boolean validateArgs(CommandLine cmd) {
@@ -198,6 +210,7 @@ public class IntegrationJob extends Job {
                 validatePublishMethodArg(cmd) &&
                 validateHeaderRowArg(cmd) &&
                 validatePublishViaFtpArg(cmd) &&
+                validatePublishViaDi2HttpArg(cmd) &&
                 validatePathToControlFileArg(cmd);
     }
 
@@ -216,12 +229,31 @@ public class IntegrationJob extends Job {
         // Set optional parameters
         if(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null) {
             setPathToControlFile(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG));
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                controlFile = mapper.readValue(pathToControlFile, ControlFile.class);
+            } catch (Exception e1) {
+                System.out.println("Could not properly parse control file:" + e1.getMessage());
+                try {
+                    System.out.println("Attempting to build control file from content in job file");
+                    controlFile = mapper.readValue(controlFileContent, ControlFile.class);
+                } catch (Exception e2) {
+                    System.out.println("Resorting to default config file");
+                    controlFile = ControlFile.generateControlFile(fileToPublish, publishMethod, null, true);
+                }
+            }
         }
         String publishViaFTP = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG, options.DEFAULT_PUBLISH_VIA_FTP);
         if(publishViaFTP.equalsIgnoreCase("true")) {
             setPublishViaFTP(true);
         } else { // cmd.getOptionValue("pf") == "false"
             setPublishViaFTP(false);
+        }
+        String publishViaDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG, options.DEFAULT_PUBLISH_VIA_DI2);
+        if(publishViaDi2.equalsIgnoreCase("true")) {
+            setPublishViaDi2Http(true);
+        } else {
+            setPublishViaDi2Http(false);
         }
     }
 
@@ -270,11 +302,11 @@ public class IntegrationJob extends Job {
                 // certainly propagate later where the error message will be more appropriate
             }
 		}
-        if(publishViaFTP) {
+        if(publishViaFTP || publishViaDi2Http) {
             if((pathToControlFile == null || pathToControlFile.equals("")) &&
                     (controlFileContent == null || controlFileContent.equals(""))) {
                 JobStatus errorStatus = JobStatus.PUBLISH_ERROR;
-                errorStatus.setMessage("You must generate or select a Control file if publishing via FTP SmartUpdate");
+                errorStatus.setMessage("You must generate or select a Control file if publishing via FTP SmartUpdate or delta-importer-2 over HTTP");
                 return errorStatus;
             } else {
                 if(pathToControlFile != null && !pathToControlFile.equals("")) {
@@ -315,7 +347,7 @@ public class IntegrationJob extends Job {
         return JobStatus.VALID;
 	}
 	
-	public JobStatus run() {
+	public JobStatus run() throws IOException {
 		SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
 		
 		UpsertResult result = null;
@@ -326,57 +358,58 @@ public class IntegrationJob extends Job {
         if(validationStatus.isError()) {
 			runStatus = validationStatus;
             runErrorMessage = validationStatus.getMessage();
-		} else {
-			// attach a requestId to all Producer API calls (for error tracking purposes)
+		} else if(publishViaFTP && !publishMethod.equals(PublishMethod.replace)) {
+            runErrorMessage = "FTP does not currently support upsert, append or delete";
+        } else {
+            File fileToPublishFile = new File(fileToPublish);
+            // attach a requestId to all Producer API calls (for error tracking purposes)
             String jobRequestId = Utils.generateRequestId();
             final Soda2Producer producer = Soda2Producer.newProducerWithRequestId(
                     connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken(), jobRequestId);
             final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
-	
-			File fileToPublishFile = new File(fileToPublish);
-			boolean noPublishExceptions = false;
-			try {
-                int filesizeChunkingCutoffBytes =
-                        Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * NUM_BYTES_PER_MB;
-                int numRowsPerChunk = Integer.parseInt(userPrefs.getNumRowsPerChunk());
+            final DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs);
+            int filesizeChunkingCutoffBytes =
+                    Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * NUM_BYTES_PER_MB;
+            int numRowsPerChunk = Integer.parseInt(userPrefs.getNumRowsPerChunk());
 
-                if(publishMethod.equals(PublishMethod.upsert) || publishMethod.equals(PublishMethod.append)) {
-                    if(publishViaFTP) {
-                        runErrorMessage = "FTP does not currently support upsert or append";
-                    } else {
-                        result = doAppendOrUpsertViaHTTP(
-                                producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
-                        noPublishExceptions = true;
-                    }
-				}
-				else if(publishMethod.equals(PublishMethod.replace)) {
-                    // TODO clean all of this up (once I refactor JobStatus class)
-                    if(publishViaFTP) {
-                        // Publish via FTP
-                        JobStatus ftpSmartUpdateStatus = doPublishViaFTPv2(importer, fileToPublishFile);
-                        if(ftpSmartUpdateStatus.isError()) {
-                            runErrorMessage = ftpSmartUpdateStatus.getMessage();
-                        } else {
-                            noPublishExceptions = true;
-                        }
-                    } else {
-                        // Publish via HTTP
-                        result = Soda2Publisher.replaceNew(
-                                producer, importer, datasetID, fileToPublishFile, fileToPublishHasHeaderRow);
-                        noPublishExceptions = true;
-                    }
-                }
-                else if(publishMethod.equals(PublishMethod.delete)) {
-                    if(publishViaFTP) {
-                        runErrorMessage = "FTP does not currently support delete";
-                    } else {
-                        result = doDeleteViaHTTP(
-                            producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
-                        noPublishExceptions = true;
-                    }
-                } else {
-					runErrorMessage = JobStatus.INVALID_PUBLISH_METHOD.getMessage();
-				}
+            boolean noPublishExceptions = false;
+			try {
+                 switch (publishMethod) {
+                     case upsert:
+                     case append:
+                         result = doAppendOrUpsertViaHTTP(
+                                 producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+                         noPublishExceptions = true;
+                         break;
+                     case replace:
+                         if (publishViaFTP) {
+                             JobStatus ftpSmartUpdateStatus = doPublishViaFTPv2(importer, fileToPublishFile);
+                             if (ftpSmartUpdateStatus.isError()) {
+                                 runErrorMessage = ftpSmartUpdateStatus.getMessage();
+                             } else {
+                                 noPublishExceptions = true;
+                             }
+                         } else if (publishViaDi2Http) {
+                             JobStatus di2Status = publisher.publishWithDi2OverHttp(datasetID, fileToPublishFile, controlFile);
+                             if (di2Status.isError()) {
+                                 runErrorMessage = di2Status.getMessage();
+                             } else {
+                                 noPublishExceptions = true;
+                             }
+                         } else {   // Publish via old HTTP method
+                             result = Soda2Publisher.replaceNew(
+                                     producer, importer, datasetID, fileToPublishFile, fileToPublishHasHeaderRow);
+                             noPublishExceptions = true;
+                         }
+                         break;
+                     case delete:
+                         result = doDeleteViaHTTP(
+                                 producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+                         noPublishExceptions = true;
+                         break;
+                     default:
+                         runErrorMessage = JobStatus.INVALID_PUBLISH_METHOD.getMessage();
+                 }
 			}
 			catch (IOException ioException) {
                 ioException.printStackTrace();
@@ -395,7 +428,7 @@ public class IntegrationJob extends Job {
 				runErrorMessage = "Unexpected exception: " + other.getMessage();
 			}
 			finally {
-				if(noPublishExceptions) {
+                if(noPublishExceptions) {
                     // Check for [row-level] SODA 2 errors
 					if(result != null) {
                         if(result.errorCount() > 0) {
@@ -416,6 +449,8 @@ public class IntegrationJob extends Job {
                         }
                     }
 				}
+                producer.close();
+                publisher.close();
 			}
 		}
 
@@ -570,11 +605,16 @@ public class IntegrationJob extends Job {
 
     private boolean validatePathToControlFileArg(CommandLine cmd) {
         CommandLineOptions options = new CommandLineOptions();
-        if(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null
-                && cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -sc,--" + options.PATH_TO_CONTROL_FILE_FLAG + " cannot be supplied " +
-                    "unless -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is 'true'");
-            return false;
+        if(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null) {
+            String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
+            String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
+            if ((publishingWithFtp == null || publishingWithFtp.equalsIgnoreCase("false")) &&
+                (publishingWithDi2 == null || publishingWithDi2.equalsIgnoreCase("false"))) {
+                System.err.println("Invalid argument: -sc,--" + options.PATH_TO_CONTROL_FILE_FLAG + " cannot be supplied " +
+                        "unless -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is 'true' or " +
+                        "unless -di2,--" + options.PUBLISH_VIA_DI2_FLAG + " is 'true'");
+                return false;
+            }
         }
 
         if(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null) {
@@ -593,11 +633,44 @@ public class IntegrationJob extends Job {
 
     private boolean validatePublishViaFtpArg(CommandLine cmd) {
         CommandLineOptions options = new CommandLineOptions();
-        if(cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG) != null &&
-                !cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("true") &&
-                !cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG).equalsIgnoreCase("false")) {
+        String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
+        if(publishingWithFtp != null &&
+                !publishingWithFtp.equalsIgnoreCase("true") &&
+                !publishingWithFtp.equalsIgnoreCase("false")) {
             System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " must be 'true' or 'false'");
             return false;
+        }
+        return true;
+    }
+
+    private boolean validatePublishViaDi2HttpArg(CommandLine cmd) {
+        CommandLineOptions options = new CommandLineOptions();
+        String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
+        if (publishingWithDi2 == null) {
+            return true;
+        }
+        if(!publishingWithDi2.equalsIgnoreCase("true") && !publishingWithDi2.equalsIgnoreCase("false")) {
+            System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_DI2_FLAG + " must be 'true' or 'false'");
+            return false;
+        }
+        if (publishingWithDi2.equalsIgnoreCase("true")) {
+            String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
+            if (publishingWithFtp != null && publishingWithFtp.equalsIgnoreCase("true")) {
+                System.err.println("Only one of -pf,--" + options.PUBLISH_VIA_DI2_FLAG + " and " +
+                        "-di2,--" + options.PUBLISH_VIA_DI2_FLAG + " may be set to 'true'");
+                return false;
+            }
+            if (PublishMethod.valueOf(cmd.getOptionValue(options.PUBLISH_METHOD_FLAG)) != PublishMethod.replace) {
+                System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_DI2_FLAG + " must be " +
+                        PublishMethod.replace.name() + " when " +
+                        "-di2,--" + options.PUBLISH_VIA_DI2_FLAG + " is set to 'true'");
+                return false;
+            }
+            if (cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) == null) {
+                System.err.println("A control file must be specified when " +
+                        "-di2,--" + options.PUBLISH_VIA_DI2_FLAG + " is set to 'true'");
+                return false;
+            }
         }
         return true;
     }
@@ -613,6 +686,7 @@ public class IntegrationJob extends Job {
             System.err.println("Invalid argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " must be 'true' or 'false'");
             return false;
         }
+        // TODO: after talk to robert, figure out what the restrictions are for di2/http
         return true;
     }
 

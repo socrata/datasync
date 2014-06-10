@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -50,8 +51,9 @@ public class DeltaImporter2Publisher {
     private static final String compressionExtenstion = ".xz";
     private ObjectMapper mapper = new ObjectMapper();
     private File patchFile = null;
+    private long diffSizeBytes = 0L;
 
-    public DeltaImporter2Publisher(UserPreferences userPrefs) throws Exception {
+    public DeltaImporter2Publisher(UserPreferences userPrefs) {
         http = new HttpUtility(userPrefs);
         domain = userPrefs.getHost();
         baseUri = new URIBuilder()
@@ -71,8 +73,9 @@ public class DeltaImporter2Publisher {
      * @return a job status indicating success or failure
      */
     public JobStatus publishWithDi2OverHttp(String datasetId, File csvOrTsvFile, ControlFile controlFile) throws
-            IOException {
+            IOException, InterruptedException {
 
+        System.out.println("Publishing " + csvOrTsvFile.getName() + " via delta-importer-2 over HTTP");
         DatasyncDirectory datasyncDir = new DatasyncDirectory(http, domain, datasetId);
         CloseableHttpResponse signature = null;
         InputStream previousSignature = null;
@@ -108,7 +111,8 @@ public class DeltaImporter2Publisher {
             // return status
             jobStatus = getJobStatus(datasetId, jobId);
 
-        } catch (Exception e) {
+        } catch (ParseException | NoSuchAlgorithmException | InputException | URISyntaxException | SignatureException e) {
+            e.printStackTrace();
             jobStatus = JobStatus.PUBLISH_ERROR;
             jobStatus.setMessage(e.getMessage());
         } finally {
@@ -129,6 +133,7 @@ public class DeltaImporter2Publisher {
      */
     private InputStream getPatch(InputStream newFile, InputStream previousSignature, boolean compress) throws
             SignatureException, IOException, InputException, NoSuchAlgorithmException {
+        System.out.println("Calculating the diff between the source file and previous signature");
         BufferedInputStream newStream = new BufferedInputStream(newFile);
         BufferedInputStream previousStream = new BufferedInputStream(previousSignature);
         if (!compress) {
@@ -138,6 +143,7 @@ public class DeltaImporter2Publisher {
             XZOutputStream patchStream = new XZOutputStream(new FileOutputStream(patchFile), new LZMA2Options());
             PatchComputer.compute(newStream, new SignatureTable(previousStream), "MD5", 102400, patchStream);
             patchStream.close(); // finishes compression and closes underlying stream
+            diffSizeBytes = patchFile.length();
             return new FileInputStream(patchFile);
         }
     }
@@ -151,9 +157,12 @@ public class DeltaImporter2Publisher {
      */
     private List<String> postPatchBlobs(InputStream patchStream, String datasetId) throws
             IOException, URISyntaxException {
+        System.out.println("Chunking and posting the diff");
+        if (diffSizeBytes > 0L) System.out.println("\t" + diffSizeBytes + " bytes remain to be sent");
         URI postingPath = baseUri.setPath(datasyncPath + "/" + datasetId).build();
         List<String> blobIds = new LinkedList<String>();
         int maxBytes = 1024*4000;  // we could make a call to /datasync/version for this info too
+        long bytesRemaining = diffSizeBytes;
         byte[] bytes = new byte[maxBytes];
 
         while (patchStream.read(bytes, 0, bytes.length) != -1) {
@@ -162,6 +171,8 @@ public class DeltaImporter2Publisher {
             String blobId = mapper.readValue(response.getEntity().getContent(), BlobId.class).blobId;
             response.close();
             blobIds.add(blobId);
+            bytesRemaining = Math.max(bytesRemaining - maxBytes, 0L);
+            if (diffSizeBytes > 0L) System.out.println("\t" + bytesRemaining + " bytes remain to be sent");
             bytes = new byte[maxBytes];
         }
         return blobIds;
@@ -174,6 +185,7 @@ public class DeltaImporter2Publisher {
      * @return the jobId of the job applying the diff
      */
     private String commitBlobPostings(CommitMessage msg, String datasetId) throws IOException, URISyntaxException {
+        System.out.println("Commiting the chunked diffs to apply the patch");
         URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + commitPath).build();
         StringEntity entity = new StringEntity(mapper.writeValueAsString(msg), ContentType.APPLICATION_JSON);
         CloseableHttpResponse response = http.post(committingPath, entity);
@@ -189,18 +201,22 @@ public class DeltaImporter2Publisher {
      * @param jobId the jobId returned from a succesful commit post
      * @return either success or a publish error
      */
-    private JobStatus getJobStatus(String datasetId, String jobId) throws URISyntaxException, IOException {
+    private JobStatus getJobStatus(String datasetId, String jobId) throws URISyntaxException, IOException, InterruptedException  {
         JobStatus jobStatus = null;
         String status = null;
+        URI statusUri = baseUri.setPath(datasyncPath + "/" + datasetId + statusPath + "/" + jobId).build();
         while (jobStatus == null) {
-            URI statusUri = baseUri.setPath(datasyncPath + "/" + datasetId + statusPath + "/" + jobId).build();
             CloseableHttpResponse response = http.get(statusUri, ContentType.APPLICATION_JSON.getMimeType());
             status = IOUtils.toString(response.getEntity().getContent());
+            System.out.println("Polling the job status: " + status);
             if (status.startsWith("SUCCESS")) {
                 jobStatus = JobStatus.SUCCESS;
             } else if (status.startsWith("FAILURE")) {
                 jobStatus = JobStatus.PUBLISH_ERROR;
+            } else {
+                Thread.sleep(1000);
             }
+            response.close();
         }
         jobStatus.setMessage(status + "(jobId:" + jobId + ")");
         return jobStatus;

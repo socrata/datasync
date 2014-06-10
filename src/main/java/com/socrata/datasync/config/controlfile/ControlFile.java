@@ -36,14 +36,11 @@ public class ControlFile {
      * @param columns the column headers correcsponding to the filetoPublish, needed if it lacks headers
      * @param useSocrataGeocoding if true use Socrata's geocoding to geocode Location columns
      * @return content of control.json based on given job parameters
-     * @throws com.socrata.exceptions.SodaError
-     * @throws InterruptedException
      */
     public static ControlFile generateControlFile(final String fileToPublish,
                                                   final PublishMethod publishMethod,
                                                   final String[] columns,
-                                                  final boolean useSocrataGeocoding) throws
-            SodaError, InterruptedException, IOException {
+                                                  final boolean useSocrataGeocoding) {
 
         int skip = 0;
         String fileToPublishExtension = Utils.getFileExtension(fileToPublish);

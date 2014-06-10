@@ -22,7 +22,7 @@ public class HttpUtility {
     private static final String appHeader = "X-App-Token";
     private static final String userAgent = "datasync";
 
-    public HttpUtility(UserPreferences userPrefs) throws Exception {
+    public HttpUtility(UserPreferences userPrefs) {
         httpClient = HttpClientBuilder.create().build();
         appToken = userPrefs.getAPIKey();
         authHeader = getAuthHeader(userPrefs.getUsername(), userPrefs.getPassword());
