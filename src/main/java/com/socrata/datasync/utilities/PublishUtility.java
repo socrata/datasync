@@ -20,11 +20,14 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.tukaani.xz.LZMA2Options;
+import org.tukaani.xz.XZOutputStream;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -42,7 +45,10 @@ public class PublishUtility {
     private static final String statusPath = "/status";
     private static final String commitPath = "/commit";
     private static final String ssigContentType = "application/x-socrata-ssig";
+    private static final String patchExtenstion = ".sdiff";
+    private static final String compressionExtenstion = ".xz";
     private ObjectMapper mapper = new ObjectMapper();
+    private File patchFile = null;
 
     public PublishUtility(UserPreferences userPrefs) throws Exception {
         http = new HttpUtility(userPrefs);
@@ -69,6 +75,7 @@ public class PublishUtility {
         DatasyncDirectory datasyncDir = new DatasyncDirectory(http, domain, datasetId);
         CloseableHttpResponse signature = null;
         InputStream previousSignature = null;
+        boolean useCompression = true;
         InputStream patch = null;
         JobStatus jobStatus;
 
@@ -84,14 +91,14 @@ public class PublishUtility {
             }
 
             // compute the patch between the csv/tsv file and its previous signature
-            patch = getPatch(new FileInputStream(csvOrTsvFile), previousSignature);
+            patch = getPatch(new FileInputStream(csvOrTsvFile), previousSignature, useCompression);
 
             // post the patch file in blobby chunks - ewww
             List<String> blobIds = postPatchBlobs(patch, datasetId);
 
             // commit the chunks, thereby applying the diff
             CommitMessage commit = new CommitMessage()
-                    .filename(csvOrTsvFile.getName() + ".sdiff")
+                    .filename(csvOrTsvFile.getName() + patchExtenstion + (useCompression ? compressionExtenstion : ""))
                     .relativeTo(pathToSignature)
                     .chunks(blobIds)
                     .control(controlFile);
@@ -111,17 +118,27 @@ public class PublishUtility {
         return jobStatus;
     }
 
-
     /**
      * Computes the diff of the csv or tsv file with the most recent completed signature if there is
      * one, else with nothing
-     * @return an input stream containing the patch
+     * @param newFile an input stream to the new file that is to replace the old
+     * @param previousSignature an input stream to the previous signature
+     * @param compress whether to compress the patch using xz compression
+     * @return an input stream containing the possibly compressed patch
      */
-    private InputStream getPatch(InputStream newSignature, InputStream previousSignature) throws
+    private InputStream getPatch(InputStream newFile, InputStream previousSignature, boolean compress) throws
             SignatureException, IOException, InputException, NoSuchAlgorithmException {
-        BufferedInputStream newStream = new BufferedInputStream(newSignature);
+        BufferedInputStream newStream = new BufferedInputStream(newFile);
         BufferedInputStream previousStream = new BufferedInputStream(previousSignature);
-        return new PatchComputer.PatchComputerInputStream(newStream, new SignatureTable(previousStream), "MD5", 102400);
+        if (!compress) {
+            return new PatchComputer.PatchComputerInputStream(newStream, new SignatureTable(previousStream), "MD5", 102400);
+        } else {
+            patchFile = File.createTempFile("patch", patchExtenstion);
+            XZOutputStream patchStream = new XZOutputStream(new FileOutputStream(patchFile), new LZMA2Options());
+            PatchComputer.compute(newStream, new SignatureTable(previousStream), "MD5", 102400, patchStream);
+            patchStream.close(); // finishes compression and closes underlying stream
+            return new FileInputStream(patchFile);
+        }
     }
 
 
@@ -172,14 +189,17 @@ public class PublishUtility {
      * @return either success or a publish error
      */
     private JobStatus getJobStatus(String datasetId, String jobId) throws URISyntaxException, IOException {
-        URI statusUri = baseUri.setPath(datasyncPath + "/" + datasetId + statusPath + "/" + jobId).build();
-        CloseableHttpResponse response = http.get(statusUri, ContentType.APPLICATION_JSON.getMimeType());
-        String status = IOUtils.toString(response.getEntity().getContent());
-        JobStatus jobStatus;
-        if (status.startsWith("SUCCESS")) {
-            jobStatus = JobStatus.SUCCESS;
-        } else {
-            jobStatus = JobStatus.PUBLISH_ERROR;
+        JobStatus jobStatus = null;
+        String status = null;
+        while (jobStatus == null) {
+            URI statusUri = baseUri.setPath(datasyncPath + "/" + datasetId + statusPath + "/" + jobId).build();
+            CloseableHttpResponse response = http.get(statusUri, ContentType.APPLICATION_JSON.getMimeType());
+            status = IOUtils.toString(response.getEntity().getContent());
+            if (status.startsWith("SUCCESS")) {
+                jobStatus = JobStatus.SUCCESS;
+            } else if (status.startsWith("FAILURE")) {
+                jobStatus = JobStatus.PUBLISH_ERROR;
+            }
         }
         jobStatus.setMessage(status + "(jobId:" + jobId + ")");
         return jobStatus;
