@@ -56,7 +56,7 @@
         <dependency>
             <groupId>com.socrata</groupId>
             <artifactId>soda-api-java</artifactId>
-            <version>0.9.12-SNAPSHOT</version>
+            <version>0.9.12</version>
         </dependency>
         <dependency>
             <groupId>javax.mail</groupId>
