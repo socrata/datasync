@@ -13,7 +13,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class PublishUtilityTest extends TestBase {
+public class DeltaImporter2PublisherTest extends TestBase {
     ObjectMapper mapper = new ObjectMapper();
 
    @Test

@@ -1,5 +1,6 @@
 package com.socrata.datasync;
 
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
@@ -71,10 +72,11 @@ public class DatasyncDirectory {
         URI uri = baseUri.setPath(baseFolder + path).build();
         CloseableHttpResponse response = http.get(uri, ContentType.APPLICATION_JSON.getMimeType());
         int status = response.getStatusLine().getStatusCode();
-        if (status == 200) {
+        if (status == HttpStatus.SC_OK || status == HttpStatus.SC_NOT_MODIFIED) {
             return mapper.readValue(response.getEntity().getContent(), ArrayList.class);
         } else {
-            return new ArrayList<String>();
+            // it isn't a show-stopper to be unable to read directories
+            return new ArrayList<>();
         }
     }
 
