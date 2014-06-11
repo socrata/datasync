@@ -20,6 +20,7 @@ import com.sun.jersey.api.client.ClientResponse;
 public class PortUtility {
 
     private static final String groupingKey = "grouping_aggregate";
+    private static final String drillingKey = "drill_down";
 
 	private PortUtility() {
 		throw new AssertionError("Never instantiate utility classes!");
@@ -137,6 +138,7 @@ public class PortUtility {
      * successfully upload the schema to core (which would otherwise throw an error about refusing to create a column
      * with a grouping_aggregrate but no group-by).  The editing of the field name is necessary for subsequent
      * data loading, since the data from soda2 expectst aggregated columns to include the grouping_aggregate.
+     * Also removes drill-down formatting info, as this is non-sensical without the unaggregated data
      * @param schema the Dataset from soda-java representing the schema
      */
      public static void adaptSchemaForAggregates(Dataset schema) {
@@ -147,6 +149,7 @@ public class PortUtility {
                 Map<String, String> format = col.getFormat();
                 if (format != null) {
                     String aggregation = format.remove(groupingKey);
+                    format.remove(drillingKey);
                     if (aggregation != null) {
                         String oldFieldName = col.getFieldName();
                         col.setFieldName(aggregation + "_" + oldFieldName);
