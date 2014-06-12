@@ -1,9 +1,35 @@
 package com.socrata.datasync.job;
 
+import com.google.common.collect.ImmutableMap;
+import com.socrata.api.Soda2Producer;
+import com.socrata.api.SodaImporter;
+import com.socrata.datasync.DataSyncMetadata;
+import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.SMTPMailer;
+import com.socrata.datasync.SocrataConnectionInfo;
+import com.socrata.datasync.Utils;
+import com.socrata.datasync.config.CommandLineOptions;
+import com.socrata.datasync.config.controlfile.ControlFile;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
+import com.socrata.datasync.publishers.DeltaImporter2Publisher;
+import com.socrata.datasync.publishers.FTPDropbox2Publisher;
+import com.socrata.datasync.publishers.Soda2Publisher;
+import com.socrata.exceptions.SodaError;
+import com.socrata.model.UpsertError;
+import com.socrata.model.UpsertResult;
+import com.socrata.model.importer.Column;
+import com.socrata.model.importer.Dataset;
+import org.apache.commons.cli.CommandLine;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
@@ -14,35 +40,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.google.common.collect.ImmutableMap;
-import com.socrata.datasync.Utils;
-import com.socrata.datasync.config.controlfile.ControlFile;
-import com.socrata.datasync.publishers.DeltaImporter2Publisher;
-import com.socrata.datasync.publishers.FTPDropbox2Publisher;
-import com.socrata.datasync.publishers.Soda2Publisher;
-import org.apache.commons.cli.CommandLine;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
-import com.socrata.datasync.DataSyncMetadata;
-import com.socrata.datasync.PublishMethod;
-import com.socrata.datasync.SMTPMailer;
-import com.socrata.datasync.SocrataConnectionInfo;
-import com.socrata.datasync.config.CommandLineOptions;
-import com.socrata.api.Soda2Producer;
-import com.socrata.api.SodaImporter;
-import com.socrata.datasync.config.userpreferences.UserPreferences;
-import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
-import com.socrata.exceptions.SodaError;
-import com.socrata.model.UpsertError;
-import com.socrata.model.UpsertResult;
-import com.socrata.model.importer.Column;
-import com.socrata.model.importer.Dataset;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
@@ -73,6 +70,9 @@ public class IntegrationJob extends Job {
     private boolean publishViaFTP = false;
     private boolean publishViaDi2Http = false;
     private ControlFile controlFile = null;
+
+    private ObjectMapper controlFileMapper =
+            new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     public IntegrationJob() {
         userPrefs = new UserPreferencesJava();
@@ -203,17 +203,29 @@ public class IntegrationJob extends Job {
     public void setPublishViaDi2Http(boolean newPublishViaDi2Http) { publishViaDi2Http = newPublishViaDi2Http; }
 
 
-
+    /**
+     * Checks that the command line arguments are sensible
+     * NB: it is expected that this is run before 'configure'.
+     * @param cmd the commandLine object constructed from the user's options
+     * @return true if the commandLine is approved, false otherwise
+     */
     public boolean validateArgs(CommandLine cmd) {
-        return  validateDatasetIdArg(cmd) &&
-                validateFileToPublishArg(cmd) &&
-                validatePublishMethodArg(cmd) &&
-                validateHeaderRowArg(cmd) &&
-                validatePublishViaFtpArg(cmd) &&
-                validatePublishViaDi2HttpArg(cmd) &&
-                validatePathToControlFileArg(cmd);
+        CommandLineOptions options = new CommandLineOptions();
+        return  validateDatasetIdArg(cmd, options) &&
+                validateFileToPublishArg(cmd, options) &&
+                validatePublishMethodArg(cmd, options) &&
+                validateHeaderRowArg(cmd, options) &&
+                validatePublishViaFtpArg(cmd, options) &&
+                validatePublishViaDi2HttpArg(cmd, options) &&
+                validatePathToControlFileArg(cmd, options);
     }
 
+    /**
+     * Configures an integration job prior to running it; in particular, the fields we need are
+     * set from the cmd line and the controlFile contents are deserialized
+     * NB: This should be run after 'validateArgs' and before 'run'
+     * @param cmd the commandLine object constructed from the user's options
+     */
     public void configure(CommandLine cmd) {
         CommandLineOptions options = new CommandLineOptions();
         // Set required parameters
@@ -227,38 +239,29 @@ public class IntegrationJob extends Job {
         }
 
         // Set optional parameters
-        if(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null) {
-            setPathToControlFile(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG));
-            ObjectMapper mapper = new ObjectMapper();
-            try {
-                controlFile = mapper.readValue(pathToControlFile, ControlFile.class);
-            } catch (Exception e1) {
-                System.out.println("Could not properly parse control file:" + e1.getMessage());
-                try {
-                    System.out.println("Attempting to build control file from content in job file");
-                    controlFile = mapper.readValue(controlFileContent, ControlFile.class);
-                } catch (Exception e2) {
-                    System.out.println("Resorting to default config file");
-                    controlFile = ControlFile.generateControlFile(fileToPublish, publishMethod, null, true);
-                }
-            }
-        }
-        String publishViaFTP = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG, options.DEFAULT_PUBLISH_VIA_FTP);
-        if(publishViaFTP.equalsIgnoreCase("true")) {
+        String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG, options.DEFAULT_PUBLISH_VIA_FTP);
+        if(publishingWithFtp.equalsIgnoreCase("true")) {
             setPublishViaFTP(true);
         } else { // cmd.getOptionValue("pf") == "false"
             setPublishViaFTP(false);
         }
-        String publishViaDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG, options.DEFAULT_PUBLISH_VIA_DI2);
-        if(publishViaDi2.equalsIgnoreCase("true")) {
+        String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG, options.DEFAULT_PUBLISH_VIA_DI2);
+        if(publishingWithDi2.equalsIgnoreCase("true")) {
             setPublishViaDi2Http(true);
         } else {
             setPublishViaDi2Http(false);
         }
+        if((publishViaFTP || publishViaDi2Http) && cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null) {
+            setPathToControlFile(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG));
+            try {
+                controlFile = controlFileMapper.readValue(new File(pathToControlFile), ControlFile.class);
+            } catch (Exception e1) {
+                System.out.println("Could not properly parse control file:" + e1.getMessage());
+            }
+        }
     }
 
     /**
-	 * 
 	 * @return an error JobStatus if any input is invalid, otherwise JobStatus.VALID
 	 */
 	public JobStatus validate(SocrataConnectionInfo connectionInfo) {
@@ -302,20 +305,25 @@ public class IntegrationJob extends Job {
                 // certainly propagate later where the error message will be more appropriate
             }
 		}
-        if(publishViaFTP || publishViaDi2Http) {
-            if((pathToControlFile == null || pathToControlFile.equals("")) &&
-                    (controlFileContent == null || controlFileContent.equals(""))) {
-                JobStatus errorStatus = JobStatus.PUBLISH_ERROR;
-                errorStatus.setMessage("You must generate or select a Control file if publishing via FTP SmartUpdate or delta-importer-2 over HTTP");
-                return errorStatus;
+        if((publishViaFTP || publishViaDi2Http) && (controlFile == null)) {
+            JobStatus controlDeserialization = null;
+            if (controlFileContent != null && !controlFileContent.equals("")) {
+                controlDeserialization = deserializeControlFile(controlFileContent);
+            }
+            if (pathToControlFile != null && !pathToControlFile.equals("")) {
+                controlDeserialization = deserializeControlFile(new File(pathToControlFile));
+            }
+            if (controlDeserialization == null) {
+                JobStatus noControl = JobStatus.PUBLISH_ERROR;
+                noControl.setMessage("You must generate or select a Control file if publishing via FTP SmartUpdate or delta-importer-2 over HTTP");
+                return noControl;
             } else {
-                if(pathToControlFile != null && !pathToControlFile.equals("")) {
-                    File controlFile = new File(pathToControlFile);
-                    if(!controlFile.exists() || controlFile.isDirectory()) {
-                        JobStatus errorStatus = JobStatus.PUBLISH_ERROR;
-                        errorStatus.setMessage(pathToControlFile + ": Control file does not exist");
-                        return errorStatus;
-                    }
+                if (controlDeserialization.isError()) {
+                    return controlDeserialization;
+                }
+                if (publishViaDi2Http && !fileToPublishHasHeaderRow && !controlFile.hasColumns()) {
+                    JobStatus noHeaders = JobStatus.PUBLISH_ERROR;
+                    noHeaders.setMessage("Headers must be specified in either the file being published or in the control file via 'columns'");
                 }
             }
         }
@@ -346,8 +354,13 @@ public class IntegrationJob extends Job {
 
         return JobStatus.VALID;
 	}
-	
-	public JobStatus run() throws IOException {
+
+    /**
+     * Runs an integration job. It is expected that 'configure' was run beforehand.
+     * @return
+     * @throws IOException
+     */
+    public JobStatus run() throws IOException {
 		SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
 		
 		UpsertResult result = null;
@@ -603,8 +616,7 @@ public class IntegrationJob extends Job {
         return numberOfRows;
     }
 
-    private boolean validatePathToControlFileArg(CommandLine cmd) {
-        CommandLineOptions options = new CommandLineOptions();
+    private boolean validatePathToControlFileArg(CommandLine cmd, CommandLineOptions options) {
         if(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null) {
             String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
             String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
@@ -631,20 +643,26 @@ public class IntegrationJob extends Job {
         return true;
     }
 
-    private boolean validatePublishViaFtpArg(CommandLine cmd) {
-        CommandLineOptions options = new CommandLineOptions();
+    private boolean validatePublishViaFtpArg(CommandLine cmd, CommandLineOptions options) {
         String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
-        if(publishingWithFtp != null &&
-                !publishingWithFtp.equalsIgnoreCase("true") &&
-                !publishingWithFtp.equalsIgnoreCase("false")) {
+        if (publishingWithFtp == null) {
+            return true;
+        }
+        if (!publishingWithFtp.equalsIgnoreCase("true") && !publishingWithFtp.equalsIgnoreCase("false")) {
             System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " must be 'true' or 'false'");
             return false;
+        }
+        if (publishingWithFtp.equalsIgnoreCase("true")) {
+            if (cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) == null) {
+                System.err.println("A control file must be specified when " +
+                        "-pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is set to 'true'");
+                return false;
+            }
         }
         return true;
     }
 
-    private boolean validatePublishViaDi2HttpArg(CommandLine cmd) {
-        CommandLineOptions options = new CommandLineOptions();
+    private boolean validatePublishViaDi2HttpArg(CommandLine cmd, CommandLineOptions options) {
         String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
         if (publishingWithDi2 == null) {
             return true;
@@ -675,8 +693,7 @@ public class IntegrationJob extends Job {
         return true;
     }
 
-    private boolean validateHeaderRowArg(CommandLine cmd) {
-        CommandLineOptions options = new CommandLineOptions();
+    private boolean validateHeaderRowArg(CommandLine cmd, CommandLineOptions options) {
         if(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG) == null) {
             System.err.println("Missing required argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " is required");
             return false;
@@ -686,12 +703,10 @@ public class IntegrationJob extends Job {
             System.err.println("Invalid argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " must be 'true' or 'false'");
             return false;
         }
-        // TODO: after talk to robert, figure out what the restrictions are for di2/http
         return true;
     }
 
-    private boolean validateFileToPublishArg(CommandLine cmd) {
-        CommandLineOptions options = new CommandLineOptions();
+    private boolean validateFileToPublishArg(CommandLine cmd, CommandLineOptions options) {
         if(cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG) == null) {
             System.err.println("Missing required argument: -f,--" + options.FILE_TO_PUBLISH_FLAG + " is required");
             return false;
@@ -699,8 +714,7 @@ public class IntegrationJob extends Job {
         return true;
     }
 
-    private boolean validateDatasetIdArg(CommandLine cmd) {
-        CommandLineOptions options = new CommandLineOptions();
+    private boolean validateDatasetIdArg(CommandLine cmd, CommandLineOptions options) {
         if(cmd.getOptionValue(options.DATASET_ID_FLAG) == null) {
             System.err.println("Missing required argument: -i,--" + options.DATASET_ID_FLAG + " is required");
             return false;
@@ -708,8 +722,7 @@ public class IntegrationJob extends Job {
         return true;
     }
 
-    private boolean validatePublishMethodArg(CommandLine cmd) {
-        CommandLineOptions options = new CommandLineOptions();
+    private boolean validatePublishMethodArg(CommandLine cmd, CommandLineOptions options) {
         String method = cmd.getOptionValue("m");
         if(method == null) {
             System.err.println("Missing required argument: -m,--" + options.PUBLISH_METHOD_FLAG + " is required");
@@ -728,6 +741,29 @@ public class IntegrationJob extends Job {
         }
         return true;
     }
+
+    private JobStatus deserializeControlFile(String contents) {
+        try {
+            controlFile = controlFileMapper.readValue(contents, ControlFile.class);
+            return JobStatus.SUCCESS;
+        } catch (Exception e) {
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage("Unable to interpret control file contents: " + e);
+            return status;
+        }
+    }
+
+    private JobStatus deserializeControlFile(File controlFilePath) {
+        try {
+            controlFile = controlFileMapper.readValue(controlFilePath, ControlFile.class);
+            return JobStatus.SUCCESS;
+        } catch (Exception e) {
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage("Unable to read in and interpret control file contents: " + e);
+            return status;
+        }
+    }
+
 
 
     /**

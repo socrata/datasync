@@ -53,7 +53,8 @@ public class CommandLineOptions {
         options.addOption("h", HAS_HEADER_ROW_FLAG, true, "File to publish has header row (true or false) [IntegrationJob]");
         options.addOption("pf", PUBLISH_VIA_FTP_FLAG, true, "Use FTP (instead of HTTP) for publishing (true or false) (default: " + DEFAULT_PUBLISH_VIA_FTP + ") [IntegrationJob]");
         options.addOption("di2", PUBLISH_VIA_DI2_FLAG, true, "Use delta-importer-2 over HTTP for publishing (true or false) (default: false) [IntegrationJob]");
-        options.addOption("sc", PATH_TO_CONTROL_FILE_FLAG, true, "control.json file, if set overrides job parameters (optional) [IntegrationJob]");
+        options.addOption("sc", PATH_TO_CONTROL_FILE_FLAG, true, "control.json file, needed for publishing via FTP or delta-importer-2 over HTTP;" +
+                                                                 "if set overrides job parameters [IntegrationJob]");
 
         // PortJob params
         options.addOption("pm", PORT_METHOD_FLAG, true, "Port method (" + Arrays.toString(PortMethod.values()) + ") [PortJob]");

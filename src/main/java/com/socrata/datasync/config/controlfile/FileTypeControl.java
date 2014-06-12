@@ -29,6 +29,11 @@ public class FileTypeControl {
 
     public FileTypeControl() {}
 
+    public boolean hasColumns(){
+        return (columns != null && columns.length > 0);
+    }
+
+
     // Builder methods:
 
     public FileTypeControl encoding(String e) { encoding = e; return this; }

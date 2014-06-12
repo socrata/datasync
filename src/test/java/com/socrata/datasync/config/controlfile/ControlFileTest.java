@@ -3,6 +3,7 @@ package com.socrata.datasync.config.controlfile;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.exceptions.SodaError;
 import junit.framework.TestCase;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
@@ -35,7 +36,7 @@ public class ControlFileTest {
             "\"useSocrataGeocoding\":" + useGeocoding +
         "}";
 
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     @Test
     public void testDefaultControlFileGenerationCsv() throws SodaError, InterruptedException, IOException {
@@ -163,6 +164,32 @@ public class ControlFileTest {
         LocationColumns lc = cf.csv.syntheticLocations.get("loc1");
         TestCase.assertEquals(state, lc.state);
         TestCase.assertNull(lc.latitude);
+    }
+
+    @Test
+    public void testHasColumns() {
+        ControlFile noColumns = ControlFile.generateControlFile("blah.csv", PublishMethod.replace, null, false);
+        ControlFile emptyColumns = ControlFile.generateControlFile("blah.csv", PublishMethod.replace, new String[]{}, false);
+        ControlFile columnsInCsv = ControlFile.generateControlFile("blah.csv", PublishMethod.replace, new String[]{"col1"}, false);
+        ControlFile columnsInTsv = ControlFile.generateControlFile("blah.tsv", PublishMethod.replace, new String[]{"col1"}, false);
+
+        TestCase.assertFalse(noColumns.hasColumns());
+        TestCase.assertFalse(emptyColumns.hasColumns());
+        TestCase.assertTrue(columnsInCsv.hasColumns());
+        TestCase.assertTrue(columnsInTsv.hasColumns());
+    }
+
+    @Test
+    public void testSingleValueAsArray() throws IOException {
+        String controlFileJson = "{" +
+                "\"action\":\"Replace\"," +
+                "\"csv\":" +
+                    "{" +
+                        "\"fixedTimestampFormat\":\"ISO8601\"" +
+                    "}" +
+                "}";
+        ControlFile cf = mapper.readValue(controlFileJson, ControlFile.class);
+        TestCase.assertEquals("ISO8601", cf.csv.fixedTimestampFormat[0]);
     }
 }
 

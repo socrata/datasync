@@ -2,14 +2,11 @@ package com.socrata.datasync.config.controlfile;
 
 import com.socrata.datasync.Utils;
 import com.socrata.datasync.PublishMethod;
-import com.socrata.exceptions.SodaError;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
-import java.io.IOException;
-
-@JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonPropertyOrder(alphabetic=true)
 public class ControlFile {
@@ -18,6 +15,9 @@ public class ControlFile {
     public FileTypeControl csv;
     public FileTypeControl tsv;
 
+    // NB: when using a mapper to read this class, you must enable
+    // DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, if either of the timestamp formats
+    // in csvControl or tsvControl are strings, rather than arrays of strings.
     public ControlFile() {}
 
     public ControlFile(String action, FileTypeControl csvControl, FileTypeControl tsvControl) {
@@ -68,6 +68,10 @@ public class ControlFile {
         } else {
             return new ControlFile(capitalizeFirstLetter(publishMethod), null, ftc);
         }
+    }
+
+    public boolean hasColumns() {
+        return ((csv != null && csv.hasColumns()) || (tsv != null && tsv.hasColumns()));
     }
 
     private static String capitalizeFirstLetter(PublishMethod method) {
