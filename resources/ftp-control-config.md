@@ -7,7 +7,7 @@ bodyclass: homepage
 ### Contents
 - [1. Setting up FTP Control file](#setup-ftp-control)
     - [1a. Header row / column list](#header-row)
-    - [1b. Date/time formatting](#date-time) 
+    - [1b. Date/time formatting](#date-time)
     - [1c. Location column and geocoding configuration](#location-geocoding)
     - [1d. Other options](#other-options)
 - [2. Checking the logs and downloading CSV "snapshots"](#check-logs)
@@ -19,14 +19,14 @@ bodyclass: homepage
 <strong>NOTICE:</strong> this guide only pertains to using the 'replace via FTP' method available in DataSync version 1.0
 </div>
 
-### 1. Setting up FTP Control file 
+### 1. Setting up FTP Control file
 
 The control file is a JSON-formatted file that is used to configure a Standard DataSync job that uses the 'replace via FTP' method. Control files are specific to the dataset you are updating.
 
 An example of a typical control file:
 ```json
 {
-  "action" : "Replace", 
+  "action" : "Replace",
   "csv" :
     {
       "useSocrataGeocoding" : true,
@@ -46,18 +46,18 @@ An example of a typical control file:
 }
 ```
 
-This guide will describe how to use the different options within the control file. 
+This guide will describe how to use the different options within the control file.
 
 {#header-row}<p>&nbsp;</p>
 
-### 1a. Header row/column list 
+### 1a. Header row/column list
 
 The `columns` and `skip` options enable configuration of how the columns within the CSV/TSV aligns with those of the dataset.
 
-`columns`: List of column names in the following format `["col_id1","col_id2",..]` (double quotes are optional). If it’s `null` then the first line of the CSV/TSV after any skipped records is used. If specified, it must be an array of strings, and must not contain nulls.   
-**IMPORTANT NOTE:** the column names, whether provided in “columns” or in the first row of the CSV/TSV, must be column identifiers (API field names), not the display name of the columns. 
+`columns`: List of column names in the following format `["col_id1","col_id2",..]` (double quotes are optional). If it’s `null` then the first line of the CSV/TSV after any skipped records is used. If specified, it must be an array of strings, and must not contain nulls.
+**IMPORTANT NOTE:** the column names, whether provided in “columns” or in the first row of the CSV/TSV, must be column identifiers (API field names), not the display name of the columns.
 
-`skip`: Specifies the number of rows to skip before reaching the header. 
+`skip`: Specifies the number of rows to skip before reaching the header.
 
 **Common combinations of `columns` and `skip`:**
 
@@ -67,15 +67,15 @@ If the first line of the CSV/TSV is the list of column identifiers:
 "skip": 0,
 ```
 
-If the first line of the CSV is the columns incorrectly formatted, for example with human-readable names instead of column identifiers, for example:  
+If the first line of the CSV is the columns incorrectly formatted, for example with human-readable names instead of column identifiers, for example:
 ```
-"columns": ["first_name","last_name","age"], 
+"columns": ["first_name","last_name","age"],
 "skip": 1,
 ```
 
-If the first line of the CSV/TSV is data (there is no header row), for example you would use:  
+If the first line of the CSV/TSV is data (there is no header row), for example you would use:
 ```
-"columns": ["first_name","last_name","age"], 
+"columns": ["first_name","last_name","age"],
 "skip": 0,
 ```
 
@@ -99,25 +99,25 @@ This would accept any of the following example date/time data values: "2014-04-2
 
 If you want to allow a date with or without a time value (e.g. both "2014-04-22" and "2014-04-22 9:30:00"), you would use:
 ```
-"fixedTimestampFormat" : ["yyyy-MM-dd", "yyyy-MM-dd hh:mm:ss"],
-"floatingTimestampFormat" : ["yyyy-MM-dd", "yyyy-MM-dd hh:mm:ss"],
+"fixedTimestampFormat" : ["yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss"],
+"floatingTimestampFormat" : ["yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss"],
 ```
 
-#### Timezone option 
+#### Timezone option
 `timezone` specifies the timezones for FixedTimestamps ("Date & Time (with timezone)" columns). This only has an effect if the timestamp format does not specify a time zone.
 
 You can set this to one of the following:
-1. "UTC"  
-2. An offset (ex "-0800")  
+1. "UTC"
+2. An offset (ex "-0800")
 3. A timezone name (e.g. "US/Pacific").  The list of accepted names is in timezones.txt in the root directory of the FTP server (instructions for logging into the FTP server is in the section below "Checking the logs and downloading CSV 'snapshots'").
 
 {#location-geocoding}<p>&nbsp;</p>
 
-### 1c. Location column and geocoding configuration 
+### 1c. Location column and geocoding configuration
 
-The the `syntheticLocations` option allows configuring a Location datatype column to "pull" or populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV. 
+The the `syntheticLocations` option allows configuring a Location datatype column to "pull" or populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV.
 
-For example: 
+For example:
 ```
  "syntheticLocations" : {
    "location_col_id" : {
@@ -131,11 +131,11 @@ For example:
  }
 ```
 
-All of the following are optional: "address", "city", "state", "zip", "latitude", and "longitude". 
-Those that are are not provided are not filled in on the generated location.  The values are 
+All of the following are optional: "address", "city", "state", "zip", "latitude", and "longitude".
+Those that are are not provided are not filled in on the generated location.  The values are
 field names of columns that must exist in the CSV. In the above example, a Location datatype column with the identifier `location_col_id` would pull in the "address" from the column with identifier `address_col_id`, the "city" from column with identifier `city_col_id`, and so on.
 
-When you provide any combination of location information but do not fill in latitude or longitude then Socrata will do geocoding automatically to generate the latitude and longitude values. Read [this guide](http://support.socrata.com/entries/27849363-Location-Information-Data-which-can-be-geocoded) for more detailed information on the Location column.  
+When you provide any combination of location information but do not fill in latitude or longitude then Socrata will do geocoding automatically to generate the latitude and longitude values. Read [this guide](http://support.socrata.com/entries/27849363-Location-Information-Data-which-can-be-geocoded) for more detailed information on the Location column.
 
 <div class="well">
 <strong>IMPORTANT:</strong> If you are NOT using Socrata's geocoding (i.e. if you are providing the latitude and longitude values directly to the Location column) you need to set the `useSocrataGeocoding` option to `false`.
@@ -157,28 +157,28 @@ Comming soon!
 
 {#check-logs}<p>&nbsp;</p>
 
-### 2. Checking the logs and downloading CSV "snapshots" 
+### 2. Checking the logs and downloading CSV "snapshots"
 
 #### Connecting to the FTP server
 You can use [Filezilla](https://filezilla-project.org/) or any other FTP client that supports FTPS to connect to the FTP server.
 
 In Filezilla go to `File -> Site Manager`
 
-Set up a new connection with the following details: 
+Set up a new connection with the following details:
 
-**Host:** production.ftp.socrata.net  
-**Port:** 22222  
-**Protocol:** FTP  
-**Encryption:** Require explicitly FTP over TLS  
-**User:** `<Your Socrata username>`  
-**Password:** `<Your Socrata password>`  
+**Host:** production.ftp.socrata.net
+**Port:** 22222
+**Protocol:** FTP
+**Encryption:** Require explicitly FTP over TLS
+**User:** `<Your Socrata username>`
+**Password:** `<Your Socrata password>`
 
 Ensure the transfer mode is 'Passive' by going to:
 `Transfer Settings -> Transfer mode : Passive.`
 
 Save the connection and press "Connect"
 
-If you only have permission to one domain, you will be dropped into the directory for that domain. You should see the directories named with the dataset ID (e.g. b2fd-cjk2) of any dataset you have updated using DataSync replace via FTP. If you have permission to multiple domains, you will see them as subdirectories. 
+If you only have permission to one domain, you will be dropped into the directory for that domain. You should see the directories named with the dataset ID (e.g. b2fd-cjk2) of any dataset you have updated using DataSync replace via FTP. If you have permission to multiple domains, you will see them as subdirectories.
 
 #### Checking the logs and downloading CSV "snapshots"
 
