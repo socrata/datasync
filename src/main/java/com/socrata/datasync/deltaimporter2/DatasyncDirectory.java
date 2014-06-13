@@ -1,5 +1,6 @@
-package com.socrata.datasync;
+package com.socrata.datasync.deltaimporter2;
 
+import com.socrata.datasync.HttpUtility;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;

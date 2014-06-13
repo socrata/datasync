@@ -1,16 +1,21 @@
 package com.socrata.datasync.utilities;
 
-import com.socrata.datasync.BlobId;
-import com.socrata.datasync.JobId;
-import com.socrata.datasync.CommitMessage;
 import com.socrata.datasync.TestBase;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.controlfile.FileTypeControl;
+import com.socrata.datasync.deltaimporter2.BlobId;
+import com.socrata.datasync.deltaimporter2.CommitMessage;
+import com.socrata.datasync.deltaimporter2.JobId;
+import com.socrata.datasync.deltaimporter2.LogItem;
 import junit.framework.TestCase;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 
 public class DeltaImporter2PublisherTest extends TestBase {
@@ -73,4 +78,28 @@ public class DeltaImporter2PublisherTest extends TestBase {
                 "}";
         TestCase.assertEquals(expectedJson, mapper.writeValueAsString(commit));
     }
+
+    @Test
+    public void testLogDeserialization() throws IOException, URISyntaxException {
+        InputStream logText = new FileInputStream(new File("src/test/resources/delta_importer_2_log_text.json"));
+
+        LogItem[] deltaLog = mapper.readValue(logText, LogItem[].class);
+        String[] logTypes = {"committing-job", "committed-job", "processing", "applying-diff-time",
+                             "counting-records-time", "reading-metadata", "reading-new-data-time",
+                             "reading-and-sorting-time", "generating-upsert-time", "finished",
+                             "upserting-time", "storing-completed-time", "success", "processing-time"};
+
+        TestCase.assertEquals(logTypes.length, deltaLog.length);
+        for (int i = 0; i < deltaLog.length; i++) {
+            TestCase.assertEquals(logTypes[i], deltaLog[i].type);
+            if (deltaLog[i].type.equalsIgnoreCase("finished")) {
+                TestCase.assertEquals(new Integer(1), deltaLog[i].getInserted());
+                TestCase.assertEquals(new Integer(0), deltaLog[i].getUpdated());
+                TestCase.assertEquals(new Integer(1), deltaLog[i].getDeleted());
+                TestCase.assertEquals(new Integer(0), deltaLog[i].getErrors());
+            }
+        }
+
+    }
+
 }

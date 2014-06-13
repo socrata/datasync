@@ -1,11 +1,9 @@
 package com.socrata.datasync.utilities;
 
 
-import com.socrata.datasync.BlobId;
 import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.TestBase;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
-import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.entity.EntityBuilder;
@@ -13,7 +11,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +20,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.HashMap;
 
 public class HttpUtilityTest extends TestBase {
     ObjectMapper mapper;

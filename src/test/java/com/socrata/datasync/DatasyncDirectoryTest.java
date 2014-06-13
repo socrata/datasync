@@ -1,5 +1,6 @@
 package com.socrata.datasync;
 
+import com.socrata.datasync.deltaimporter2.DatasyncDirectory;
 import junit.framework.TestCase;
 import org.junit.Before;
 import org.junit.Test;

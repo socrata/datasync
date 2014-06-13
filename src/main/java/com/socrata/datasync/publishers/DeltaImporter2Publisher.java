@@ -1,12 +1,13 @@
 package com.socrata.datasync.publishers;
 
-import com.socrata.datasync.BlobId;
-import com.socrata.datasync.JobId;
-import com.socrata.datasync.CommitMessage;
-import com.socrata.datasync.DatasyncDirectory;
+import com.socrata.datasync.deltaimporter2.BlobId;
+import com.socrata.datasync.deltaimporter2.JobId;
+import com.socrata.datasync.deltaimporter2.CommitMessage;
+import com.socrata.datasync.deltaimporter2.DatasyncDirectory;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.HttpUtility;
+import com.socrata.datasync.deltaimporter2.LogItem;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.ssync.PatchComputer;
 import com.socrata.ssync.SignatureComputer;
@@ -40,15 +41,19 @@ import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
+import java.util.regex.MatchResult;
 
 public class DeltaImporter2Publisher {
 
     private static final String datasyncPath = "/datasync/id";
     private static final String statusPath = "/status";
     private static final String commitPath = "/commit";
+    private static final String logPath = "/log";
     private static final String ssigContentType = "application/x-socrata-ssig";
     private static final String patchExtenstion = ".sdiff";
     private static final String compressionExtenstion = ".xz";
+    private static final String finishedLogKey = "finished";
     private static final int httpRetries = 3;
 
 
@@ -259,23 +264,24 @@ public class DeltaImporter2Publisher {
         String status = null;
         StatusLine statusLine = null;
         URI statusUri = baseUri.setPath(datasyncPath + "/" + datasetId + statusPath + "/" + jobId).build();
+        URI logUri = baseUri.setPath(datasyncPath + "/" + datasetId + logPath + "/" + jobId + ".json").build();
         int retries = 0;
         while (jobStatus == null && retries < httpRetries) {
             CloseableHttpResponse response = http.get(statusUri, ContentType.APPLICATION_JSON.getMimeType());
             statusLine = response.getStatusLine();
             int statusCode = statusLine.getStatusCode();
-            if (statusCode == HttpStatus.SC_OK || statusCode == HttpStatus.SC_NOT_MODIFIED) {
+            if (statusCode == HttpStatus.SC_OK) {
                 status = IOUtils.toString(response.getEntity().getContent());
-                System.out.println("Polling the job status: " + status);
+                System.out.print("Polling the job status: " + status);
                 if (status.startsWith("SUCCESS")) {
                     jobStatus = JobStatus.SUCCESS;
                 } else if (status.startsWith("FAILURE")) {
                     jobStatus = JobStatus.PUBLISH_ERROR;
                 } else {
-                    Thread.sleep(1000);
+                   Thread.sleep(1000);
                 }
-            } else {
-                retries +=1;
+            } else if (statusCode != HttpStatus.SC_NOT_MODIFIED) {
+                retries += 1;
                 Thread.sleep(1000);
             }
             response.close();
@@ -284,7 +290,32 @@ public class DeltaImporter2Publisher {
             throw new HttpException(statusLine.toString());
         }
         jobStatus.setMessage(status + "(jobId:" + jobId + ")");
+        loadStatusWithCRUD(jobStatus, logUri);
         return jobStatus;
+    }
+
+    private void loadStatusWithCRUD(JobStatus status, URI logUri) {
+        try {
+            CloseableHttpResponse response = http.get(logUri, ContentType.APPLICATION_JSON.getMimeType());
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == HttpStatus.SC_OK) {
+                LogItem[] deltaLog = mapper.readValue(response.getEntity().getContent(), LogItem[].class);
+                for (int i = 0; i < deltaLog.length; i++) {
+                    LogItem item = deltaLog[i];
+                    if (item.type.equalsIgnoreCase(finishedLogKey)) {
+                        status.rowsCreated = item.getInserted();
+                        status.rowsUpdated = item.getUpdated();
+                        status.rowsDeleted = item.getDeleted();
+                        status.errors = item.getErrors();
+                        break;
+                    }
+                }
+            } else {
+                System.err.println("Unable to parse out CRUD details from logs");
+            }
+        } catch (IOException e) {
+            System.err.println("Unable to parse out CRUD details from logs");
+        }
     }
 
     private InputStream getNullSignature() throws IOException, NoSuchAlgorithmException {

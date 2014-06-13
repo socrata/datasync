@@ -1,4 +1,4 @@
-package com.socrata.datasync;
+package com.socrata.datasync.deltaimporter2;
 
 import com.socrata.datasync.config.controlfile.ControlFile;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;

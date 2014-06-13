@@ -56,6 +56,11 @@ public enum JobStatus {
      */
     private boolean isError;
 
+    public Integer rowsUpdated;
+    public Integer rowsCreated;
+    public Integer rowsDeleted;
+    public Integer errors;
+
     /**
      * Private constructor (to prevent re-construction).
      * 

@@ -256,7 +256,8 @@ public class IntegrationJob extends Job {
             try {
                 controlFile = controlFileMapper.readValue(new File(pathToControlFile), ControlFile.class);
             } catch (Exception e1) {
-                System.out.println("Could not properly parse control file:" + e1.getMessage());
+                System.err.println("Could not properly parse control file:" + e1.getMessage());
+                System.exit(1);
             }
         }
     }
@@ -362,17 +363,15 @@ public class IntegrationJob extends Job {
      */
     public JobStatus run() throws IOException {
 		SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
-		
 		UpsertResult result = null;
 		JobStatus runStatus = JobStatus.SUCCESS;
-        String runErrorMessage = null;
 
-		JobStatus validationStatus = validate(connectionInfo);
+        JobStatus validationStatus = validate(connectionInfo);
         if(validationStatus.isError()) {
 			runStatus = validationStatus;
-            runErrorMessage = validationStatus.getMessage();
 		} else if(publishViaFTP && !publishMethod.equals(PublishMethod.replace)) {
-            runErrorMessage = "FTP does not currently support upsert, append or delete";
+            runStatus = JobStatus.PUBLISH_ERROR;
+            runStatus.setMessage("FTP does not currently support upsert, append or delete");
         } else {
             File fileToPublishFile = new File(fileToPublish);
             // attach a requestId to all Producer API calls (for error tracking purposes)
@@ -385,110 +384,50 @@ public class IntegrationJob extends Job {
                     Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * NUM_BYTES_PER_MB;
             int numRowsPerChunk = Integer.parseInt(userPrefs.getNumRowsPerChunk());
 
-            boolean noPublishExceptions = false;
+            boolean publishExceptions = false;
 			try {
                  switch (publishMethod) {
                      case upsert:
                      case append:
                          result = doAppendOrUpsertViaHTTP(
                                  producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
-                         noPublishExceptions = true;
                          break;
                      case replace:
                          if (publishViaFTP) {
-                             JobStatus ftpSmartUpdateStatus = doPublishViaFTPv2(importer, fileToPublishFile);
-                             if (ftpSmartUpdateStatus.isError()) {
-                                 runErrorMessage = ftpSmartUpdateStatus.getMessage();
-                             } else {
-                                 noPublishExceptions = true;
-                             }
+                             runStatus = doPublishViaFTPv2(importer, fileToPublishFile);
                          } else if (publishViaDi2Http) {
-                             JobStatus di2Status = publisher.publishWithDi2OverHttp(datasetID, fileToPublishFile, controlFile);
-                             if (di2Status.isError()) {
-                                 runErrorMessage = di2Status.getMessage();
-                             } else {
-                                 noPublishExceptions = true;
-                             }
+                             runStatus = publisher.publishWithDi2OverHttp(datasetID, fileToPublishFile, controlFile);
                          } else {   // Publish via old HTTP method
                              result = Soda2Publisher.replaceNew(
                                      producer, importer, datasetID, fileToPublishFile, fileToPublishHasHeaderRow);
-                             noPublishExceptions = true;
                          }
                          break;
                      case delete:
                          result = doDeleteViaHTTP(
                                  producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
-                         noPublishExceptions = true;
                          break;
                      default:
-                         runErrorMessage = JobStatus.INVALID_PUBLISH_METHOD.getMessage();
+                         runStatus = JobStatus.INVALID_PUBLISH_METHOD;
                  }
 			}
-			catch (IOException ioException) {
-                ioException.printStackTrace();
-				runErrorMessage = "IO exception: " + ioException.getMessage();
-			} 
-			catch (SodaError sodaError) {
-                sodaError.printStackTrace();
-                runErrorMessage = sodaError.getMessage();
-			} 
-			catch (InterruptedException intrruptException) {
-                intrruptException.printStackTrace();
-				runErrorMessage = "Interrupted exception: " + intrruptException.getMessage();
-			}
-			catch (Exception other) {
-                other.printStackTrace();
-				runErrorMessage = "Unexpected exception: " + other.getMessage();
+			catch (IOException | SodaError | InterruptedException e) {
+                publishExceptions = true;
+                e.printStackTrace();
 			}
 			finally {
-                if(noPublishExceptions) {
-                    // Check for [row-level] SODA 2 errors
-					if(result != null) {
-                        if(result.errorCount() > 0) {
-                            int lineIndexOffset = (fileToPublishHasHeaderRow) ? 2 : 1;
-                            runErrorMessage = "";
-							for (UpsertError upsertErr : result.getErrors()) {
-								runErrorMessage += upsertErr.getError() + " (line "
-										+ (upsertErr.getIndex() + lineIndexOffset) + " of file) \n";
-							}
-							runStatus = JobStatus.PUBLISH_ERROR;
-						}
-					}
-				} else {
-                    runStatus = JobStatus.PUBLISH_ERROR;
-                    if(runErrorMessage != null) {
-                        if(runErrorMessage.equals("Not found")) {
-                            runErrorMessage = "Dataset with that ID does not exist or you do not have permission to publish to it";
-                        }
-                    }
-				}
                 producer.close();
                 publisher.close();
 			}
-		}
 
-        // TODO NEED to make this cleaner by turning JobStatus into regular class (rather than enum)
-        if(runErrorMessage != null)
-            runStatus.setMessage(runErrorMessage);
-
-		String adminEmail = userPrefs.getAdminEmail();
-		String logDatasetID = userPrefs.getLogDatasetID();
-        String logPublishingErrorMessage = null;
-        if(logDatasetID != null && !logDatasetID.equals("")) {
-            String logDatasetUrl = userPrefs.getDomain() + "/d/" + userPrefs.getLogDatasetID();
-            System.out.println("Publishing results to logging dataset (" + logDatasetUrl + ")...");
-            logPublishingErrorMessage = addLogEntry(
-                    logDatasetID, connectionInfo, this, runStatus, result);
-            if(logPublishingErrorMessage != null) {
-                System.out.println("Error publishing results to logging dataset (" + logDatasetUrl + "): " +
-                        logPublishingErrorMessage);
+            if (publishExceptions) {
+                runStatus = JobStatus.PUBLISH_ERROR;
+            } else if (result != null && result.errorCount() > 0) {  // Check for [row-level] SODA 2 errors
+                runStatus = craftSoda2PublishError(result);
             }
 		}
 
-		if(userPrefs.emailUponError() && !adminEmail.equals("")) {
-            sendErrorNotificationEmail(
-                    adminEmail, connectionInfo, runStatus, runErrorMessage, logDatasetID, logPublishingErrorMessage);
-		}
+        String logPublishingErrorMessage = logRunResults(runStatus, result);
+        emailAdmin(runStatus, logPublishingErrorMessage);
 
         if(runStatus.isError()) {
             System.err.println("Job completed with errors: " + runStatus.getMessage());
@@ -506,29 +445,34 @@ public class IntegrationJob extends Job {
      */
     public static String addLogEntry(final String logDatasetID, final SocrataConnectionInfo connectionInfo,
                                      final IntegrationJob job, final JobStatus status, final UpsertResult result) {
-        final Soda2Producer producer = Soda2Producer.newProducer(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
+        final Soda2Producer producer = Soda2Producer.newProducer(connectionInfo.getUrl(), connectionInfo.getUser(),
+                connectionInfo.getPassword(), connectionInfo.getToken());
 
-        List<Map<String, Object>> upsertObjects = new ArrayList<Map<String, Object>>();
-        Map<String, Object> newCols = new HashMap<String,Object>();
+        List<Map<String, Object>> upsertObjects = new ArrayList<>();
+        Map<String, Object> newCols = new HashMap<>();
 
         // add standard log data
         Date currentDateTime = new Date();
-        newCols.put("Date", (Object) currentDateTime);
-        newCols.put("DatasetID", (Object) job.getDatasetID());
-        newCols.put("FileToPublish", (Object) job.getFileToPublish());
-        newCols.put("PublishMethod", (Object) job.getPublishMethod());
-        newCols.put("JobFile", (Object) job.getPathToSavedFile());
+        newCols.put("Date", currentDateTime);
+        newCols.put("DatasetID", job.getDatasetID());
+        newCols.put("FileToPublish", job.getFileToPublish());
+        newCols.put("PublishMethod", job.getPublishMethod());
+        newCols.put("JobFile", job.getPathToSavedFile());
         if(result != null) {
-            newCols.put("RowsUpdated", (Object) result.rowsUpdated);
-            newCols.put("RowsCreated", (Object) result.rowsCreated);
-            newCols.put("RowsDeleted", (Object) result.rowsDeleted);
+            newCols.put("RowsUpdated", result.rowsUpdated);
+            newCols.put("RowsCreated", result.rowsCreated);
+            newCols.put("RowsDeleted", result.rowsDeleted);
+        } else {
+            newCols.put("RowsUpdated", status.rowsUpdated);
+            newCols.put("RowsCreated", status.rowsCreated);
+            newCols.put("RowsDeleted", status.rowsDeleted);
         }
         if(status.isError()) {
-            newCols.put("Errors", (Object) status.getMessage());
+            newCols.put("Errors", status.getMessage());
         } else {
-            newCols.put("Success", (Object) true);
+            newCols.put("Success", true);
         }
-        newCols.put("DataSyncVersion", (Object) DataSyncMetadata.getDatasyncVersion());
+        newCols.put("DataSyncVersion", DataSyncMetadata.getDatasyncVersion());
         upsertObjects.add(ImmutableMap.copyOf(newCols));
 
         System.out.println("Adding row to logging dataset (" + connectionInfo.getUrl() + "/d/" + logDatasetID + ")...");
@@ -536,17 +480,9 @@ public class IntegrationJob extends Job {
         try {
             producer.upsert(logDatasetID, upsertObjects);
         }
-        catch (SodaError sodaError) {
-            sodaError.printStackTrace();
-            logPublishingErrorMessage = sodaError.getMessage();
-        }
-        catch (InterruptedException intrruptException) {
-            intrruptException.printStackTrace();
-            logPublishingErrorMessage = intrruptException.getMessage();
-        }
-        catch (Exception other) {
-            other.printStackTrace();
-            logPublishingErrorMessage = other.toString() + ": " + other.getMessage();
+        catch (SodaError | InterruptedException e) {
+            e.printStackTrace();
+            logPublishingErrorMessage = e.getMessage();
         }
         return logPublishingErrorMessage;
     }
@@ -740,6 +676,48 @@ public class IntegrationJob extends Job {
             return false;
         }
         return true;
+    }
+
+    private JobStatus craftSoda2PublishError(UpsertResult result) {
+        JobStatus error = JobStatus.PUBLISH_ERROR;
+        if(result != null && result.errorCount() > 0) {
+            int lineIndexOffset = (fileToPublishHasHeaderRow) ? 2 : 1;
+            String errMsg = "";
+            for (UpsertError upsertErr : result.getErrors()) {
+                errMsg += upsertErr.getError() + " (line " + (upsertErr.getIndex() + lineIndexOffset) + " of file) \n";
+            }
+            error.setMessage(errMsg);
+        }
+        return error;
+    }
+
+    private String logRunResults(JobStatus runStatus, UpsertResult result) {
+        String logDatasetID = userPrefs.getLogDatasetID();
+        String logPublishingErrorMessage = null;
+        SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
+
+        if (logDatasetID != null && !logDatasetID.equals("")) {
+            String logDatasetUrl = userPrefs.getDomain() + "/d/" + userPrefs.getLogDatasetID();
+            System.out.println("Publishing results to logging dataset (" + logDatasetUrl + ")...");
+            logPublishingErrorMessage = addLogEntry(
+                    logDatasetID, connectionInfo, this, runStatus, result);
+            if (logPublishingErrorMessage != null) {
+                System.out.println("Error publishing results to logging dataset (" + logDatasetUrl + "): " +
+                        logPublishingErrorMessage);
+            }
+        }
+        return logPublishingErrorMessage;
+    }
+
+    private void emailAdmin(JobStatus status, String logPublishingErrorMessage) {
+        String adminEmail = userPrefs.getAdminEmail();
+        String logDatasetID = userPrefs.getLogDatasetID();
+        SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
+
+        if(userPrefs.emailUponError() && adminEmail == null && !adminEmail.equals("")) {
+            sendErrorNotificationEmail(
+                    adminEmail, connectionInfo, status, status.getMessage(), logDatasetID, logPublishingErrorMessage);
+        }
     }
 
     private JobStatus deserializeControlFile(String contents) {
