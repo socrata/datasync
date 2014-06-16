@@ -42,7 +42,7 @@ public class Main {
             CommandLine cmd = options.getCommandLine(args);
             UserPreferences userPrefs = null;
             try {
-                userPrefs = loadUserPreferences(cmd);
+                userPrefs = loadUserPreferences(options, cmd);
             } catch (IOException e) {
                 System.err.println("Failed to load configuration: " + e.toString());
                 System.exit(1);
@@ -87,13 +87,20 @@ public class Main {
      * @return UserPreferences object containing global preferences
      * @throws IOException
      */
-    private static UserPreferences loadUserPreferences(CommandLine cmd) throws IOException {
+    private static UserPreferences loadUserPreferences(CommandLineOptions options, CommandLine cmd) throws IOException {
         UserPreferences userPrefs;
-        if (cmd.getOptionValue("config") != null) {
+        if (cmd.getOptionValue(options.CONFIG_FLAG) != null) {
             // load user preferences from given JSON config file
             File configFile = new File(cmd.getOptionValue("config"));
             ObjectMapper mapper = new ObjectMapper();
             userPrefs = mapper.readValue(configFile, UserPreferencesFile.class);
+            String proxyUsername = cmd.getOptionValue(options.PROXY_USERNAME_FLAG);
+            String proxyPassword = cmd.getOptionValue(options.PROXY_PASSWORD_FLAG);
+            String jobType = cmd.getOptionValue(options.JOB_TYPE_FLAG, options.DEFAULT_JOBTYPE);
+            if (proxyUsername != null && proxyPassword != null && !jobType.equals(Jobs.LOAD_PREFERENCES_JOB.toString())) {
+                userPrefs.setProxyUsername(proxyUsername);
+                userPrefs.setProxyPassword(proxyPassword);
+            }
         } else {
             // load user preferences from Java preferences class
             userPrefs = new UserPreferencesJava();

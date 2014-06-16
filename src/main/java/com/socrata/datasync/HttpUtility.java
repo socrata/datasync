@@ -4,11 +4,18 @@ import com.google.common.net.HttpHeaders;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import org.apache.commons.net.util.Base64;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
 
 import java.io.IOException;
 import java.net.URI;
@@ -16,16 +23,28 @@ import java.nio.charset.Charset;
 
 public class HttpUtility {
 
-    private CloseableHttpClient httpClient;
+    private CloseableHttpClient httpClient = null;
+    private RequestConfig proxyConfig = null;
     private String authHeader;
     private String appToken;
     private static final String appHeader = "X-App-Token";
     private static final String userAgent = "datasync";
 
     public HttpUtility(UserPreferences userPrefs) {
-        httpClient = HttpClientBuilder.create().build();
         appToken = userPrefs.getAPIKey();
         authHeader = getAuthHeader(userPrefs.getUsername(), userPrefs.getPassword());
+        if(userPrefs.getProxyHost() != null && userPrefs.getProxyPort() != null) {
+            HttpHost proxy = new HttpHost(userPrefs.getProxyHost(), Integer.valueOf(userPrefs.getProxyPort()));
+            proxyConfig = RequestConfig.custom().setProxy(proxy).build();
+            if (userPrefs.getProxyUsername() != null && userPrefs.getProxyPassword() != null) {
+                CredentialsProvider credsProvider = new BasicCredentialsProvider();
+                credsProvider.setCredentials(
+                        new AuthScope(userPrefs.getProxyHost(), Integer.valueOf(userPrefs.getProxyPort())),
+                        new UsernamePasswordCredentials(userPrefs.getProxyUsername(), userPrefs.getProxyPassword()));
+                httpClient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build();
+            }
+        }
+        if (httpClient == null) httpClient = HttpClientBuilder.create().build();
     }
 
     /**
@@ -36,6 +55,8 @@ public class HttpUtility {
      */
     public CloseableHttpResponse get(URI uri, String contentType) throws IOException {
         HttpGet httpGet = new HttpGet(uri);
+        if (proxyConfig != null)
+            httpGet.setConfig(proxyConfig);
         httpGet.addHeader(HttpHeaders.ACCEPT, contentType);
         httpGet.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
         httpGet.setHeader(appHeader, appToken);
@@ -50,6 +71,8 @@ public class HttpUtility {
      */
     public CloseableHttpResponse post(URI uri, HttpEntity entity) throws IOException {
         HttpPost httpPost = new HttpPost(uri);
+        if (proxyConfig != null)
+            httpPost.setConfig(proxyConfig);
         httpPost.setHeader(HttpHeaders.USER_AGENT, userAgent);
         httpPost.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
         httpPost.setHeader(appHeader, appToken);

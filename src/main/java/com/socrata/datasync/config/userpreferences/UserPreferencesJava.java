@@ -19,8 +19,13 @@ public class UserPreferencesJava implements UserPreferences {
 	private static final String USERNAME = "username";
 	private static final String PASSWORD = "password";
 	private static final String API_KEY = "api_key";
-	
-	private static final String ADMIN_EMAIL = "admin_email";
+
+    private static final String PROXY_USERNAME = "proxy_username";
+    private static final String PROXY_PASSWORD = "proxy_password";
+    private static final String PROXY_HOST = "proxy_host";
+    private static final String PROXY_PORT = "proxy_port";
+
+    private static final String ADMIN_EMAIL = "admin_email";
 	private static final String EMAIL_UPON_ERROR = "email_upon_error";
 	private static final String LOG_DATASET_ID = "log_dataset_id";
 	
@@ -62,7 +67,21 @@ public class UserPreferencesJava implements UserPreferences {
 	public void saveAPIKey(String apiKey) {
 		userPrefs.put(API_KEY, apiKey);
 	}
-	
+
+    public void saveProxyHost(String host) { userPrefs.put(PROXY_HOST, host); }
+
+    public void saveProxyPort(String port) {
+        userPrefs.put(PROXY_PORT, port);
+    }
+
+    public void saveProxyUsername(String username) {
+        userPrefs.put(PROXY_USERNAME, username);
+    }
+
+    public void saveProxyPassword(String password) {
+        userPrefs.put(PROXY_PASSWORD, password);
+    }
+
 	public void saveAdminEmail(String adminEmail) {
 		userPrefs.put(ADMIN_EMAIL, adminEmail);
 	}
@@ -123,8 +142,26 @@ public class UserPreferencesJava implements UserPreferences {
 	public String getAPIKey() {
 		return userPrefs.get(API_KEY, "");
 	}
-	
-	public String getAdminEmail() {
+
+    public String getProxyHost() { return userPrefs.get(PROXY_HOST, ""); }
+
+    public String getProxyPort() {
+        return userPrefs.get(PROXY_PORT, "");
+    }
+
+    public String getProxyUsername() {
+        return userPrefs.get(PROXY_USERNAME, "");
+    }
+
+    public String getProxyPassword() {
+        return userPrefs.get(PROXY_PASSWORD, "");
+    }
+
+    public void setProxyUsername(String username) {};
+
+    public void setProxyPassword(String password) {};
+
+    public String getAdminEmail() {
 		return userPrefs.get(ADMIN_EMAIL, "");
 	}
 	

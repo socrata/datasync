@@ -217,7 +217,8 @@ public class IntegrationJob extends Job {
                 validateHeaderRowArg(cmd, options) &&
                 validatePublishViaFtpArg(cmd, options) &&
                 validatePublishViaDi2HttpArg(cmd, options) &&
-                validatePathToControlFileArg(cmd, options);
+                validatePathToControlFileArg(cmd, options) &&
+                validateProxyArgs(cmd, options);
     }
 
     /**
@@ -673,6 +674,21 @@ public class IntegrationJob extends Job {
         if(!publishMethodValid) {
             System.err.println("Invalid argument: -m,--" + options.PUBLISH_METHOD_FLAG + " must be " +
                     Arrays.toString(PublishMethod.values()));
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateProxyArgs(CommandLine cmd, CommandLineOptions options) {
+        String username = cmd.getOptionValue(options.PROXY_USERNAME_FLAG);
+        String password = cmd.getOptionValue(options.PROXY_PASSWORD_FLAG);
+        if(username == null && password != null) {
+            System.err.println("Missing required argument: -pun,--" + options.PROXY_USERNAME_FLAG + " is required if" +
+                " supplying proxy credentials with -ppw, --" + options.PROXY_PASSWORD_FLAG);
+            return false;
+        } else if(username != null && password == null) {
+            System.err.println("Missing required argument: -ppw,--" + options.PROXY_PASSWORD_FLAG + " is required if" +
+                    " supplying proxy credentials with -pun, --" + options.PROXY_USERNAME_FLAG);
             return false;
         }
         return true;

@@ -15,6 +15,10 @@ public class UserPreferencesLib implements UserPreferences {
     private String password;
     private String appToken;
     private String adminEmail;
+    private String proxyHost;
+    private String proxyPort;
+    private String proxyUsername;
+    private String proxyPassword;
     private boolean emailUponError;
     private String logDatasetID;
     private String outgoingMailServer;
@@ -79,6 +83,34 @@ public class UserPreferencesLib implements UserPreferences {
 
     public void setAppToken(String appToken) {
         this.appToken = appToken;
+    }
+
+    public String getProxyHost() { return proxyHost; }
+
+    public void setProxyHost(String host) {
+        this.proxyHost = host;
+    }
+
+    public String getProxyPort() { return proxyPort; }
+
+    public void setProxyPort(String port) {
+        this.proxyPort = port;
+    }
+
+    public String getProxyUsername() {
+        return proxyUsername;
+    }
+
+    public void setProxyUsername(String username) {
+        this.proxyUsername = username;
+    }
+
+    public String getProxyPassword() {
+        return proxyPassword;
+    }
+
+    public void setProxyPassword(String password) {
+        this.proxyPassword = password;
     }
 
     public String getAdminEmail() {

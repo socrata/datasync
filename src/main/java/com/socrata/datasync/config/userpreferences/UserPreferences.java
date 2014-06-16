@@ -19,6 +19,14 @@ public interface UserPreferences {
     // API key a.k.a. App token
     public String getAPIKey();
 
+    public String getProxyHost();
+
+    public String getProxyPort();
+
+    public String getProxyPassword();
+
+    public String getProxyUsername();
+
     public String getAdminEmail();
 
     public boolean emailUponError();
@@ -44,5 +52,9 @@ public interface UserPreferences {
     public boolean getUseNewBackend();
 
     public SocrataConnectionInfo getConnectionInfo();
+
+    public void setProxyPassword(String password);
+
+    public void setProxyUsername(String username);
 
 }

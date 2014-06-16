@@ -18,6 +18,10 @@ public class UserPreferencesFile implements UserPreferences {
     private String username;
     private String password;
     private String appToken;
+    private String proxyHost;
+    private String proxyPort;
+    private String proxyUsername;
+    private String proxyPassword;
     private String adminEmail;
     private boolean emailUponError;
     private String logDatasetID;
@@ -32,7 +36,7 @@ public class UserPreferencesFile implements UserPreferences {
     private boolean useNewBackend;
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
-    private static final long fileVersionUID = 4L;
+    private static final long fileVersionUID = 5L;
 
     @JsonProperty("domain")
     public String getDomain() {
@@ -56,6 +60,26 @@ public class UserPreferencesFile implements UserPreferences {
     // Alias for getAppToken
     public String getAPIKey() {
         return appToken;
+    }
+
+    @JsonProperty("proxyHost")
+    public String getProxyHost() {
+        return proxyHost;
+    }
+
+    @JsonProperty("proxyPort")
+    public String getProxyPort() {
+        return proxyPort;
+    }
+
+    @JsonProperty("proxyUsername")
+    public String getProxyUsername() {
+        return proxyUsername;
+    }
+
+    @JsonProperty("proxyPassword")
+    public String getProxyPassword() {
+        return proxyPassword;
     }
 
     @JsonProperty("adminEmail")
@@ -115,6 +139,12 @@ public class UserPreferencesFile implements UserPreferences {
 
     @JsonProperty("useNewBackend")
     public boolean getUseNewBackend() { return useNewBackend; }
+
+    @JsonProperty("proxyUsername")
+    public void setProxyUsername(String username) { proxyUsername = username; }
+
+    @JsonProperty("proxyPassword")
+    public void setProxyPassword(String password) { proxyPassword = password; }
 
     public String getHost() {
         if (domain != null) {

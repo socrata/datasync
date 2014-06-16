@@ -23,6 +23,8 @@ public class CommandLineOptions {
     public static final String PUBLISH_VIA_FTP_FLAG = "publishViaFTP";
     public static final String PUBLISH_VIA_DI2_FLAG = "publishViaDi2Http";
     public static final String PATH_TO_CONTROL_FILE_FLAG = "pathToControlFile";
+    public static final String PROXY_USERNAME_FLAG = "proxyUsername";
+    public static final String PROXY_PASSWORD_FLAG = "proxyPassword";
 
     public static final String PORT_METHOD_FLAG = "portMethod";
     public static final String SOURCE_DOMAIN_FLAG = "sourceDomain";
@@ -55,6 +57,8 @@ public class CommandLineOptions {
         options.addOption("di2", PUBLISH_VIA_DI2_FLAG, true, "Use delta-importer-2 over HTTP for publishing (true or false) (default: false) [IntegrationJob]");
         options.addOption("sc", PATH_TO_CONTROL_FILE_FLAG, true, "control.json file, needed for publishing via FTP or delta-importer-2 over HTTP;" +
                                                                  "if set overrides job parameters [IntegrationJob]");
+        options.addOption("pun", PROXY_USERNAME_FLAG, true, "The username to supply to connect to the proxy server [IntegrationJob]");
+        options.addOption("ppw", PROXY_PASSWORD_FLAG, true, "The password to supply to connect to the proxy server [IntegrationJob]");
 
         // PortJob params
         options.addOption("pm", PORT_METHOD_FLAG, true, "Port method (" + Arrays.toString(PortMethod.values()) + ") [PortJob]");
