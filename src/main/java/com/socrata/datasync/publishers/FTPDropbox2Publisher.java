@@ -1,21 +1,19 @@
 package com.socrata.datasync.publishers;
 
-import com.socrata.api.HttpLowLevel;
-import com.socrata.api.SodaDdl;
 import com.socrata.datasync.DataSyncMetadata;
+import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.Utils;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
-import com.socrata.exceptions.LongRunningQueryException;
-import com.socrata.exceptions.SodaError;
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
 import org.apache.commons.net.ftp.FTPSClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.entity.ContentType;
 
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayInputStream;
@@ -59,26 +57,22 @@ public class FTPDropbox2Publisher {
      * using FTP Dropbox v2.0
      *
      * @param userPrefs object containing the user preferences
-     * @param ddl Soda 2 ddl object
      * @param datasetId id of the Socrata dataset to publish to
      * @param csvOrTsvFile file to publish containing data in comma- or tab- separated values (CSV or TSV) format
      * @param controlFile Control.json file to configure FTP dropbox v2
      * @return JobStatus containing success or error information
      */
-    public static JobStatus publishViaFTPDropboxV2(final UserPreferences userPrefs, final SodaDdl ddl,
-                                                   final String datasetId, final File csvOrTsvFile,
-                                                   final File controlFile) {
+    public static JobStatus publishViaFTPDropboxV2(final UserPreferences userPrefs, final String datasetId,
+                                                   final File csvOrTsvFile, final File controlFile) {
         try {
             InputStream inputControlFile = new FileInputStream(controlFile);
-            return publishViaFTPDropboxV2(userPrefs, ddl, datasetId, csvOrTsvFile, inputControlFile);
+            return publishViaFTPDropboxV2(userPrefs, datasetId, csvOrTsvFile, inputControlFile);
         } catch (Exception e) {
             e.printStackTrace();
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage("Error uploading control file: " + e.getMessage());
             return status;
         }
-
-
     }
 
     /**
@@ -86,18 +80,16 @@ public class FTPDropbox2Publisher {
      * using FTP Dropbox v2.0
      *
      * @param userPrefs object containing the user preferences
-     * @param ddl Soda 2 ddl object
      * @param datasetId id of the Socrata dataset to publish to
      * @param csvOrTsvFile file to publish containing data in comma- or tab- separated values (CSV or TSV) format
      * @param controlFileContent content of Control file to configure FTP dropbox v2
      * @return JobStatus containing success or error information
      */
-    public static JobStatus publishViaFTPDropboxV2(final UserPreferences userPrefs, final SodaDdl ddl,
-                                                   final String datasetId, final File csvOrTsvFile,
-                                                   final String controlFileContent) {
+    public static JobStatus publishViaFTPDropboxV2(final UserPreferences userPrefs, final String datasetId,
+                                                   final File csvOrTsvFile, final String controlFileContent) {
         try {
             InputStream inputControlFile = new ByteArrayInputStream(controlFileContent.getBytes("UTF-8"));
-            return publishViaFTPDropboxV2(userPrefs, ddl, datasetId, csvOrTsvFile, inputControlFile);
+            return publishViaFTPDropboxV2(userPrefs, datasetId, csvOrTsvFile, inputControlFile);
         } catch (Exception e) {
             e.printStackTrace();
             JobStatus status = JobStatus.PUBLISH_ERROR;
@@ -111,20 +103,18 @@ public class FTPDropbox2Publisher {
      * using FTP Dropbox v2.0
      *
      * @param userPrefs object containing the user preferences
-     * @param ddl Soda 2 ddl object
      * @param datasetId id of the Socrata dataset to publish to
      * @param csvOrTsvFile file to publish containing data in comma- or tab- separated values (CSV or TSV) format
      * @param inputControlFile  stream of control.json file content
      * @return JobStatus containing success or error information
      */
-    private static JobStatus publishViaFTPDropboxV2(final UserPreferences userPrefs, final SodaDdl ddl,
-                                                   final String datasetId, final File csvOrTsvFile,
-                                                   final InputStream inputControlFile) {
+    private static JobStatus publishViaFTPDropboxV2(final UserPreferences userPrefs, final String datasetId,
+                                                    final File csvOrTsvFile, final InputStream inputControlFile) {
         JobStatus status = JobStatus.PUBLISH_ERROR;
 
         String ftpHost;
         try {
-            ftpHost = getFTPHost(userPrefs.getDomain(), ddl);
+            ftpHost = getFTPHost(userPrefs);
         } catch (Exception e) {
             e.printStackTrace();
             status.setMessage("Error obtaining FTP host: " + e.getMessage());
@@ -311,12 +301,13 @@ public class FTPDropbox2Publisher {
         }
     }
 
-    public static String getFTPHost(String domain, SodaDdl ddl) throws URISyntaxException, LongRunningQueryException, SodaError {
-        HttpLowLevel httpClient = ddl.getHttpLowLevel();
-        URI versionApiUri = new URI(domain + VERSION_API_ENDPOINT);
-        ClientResponse response = httpClient.queryRaw(versionApiUri, HttpLowLevel.JSON_TYPE);
-        String regionName = response.getHeaders().get(X_SOCRATA_REGION).get(0);
-        return regionName + FTP_HOST_SUFFIX;
+    public static String getFTPHost(UserPreferences userPerfs) throws URISyntaxException, IOException {
+        HttpUtility http = new HttpUtility(userPerfs);
+        URI versionApiUri = new URI(userPerfs.getDomain() + VERSION_API_ENDPOINT);
+        try(CloseableHttpResponse response = http.get(versionApiUri, ContentType.APPLICATION_JSON.getMimeType())) {
+            String regionName = response.getHeaders(X_SOCRATA_REGION)[0].getValue();
+            return regionName + FTP_HOST_SUFFIX;
+        }
     }
 
 

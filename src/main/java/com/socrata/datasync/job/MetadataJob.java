@@ -56,7 +56,7 @@ public class MetadataJob extends Job {
 
     private static final String DEFAULT_JOB_NAME = "Untitled Metadata Job";
     public static final List<String> allowedFileToPublishExtensions = Arrays.asList("csv", "tsv");
-	
+
 	public MetadataJob() {
         userPrefs = new UserPreferencesJava();
 	}
@@ -74,7 +74,7 @@ public class MetadataJob extends Job {
             throw new IOException(e.toString());
         }
     }
-    
+
     public MetadataJob(UserPreferences userPreferences) {
     	userPrefs = userPreferences;
     }
@@ -115,12 +115,12 @@ public class MetadataJob extends Job {
     }
 
 	/**
-	 * 
+	 *
 	 * @return an error JobStatus if any input is invalid, otherwise JobStatus.VALID
 	 */
 	//TODO: Need to get info on max sizes on fields and validate here.
 	public JobStatus validate(SocrataConnectionInfo connectionInfo) {
-		
+
 		if(!(connectionInfo.getUrl().startsWith("http://")
 				|| connectionInfo.getUrl().startsWith("https://"))) {
 			return JobStatus.INVALID_DOMAIN;
@@ -131,10 +131,10 @@ public class MetadataJob extends Job {
 		if(StringUtils.isBlank(title)) {
 			return JobStatus.MISSING_METADATA_TITLE;
 		}
-		
+
 		return JobStatus.VALID;
 	}
-	
+
 	public JobStatus run() {
 		SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
 		JobStatus runStatus = JobStatus.SUCCESS;
@@ -142,20 +142,20 @@ public class MetadataJob extends Job {
 		JobStatus validationStatus = validate(connectionInfo);
 		//boolean workingCopyCreated = false;
 		String workingCopyDatasetId = null;
-		
+
 		if(validationStatus.isError()) {
 			runStatus = validationStatus;
 		} else {
-			
-			final SodaDdl updater = SodaDdl.newDdl(connectionInfo.getUrl(), connectionInfo.getUser(), 
+
+			final SodaDdl updater = SodaDdl.newDdl(connectionInfo.getUrl(), connectionInfo.getUser(),
 					connectionInfo.getPassword(), connectionInfo.getToken());
-			final SodaWorkflow workflower = SodaWorkflow.newWorkflow(connectionInfo.getUrl(), connectionInfo.getUser(), 
+			final SodaWorkflow workflower = SodaWorkflow.newWorkflow(connectionInfo.getUrl(), connectionInfo.getUser(),
 					connectionInfo.getPassword(), connectionInfo.getToken());
 
 			boolean noExceptions = false;
 			try {
 				DatasetInfo datasetInfo = updater.loadDatasetInfo(datasetID);
-				
+
 				if (datasetInfo == null) {
 					runErrorMessage = "Dataset with that ID does not exist or you do not have permission to publish to it";
 					runStatus = JobStatus.PUBLISH_ERROR;
@@ -165,11 +165,11 @@ public class MetadataJob extends Job {
 						DatasetInfo workingCopyDatasetInfo = workflower.createWorkingCopy(datasetInfo.getId());
 						datasetInfo = updater.loadDatasetInfo(workingCopyDatasetInfo.getId());
 						workingCopyDatasetId = datasetInfo.getId();
-					}				
-					
+					}
+
 					datasetInfo.setName(title);
 					datasetInfo.setDescription(description);
-					datasetInfo.setCategory(category); 
+					datasetInfo.setCategory(category);
 					if (keywords != null && !keywords.isEmpty()) {
 						datasetInfo.setTags(keywords);
 					}
@@ -179,7 +179,7 @@ public class MetadataJob extends Job {
 					if (licenseType != null) {
 						//TODO: Once issue with setting no license via api is resolved, update below to handle
 						if (licenseType == LicenseType.no_license) {
-							datasetInfo.setLicenseId(""); //null, "", "''", "\"\"", Tried all of these, no luck, validation errors on all, so 
+							datasetInfo.setLicenseId(""); //null, "", "''", "\"\"", Tried all of these, no luck, validation errors on all, so
 						}
 						else {
 							datasetInfo.setLicenseId(licenseType.getValue());
@@ -192,20 +192,20 @@ public class MetadataJob extends Job {
 						privateMetadata = new HashMap<String, Object>();
 					}
 					privateMetadata.put("contactEmail", contactInfo);
-					
+
 					updater.updateDatasetInfo(datasetInfo);
-					
+
 					if (!StringUtils.isBlank(workingCopyDatasetId)) {
 						workflower.publish(datasetInfo.getId());
 						workingCopyDatasetId = null;
 					}
 					noExceptions = true;
 				}
-			} 
+			}
 			catch (SodaError sodaError) {
                 runErrorMessage = sodaError.getMessage();
                 runStatus = JobStatus.PUBLISH_ERROR;
-			} 
+			}
 			catch (InterruptedException intrruptException) {
 				runErrorMessage = intrruptException.getMessage();
 				runStatus = JobStatus.PUBLISH_ERROR;
@@ -226,7 +226,7 @@ public class MetadataJob extends Job {
 				}
 			}
 		}
-		
+
 		String adminEmail = userPrefs.getAdminEmail();
 		String logDatasetID = userPrefs.getLogDatasetID();
 		JobStatus logStatus = JobStatus.SUCCESS;
@@ -266,12 +266,12 @@ public class MetadataJob extends Job {
 
 		return runStatus;
 	}
-	
+
 	public String loadCurrentMetadata() {
 		try {
 			SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
-			final SodaDdl sodaDdl = SodaDdl.newDdl(connectionInfo.getUrl(), connectionInfo.getUser(), 
-					connectionInfo.getPassword(), connectionInfo.getToken());	
+			final SodaDdl sodaDdl = SodaDdl.newDdl(connectionInfo.getUrl(), connectionInfo.getUser(),
+					connectionInfo.getPassword(), connectionInfo.getToken());
 			readDatasetInfo(sodaDdl.loadDatasetInfo(datasetID));
 			return "";
 		}
@@ -338,8 +338,8 @@ public class MetadataJob extends Job {
     @JsonProperty("datasetID")
 	public String getDatasetID() {
 		return datasetID;
-	}    
-    
+	}
+
     @JsonProperty("title")
 	public String getTitle() {
 		return title;
@@ -387,16 +387,16 @@ public class MetadataJob extends Job {
     	}
     	return licenseType.no_license.getValue();
 	}
-    
+
     @JsonProperty("license_type_id")
 	public void setLicenseTypeId(String licenseTypeId) {
-		this.licenseType = LicenseType.getLicenseTypeForValue(licenseTypeId); 
+		this.licenseType = LicenseType.getLicenseTypeForValue(licenseTypeId);
 	}
-    
+
     public LicenseType getLicenseType() {
     	return this.licenseType;
     }
-    
+
     public void setLicenseType(LicenseType licenseType) {
     	this.licenseType = licenseType;
     }
@@ -415,7 +415,7 @@ public class MetadataJob extends Job {
 	public String getSourceLink() {
 		return sourceLink;
 	}
-    
+
     @JsonProperty("source_link")
 	public void setSourceLink(String sourceLink) {
 		this.sourceLink = sourceLink;

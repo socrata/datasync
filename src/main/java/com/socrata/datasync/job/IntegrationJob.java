@@ -329,7 +329,7 @@ public class IntegrationJob extends Job {
                 }
             }
         }
-		
+
 		// TODO add more validation? (e.g. validation of File To Publish header row)
 
         // Check if version is up-to-date (ONLY if running headlessly)
@@ -395,7 +395,7 @@ public class IntegrationJob extends Job {
                          break;
                      case replace:
                          if (publishViaFTP) {
-                             runStatus = doPublishViaFTPv2(importer, fileToPublishFile);
+                             runStatus = doPublishViaFTPv2(fileToPublishFile);
                          } else if (publishViaDi2Http) {
                              runStatus = publisher.publishWithDi2OverHttp(datasetID, fileToPublishFile, controlFile);
                          } else {   // Publish via old HTTP method
@@ -488,15 +488,13 @@ public class IntegrationJob extends Job {
         return logPublishingErrorMessage;
     }
 
-    private JobStatus doPublishViaFTPv2(SodaImporter importer, File fileToPublishFile) {
+    private JobStatus doPublishViaFTPv2(File fileToPublishFile) {
         if((pathToControlFile != null && !pathToControlFile.equals(""))) {
             return FTPDropbox2Publisher.publishViaFTPDropboxV2(
-                    userPrefs, importer,
-                    datasetID, fileToPublishFile, new File(pathToControlFile));
+                    userPrefs, datasetID, fileToPublishFile, new File(pathToControlFile));
         } else {
             return FTPDropbox2Publisher.publishViaFTPDropboxV2(
-                    userPrefs, importer,
-                    datasetID, fileToPublishFile, controlFileContent);
+                    userPrefs, datasetID, fileToPublishFile, controlFileContent);
         }
     }
 
@@ -730,7 +728,7 @@ public class IntegrationJob extends Job {
         String logDatasetID = userPrefs.getLogDatasetID();
         SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
 
-        if(userPrefs.emailUponError() && adminEmail == null && !adminEmail.equals("")) {
+        if(userPrefs.emailUponError() && adminEmail != null && !adminEmail.equals("")) {
             sendErrorNotificationEmail(
                     adminEmail, connectionInfo, status, status.getMessage(), logDatasetID, logPublishingErrorMessage);
         }

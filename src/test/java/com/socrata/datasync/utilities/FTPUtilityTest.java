@@ -2,6 +2,7 @@ package com.socrata.datasync.utilities;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
+import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.TestBase;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
@@ -10,6 +11,7 @@ import com.socrata.datasync.publishers.Soda2Publisher;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import junit.framework.TestCase;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
 import java.io.File;
@@ -23,19 +25,25 @@ import java.net.URISyntaxException;
 public class FTPUtilityTest extends TestBase {
 
     @Test
-    public void testDownloadingFileViaFTP() throws IOException, SodaError, InterruptedException, LongRunningQueryException, URISyntaxException {
+    public void testDownloadingFileViaFTP() throws IOException, InterruptedException, URISyntaxException {
         // TODO...
     }
 
     @Test
-    public void tesGetFTPHost() throws URISyntaxException, IOException, LongRunningQueryException, SodaError {
-        final SodaDdl ddl = createSodaDdl();
+    public void tesGetFTPHost() throws URISyntaxException, IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        UserPreferences userPrefs1 = mapper.readValue("{\"domain\": \"https://sandbox.demo.socrata.com\"}",
+                UserPreferencesFile.class);
+        UserPreferences userPrefs2 = mapper.readValue("{\"domain\": \"https://adrian.demo.socrata.com\"}",
+                UserPreferencesFile.class);
+        UserPreferences userPrefs3 = mapper.readValue("{\"domain\": \"https://opendata.test-socrata.com\"}",
+                UserPreferencesFile.class);
         TestCase.assertEquals("production.ftp.socrata.net",
-                FTPDropbox2Publisher.getFTPHost("https://sandbox.demo.socrata.com", ddl));
+                FTPDropbox2Publisher.getFTPHost(userPrefs1));
         TestCase.assertEquals("production.ftp.socrata.net",
-                FTPDropbox2Publisher.getFTPHost("https://adrian.demo.socrata.com", ddl));
+                FTPDropbox2Publisher.getFTPHost(userPrefs2));
         TestCase.assertEquals("azure-staging.ftp.socrata.net",
-                FTPDropbox2Publisher.getFTPHost("https://opendata.test-socrata.com", ddl));
+                FTPDropbox2Publisher.getFTPHost(userPrefs3));
     }
 
     @Test
@@ -69,7 +77,7 @@ public class FTPUtilityTest extends TestBase {
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_four_rows_multidate.csv");
         JobStatus result = FTPDropbox2Publisher.publishViaFTPDropboxV2(
-                userPrefs, ddl, UNITTEST_DATASET_ID, threeRowsFile,
+                userPrefs, UNITTEST_DATASET_ID, threeRowsFile,
                 controlFileContent);
 
         TestCase.assertEquals(JobStatus.SUCCESS, result);
@@ -88,7 +96,7 @@ public class FTPUtilityTest extends TestBase {
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
         JobStatus result = FTPDropbox2Publisher.publishViaFTPDropboxV2(
-                userPrefs, ddl, UNITTEST_DATASET_ID, threeRowsFile,
+                userPrefs, UNITTEST_DATASET_ID, threeRowsFile,
                 new File("src/test/resources/datasync_unit_test_three_rows_control.json"));
 
         TestCase.assertEquals(JobStatus.SUCCESS, result);
@@ -124,7 +132,7 @@ public class FTPUtilityTest extends TestBase {
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_no_header.csv");
         JobStatus result = FTPDropbox2Publisher.publishViaFTPDropboxV2(
-                userPrefs, ddl, UNITTEST_DATASET_ID, threeRowsFile,
+                userPrefs, UNITTEST_DATASET_ID, threeRowsFile,
                 controlFileContent);
 
         TestCase.assertEquals(JobStatus.SUCCESS, result);
@@ -143,7 +151,7 @@ public class FTPUtilityTest extends TestBase {
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows_invalid_date.csv");
         JobStatus result = FTPDropbox2Publisher.publishViaFTPDropboxV2(
-                userPrefs, ddl, UNITTEST_DATASET_ID, threeRowsFile,
+                userPrefs, UNITTEST_DATASET_ID, threeRowsFile,
                 new File("src/test/resources/datasync_unit_test_three_rows_control.json"));
 
         TestCase.assertEquals(JobStatus.PUBLISH_ERROR, result);
@@ -153,13 +161,12 @@ public class FTPUtilityTest extends TestBase {
     }
 
     @Test
-    public void testReplaceViaFTPInvalidControlFile() throws IOException, SodaError, InterruptedException, LongRunningQueryException {
-        final SodaDdl ddl = createSodaDdl();
+    public void testReplaceViaFTPInvalidControlFile() throws IOException, InterruptedException {
         final UserPreferences userPrefs = getUserPrefs();
 
         File threeRowsFile = new File("src/test/resources/datasync_unit_test_three_rows.csv");
         JobStatus result = FTPDropbox2Publisher.publishViaFTPDropboxV2(
-                userPrefs, ddl, UNITTEST_DATASET_ID, threeRowsFile,
+                userPrefs, UNITTEST_DATASET_ID, threeRowsFile,
                 new File("src/test/resources/datasync_unit_test_three_rows_control_invalid.json"));
 
         TestCase.assertEquals(JobStatus.PUBLISH_ERROR, result);
