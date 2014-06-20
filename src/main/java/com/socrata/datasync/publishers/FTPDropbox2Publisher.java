@@ -136,7 +136,29 @@ public class FTPDropbox2Publisher {
             ftp = new FTPSClient(false, SSLContext.getDefault());
 
             System.out.println("Connecting to " + ftpHost + ":" + FTP_HOST_PORT);
-            ftp.connect(ftpHost, FTP_HOST_PORT);
+            // ADDED connection retry logic
+            int count = 0;
+            int maxTries = 3;
+            boolean connectionSuccessful = false;
+            do {
+                try {
+                    ftp.connect(ftpHost, FTP_HOST_PORT);
+                    connectionSuccessful = true;
+                } catch (Exception connectException) {
+                    // wait 2 secs, then retry connection
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        // do nothing
+                    }
+                }
+                if (++count == maxTries) {
+                    status.setMessage("FTP server refused connection (connection timeout).");
+                    return status;
+                }
+            } while(!connectionSuccessful);
+            // END connection retry logic
+
             SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
             ftp.login(connectionInfo.getUser(), connectionInfo.getPassword());
 
