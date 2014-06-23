@@ -30,10 +30,10 @@ import java.util.Map;
 public class SimpleIntegrationWizard {
 	/**
 	 * @author Adrian Laurenzi
-	 * 
+	 *
 	 * GUI interface to DataSync
 	 */
-	private static final String TITLE = "Socrata DataSync " + DataSyncMetadata.getDatasyncVersion();
+	private static final String TITLE = "Socrata DataSync " + VersionProvider.getThisVersion();
     private static final String LOGO_FILE_PATH = "/datasync_logo.png";
 	private static final String LOADING_SPINNER_FILE_PATH = "/loading_spinner.gif";
 	private static final int FRAME_WIDTH = 800;
@@ -45,7 +45,7 @@ public class SimpleIntegrationWizard {
 	private static final Dimension AUTH_DETAILS_DIMENSION = new Dimension(465, 100);
 	private static final int PREFERENCES_FRAME_WIDTH = 475;
 	private static final int PREFERENCES_FRAME_HEIGHT = 475;
-	
+
 	private static UserPreferencesJava userPrefs;
 
     // TODO remove these declarations from this file (duplicates...)
@@ -93,7 +93,7 @@ public class SimpleIntegrationWizard {
      *              'closeJobTab' methods
 	 */
 	private List<JobTab> jobTabs;
-	
+
 	private JTabbedPane jobTabsPane;
 	private JFrame frame;
 	private JFrame prefsFrame;
@@ -106,7 +106,7 @@ public class SimpleIntegrationWizard {
 	public SimpleIntegrationWizard() {
 		// load user preferences (saved locally)
 		userPrefs = new UserPreferencesJava();
-		
+
 		// Build GUI
 		frame = new JFrame(TITLE);
 		frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
@@ -122,21 +122,21 @@ public class SimpleIntegrationWizard {
                 System.exit(0);
             }
         });
-		
+
 		JMenuBar menuBar = generateMenuBar();
 		frame.setJMenuBar(menuBar);
-		
+
 		JPanel mainPanel = generateMainPanel();
 		loadAuthenticationInfoIntoForm();
 		generatePreferencesFrame();
-		
+
         frame.add(mainPanel);
-		
+
         frame.pack();
         // centers the window
      	frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
-		
+
 		// Alert user if new version is available
 		try {
 			checkVersion();
@@ -160,35 +160,35 @@ public class SimpleIntegrationWizard {
         });
     }
 
-    /** Queries special Socrata dataset with DataSync metadata to
-	 *  determine if this is the most recent version. Alert user
-	 *  if a new version is available
+    /**
+     * Queries github for the most recent release. If query is successful
+     * and the major version of the user's datasync is outdated, alerts
+	 * that a new version is available
 	 *
-	 * @throws LongRunningQueryException
-	 * @throws SodaError
-	 * @throws MalformedURLException
 	 * @throws URISyntaxException
 	 */
-	private void checkVersion() throws LongRunningQueryException, SodaError, URISyntaxException {
-		Map<String, String> dataSyncVersionMetadata = DataSyncMetadata.getDataSyncMetadata();
-        String currentVersion = DataSyncMetadata.getCurrentVersion(dataSyncVersionMetadata);
-        if(!DataSyncMetadata.isLatestVersion(dataSyncVersionMetadata)) {
-	    	Object[] options = {"Download Now", "No Thanks"};
-            int n = JOptionPane.showOptionDialog(frame,
-            				"A new version of DataSync is available (version "
-        	    	    	+ currentVersion + ").\nDo you want to download it now?\n",
-        	    	    	"Alert: New Version Available",
-                            JOptionPane.YES_NO_OPTION,
-                            JOptionPane.QUESTION_MESSAGE,
-                            null, options, options[0]);
-            if (n == JOptionPane.YES_OPTION) {
-            	URI currentVersionDownloadURI = new URI(
-                        DataSyncMetadata.getCurrentVersionDownloadUrl(dataSyncVersionMetadata));
-            	Utils.openWebpage(currentVersionDownloadURI);
+	private void checkVersion() throws URISyntaxException {
+		if(VersionProvider.isLatestMajorVersion() == VersionProvider.VersionStatus.NOT_LATEST) {
+            String currentVersion = VersionProvider.getLatestVersion();
+            if (currentVersion != null) {
+                Object[] options = {"Download Now", "No Thanks"};
+                int n = JOptionPane.showOptionDialog(frame,
+                        "A new version of DataSync is available (version " + currentVersion + ").\n" +
+                        "Do you want to download it now?\n",
+                        "Alert: New Version Available",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null, options, options[0]
+                );
+                if (n == JOptionPane.YES_OPTION) {
+                    URI currentVersionDownloadURI = new URI(VersionProvider.getDownloadUrlForLatestVersion());
+                    if (currentVersionDownloadURI != null)
+                        Utils.openWebpage(currentVersionDownloadURI);
+                }
             }
-	    }
+        }
 	}
-	
+
 	private void addJobTab(Job job) throws IllegalArgumentException {
         JobTab newJobTab;
         if(job.getClass().equals(IntegrationJob.class)) {
@@ -200,13 +200,13 @@ public class SimpleIntegrationWizard {
         } else {
             throw new IllegalArgumentException("Given job is invalid: unrecognized class '" + job.getClass() + "'");
         }
-        JPanel newJobPanel = newJobTab.getTabPanel();        
+        JPanel newJobPanel = newJobTab.getTabPanel();
 
 		// Build the tab with close button
 	    FlowLayout tabLayout = new FlowLayout(FlowLayout.CENTER, 5, 0);
 	    JPanel tabPanel = new JPanel(tabLayout);
 	    tabPanel.setOpaque(false);
-	    
+
 	    // Create a JButton for the close tab button
 	    JButton closeTabButton = new JButton("[X]");
 	    // TODO make close button an icon rather than [X]
@@ -223,16 +223,16 @@ public class SimpleIntegrationWizard {
 	    // Add a thin border to keep the image below the top edge of the tab when the tab is selected
 	    tabPanel.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
 
-		// Put tab with close button into tabbed pane 
-	    //TODO: BW: Possibly implement way to keep other tabs from being scrollable?	    
+		// Put tab with close button into tabbed pane
+	    //TODO: BW: Possibly implement way to keep other tabs from being scrollable?
 	    JScrollPane newJobScrollPanel = new JScrollPane(newJobPanel);
 	    newJobScrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         jobTabsPane.addTab(null, newJobScrollPanel);
 	    int pos = jobTabsPane.indexOfComponent(newJobScrollPanel);
-	    
+
 	    // Now assign the component for the tab
 	    jobTabsPane.setTabComponentAt(pos, tabPanel);
-	    
+
 	    closeTabButton.addActionListener(new CloseJobFromTabListener());
 
         jobTabs.add(newJobTab);
@@ -251,7 +251,7 @@ public class SimpleIntegrationWizard {
 	private class RunJobNowListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			saveAuthenticationInfoFromForm();
-			
+
 			// run integration job with data from form
 	        int selectedJobTabIndex = jobTabsPane.getSelectedIndex();
             JobTab selectedJobTab = jobTabs.get(selectedJobTabIndex);
@@ -307,7 +307,7 @@ public class SimpleIntegrationWizard {
             }
         }
     }
-	
+
 	private class SaveJobListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			saveAuthenticationInfoFromForm();
@@ -316,7 +316,7 @@ public class SimpleIntegrationWizard {
             selectedJobTab.saveJob();
 		}
 	}
-	
+
 	private class OpenJobListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			JFileChooser savedJobFileChooser = new JFileChooser();
@@ -329,7 +329,7 @@ public class SimpleIntegrationWizard {
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
 				File openedFile = savedJobFileChooser.getSelectedFile();
 				// Ensure file exists
-				if(openedFile.exists()) {	
+				if(openedFile.exists()) {
 					// ensure this job is not already open
 					String openedFileLocation = openedFile.getAbsolutePath();
                     int indexOfAlreadyOpenFile = -1;
@@ -398,7 +398,7 @@ public class SimpleIntegrationWizard {
             jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
         }
     }
-    
+
     private class NewMetadataJobListener implements ActionListener {
     	public void actionPerformed(ActionEvent e) {
     		addJobTab(new MetadataJob());
@@ -417,10 +417,10 @@ public class SimpleIntegrationWizard {
 		    closeJobTab(jobTabIndex);
 		}
 	}
-	
+
 	private JMenuBar generateMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
-		
+
 		JMenu fileMenu = new JMenu("File");
 		menuBar.add(fileMenu);
 
@@ -432,22 +432,22 @@ public class SimpleIntegrationWizard {
         JMenuItem newMetadataJobItem = new JMenuItem("Metadata Job (beta)");
         newJobMenu.add(newMetadataJobItem);
 		fileMenu.add(newJobMenu);
-		
+
 		JMenuItem openJobItem = new JMenuItem("Open Job");
 		openJobItem.setAccelerator(KeyStroke.getKeyStroke(
 			KeyEvent.VK_O, ActionEvent.CTRL_MASK));
 		fileMenu.add(openJobItem);
-		
+
 		JMenuItem saveJobItem = new JMenuItem("Save Job");
 		saveJobItem.setAccelerator(KeyStroke.getKeyStroke(
 			KeyEvent.VK_S, ActionEvent.CTRL_MASK));
 		fileMenu.add(saveJobItem);
-		
+
 		JMenuItem runJobItem = new JMenuItem("Run Job Now");
 		runJobItem.setAccelerator(KeyStroke.getKeyStroke(
 			KeyEvent.VK_R, ActionEvent.CTRL_MASK));
 		fileMenu.add(runJobItem);
-		
+
 		JMenu editMenu = new JMenu("Edit");
 		menuBar.add(editMenu);
 		JMenuItem prefsItem = new JMenuItem("Preferences");
@@ -493,10 +493,10 @@ public class SimpleIntegrationWizard {
                 } catch (URISyntaxException e1) { e1.printStackTrace(); }
             }
         });
-		
+
 		return menuBar;
 	}
-	
+
 	private JPanel generateMainPanel() {
 		JPanel mainContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		mainContainer.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
@@ -506,8 +506,8 @@ public class SimpleIntegrationWizard {
 		jobTabsContainer.setPreferredSize(JOB_PANEL_DIMENSION);
 		jobTabsPane = new JTabbedPane();
 		jobTabsContainer.add(jobTabsPane);
-        jobTabsPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);        
-        
+        jobTabsPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+
         JPanel jobButtonContainer = new JPanel(new GridLayout(1,2));
         JPanel leftButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         runJobNowButton = new JButton("Run Job Now");
@@ -598,11 +598,11 @@ public class SimpleIntegrationWizard {
 		prefsPanel.add(new JLabel(" Log Dataset ID (e.g., n38h-y5wp)"));
 		logDatasetIDTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
 		prefsPanel.add(logDatasetIDTextField);
-		
+
 		prefsPanel.add(new JLabel(" Admin Email"));
 		adminEmailTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
 		prefsPanel.add(adminEmailTextField);
-		
+
 		emailUponErrorCheckBox = new JCheckBox(" Auto-email admin upon error");
 		prefsPanel.add(emailUponErrorCheckBox);
 		prefsPanel.add(new JLabel("*must fill in SMTP Settings below"));
@@ -662,10 +662,10 @@ public class SimpleIntegrationWizard {
 		prefsPanel.add(prefsButtonContainer);
 
 		loadPreferencesIntoForm();
-		
+
 		return prefsPanel;
 	}
-	
+
 	private void loadPreferencesIntoForm() {
         filesizeChunkingCutoffTextField.setText(userPrefs.getFilesizeChunkingCutoffMB());
         numRowsPerChunkTextField.setText(userPrefs.getNumRowsPerChunk());
@@ -673,7 +673,7 @@ public class SimpleIntegrationWizard {
 		adminEmailTextField.setText(userPrefs.getAdminEmail());
 		logDatasetIDTextField.setText(userPrefs.getLogDatasetID());
 		emailUponErrorCheckBox.setSelected(userPrefs.emailUponError());
-		
+
 		outgoingMailServerTextField.setText(userPrefs.getOutgoingMailServer());
 		smtpPortTextField.setText(userPrefs.getSmtpPort());
 		String sslPort = userPrefs.getSslPort();
@@ -686,7 +686,7 @@ public class SimpleIntegrationWizard {
 		smtpUsernameTextField.setText(userPrefs.getSmtpUsername());
 		smtpPasswordField.setText(userPrefs.getSmtpPassword());
 	}
-	
+
 	private void savePreferences() {
         try {
             userPrefs.saveFilesizeChunkingCutoffMB(
@@ -704,7 +704,7 @@ public class SimpleIntegrationWizard {
 		userPrefs.saveAdminEmail(adminEmailTextField.getText());
 		userPrefs.saveLogDatasetID(logDatasetIDTextField.getText());
 		userPrefs.saveEmailUponError(emailUponErrorCheckBox.isSelected());
-		
+
 		userPrefs.saveOutgoingMailServer(outgoingMailServerTextField.getText());
 		userPrefs.saveSMTPPort(smtpPortTextField.getText());
 		if(useSSLCheckBox.isSelected()) {
@@ -716,7 +716,7 @@ public class SimpleIntegrationWizard {
 		String smtpPassword = new String(smtpPasswordField.getPassword());
     	userPrefs.saveSMTPPassword(smtpPassword);
 	}
-	
+
 	private class SavePreferencesListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			// TODO validation of email and log dataset ID
@@ -724,21 +724,21 @@ public class SimpleIntegrationWizard {
 			prefsFrame.setVisible(false);
 		}
 	}
-	
+
 	private class CancelPreferencesListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			loadPreferencesIntoForm();
 			prefsFrame.setVisible(false);
 		}
 	}
-	
+
 	private class TestSMTPSettingsListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			savePreferences();
 			String adminEmail = userPrefs.getAdminEmail();
 			String message;
 			try {
-				SMTPMailer.send(adminEmail, "Socrata DataSync Test Email", 
+				SMTPMailer.send(adminEmail, "Socrata DataSync Test Email",
 						"This email confirms that your SMTP Settings are valid.");
 				message = "Sent test email to " + adminEmail + ". Please ensure the "
 						+ "email was delievered successfully (it may take a few minutes).";
@@ -748,7 +748,7 @@ public class SimpleIntegrationWizard {
 			JOptionPane.showMessageDialog(prefsFrame, message);
 		}
 	}
-	
+
 	private class OpenPreferencesListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			// centers the window
@@ -756,7 +756,7 @@ public class SimpleIntegrationWizard {
 			prefsFrame.setVisible(true);
 		}
 	}
-	
+
 	private JPanel generateAuthenticationDetailsFormPanel() {
 		JPanel authenticationDetailsPanel = new JPanel(new GridLayout(0,2));
 
@@ -786,7 +786,7 @@ public class SimpleIntegrationWizard {
 
 		return authenticationDetailsPanel;
 	}
-    
+
 	/**
 	 * Ensures consistency of fields within job tabs
 	 * @return true if no issues were found, false otherwise
@@ -794,18 +794,18 @@ public class SimpleIntegrationWizard {
 	private boolean jobTabsValid() {
         return (jobTabsPane.getTabCount() == jobTabs.size());
 	}
-	
+
     /**
      * Saves user authentication data input into form
      */
     private void saveAuthenticationInfoFromForm() {
-    	userPrefs.saveDomain(domainTextField.getText()); 
+    	userPrefs.saveDomain(domainTextField.getText());
     	userPrefs.saveUsername(usernameTextField.getText());
 		String password = new String(passwordField.getPassword());
     	userPrefs.savePassword(password);
     	userPrefs.saveAPIKey(apiKeyTextField.getText());
     }
-    
+
     /**
      * Loads user authentication data from userPrefs
      */
@@ -815,5 +815,5 @@ public class SimpleIntegrationWizard {
 		passwordField.setText(userPrefs.getPassword());
 		apiKeyTextField.setText(userPrefs.getAPIKey());
     }
-    
+
 }

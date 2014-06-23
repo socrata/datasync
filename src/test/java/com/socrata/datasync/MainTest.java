@@ -1,7 +1,6 @@
 package com.socrata.datasync;
 
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
-import com.socrata.datasync.publishers.FTPDropbox2Publisher;
 import com.socrata.datasync.publishers.Soda2Publisher;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;

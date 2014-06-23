@@ -3,11 +3,11 @@ package com.socrata.datasync.job;
 import com.google.common.collect.ImmutableMap;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaImporter;
-import com.socrata.datasync.DataSyncMetadata;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.SMTPMailer;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.Utils;
+import com.socrata.datasync.VersionProvider;
 import com.socrata.datasync.config.CommandLineOptions;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -336,25 +337,12 @@ public class IntegrationJob extends Job {
 		// TODO add more validation? (e.g. validation of File To Publish header row)
 
         // Check if version is up-to-date (ONLY if running headlessly)
-        try {
-            Map<String, String> dataSyncVersionMetadata = DataSyncMetadata.getDataSyncMetadata();
-            String newVersionDownloadMessage = "Download the new version (" +
-                    DataSyncMetadata.getCurrentVersion(dataSyncVersionMetadata) + ") here:\n" +
-                    DataSyncMetadata.getCurrentVersionDownloadUrl(dataSyncVersionMetadata) + "\n";
-
-            if(!DataSyncMetadata.isLatestMajorVersion(dataSyncVersionMetadata)) {
-                // Fail job if major version out-of-date
-                JobStatus versionOutOfDate = JobStatus.VERSION_OUT_OF_DATE;
-                versionOutOfDate.setMessage("DataSync critical update required: job cannot be run until " +
-                        " DataSync is updated. " + newVersionDownloadMessage);
-                return versionOutOfDate;
-            } else if(!DataSyncMetadata.isLatestVersion(dataSyncVersionMetadata)) {
-                // Warn user if version out of date at all
-                System.err.println("\nWARNING: DataSync is out-of-date. " + newVersionDownloadMessage + "\n");
-            }
-        } catch (Exception e) {
-            // do nothing upon failure
-            System.out.println("WARNING: checking DataSync version failed.");
+        if(VersionProvider.isLatestMajorVersion() == VersionProvider.VersionStatus.NOT_LATEST) {
+            String newDownloadLink = VersionProvider.getDownloadUrlForLatestVersion();
+            String newVersionDownloadMessage = newDownloadLink == null ? "\n" :
+                    "Download the new version (" + VersionProvider.getThisVersion() + ") here:\n" +
+                    newDownloadLink + "\n";
+            System.err.println("\nWARNING: DataSync is out-of-date. " + newVersionDownloadMessage);
         }
 
         return JobStatus.VALID;
@@ -476,7 +464,7 @@ public class IntegrationJob extends Job {
         } else {
             newCols.put("Success", true);
         }
-        newCols.put("DataSyncVersion", DataSyncMetadata.getDatasyncVersion());
+        newCols.put("DataSyncVersion", VersionProvider.getThisVersion());
         upsertObjects.add(ImmutableMap.copyOf(newCols));
 
         System.out.println("Adding row to logging dataset (" + connectionInfo.getUrl() + "/d/" + logDatasetID + ")...");

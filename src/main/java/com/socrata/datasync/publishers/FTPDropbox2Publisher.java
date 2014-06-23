@@ -1,7 +1,7 @@
 package com.socrata.datasync.publishers;
 
-import com.socrata.datasync.DataSyncMetadata;
 import com.socrata.datasync.HttpUtility;
+import com.socrata.datasync.VersionProvider;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.Utils;
@@ -302,7 +302,7 @@ public class FTPDropbox2Publisher {
     }
 
     public static String getFTPHost(UserPreferences userPerfs) throws URISyntaxException, IOException {
-        HttpUtility http = new HttpUtility(userPerfs);
+        HttpUtility http = new HttpUtility(userPerfs, true);
         URI versionApiUri = new URI(userPerfs.getDomain() + VERSION_API_ENDPOINT);
         try(CloseableHttpResponse response = http.get(versionApiUri, ContentType.APPLICATION_JSON.getMimeType())) {
             String regionName = response.getHeaders(X_SOCRATA_REGION)[0].getValue();
@@ -405,7 +405,7 @@ public class FTPDropbox2Publisher {
      */
     private static void recordDataSyncVersion(FTPSClient ftp, String pathToDataSyncVersionFile) {
         try {
-            String currentDataSyncVersion = DataSyncMetadata.getDatasyncVersion();
+            String currentDataSyncVersion = VersionProvider.getThisVersion();
             System.out.println("Recording DataSync version being used (" + currentDataSyncVersion + ")");
             InputStream inputDataSyncVersion = new ByteArrayInputStream(currentDataSyncVersion.getBytes("UTF-8"));
             System.out.println("Setting job request ID - ftp.storeFile(" + pathToDataSyncVersionFile + ", " + inputDataSyncVersion + ")");

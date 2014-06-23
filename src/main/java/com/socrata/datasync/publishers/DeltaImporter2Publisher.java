@@ -62,7 +62,7 @@ public class DeltaImporter2Publisher {
     CloseableHttpResponse signatureResponse = null;
 
     public DeltaImporter2Publisher(UserPreferences userPrefs) {
-        http = new HttpUtility(userPrefs);
+        http = new HttpUtility(userPrefs, true);
         domain = userPrefs.getHost();
         baseUri = new URIBuilder()
                 .setScheme("https")

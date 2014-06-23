@@ -20,7 +20,7 @@ public class DatasyncDirectoryTest extends TestBase {
 
     @Before
     public void setUp() throws Exception {
-        http = new HttpUtility(getUserPrefs());
+        http = new HttpUtility(getUserPrefs(), false);
         dd = new DatasyncDirectory(http, "test.socrata.com", "some-4by4");
     }
 

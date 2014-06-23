@@ -259,12 +259,10 @@ public class UserPreferencesJava implements UserPreferences {
     }
 
     private void saveKeyValuePair(String key, String value) {
-        if (key != null) {
-            if (value == null) {
-                userPrefs.remove(key);
-            } else {
-                userPrefs.put(key, value);
-            }
+        if (value == null) {
+            userPrefs.remove(key);
+        } else {
+            userPrefs.put(key, value);
         }
     }
 }

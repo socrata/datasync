@@ -29,7 +29,7 @@ public class HttpUtilityTest extends TestBase {
     public void setUp() throws Exception {
         mapper = new ObjectMapper();
         UserPreferences userPrefs = getUserPrefs();
-        http = new HttpUtility(userPrefs);
+        http = new HttpUtility(userPrefs, true);
     }
 
     @After

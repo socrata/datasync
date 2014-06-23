@@ -27,13 +27,19 @@ public class HttpUtility {
     private RequestConfig proxyConfig = null;
     private String authHeader;
     private String appToken;
+    private boolean authRequired = false;
     private static final String appHeader = "X-App-Token";
     private static final String userAgent = "datasync";
 
-    public HttpUtility(UserPreferences userPrefs) {
-        appToken = userPrefs.getAPIKey();
-        authHeader = getAuthHeader(userPrefs.getUsername(), userPrefs.getPassword());
-        if(userPrefs.getProxyHost() != null && userPrefs.getProxyPort() != null) {
+    public HttpUtility() { this(null, false); }
+
+    public HttpUtility(UserPreferences userPrefs, boolean useAuth) {
+        if (useAuth) {
+            authHeader = getAuthHeader(userPrefs.getUsername(), userPrefs.getPassword());
+            appToken = userPrefs.getAPIKey();
+        }
+        authRequired = useAuth;
+        if(userPrefs != null && userPrefs.getProxyHost() != null && userPrefs.getProxyPort() != null) {
             HttpHost proxy = new HttpHost(userPrefs.getProxyHost(), Integer.valueOf(userPrefs.getProxyPort()));
             proxyConfig = RequestConfig.custom().setProxy(proxy).build();
             if (userPrefs.getProxyUsername() != null && userPrefs.getProxyPassword() != null) {
@@ -55,11 +61,14 @@ public class HttpUtility {
      */
     public CloseableHttpResponse get(URI uri, String contentType) throws IOException {
         HttpGet httpGet = new HttpGet(uri);
+        httpGet.setHeader(HttpHeaders.USER_AGENT, userAgent);
+        httpGet.addHeader(HttpHeaders.ACCEPT, contentType);
         if (proxyConfig != null)
             httpGet.setConfig(proxyConfig);
-        httpGet.addHeader(HttpHeaders.ACCEPT, contentType);
-        httpGet.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
-        httpGet.setHeader(appHeader, appToken);
+        if (authRequired) {
+            httpGet.setHeader(appHeader, appToken);
+            httpGet.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
+        }
         return httpClient.execute(httpGet);
     }
 
@@ -71,13 +80,15 @@ public class HttpUtility {
      */
     public CloseableHttpResponse post(URI uri, HttpEntity entity) throws IOException {
         HttpPost httpPost = new HttpPost(uri);
-        if (proxyConfig != null)
-            httpPost.setConfig(proxyConfig);
         httpPost.setHeader(HttpHeaders.USER_AGENT, userAgent);
-        httpPost.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
-        httpPost.setHeader(appHeader, appToken);
         httpPost.setHeader(entity.getContentType());
         httpPost.setEntity(entity);
+        if (proxyConfig != null)
+            httpPost.setConfig(proxyConfig);
+        if (authRequired) {
+            httpPost.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
+            httpPost.setHeader(appHeader, appToken);
+        }
         return httpClient.execute(httpPost);
     }
 
