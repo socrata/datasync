@@ -456,7 +456,7 @@ public class SimpleIntegrationWizard {
         JMenu helpMenu = new JMenu("Help");
         menuBar.add(helpMenu);
         JMenuItem gettingStartedGuideItem = new JMenuItem("Getting started guide");
-        JMenuItem controlDocumentationItem = new JMenuItem("FTP control file configuration");
+        JMenuItem controlDocumentationItem = new JMenuItem("Control file configuration");
         JMenuItem schedulingItem = new JMenuItem("Scheduling a job");
         helpMenu.add(gettingStartedGuideItem);
         helpMenu.add(controlDocumentationItem);
