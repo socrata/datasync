@@ -582,12 +582,20 @@ public class IntegrationJobTab implements JobTab {
 
             String[] columns = null;
             if (!containsHeaderRow) {
-                columns = Utils.getDatasetFieldNames(datasetInfo).split(",");
+
+                String columnString = Utils.getDatasetFieldNames(datasetInfo);
+                // This replace is a bit of a hack to allow us to match the same behavior that we have in DeltaSync1.0.
+                // With this hack, the "GetColumnList" button will still return quotes.
+                // However, the JSON will be properly escaped, and we will have made the minimum change necessary.
+                // Allows us to avoid any scenario where a data coordinator has custom parsing logic already built on the quotes in datasync
+                columnString = columnString.replace("\"","");
+                columns = columnString.split(",");
+
             }
 
             ControlFile control = ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding);
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.writeValueAsString(control);
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(control);
         }
 
         /**
