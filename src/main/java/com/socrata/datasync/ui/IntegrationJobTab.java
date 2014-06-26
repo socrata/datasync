@@ -183,7 +183,7 @@ public class IntegrationJobTab implements JobTab {
         httpButton.setSelected(true);
 
         //Should refactor the name to be radio button
-        PublishViaFTPCheckBoxListener listener = new PublishViaFTPCheckBoxListener();
+        PublishViaReplaceListener listener = new PublishViaReplaceListener();
 
         soda2Button.addActionListener(listener);
         ftpButton.addActionListener(listener);
@@ -264,7 +264,7 @@ public class IntegrationJobTab implements JobTab {
         publishMethodComboBox.setSelectedItem(jobPublishMethod);
         fileToPublishHasHeaderCheckBox.setSelected(job.getFileToPublishHasHeaderRow());
 
-        updatePublishViaFTPUIFields(job.getPublishMethod(),
+        updatePublishViaReplaceUIFields(job.getPublishMethod(),
                 job.getPublishViaFTP() || job.getPublishViaDi2Http());
 
         //Set the defaults on the button correctly.
@@ -309,10 +309,8 @@ public class IntegrationJobTab implements JobTab {
         generateEditControlFileButton.setEnabled(setEditGenerateFtpControlFileEnabled);
     }
 
-    private void updatePublishViaFTPUIFields(PublishMethod publishMethod,
+    private void updatePublishViaReplaceUIFields(PublishMethod publishMethod,
                                                         boolean showFileInfo) {
-       //Commenting this out as we now take care of setting the UI correctly prior to entering this method.  The only thing that this cares about is whether or not we should show the info panel associated with replace
-       // publishViaFTPCheckBox.setSelected(publishViaFTP);
         publishViaFTPLabelContainer.setVisible(
                 publishMethod.equals(PublishMethod.replace));
         if(showFileInfo) {
@@ -470,13 +468,13 @@ public class IntegrationJobTab implements JobTab {
                     (PublishMethod) publishMethodComboBox.getSelectedItem();
             boolean setPublishViaFTPAsChecked = 
                     (selectedPublishMethod.equals(PublishMethod.replace) && (ftpButton.isSelected()|| httpButton.isSelected()));
-            updatePublishViaFTPUIFields(selectedPublishMethod, setPublishViaFTPAsChecked);
+            updatePublishViaReplaceUIFields(selectedPublishMethod, setPublishViaFTPAsChecked);
         }
     }
 
-    private class PublishViaFTPCheckBoxListener implements ActionListener {
+    private class PublishViaReplaceListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            updatePublishViaFTPUIFields(
+            updatePublishViaReplaceUIFields(
                     (PublishMethod) publishMethodComboBox.getSelectedItem(),
                     controlFileNeeded());
         }
