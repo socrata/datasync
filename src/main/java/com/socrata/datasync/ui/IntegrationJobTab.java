@@ -469,7 +469,7 @@ public class IntegrationJobTab implements JobTab {
             PublishMethod selectedPublishMethod =
                     (PublishMethod) publishMethodComboBox.getSelectedItem();
             boolean setPublishViaFTPAsChecked = 
-                    selectedPublishMethod.equals(PublishMethod.replace);
+                    (selectedPublishMethod.equals(PublishMethod.replace) && (ftpButton.isSelected()|| httpButton.isSelected()));
             updatePublishViaFTPUIFields(selectedPublishMethod, setPublishViaFTPAsChecked);
         }
     }
