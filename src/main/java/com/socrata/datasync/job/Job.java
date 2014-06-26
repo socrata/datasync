@@ -10,7 +10,7 @@ import java.io.IOException;
 public abstract class Job {
 
     String pathToSavedJobFile = "";
-    String defaultJobName = "";
+    String defaultJobName = "Untitled Standard Job";
 
     public abstract boolean validateArgs(CommandLine cmd);
     public abstract void configure(CommandLine cmd);
