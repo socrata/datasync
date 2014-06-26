@@ -370,7 +370,7 @@ public class IntegrationJob extends Job {
         JobStatus validationStatus = validate(connectionInfo);
         if(validationStatus.isError()) {
 			runStatus = validationStatus;
-		} else if(publishViaFTP && !publishMethod.equals(PublishMethod.replace)) {
+		} else if((publishViaFTP || publishViaDi2Http) && !publishMethod.equals(PublishMethod.replace)) {
             runStatus = JobStatus.PUBLISH_ERROR;
             runStatus.setMessage("FTP does not currently support upsert, append or delete");
         } else {

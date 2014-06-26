@@ -143,18 +143,18 @@ public class UserPreferencesJava implements UserPreferences {
 		return userPrefs.get(API_KEY, "");
 	}
 
-    public String getProxyHost() { return userPrefs.get(PROXY_HOST, ""); }
+    public String getProxyHost() { return userPrefs.get(PROXY_HOST, null); }
 
     public String getProxyPort() {
-        return userPrefs.get(PROXY_PORT, "");
+        return userPrefs.get(PROXY_PORT, null);
     }
 
     public String getProxyUsername() {
-        return userPrefs.get(PROXY_USERNAME, "");
+        return userPrefs.get(PROXY_USERNAME, null);
     }
 
     public String getProxyPassword() {
-        return userPrefs.get(PROXY_PASSWORD, "");
+        return userPrefs.get(PROXY_PASSWORD, null);
     }
 
     public void setProxyUsername(String username) {};
