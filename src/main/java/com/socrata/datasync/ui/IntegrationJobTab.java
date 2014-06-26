@@ -59,10 +59,10 @@ public class IntegrationJobTab implements JobTab {
             "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; " +
             "NOTE: requires dataset to have Row Identifier." +
             "</body></html>";
-    private static final String PUBLISH_VIA_FTP_ROW_TIP_TEXT = "<html><body style='width: 400px'>'replace via FTP' is the preferred " +
-            "and most efficient publishing method. Sends CSV/TSV file over FTP, automatically detects " +
+    private static final String PUBLISH_VIA_FTP_ROW_TIP_TEXT = "<html><body style='width: 400px'>'Replace via HTTP' is the preferred " +
+            "and most efficient publishing method. Sends CSV/TSV file over HTTP, automatically detects " +
             "changes since last update, and only updates new/changed rows.<br>" +
-            "<strong>NOTE</strong>: your firewall may need to be configured to allow FTP traffic through ports " +
+            "<strong>NOTE</strong>: If you choose FTP, your firewall may need to be configured to allow FTP traffic through ports " +
             "22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)</body></html>";
     private static final String CONTROL_FILE_TIP_TEXT = "<html><body style='width: 300px'>" +
             "Establishes import configuration such as date formatting and Location column being populated" +
@@ -74,7 +74,9 @@ public class IntegrationJobTab implements JobTab {
     private static final String RUN_COMMAND_TIP_TEXT = "<html><body style='width: 300px'>After saving the job this field will be populated with a command-line command that can be used to run the job." +
             " This command can be input into tools such as the Windows Task Scheduler or ETL tools to run the job automatically.</body></html>";
     public static final String CONTAINS_A_HEADER_ROW_CHECKBOX_TEXT = "File to publish contains a header row";
-    public static final String PUBLISH_VIA_FTP_CHECKBOX_TEXT = "Publish via FTP";
+    public static final String PUBLISH_VIA_SODA_RADIO_TEXT = "SODA2 (legacy)";
+    public static final String PUBLISH_VIA_FTP_RADIO_TEXT = "FTP";
+    public static final String PUBLISH_VIA_HTTP_RADIO_TEXT = "HTTP";
     public static final String COPY_TO_CLIPBOARD_BUTTON_TEXT = "Copy to clipboard";
     public static final String GENERATE_EDIT_CONTROL_FILE_BUTTON_TEXT = "Generate/Edit";
     public static final String GET_COLUMN_IDS_BUTTON_TEXT = "Get Column ID List";
@@ -90,7 +92,11 @@ public class IntegrationJobTab implements JobTab {
     private JTextField fileToPublishTextField;
     private JCheckBox fileToPublishHasHeaderCheckBox;
     private JComboBox publishMethodComboBox;
-    private JCheckBox publishViaFTPCheckBox;
+    private ButtonGroup publishMethodRadioButtonGroup;
+    private JRadioButton soda2Button;
+    private JRadioButton ftpButton;
+    private JRadioButton httpButton;
+    //private JCheckBox publishViaFTPCheckBox;
     private JPanel publishViaFTPLabelContainer;
     private JTextField controlFileTextField;
     private JButton browseForControlFileButton;
@@ -119,7 +125,7 @@ public class IntegrationJobTab implements JobTab {
 
     private void addControlFileFieldToJobPanel() {
         controlFileLabelContainer = UIUtility.generateLabelWithHelpBubble(
-                "FTP control file", CONTROL_FILE_TIP_TEXT, HELP_ICON_TOP_PADDING);
+                "Control file", CONTROL_FILE_TIP_TEXT, HELP_ICON_TOP_PADDING);
         jobPanel.add(controlFileLabelContainer);
 
         controlFileSelectorContainer = new JPanel(FLOW_RIGHT);
@@ -170,11 +176,32 @@ public class IntegrationJobTab implements JobTab {
 
         publishMethodTextFieldContainer.add(publishMethodComboBox);
 
-        publishViaFTPCheckBox = new JCheckBox(PUBLISH_VIA_FTP_CHECKBOX_TEXT);
-        publishViaFTPCheckBox.addActionListener(
-                new PublishViaFTPCheckBoxListener());
+        //Create the radio buttons
+        soda2Button = new JRadioButton(PUBLISH_VIA_SODA_RADIO_TEXT);
+        ftpButton = new JRadioButton(PUBLISH_VIA_FTP_RADIO_TEXT);
+        httpButton = new JRadioButton(PUBLISH_VIA_HTTP_RADIO_TEXT);
+        httpButton.setSelected(true);
+
+        //Should refactor the name to be radio button
+        PublishViaFTPCheckBoxListener listener = new PublishViaFTPCheckBoxListener();
+
+        soda2Button.addActionListener(listener);
+        ftpButton.addActionListener(listener);
+        httpButton.addActionListener(listener);
+
+        publishMethodRadioButtonGroup = new ButtonGroup();
+        publishMethodRadioButtonGroup.add(soda2Button);
+        publishMethodRadioButtonGroup.add(ftpButton);
+        publishMethodRadioButtonGroup.add(httpButton);
+
+
+        //publishViaFTPCheckBox = new JCheckBox(PUBLISH_VIA_FTP_CHECKBOX_TEXT);
+        //publishViaFTPCheckBox.addActionListener(
+         //       new PublishViaFTPCheckBoxListener());
         publishViaFTPLabelContainer = new JPanel(FLOW_LEFT);
-        publishViaFTPLabelContainer.add(publishViaFTPCheckBox);
+        publishViaFTPLabelContainer.add(soda2Button);
+        publishViaFTPLabelContainer.add(ftpButton);
+        publishViaFTPLabelContainer.add(httpButton);
         publishViaFTPLabelContainer.add(
                 UIUtility.generateHelpBubble(PUBLISH_VIA_FTP_ROW_TIP_TEXT));
         publishMethodTextFieldContainer.add(publishViaFTPLabelContainer);
@@ -275,7 +302,8 @@ public class IntegrationJobTab implements JobTab {
 
     private void updatePublishViaFTPUIFields(PublishMethod publishMethod,
                                                         boolean publishViaFTP) {
-        publishViaFTPCheckBox.setSelected(publishViaFTP);
+       //Commenting this out as whatever was set previously as part of the button group should just continue
+       // publishViaFTPCheckBox.setSelected(publishViaFTP);
         publishViaFTPLabelContainer.setVisible(
                 publishMethod.equals(PublishMethod.replace));
         if(publishViaFTP) {
@@ -299,7 +327,8 @@ public class IntegrationJobTab implements JobTab {
         jobToRun.setPublishMethod(
                 (PublishMethod) publishMethodComboBox.getSelectedItem());
         jobToRun.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
-        jobToRun.setPublishViaFTP(publishViaFTPCheckBox.isSelected());
+        jobToRun.setPublishViaFTP(ftpButton.isSelected());
+        jobToRun.setPublishViaDi2Http(httpButton.isSelected());
         jobToRun.setPathToControlFile(controlFileTextField.getText());
         jobToRun.setControlFileContent(controlFileContentTextArea.getText());
         try {
@@ -319,7 +348,8 @@ public class IntegrationJobTab implements JobTab {
         newIntegrationJob.setPublishMethod(
                 (PublishMethod) publishMethodComboBox.getSelectedItem());
         newIntegrationJob.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
-        newIntegrationJob.setPublishViaFTP(publishViaFTPCheckBox.isSelected());
+        newIntegrationJob.setPublishViaFTP(ftpButton.isSelected());
+        newIntegrationJob.setPublishViaDi2Http(httpButton.isSelected());
         newIntegrationJob.setPathToControlFile(controlFileTextField.getText());
         newIntegrationJob.setControlFileContent(controlFileContentTextArea.getText());
         newIntegrationJob.setPathToSavedFile(jobFileLocation);
@@ -439,7 +469,11 @@ public class IntegrationJobTab implements JobTab {
         public void actionPerformed(ActionEvent e) {
             updatePublishViaFTPUIFields(
                     (PublishMethod) publishMethodComboBox.getSelectedItem(),
-                    publishViaFTPCheckBox.isSelected());
+                    controlFileNeeded());
+        }
+
+        private boolean controlFileNeeded() {
+            return httpButton.isSelected() || ftpButton.isSelected();
         }
     }
 
@@ -534,7 +568,8 @@ public class IntegrationJobTab implements JobTab {
             boolean useGeocoding = Utils.datasetHasLocationColumn(datasetInfo);
 
             // In FTP Dropbox v2 there is only Append (append == upsert)
-            if (publishViaFTPCheckBox.isSelected() && publishMethod.equals(PublishMethod.upsert)) {
+            //Consider factoring the ftp and http button check into a new method
+            if ((ftpButton.isSelected()||httpButton.isSelected()) && publishMethod.equals(PublishMethod.upsert)) {
                 publishMethod = PublishMethod.append;
             }
 

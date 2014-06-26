@@ -54,8 +54,8 @@ public class CommandLineOptions {
         options.addOption("m", PUBLISH_METHOD_FLAG, true, "Publish method (" + Arrays.toString(PublishMethod.values()) + ") [IntegrationJob]");
         options.addOption("h", HAS_HEADER_ROW_FLAG, true, "File to publish has header row (true or false) [IntegrationJob]");
         options.addOption("pf", PUBLISH_VIA_FTP_FLAG, true, "Use FTP (instead of HTTP) for publishing (true or false) (default: " + DEFAULT_PUBLISH_VIA_FTP + ") [IntegrationJob]");
-        options.addOption("di2", PUBLISH_VIA_DI2_FLAG, true, "Use delta-importer-2 over HTTP for publishing (true or false) (default: false) [IntegrationJob]");
-        options.addOption("sc", PATH_TO_CONTROL_FILE_FLAG, true, "control.json file, needed for publishing via FTP or delta-importer-2 over HTTP;" +
+        options.addOption("di2", PUBLISH_VIA_DI2_FLAG, true, "Use HTTP for publishing (true or false) (default: false) [IntegrationJob]");
+        options.addOption("sc", PATH_TO_CONTROL_FILE_FLAG, true, "control.json file, needed for publishing via FTP or HTTP;" +
                                                                  "if set overrides job parameters [IntegrationJob]");
         options.addOption("pun", PROXY_USERNAME_FLAG, true, "The username to supply to connect to the proxy server [IntegrationJob]");
         options.addOption("ppw", PROXY_PASSWORD_FLAG, true, "The password to supply to connect to the proxy server [IntegrationJob]");
