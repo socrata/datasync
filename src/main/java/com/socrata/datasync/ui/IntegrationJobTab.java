@@ -194,10 +194,6 @@ public class IntegrationJobTab implements JobTab {
         publishMethodRadioButtonGroup.add(ftpButton);
         publishMethodRadioButtonGroup.add(httpButton);
 
-
-        //publishViaFTPCheckBox = new JCheckBox(PUBLISH_VIA_FTP_CHECKBOX_TEXT);
-        //publishViaFTPCheckBox.addActionListener(
-         //       new PublishViaFTPCheckBoxListener());
         publishViaFTPLabelContainer = new JPanel(FLOW_LEFT);
         publishViaFTPLabelContainer.add(soda2Button);
         publishViaFTPLabelContainer.add(ftpButton);
