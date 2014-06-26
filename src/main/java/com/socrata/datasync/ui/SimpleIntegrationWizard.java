@@ -387,8 +387,8 @@ public class SimpleIntegrationWizard {
 
     private IntegrationJob getNewIntegrationJob() {
         IntegrationJob newJob = new IntegrationJob();
-        // set publishViaFTP to true as default (ONLY for GUI mode)
-        newJob.setPublishViaFTP(true);
+        // set publishViaDi2Http to true as default (ONLY for GUI mode)
+        newJob.setPublishViaDi2Http(true);
         return newJob;
     }
 

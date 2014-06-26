@@ -252,6 +252,15 @@ public class IntegrationJobTab implements JobTab {
         jobPanel.add(hasHeaderRowLabelContainer);
     }
 
+    private void setReplaceRadioButtons(IntegrationJob job) {
+        if (!job.getPublishViaDi2Http() || !job.getPublishViaDi2Http())
+            soda2Button.setSelected(true);
+        else{
+            ftpButton.setSelected(job.getPublishViaFTP());
+            httpButton.setSelected(job.getPublishViaDi2Http());
+        }
+    }
+
     private void loadJobDataIntoUIFields(IntegrationJob job) {
         datasetIDTextField.setText(job.getDatasetID());
         fileToPublishTextField.setText(job.getFileToPublish());
@@ -260,7 +269,11 @@ public class IntegrationJobTab implements JobTab {
         fileToPublishHasHeaderCheckBox.setSelected(job.getFileToPublishHasHeaderRow());
 
         updatePublishViaFTPUIFields(job.getPublishMethod(),
-                job.getPublishViaFTP());
+                job.getPublishViaFTP() || job.getPublishViaDi2Http());
+
+        //Set the defaults on the button correctly.
+        setReplaceRadioButtons(job);
+
 
         updateControlFileInputs(job.getPathToControlFile(), job.getControlFileContent());
 
@@ -301,12 +314,12 @@ public class IntegrationJobTab implements JobTab {
     }
 
     private void updatePublishViaFTPUIFields(PublishMethod publishMethod,
-                                                        boolean publishViaFTP) {
-       //Commenting this out as whatever was set previously as part of the button group should just continue
+                                                        boolean showFileInfo) {
+       //Commenting this out as we now take care of setting the UI correctly prior to entering this method.  The only thing that this cares about is whether or not we should show the info panel associated with replace
        // publishViaFTPCheckBox.setSelected(publishViaFTP);
         publishViaFTPLabelContainer.setVisible(
                 publishMethod.equals(PublishMethod.replace));
-        if(publishViaFTP) {
+        if(showFileInfo) {
             controlFileLabelContainer.setVisible(true);
             controlFileSelectorContainer.setVisible(true);
         } else {
