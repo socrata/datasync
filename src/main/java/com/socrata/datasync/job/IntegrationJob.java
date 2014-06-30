@@ -464,9 +464,9 @@ public class IntegrationJob extends Job {
             newCols.put("RowsCreated", result.rowsCreated);
             newCols.put("RowsDeleted", result.rowsDeleted);
         } else {
-            newCols.put("RowsUpdated", status.rowsUpdated);
-            newCols.put("RowsCreated", status.rowsCreated);
-            newCols.put("RowsDeleted", status.rowsDeleted);
+            newCols.put("RowsUpdated", (status.rowsUpdated == null ? 0 : status.rowsUpdated));
+            newCols.put("RowsCreated", (status.rowsCreated == null ? 0 : status.rowsCreated));
+            newCols.put("RowsDeleted", (status.rowsDeleted == null ? 0 : status.rowsDeleted));
         }
         if(status.isError()) {
             newCols.put("Errors", status.getMessage());

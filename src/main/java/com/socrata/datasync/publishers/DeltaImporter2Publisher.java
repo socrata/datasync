@@ -290,7 +290,7 @@ public class DeltaImporter2Publisher {
             throw new HttpException(statusLine.toString());
         }
         jobStatus.setMessage(status + "(jobId:" + jobId + ")");
-        loadStatusWithCRUD(jobStatus, logUri);
+        if(!jobStatus.isError()) loadStatusWithCRUD(jobStatus, logUri);
         return jobStatus;
     }
 

@@ -17,7 +17,6 @@ public class ControlFileTest {
     Boolean emptyTextIsNull = true;
     Boolean trimSpace = true;
     Boolean useGeocoding = true;
-    Boolean ignoreServerLatLong = false;
     String encoding = "utf-8";
     String timezone = "UTC";
     String[] columns = {"boo", "bar", "baz"};
@@ -93,7 +92,7 @@ public class ControlFileTest {
         TestCase.assertEquals(trimSpace, cf.csv.trimServerWhitespace);
         TestCase.assertEquals(trimSpace, cf.csv.trimWhitespace);
         TestCase.assertNull(cf.csv.escape);
-        TestCase.assertNull(cf.csv.ignoreServerLatLong);
+        TestCase.assertTrue(cf.csv.useSocrataGeocoding);
         TestCase.assertNull(cf.csv.overrides);
         TestCase.assertNull(cf.csv.syntheticLocations);
     }
@@ -111,9 +110,8 @@ public class ControlFileTest {
 
         ColumnOverride override = new ColumnOverride()
                 .emptyTextIsNull(true)
-                .fixedTimestampFormat(new String[]{"MM/YYYY", "YYYY/MM"})
-                .floatingTimestampFormat(new String[]{"MM/YYYY", "YYYY/MM"})
-                .ignoreServerLatLong(false)
+                .timestampFormat(new String[]{"MM/YYYY", "YYYY/MM"})
+                .useSocrataGeocoding(false)
                 .trimWhitespace(false)
                 .timezone(otherTimezone);
 
@@ -129,9 +127,11 @@ public class ControlFileTest {
                 "\"action\":\"Delete\"," +
                 "\"csv\":" +
                 fileTypeInnardsStart +
+                "\"ignoreColumns\":[\"foo\"]," +
                 "\"escape\":\"\\\\\\\\\"," +
-                "\"ignoreServerLatLong\":" + ignoreServerLatLong + "," +
+                "\"useSocrataGeocoding\":" + useGeocoding + "," +
                 "\"separator\":\",\"," +
+                "\"dropUninterpretableRows\":\"TenPercent\"," +
                 "\"overrides\":" + mapper.writeValueAsString(overrides) + "," +
                 "\"syntheticLocations\":" + mapper.writeValueAsString(syntheticLocations) + "," +
                 fileTypeInnardsEnd +
@@ -142,6 +142,7 @@ public class ControlFileTest {
         TestCase.assertNotNull(cf.csv);
         TestCase.assertNull(cf.tsv);
         TestCase.assertEquals(3, cf.csv.columns.length);
+        TestCase.assertEquals(1, cf.csv.ignoreColumns.length);
         TestCase.assertEquals(skip, cf.csv.skip);
         TestCase.assertEquals(4, cf.csv.fixedTimestampFormat.length);
         TestCase.assertEquals(4, cf.csv.floatingTimestampFormat.length);
@@ -149,16 +150,17 @@ public class ControlFileTest {
         TestCase.assertEquals(emptyTextIsNull, cf.csv.emptyTextIsNull);
         TestCase.assertEquals(trimSpace, cf.csv.trimServerWhitespace);
         TestCase.assertEquals(trimSpace, cf.csv.trimWhitespace);
+        TestCase.assertEquals("TenPercent", cf.csv.dropUninterpretableRows);
         TestCase.assertEquals("\\\\", cf.csv.escape);
-        TestCase.assertEquals(ignoreServerLatLong, cf.csv.ignoreServerLatLong);
+        TestCase.assertEquals(useGeocoding, cf.csv.useSocrataGeocoding);
         TestCase.assertNotNull(cf.csv.overrides);
         TestCase.assertNotNull(cf.csv.syntheticLocations);
-        TestCase.assertFalse(cf.csv.overrides.get("column1").ignoreServerLatLong);
+        TestCase.assertFalse(cf.csv.overrides.get("column1").useSocrataGeocoding);
 
         ColumnOverride co = cf.csv.overrides.get("column1");
         TestCase.assertTrue(co.emptyTextIsNull);
         TestCase.assertNull(co.trimServerWhitespace);
-        TestCase.assertEquals(2, co.fixedTimestampFormat.length);
+        TestCase.assertEquals(2, co.timestampFormat.length);
         TestCase.assertEquals(otherTimezone, co.timezone);
 
         LocationColumns lc = cf.csv.syntheticLocations.get("loc1");

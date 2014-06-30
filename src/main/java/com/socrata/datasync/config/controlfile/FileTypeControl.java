@@ -15,14 +15,15 @@ public class FileTypeControl {
     public String quote;
     public String escape;
     public String[] columns;
+    public String[] ignoreColumns;
     public Integer skip;
     public Boolean trimWhitespace;
     public Boolean trimServerWhitespace;
-    public Boolean ignoreServerLatLong;
     public Boolean emptyTextIsNull;
     public String[] floatingTimestampFormat;
     public String[] fixedTimestampFormat;
     public String timezone;
+    public String dropUninterpretableRows;
     public Map<String, ColumnOverride> overrides;
     public Map<String, LocationColumns> syntheticLocations;
     public Boolean useSocrataGeocoding;
@@ -46,13 +47,13 @@ public class FileTypeControl {
 
     public FileTypeControl columns(String[] c) { columns = c; return this; }
 
+    public FileTypeControl ignoreColumns(String[] c) { ignoreColumns = c; return this; }
+
     public FileTypeControl skip(int s) { skip = s; return this; }
 
     public FileTypeControl trimWhitespace(boolean t) { trimWhitespace = t; return this; }
 
     public FileTypeControl trimServerWhitespace(boolean t) { trimServerWhitespace = t; return this; }
-
-    public FileTypeControl ignoreServerLatLong(boolean i) { ignoreServerLatLong = i; return this; }
 
     public FileTypeControl emptyTextIsNull(boolean e) { emptyTextIsNull = e; return this; }
 
@@ -61,6 +62,8 @@ public class FileTypeControl {
     public FileTypeControl fixedTimestampFormat(String[] f) { fixedTimestampFormat = f; return this; }
 
     public FileTypeControl timezone(String t) { timezone = t; return this; }
+
+    public FileTypeControl dropUninterpretableRows(String d) { dropUninterpretableRows = d; return this; }
 
     public FileTypeControl overrides(Map<String, ColumnOverride> o) { overrides = o; return this; }
 

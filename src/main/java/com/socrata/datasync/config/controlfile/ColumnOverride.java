@@ -8,10 +8,9 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class ColumnOverride {
     public Boolean trimWhitespace;
     public Boolean trimServerWhitespace;
-    public Boolean ignoreServerLatLong;
+    public Boolean useSocrataGeocoding;
     public Boolean emptyTextIsNull;
-    public String[] floatingTimestampFormat;
-    public String[] fixedTimestampFormat;
+    public String[] timestampFormat;
     public String timezone;
 
     // Builder methods
@@ -20,13 +19,11 @@ public class ColumnOverride {
 
     public ColumnOverride trimServerWhitespace (boolean t) { trimServerWhitespace = t; return this; }
 
-    public ColumnOverride ignoreServerLatLong (boolean i) { ignoreServerLatLong = i; return this; }
+    public ColumnOverride useSocrataGeocoding (boolean u) { useSocrataGeocoding = u; return this; }
 
     public ColumnOverride emptyTextIsNull (boolean e) { emptyTextIsNull = e; return this; }
 
-    public ColumnOverride floatingTimestampFormat (String[] f) { floatingTimestampFormat = f; return this; }
-
-    public ColumnOverride fixedTimestampFormat (String[] f) { fixedTimestampFormat = f; return this; }
+    public ColumnOverride timestampFormat (String[] f) { timestampFormat = f; return this; }
 
     public ColumnOverride timezone (String t) { timezone = t; return this; }
 
