@@ -249,7 +249,7 @@ public class IntegrationJobTab implements JobTab {
     }
 
     private void setReplaceRadioButtons(IntegrationJob job) {
-        if (!job.getPublishViaDi2Http() || !job.getPublishViaFTP())
+        if (!job.getPublishViaDi2Http() && !job.getPublishViaFTP())
             soda2Button.setSelected(true);
         else{
             ftpButton.setSelected(job.getPublishViaFTP());
