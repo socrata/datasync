@@ -98,7 +98,7 @@ public class DatasyncDirectory {
         Date date;
         for(int i=1; i < directoryContents.size(); i++){
             date = df.parse(cleanString(directoryContents.get(i)));
-            if (date.compareTo(mostRecent) < 0) {
+            if (date.compareTo(mostRecent) > 0) {
                 mostRecent = date;
                 mostRecentIdx = i;
             }

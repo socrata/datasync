@@ -34,12 +34,12 @@ public class DatasyncDirectoryTest extends TestBase {
         List<String> listing1 = Arrays.asList("2013/");
         String mostRecent1 = listing1.get(0);
         List<String> listing2 = Arrays.asList("02/", "06/", "11/");
-        String mostRecent2 = listing2.get(0);
+        String mostRecent2 = listing2.get(2);
         List<String> listing3 = Arrays.asList("05:10:50.456", "22:11:00.102", "00:01:34.232");
-        String mostRecent3 = listing3.get(2);
+        String mostRecent3 = listing3.get(1);
         List<String> listing4 = Arrays.asList("05%3A10%3A50.546-filename.ssig",
                 "02%3A11%3A00.382-filename.ssig", "21%3A01%3A34.999-filename.ssig");
-        String mostRecent4 = URLDecoder.decode(listing4.get(1), "UTF-8");
+        String mostRecent4 = URLDecoder.decode(listing4.get(2), "UTF-8");
 
         TestCase.assertNull(dd.findMostRecentContent(null, yearDf));
         TestCase.assertNull(dd.findMostRecentContent(new ArrayList<String>(), yearDf));
