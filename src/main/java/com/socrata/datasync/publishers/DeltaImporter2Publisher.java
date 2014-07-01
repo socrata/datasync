@@ -1,13 +1,9 @@
 package com.socrata.datasync.publishers;
 
-import com.socrata.datasync.deltaimporter2.BlobId;
-import com.socrata.datasync.deltaimporter2.JobId;
-import com.socrata.datasync.deltaimporter2.CommitMessage;
-import com.socrata.datasync.deltaimporter2.DatasyncDirectory;
+import com.socrata.datasync.deltaimporter2.*;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.HttpUtility;
-import com.socrata.datasync.deltaimporter2.LogItem;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.ssync.PatchComputer;
 import com.socrata.ssync.SignatureComputer;
@@ -39,6 +35,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -61,8 +58,6 @@ public class DeltaImporter2Publisher {
     private static HttpUtility http;
     private static URIBuilder baseUri;
     private ObjectMapper mapper = new ObjectMapper();
-    private File patchFile = null;
-    private long diffSizeBytes = 0L;
     private String pathToSignature = null;
     CloseableHttpResponse signatureResponse = null;
 
@@ -100,8 +95,15 @@ public class DeltaImporter2Publisher {
             pathToSignature = datasyncDir.getPathToSignature();
             previousSignature = getPreviousSignature(pathToSignature);
 
+            final long fileSize = csvOrTsvFile.length();
+            InputStream progressingInputStream = new ProgressingInputStream(new FileInputStream(csvOrTsvFile)) {
+                @Override
+                protected void progress(long count) {
+                    System.out.println("Read " + count + " of " + fileSize + " bytes");
+                }
+            };
             // compute the patch between the csv/tsv file and its previous signature
-            patch = getPatch(new FileInputStream(csvOrTsvFile), previousSignature, useCompression);
+            patch = getPatch(progressingInputStream, previousSignature, useCompression);
 
             // post the patch file in blobby chunks - ewww
             List<String> blobIds = postPatchBlobs(patch, datasetId);
@@ -176,12 +178,8 @@ public class DeltaImporter2Publisher {
         if (!compress) {
             return new PatchComputer.PatchComputerInputStream(newStream, new SignatureTable(previousStream), "MD5", 102400);
         } else {
-            patchFile = File.createTempFile("patch", patchExtenstion);
-            XZOutputStream patchStream = new XZOutputStream(new FileOutputStream(patchFile), new LZMA2Options());
-            PatchComputer.compute(newStream, new SignatureTable(previousStream), "MD5", 102400, patchStream);
-            patchStream.close(); // finishes compression and closes underlying stream
-            diffSizeBytes = patchFile.length();
-            return new FileInputStream(patchFile);
+            InputStream patchStream = new PatchComputer.PatchComputerInputStream(newStream, new SignatureTable(previousStream), "MD5", 1024000);
+            return new XZCompressInputStream(patchStream, 10 * 1024 * 1024); // this number should probably be about 2*chunk_size
         }
     }
 
@@ -195,35 +193,34 @@ public class DeltaImporter2Publisher {
     private List<String> postPatchBlobs(InputStream patchStream, String datasetId) throws
             IOException, URISyntaxException, HttpException {
         System.out.println("Chunking and posting the diff");
-        if (diffSizeBytes > 0L) System.out.println("\t" + diffSizeBytes + " bytes remain to be sent");
 
         URI postingPath = baseUri.setPath(datasyncPath + "/" + datasetId).build();
         List<String> blobIds = new LinkedList<>();
         int maxBytes = 1024*4000;  // we could make a call to /datasync/version for this info too
-        long bytesRemaining = diffSizeBytes;
         byte[] bytes = new byte[maxBytes];
         StatusLine statusLine;
         int status;
+        int bytesRead;
 
-        while (patchStream.read(bytes, 0, bytes.length) != -1) {
-            HttpEntity entity = EntityBuilder.create().setBinary(bytes).build();
+        while ((bytesRead = patchStream.read(bytes, 0, bytes.length)) != -1) {
+            System.out.println("Uploading " + bytesRead + " bytes");
+            byte[] chunk = bytesRead == bytes.length ? bytes : Arrays.copyOf(bytes, bytesRead);
+            HttpEntity entity = EntityBuilder.create().setBinary(chunk).build();
             int retries = 0;
             do {
-                CloseableHttpResponse response = http.post(postingPath, entity);
-                statusLine = response.getStatusLine();
-                status = statusLine.getStatusCode();
-                if (status != HttpStatus.SC_CREATED) {
-                    retries += 1;
-                } else {
-                    String blobId = mapper.readValue(response.getEntity().getContent(), BlobId.class).blobId;
-                    blobIds.add(blobId);
-                    bytesRemaining = Math.max(bytesRemaining - maxBytes, 0L);
-                    if (diffSizeBytes > 0L) System.out.println("\t" + bytesRemaining + " bytes remain to be sent");
-                    bytes = new byte[maxBytes];
+                try(CloseableHttpResponse response = http.post(postingPath, entity)) {
+                    statusLine = response.getStatusLine();
+                    status = statusLine.getStatusCode();
+                    if (status != HttpStatus.SC_CREATED) {
+                        retries += 1;
+                    } else {
+                        String blobId = mapper.readValue(response.getEntity().getContent(), BlobId.class).blobId;
+                        blobIds.add(blobId);
+                    }
                 }
-                response.close();
             } while (status != HttpStatus.SC_CREATED && retries < httpRetries);
             if (retries == 5) throw new HttpException(statusLine.toString());
+            System.out.println("Uploaded " + bytesRead + " bytes");
         }
         return blobIds;
     }
