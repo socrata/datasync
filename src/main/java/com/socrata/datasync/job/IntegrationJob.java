@@ -252,8 +252,11 @@ public class IntegrationJob extends Job {
         } else {
             setPublishViaDi2Http(false);
         }
-        if((publishViaFTP || publishViaDi2Http) && cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null) {
-            setPathToControlFile(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG));
+        String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
+        if (controlFilePath == null) controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
+
+        if((publishViaFTP || publishViaDi2Http) && controlFilePath != null) {
+            setPathToControlFile(controlFilePath);
             try {
                 controlFile = controlFileMapper.readValue(new File(pathToControlFile), ControlFile.class);
             } catch (Exception e1) {
@@ -552,27 +555,33 @@ public class IntegrationJob extends Job {
     }
 
     private boolean validatePathToControlFileArg(CommandLine cmd, CommandLineOptions options) {
-        if(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null) {
+        String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
+        if (controlFilePath == null) controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
+
+        if(controlFilePath != null) {
             String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
             String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
             if ((publishingWithFtp == null || publishingWithFtp.equalsIgnoreCase("false")) &&
                 (publishingWithDi2 == null || publishingWithDi2.equalsIgnoreCase("false"))) {
-                System.err.println("Invalid argument: -sc,--" + options.PATH_TO_CONTROL_FILE_FLAG + " cannot be supplied " +
+                System.err.println("Invalid argument: Neither -sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG +
+                        " -cf,--" + options.PATH_TO_CONTROL_FILE_FLAG + " can be supplied " +
                         "unless -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is 'true' or " +
-                        "unless -di2,--" + options.PUBLISH_VIA_DI2_FLAG + " is 'true'");
+                        "unless -ph,--" + options.PUBLISH_VIA_DI2_FLAG + " is 'true'");
                 return false;
             }
         }
 
-        if(cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) != null) {
+        if(controlFilePath != null) {
             // TODO remove this when flags override other parameters
             if(cmd.getOptionValue(options.PUBLISH_METHOD_FLAG) != null) {
                 System.out.println("WARNING: -m,--" + options.PUBLISH_METHOD_FLAG + " is being ignored because " +
-                        "-sc,--" + options.PATH_TO_CONTROL_FILE_FLAG + " is supplied");
+                        "-sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG +  " or " +
+                        "-cf,--" + options.PATH_TO_CONTROL_FILE_FLAG +  " was supplied");
             }
             if(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG) != null) {
                 System.out.println("WARNING: -h,--" + options.HAS_HEADER_ROW_FLAG + " is being ignored because " +
-                        "-sc,--" + options.PATH_TO_CONTROL_FILE_FLAG + " is supplied");
+                        "-sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG +  " or " +
+                        "-cf,--" + options.PATH_TO_CONTROL_FILE_FLAG +  " was supplied");
             }
         }
         return true;
@@ -588,7 +597,9 @@ public class IntegrationJob extends Job {
             return false;
         }
         if (publishingWithFtp.equalsIgnoreCase("true")) {
-            if (cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) == null) {
+            String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
+            if (controlFilePath == null) controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
+            if (controlFilePath == null) {
                 System.err.println("A control file must be specified when " +
                         "-pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is set to 'true'");
                 return false;
@@ -610,18 +621,20 @@ public class IntegrationJob extends Job {
             String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
             if (publishingWithFtp != null && publishingWithFtp.equalsIgnoreCase("true")) {
                 System.err.println("Only one of -pf,--" + options.PUBLISH_VIA_DI2_FLAG + " and " +
-                        "-di2,--" + options.PUBLISH_VIA_DI2_FLAG + " may be set to 'true'");
+                        "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " may be set to 'true'");
                 return false;
             }
             if (PublishMethod.valueOf(cmd.getOptionValue(options.PUBLISH_METHOD_FLAG)) != PublishMethod.replace) {
                 System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_DI2_FLAG + " must be " +
                         PublishMethod.replace.name() + " when " +
-                        "-di2,--" + options.PUBLISH_VIA_DI2_FLAG + " is set to 'true'");
+                        "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " is set to 'true'");
                 return false;
             }
-            if (cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG) == null) {
+            String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
+            if (controlFilePath == null) controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
+            if (controlFilePath == null) {
                 System.err.println("A control file must be specified when " +
-                        "-di2,--" + options.PUBLISH_VIA_DI2_FLAG + " is set to 'true'");
+                        "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " is set to 'true'");
                 return false;
             }
         }

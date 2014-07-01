@@ -284,13 +284,13 @@ public class IntegrationJobTab implements JobTab {
         jobTabTitleLabel = new JLabel(job.getJobFilename());
     }
 
-    private void updateControlFileInputs(final String pathToFtpControlFile, final String controlFileContent) {
-        if((pathToFtpControlFile == null || pathToFtpControlFile.equals(""))
+    private void updateControlFileInputs(final String pathToControlFile, final String controlFileContent) {
+        if((pathToControlFile == null || pathToControlFile.equals(""))
                 && (controlFileContent == null || controlFileContent.equals(""))) {
             setFtpControlFileSelectorEnabled(true);
             setEditGenerateFtpControlFileButtonEnabled(true);
-        } else if(pathToFtpControlFile != null && !pathToFtpControlFile.equals("")) {
-            controlFileTextField.setText(pathToFtpControlFile);
+        } else if(pathToControlFile != null && !pathToControlFile.equals("")) {
+            controlFileTextField.setText(pathToControlFile);
             setFtpControlFileSelectorEnabled(true);
             setEditGenerateFtpControlFileButtonEnabled(false);
         } else {
@@ -559,7 +559,7 @@ public class IntegrationJobTab implements JobTab {
          *
          * @param ddl Soda 2 ddl object
          * @param publishMethod to use to publish (upsert, append, replace, or delete)
-         *               NOTE: this option will be overriden if userPrefs has pathToFTPControlFile set
+         *               NOTE: this option will be overriden if userPrefs has pathToFTPControlFile or pathToControlFile set
          * @param datasetId id of the Socrata dataset to publish to
          * @param fileToPublish filename of file to publish (.tsv or .csv file)
          * @param containsHeaderRow if true assume the first row in CSV/TSV file is a list of the dataset columns,

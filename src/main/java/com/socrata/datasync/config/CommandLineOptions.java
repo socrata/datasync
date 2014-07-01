@@ -22,7 +22,9 @@ public class CommandLineOptions {
     public static final String HAS_HEADER_ROW_FLAG = "fileToPublishHasHeaderRow";
     public static final String PUBLISH_VIA_FTP_FLAG = "publishViaFTP";
     public static final String PUBLISH_VIA_DI2_FLAG = "publishViaHttp";
-    public static final String PATH_TO_CONTROL_FILE_FLAG = "pathToFTPControlFile";
+    // TODO: remove at some point, ftp_control is deprecated in favor of control
+    public static final String PATH_TO_FTP_CONTROL_FILE_FLAG = "pathToFTPControlFile";
+    public static final String PATH_TO_CONTROL_FILE_FLAG = "pathToControlFile";
     public static final String PROXY_USERNAME_FLAG = "proxyUsername";
     public static final String PROXY_PASSWORD_FLAG = "proxyPassword";
 
@@ -55,8 +57,9 @@ public class CommandLineOptions {
         options.addOption("h", HAS_HEADER_ROW_FLAG, true, "File to publish has header row (true or false) [IntegrationJob]");
         options.addOption("pf", PUBLISH_VIA_FTP_FLAG, true, "Use FTP (instead of HTTP) for publishing (true or false) (default: " + DEFAULT_PUBLISH_VIA_FTP + ") [IntegrationJob]");
         options.addOption("ph", PUBLISH_VIA_DI2_FLAG, true, "Use HTTP for publishing (true or false) (default: false) [IntegrationJob]");
-        options.addOption("sc", PATH_TO_CONTROL_FILE_FLAG, true, "control.json file, needed for publishing via FTP or HTTP;" +
-                                                                 "if set overrides job parameters [IntegrationJob]");
+        options.addOption("sc", PATH_TO_FTP_CONTROL_FILE_FLAG, true, "deprecated! please use -cf, --pathToControlFile instead");
+        options.addOption("cf", PATH_TO_CONTROL_FILE_FLAG, true, "control.json file, needed for publishing via FTP or HTTP;" +
+                "if set overrides job parameters [IntegrationJob]");
         options.addOption("pun", PROXY_USERNAME_FLAG, true, "The username to supply to connect to the proxy server [IntegrationJob]");
         options.addOption("ppw", PROXY_PASSWORD_FLAG, true, "The password to supply to connect to the proxy server [IntegrationJob]");
 
