@@ -10,6 +10,7 @@ import com.socrata.datasync.job.JobStatus;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.Dataset;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -581,12 +582,11 @@ public class IntegrationJobTab implements JobTab {
             }
 
             String[] columns = null;
-            if (!containsHeaderRow) {
-                columns = Utils.getDatasetFieldNames(datasetInfo).split(",");
-            }
+            if (!containsHeaderRow)
+                columns = Utils.getDatasetFieldNames(datasetInfo);
 
             ControlFile control = ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding);
-            ObjectMapper mapper = new ObjectMapper();
+            ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
             return mapper.writeValueAsString(control);
         }
 
@@ -618,7 +618,7 @@ public class IntegrationJobTab implements JobTab {
             String datasetFieldNames = null;
             if(datasetIdValid()) {
                 try {
-                    datasetFieldNames = Utils.getDatasetFieldNames(
+                    datasetFieldNames = Utils.getDatasetFieldNamesString(
                             getSodaDdl(), datasetIDTextField.getText());
                 } catch (Exception e) {
                     e.printStackTrace();

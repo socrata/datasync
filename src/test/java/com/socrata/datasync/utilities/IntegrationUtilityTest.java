@@ -307,10 +307,16 @@ public class IntegrationUtilityTest extends TestBase {
     @Test
     public void testGetDatasetFieldNames() throws IOException, SodaError, InterruptedException {
         //UserPreferences userPrefs = new UserPreferencesJava();
-        //System.out.println(IntegrationUtility.getDatasetFieldNames(ddl, "6qkn-8xvw"));
+        //System.out.println(IntegrationUtility.getDatasetFieldNamesString(ddl, "6qkn-8xvw"));
         final SodaDdl ddl = createSodaDdl();
-        String datasetFieldNames = Utils.getDatasetFieldNames(ddl, UNITTEST_DATASET_ID);
-        TestCase.assertEquals("\"id\",\"name\",\"another_name\",\"date\"", datasetFieldNames);
+        String datasetFieldNamesString = Utils.getDatasetFieldNamesString(ddl, UNITTEST_DATASET_ID);
+        TestCase.assertEquals("\"id\",\"name\",\"another_name\",\"date\"", datasetFieldNamesString);
+
+        Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(UNITTEST_DATASET_ID);
+        String[] datasetFieldNames = Utils.getDatasetFieldNames(datasetInfo);
+        TestCase.assertEquals("id", datasetFieldNames[0]);
+        TestCase.assertEquals("name", datasetFieldNames[1]);
+        TestCase.assertEquals("another_name", datasetFieldNames[2]);
     }
 
     @Test

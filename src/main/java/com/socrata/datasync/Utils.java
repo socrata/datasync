@@ -56,18 +56,18 @@ public class Utils {
      * @param datasetId
      * @return list of field names or null if there
      */
-    public static String getDatasetFieldNames(SodaDdl ddl, String datasetId) throws SodaError, InterruptedException {
+    public static String getDatasetFieldNamesString(SodaDdl ddl, String datasetId) throws SodaError, InterruptedException {
         Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(datasetId);
-        return getDatasetFieldNames(datasetInfo);
+        return getDatasetFieldNamesString(datasetInfo);
     }
 
     /**
      * Returns list of dataset field names in the form: "col1","col2",...
      *
      * @param datasetInfo
-     * @return list of field names or null if there
+     * @return list of field names or null if there are none
      */
-    public static String getDatasetFieldNames(Dataset datasetInfo) {
+    public static String getDatasetFieldNamesString(Dataset datasetInfo) {
         String columnsValue = "";
         List<Column> columns = datasetInfo.getColumns();
         for(int i = 0; i < columns.size(); i++) {
@@ -77,6 +77,22 @@ public class Utils {
         }
         return columnsValue;
     }
+
+    /**
+     * Returns an array of dataset field names.
+     *
+     * @param datasetInfo
+     * @return array of field names or null if there are none
+     */
+    public static String[] getDatasetFieldNames(Dataset datasetInfo) {
+        List<Column> columns = datasetInfo.getColumns();
+        String[] columnsArray = new String[columns.size()];
+        for(int i = 0; i < columns.size(); i++) {
+            columnsArray[i] = columns.get(i).getFieldName();
+        }
+        return columnsArray;
+    }
+
 
     /**
      * @return true if given dataset has one or more Location columns, false otherwise
