@@ -39,6 +39,7 @@ public class TestBase
 
     public static final String PATH_TO_STAGING_CONFIG_FILE = "src/test/resources/basic_test_config_staging.json";
     public static final String PATH_TO_PROD_CONFIG_FILE = "src/test/resources/basic_test_config.json";
+    public static final String PATH_TO_SIMPLE_CONFIG_FILE = "src/test/resources/simple_config.json";
 
     public static final String PATH_TO_CONFIG_FILE = (testOnStaging) ?
             PATH_TO_STAGING_CONFIG_FILE : PATH_TO_PROD_CONFIG_FILE;

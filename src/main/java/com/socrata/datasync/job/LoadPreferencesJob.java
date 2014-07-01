@@ -9,6 +9,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.prefs.BackingStoreException;
 
 public class LoadPreferencesJob extends Job {
     private UserPreferences userPrefs;
@@ -44,6 +45,12 @@ public class LoadPreferencesJob extends Job {
 
     public JobStatus run() {
         UserPreferencesJava newUserPrefs = new UserPreferencesJava();
+        try {
+            newUserPrefs.clear();
+        } catch (BackingStoreException e) {
+            System.err.println("Was unable to clear old preferences before loading new ones.");
+        }
+
         newUserPrefs.saveDomain(userPrefs.getDomain());
         newUserPrefs.saveUsername(userPrefs.getUsername());
         newUserPrefs.savePassword(userPrefs.getPassword());
@@ -58,10 +65,10 @@ public class LoadPreferencesJob extends Job {
         newUserPrefs.saveSMTPPassword(userPrefs.getSmtpPassword());
         newUserPrefs.saveProxyHost(userPrefs.getProxyHost());
         newUserPrefs.saveProxyPort(userPrefs.getProxyPort());
-        newUserPrefs.saveFilesizeChunkingCutoffMB(
-                Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()));
-        newUserPrefs.saveNumRowsPerChunk(
-                Integer.parseInt(userPrefs.getNumRowsPerChunk()));
+        if (userPrefs.getFilesizeChunkingCutoffMB() != null)
+            newUserPrefs.saveFilesizeChunkingCutoffMB(Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()));
+        if (userPrefs.getNumRowsPerChunk() != null)
+            newUserPrefs.saveNumRowsPerChunk(Integer.parseInt(userPrefs.getNumRowsPerChunk()));
 
         System.out.println("Preferences saved:\n\n" + newUserPrefs.toString());
         return JobStatus.SUCCESS;

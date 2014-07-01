@@ -52,29 +52,4 @@ public class MainTest extends TestBase {
         Main.main(args);
         TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
-
-    @Test
-    public void testHeadlessLoadPreferencesJob() throws ParseException {
-        UserPreferencesJava userPrefsClearDomain = new UserPreferencesJava();
-        userPrefsClearDomain.saveDomain("");
-
-        String[] args = {"-t", "LoadPreferences",
-                "-c", PATH_TO_PROD_CONFIG_FILE};
-        Main.main(args);
-        UserPreferencesJava userPrefs = new UserPreferencesJava();
-        TestCase.assertEquals("https://sandbox.demo.socrata.com", userPrefs.getDomain());
-        TestCase.assertEquals("testuser@gmail.com", userPrefs.getUsername());
-        TestCase.assertEquals("OpenData", userPrefs.getPassword());
-        TestCase.assertEquals("D8Atrg62F2j017ZTdkMpuZ9vY", userPrefs.getAPIKey());
-        TestCase.assertEquals("admin@something.com", userPrefs.getAdminEmail());
-        TestCase.assertEquals(false, userPrefs.emailUponError());
-        TestCase.assertEquals("", userPrefs.getLogDatasetID());
-        TestCase.assertEquals("smtp.something.com", userPrefs.getOutgoingMailServer());
-        TestCase.assertEquals("21", userPrefs.getSmtpPort());
-        TestCase.assertEquals("47", userPrefs.getSslPort());
-        TestCase.assertEquals("test@something.com", userPrefs.getSmtpUsername());
-        TestCase.assertEquals("smtppass", userPrefs.getSmtpPassword());
-        TestCase.assertEquals("10", userPrefs.getFilesizeChunkingCutoffMB());
-        TestCase.assertEquals("10000", userPrefs.getNumRowsPerChunk());
-    }
 }
