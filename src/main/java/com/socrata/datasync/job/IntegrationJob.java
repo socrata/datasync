@@ -376,7 +376,7 @@ public class IntegrationJob extends Job {
                     Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * NUM_BYTES_PER_MB;
             int numRowsPerChunk = Integer.parseInt(userPrefs.getNumRowsPerChunk());
 
-            boolean publishExceptions = false;
+            String publishExceptions = "";
 			try {
                  switch (publishMethod) {
                      case upsert:
@@ -403,7 +403,7 @@ public class IntegrationJob extends Job {
                  }
 			}
 			catch (IOException | SodaError | InterruptedException e) {
-                publishExceptions = true;
+                publishExceptions = e.getMessage();
                 e.printStackTrace();
 			}
 			finally {
@@ -411,8 +411,9 @@ public class IntegrationJob extends Job {
                 publisher.close();
 			}
 
-            if (publishExceptions) {
+            if (publishExceptions.length() > 0) {
                 runStatus = JobStatus.PUBLISH_ERROR;
+                runStatus.setMessage(publishExceptions);
             } else if (result != null && result.errorCount() > 0) {  // Check for [row-level] SODA 2 errors
                 runStatus = craftSoda2PublishError(result);
             }
