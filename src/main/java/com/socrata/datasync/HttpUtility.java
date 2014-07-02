@@ -40,15 +40,19 @@ public class HttpUtility {
             appToken = userPrefs.getAPIKey();
         }
         authRequired = useAuth;
-        if(userPrefs != null && userPrefs.getProxyHost() != null && userPrefs.getProxyPort() != null) {
-            HttpHost proxy = new HttpHost(userPrefs.getProxyHost(), Integer.valueOf(userPrefs.getProxyPort()));
-            proxyConfig = RequestConfig.custom().setProxy(proxy).build();
-            if (userPrefs.getProxyUsername() != null && userPrefs.getProxyPassword() != null) {
-                CredentialsProvider credsProvider = new BasicCredentialsProvider();
-                credsProvider.setCredentials(
-                        new AuthScope(userPrefs.getProxyHost(), Integer.valueOf(userPrefs.getProxyPort())),
-                        new UsernamePasswordCredentials(userPrefs.getProxyUsername(), userPrefs.getProxyPassword()));
-                httpClient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build();
+        if(userPrefs != null) {
+            String proxyHost = userPrefs.getProxyHost();
+            String proxyPort = userPrefs.getProxyPort();
+            if (canUse(proxyHost) && canUse(proxyPort)) {
+                HttpHost proxy = new HttpHost(proxyHost, Integer.valueOf(proxyPort));
+                proxyConfig = RequestConfig.custom().setProxy(proxy).build();
+                if (canUse(userPrefs.getProxyUsername()) && canUse(userPrefs.getProxyPassword())) {
+                    CredentialsProvider credsProvider = new BasicCredentialsProvider();
+                    credsProvider.setCredentials(
+                            new AuthScope(proxyHost, Integer.valueOf(proxyPort)),
+                            new UsernamePasswordCredentials(userPrefs.getProxyUsername(), userPrefs.getProxyPassword()));
+                    httpClient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build();
+                }
             }
         }
         if (httpClient == null) httpClient = HttpClientBuilder.create().build();
@@ -103,5 +107,9 @@ public class HttpUtility {
         String auth = username + ":" + password;
         byte[] encodedAuth = Base64.encodeBase64(auth.getBytes(Charset.forName("US-ASCII")));
         return "Basic " + new String(encodedAuth);
+    }
+
+    private boolean canUse(String option) {
+        return option != null && !option.isEmpty();
     }
 }

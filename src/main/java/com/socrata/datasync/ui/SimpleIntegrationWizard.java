@@ -44,7 +44,7 @@ public class SimpleIntegrationWizard {
 	private static final int DEFAULT_TEXTFIELD_COLS = 25;
 	private static final Dimension AUTH_DETAILS_DIMENSION = new Dimension(465, 100);
 	private static final int PREFERENCES_FRAME_WIDTH = 475;
-	private static final int PREFERENCES_FRAME_HEIGHT = 475;
+	private static final int PREFERENCES_FRAME_HEIGHT = 675;
 
 	private static UserPreferencesJava userPrefs;
 
@@ -78,7 +78,8 @@ public class SimpleIntegrationWizard {
     private JTextField filesizeChunkingCutoffTextField, numRowsPerChunkTextField;
 	private JTextField logDatasetIDTextField, adminEmailTextField;
 	private JTextField outgoingMailServerTextField, smtpPortTextField, sslPortTextField, smtpUsernameTextField;
-	private JPasswordField smtpPasswordField;
+    private JTextField proxyHostTextField, proxyPortTextField, proxyUsernameTextField, proxyPasswordTextField;
+    private JPasswordField smtpPasswordField;
 	private JCheckBox useSSLCheckBox;
 	private JCheckBox emailUponErrorCheckBox;
 
@@ -646,6 +647,26 @@ public class SimpleIntegrationWizard {
 		smtpPasswordField = new JPasswordField(DEFAULT_TEXTFIELD_COLS);
 		prefsPanel.add(smtpPasswordField);
 
+
+        // Proxy settings
+        JLabel proxySettingsLabel = new JLabel(" Proxy Settings");
+        proxySettingsLabel.setFont(boldFont);
+        prefsPanel.add(proxySettingsLabel);
+        prefsPanel.add(new JLabel(""));
+
+        prefsPanel.add(new JLabel(" Proxy Host"));
+        proxyHostTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(proxyHostTextField);
+        prefsPanel.add(new JLabel(" Proxy Port"));
+        proxyPortTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(proxyPortTextField);
+        prefsPanel.add(new JLabel(" Proxy Username"));
+        proxyUsernameTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(proxyUsernameTextField);
+        prefsPanel.add(new JLabel(" Proxy Password"));
+        proxyPasswordTextField = new JPasswordField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(proxyPasswordTextField);
+
         JPanel testSMTPSettingsContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton testSMTPSettingsButton = new JButton("Test SMTP Settings");
         testSMTPSettingsButton.addActionListener(new TestSMTPSettingsListener());
@@ -676,7 +697,7 @@ public class SimpleIntegrationWizard {
 
 		outgoingMailServerTextField.setText(userPrefs.getOutgoingMailServer());
 		smtpPortTextField.setText(userPrefs.getSmtpPort());
-		String sslPort = userPrefs.getSslPort();
+        String sslPort = userPrefs.getSslPort();
 		sslPortTextField.setText(sslPort);
 		if(sslPort.equals("")) {
 			useSSLCheckBox.setSelected(false);
@@ -685,7 +706,13 @@ public class SimpleIntegrationWizard {
 		}
 		smtpUsernameTextField.setText(userPrefs.getSmtpUsername());
 		smtpPasswordField.setText(userPrefs.getSmtpPassword());
-	}
+
+        proxyHostTextField.setText(userPrefs.getProxyHost());
+        proxyPortTextField.setText(userPrefs.getProxyPort());
+        proxyUsernameTextField.setText(userPrefs.getProxyUsername());
+        proxyPasswordTextField.setText(userPrefs.getProxyPassword());
+
+    }
 
 	private void savePreferences() {
         try {
@@ -715,7 +742,13 @@ public class SimpleIntegrationWizard {
 		userPrefs.saveSMTPUsername(smtpUsernameTextField.getText());
 		String smtpPassword = new String(smtpPasswordField.getPassword());
     	userPrefs.saveSMTPPassword(smtpPassword);
-	}
+
+        userPrefs.saveProxyHost(proxyHostTextField.getText());
+        userPrefs.saveProxyPort(proxyPortTextField.getText());
+        userPrefs.saveProxyUsername(proxyUsernameTextField.getText());
+        userPrefs.saveProxyPassword(proxyPasswordTextField.getText());
+
+    }
 
 	private class SavePreferencesListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
