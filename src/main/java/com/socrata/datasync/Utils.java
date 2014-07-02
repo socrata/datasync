@@ -134,7 +134,7 @@ public class Utils {
                 jarPath = jarPath.substring(1, jarPath.length());
             }
             //TODO: This may change based on how we implement running metadata jobs from the command line.
-            return "java -jar " + jarPath + " " + pathToSaveJobFile;
+            return "java -jar \"" + jarPath + "\" \"" + pathToSaveJobFile + "\"";
         } catch (UnsupportedEncodingException unsupportedEncoding) {
             return "Error getting path to this executeable: " + unsupportedEncoding.getMessage();
         }

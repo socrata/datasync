@@ -51,4 +51,11 @@ public class MainTest extends TestBase {
         Main.main(args);
         TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
+
+    @Test
+    public void testRunCommandOutput() {
+         String pathToSaveJobFile = "/Users/someone/somedirectory/some.sij";
+         String expected = "java -jar \".*\" \"" + pathToSaveJobFile + "\"";
+        TestCase.assertTrue(Utils.getRunJobCommand(pathToSaveJobFile).matches(expected));
+    }
 }
