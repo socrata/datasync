@@ -28,6 +28,7 @@ public class HttpUtility {
     private String authHeader;
     private String appToken;
     private boolean authRequired = false;
+    private static final String datasyncVersionHeader = "X-Socrata-DataSync-Version";
     private static final String appHeader = "X-App-Token";
     private static final String userAgent = "datasync";
 
@@ -63,6 +64,7 @@ public class HttpUtility {
         HttpGet httpGet = new HttpGet(uri);
         httpGet.setHeader(HttpHeaders.USER_AGENT, userAgent);
         httpGet.addHeader(HttpHeaders.ACCEPT, contentType);
+        httpGet.addHeader(datasyncVersionHeader, VersionProvider.getThisVersion());
         if (proxyConfig != null)
             httpGet.setConfig(proxyConfig);
         if (authRequired) {
@@ -82,6 +84,7 @@ public class HttpUtility {
         HttpPost httpPost = new HttpPost(uri);
         httpPost.setHeader(HttpHeaders.USER_AGENT, userAgent);
         httpPost.setHeader(entity.getContentType());
+        httpPost.addHeader(datasyncVersionHeader, VersionProvider.getThisVersion());
         httpPost.setEntity(entity);
         if (proxyConfig != null)
             httpPost.setConfig(proxyConfig);
