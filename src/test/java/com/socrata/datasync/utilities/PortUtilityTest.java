@@ -5,7 +5,6 @@ import com.socrata.api.SodaDdl;
 import com.socrata.datasync.PortUtility;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.TestBase;
-import com.socrata.datasync.publishers.FTPDropbox2Publisher;
 import com.socrata.datasync.publishers.Soda2Publisher;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
@@ -134,7 +133,7 @@ public class PortUtilityTest extends TestBase {
     }
 
     @Test
-    public void testPortContentsUpsert() throws SodaError, InterruptedException, LongRunningQueryException {
+    public void testPortContentsUpsert() throws SodaError, InterruptedException, LongRunningQueryException, IOException {
         // Query for the rows of the source dataset.
         List<UnitTestDataset> sourceRows = sinkProducer.query(UNITTEST_DATASET_ID, SoqlQuery.SELECT_ALL, UnitTestDataset.LIST_TYPE);
 

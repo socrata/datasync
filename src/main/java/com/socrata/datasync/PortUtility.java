@@ -1,22 +1,29 @@
 package com.socrata.datasync;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
+import com.socrata.builders.SoqlQueryBuilder;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
+import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
 import com.socrata.model.importer.DatasetInfo;
 import com.socrata.model.soql.SoqlQuery;
 import com.sun.jersey.api.client.ClientResponse;
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 public class PortUtility {
 
@@ -30,7 +37,8 @@ public class PortUtility {
 	public static String portSchema(SodaDdl loader, SodaDdl creator,
 			final String sourceSetID, final String destinationDatasetTitle,
             final boolean useNewBackend) throws SodaError, InterruptedException {
-		Dataset sourceSet = (Dataset) loader.loadDatasetInfo(sourceSetID);
+		System.out.print("Copying schema from dataset " + sourceSetID);
+        Dataset sourceSet = (Dataset) loader.loadDatasetInfo(sourceSetID);
         if(destinationDatasetTitle != null && !destinationDatasetTitle.equals(""))
             sourceSet.setName(destinationDatasetTitle);
 
@@ -41,6 +49,7 @@ public class PortUtility {
         DatasetInfo sinkSet = creator.createDataset(sourceSet);
 
         String sinkSetID = sinkSet.getId();
+        System.out.println(" to dataset " + sinkSetID);
 		return sinkSetID;
 	}
 
@@ -51,65 +60,92 @@ public class PortUtility {
 		return publishedID;
 	}
 
-	public static void portContents(Soda2Consumer streamExporter,
-			Soda2Producer streamUpserter, String sourceSetID, String sinkSetID,
-			PublishMethod publishMethod) throws InterruptedException {
-		// Limit of 1000 rows per export, so offset "pages" through dataset
-		// 1000 at a time
-		int offset = 0;
-		// Initialize response object (we get the stream from this later)
-		ClientResponse response = null;
-		// The stream
-		String sourceSetData = null;
-		do {
-			// Can't query dataset semaphore to my knowledge, so wait 1000
-			// milliseconds (1 second)
-			Thread.sleep(1000);
-			// SoqlQuery has multiple parameters, the only important one for
-			// us is offset
-			SoqlQuery myQuery = new SoqlQuery(null, null, null, null, null,
-					null, offset, null);
-			try {
-				try {
-					// Query using Soda2Consumer object
-					response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
-				} catch (SodaError sodaError) {
-					System.out.println("SODA error: " + sodaError.getMessage());
-				}
-			} catch (LongRunningQueryException e) {
-				System.out.println("Query too long to run: " + e.getMessage());
-			}
-			// Convert the ClientResponse object to String
-			sourceSetData = response.getEntity(String.class).trim();
-			// Increment the offset
-			offset += 1000;
-			// Magic number (I'm so sorry)... an "empty" response has a
-			// length of 3.
-			// If the response is empty, do not upsert.
-			if (sourceSetData.length() > 3) {
-				try {
-					// Convert String to byte array
-					InputStream sourceSetStream = new ByteArrayInputStream(
-							sourceSetData.getBytes("UTF-8"));
-					// Upsert or replace using Soda2Producer object
-					if (publishMethod.equals(PublishMethod.upsert)) {
-						streamUpserter.upsertStream(sinkSetID,
-								HttpLowLevel.JSON_TYPE, sourceSetStream);
-					} else if (publishMethod.equals(PublishMethod.replace)){
-						streamUpserter.replaceStream(sinkSetID,
-								HttpLowLevel.JSON_TYPE, sourceSetStream);
-					}
-				} catch (SodaError sodaError) {
-					System.out.println(sodaError.getMessage());
-				} catch (Exception exception) {
-					System.out.println(exception.getMessage());
-				}
-			}
-			// Break after one empty response.
-		} while (sourceSetData.length() > 3);
-	}
+    public static void portContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter, String sourceSetID,
+                                    String sinkSetID, PublishMethod publishMethod)
+            throws InterruptedException, LongRunningQueryException, SodaError, IOException {
+        switch (publishMethod) {
+            case upsert:
+                upsertContents(streamExporter, streamUpserter, sourceSetID, sinkSetID);
+                break;
+            case replace:
+                replaceContents(streamExporter, streamUpserter, sourceSetID, sinkSetID);
+        }
+    }
 
-    public static JobStatus assertSchemasAreAlike(SodaDdl sourceChecker, SodaDdl sinkChecker, String sourceSetID, String sinkSetID) throws SodaError, InterruptedException {
+	private static void upsertContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter,
+                    String sourceSetID, String sinkSetID) throws
+            InterruptedException, LongRunningQueryException, SodaError, IOException {
+
+		System.out.println("Upserting contents of dataset " + sourceSetID + " into dataset " + sinkSetID);
+
+		// Limit of 1000 rows per export, so page through dataset using $offset
+		int offset = 0;
+        int rowsUpserted = 0;
+        ClientResponse response;
+		ObjectMapper mapper = new ObjectMapper();
+        List<Map<String, Object>> rowSet;
+
+		do {
+			SoqlQuery myQuery =new SoqlQueryBuilder().setOffset(offset).build();
+			response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
+            rowSet = mapper.readValue(response.getEntityInputStream(), new TypeReference<List<Map<String,Object>>>() {});
+			if (rowSet.size() > 0) {
+                offset += rowSet.size();
+                UpsertResult result = streamUpserter.upsert(sinkSetID, rowSet);
+                rowsUpserted += result.getRowsCreated() + result.getRowsUpdated();
+                System.out.println("\tUpserted " + rowsUpserted + " rows.");
+            }
+		} while (rowSet.size() > 0);
+    }
+
+    private static void replaceContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter,
+                String sourceSetID, String sinkSetID) throws
+            InterruptedException, LongRunningQueryException, SodaError, IOException {
+
+        System.out.println("Replacing contents of dataset " + sourceSetID + " into dataset " + sinkSetID);
+        // Limit of 1000 rows per export, so page through dataset using $offset
+        int offset = 0;
+        int batchesRead = 0;
+        SoqlQuery myQuery;
+        ClientResponse response;
+        ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
+        List<Map<String, Object>> rowSet;
+        final File tempFile = File.createTempFile("replacement_dataset", ".json");
+        tempFile.createNewFile();
+        tempFile.deleteOnExit();
+        try (FileWriter tempOut = new FileWriter(tempFile, true)) {
+
+            tempOut.write("[\n");
+            do {
+                myQuery = new SoqlQueryBuilder().setOffset(offset).build();
+                response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
+                rowSet = mapper.readValue(response.getEntityInputStream(),
+                        new TypeReference<List<Map<String, Object>>>() {
+                        }
+                );
+                if (batchesRead > 0 && rowSet.size() > 0)
+                    tempOut.write(",\n");
+                for (int i = 0; i < rowSet.size(); i++) {
+                    mapper.writeValue(tempOut, rowSet.get(i));
+                    if (i != rowSet.size() - 1)
+                        tempOut.write(",\n");
+                }
+                offset += rowSet.size();
+                batchesRead += 1;
+                System.out.println("\tGathered " + Utils.ordinal(batchesRead) + " batch of 1000 rows for replacement");
+                response.close();
+            } while (rowSet.size() > 0);
+            tempOut.write("\n]");
+        }
+
+        System.out.print("\tReplacing data . . .");
+        FileInputStream replacementFile = new FileInputStream(tempFile);
+        streamUpserter.replaceStream(sinkSetID, HttpLowLevel.JSON_TYPE, replacementFile);
+        System.out.println();
+    }
+
+    public static JobStatus assertSchemasAreAlike(SodaDdl sourceChecker, SodaDdl sinkChecker, String sourceSetID, String sinkSetID)
+            throws SodaError, InterruptedException {
         // We don't need to test metadata; we're only concerned with the columns...
         Dataset sourceSchema = (Dataset) sourceChecker.loadDatasetInfo(sourceSetID);
         Dataset sinkSchema = (Dataset) sinkChecker.loadDatasetInfo(sinkSetID);

@@ -155,4 +155,7 @@ public class Utils {
         return offset - initialOffset;
     }
 
+    public static String ordinal(int i) {
+        return i % 100 == 11 || i % 100 == 12 || i % 100 == 13 ? i + "th" : i + new String[]{"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"}[i % 10];
+    }
 }
