@@ -8,6 +8,7 @@ import com.socrata.datasync.deltaimporter2.CommitMessage;
 import com.socrata.datasync.deltaimporter2.JobId;
 import com.socrata.datasync.deltaimporter2.LogItem;
 import junit.framework.TestCase;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
@@ -19,7 +20,7 @@ import java.net.URISyntaxException;
 import java.util.Arrays;
 
 public class DeltaImporter2PublisherTest extends TestBase {
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
    @Test
     public void testDeserializationReturnIds() throws IOException {
@@ -46,7 +47,7 @@ public class DeltaImporter2PublisherTest extends TestBase {
     @Test
     public void testSerializationFullCommitMessage() throws IOException {
         FileTypeControl ftc = new FileTypeControl().floatingTimestampFormat(new String[]{"ISO8601"});
-        ControlFile cf = new ControlFile("Replace", ftc, null);
+        ControlFile cf = new ControlFile("Replace", null, ftc, null);
         CommitMessage commit = new CommitMessage()
                 .filename("hoo-ya.csv")
                 .relativeTo("datasync/id/some-4by4/completed/2014/6/2/hoo-ya.csv")
@@ -87,7 +88,7 @@ public class DeltaImporter2PublisherTest extends TestBase {
         String[] logTypes = {"committing-job", "committed-job", "processing", "applying-diff-time",
                              "counting-records-time", "reading-metadata", "reading-new-data-time",
                              "reading-and-sorting-time", "generating-upsert-time", "finished",
-                             "upserting-time", "storing-completed-time", "success", "processing-time"};
+                             "upserting-time", "storing-completed-time", "success", "failure","processing-time"};
 
         TestCase.assertEquals(logTypes.length, deltaLog.length);
         for (int i = 0; i < deltaLog.length; i++) {

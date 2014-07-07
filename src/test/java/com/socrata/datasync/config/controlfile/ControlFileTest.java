@@ -125,6 +125,7 @@ public class ControlFileTest {
 
         String controlFileJson = "{" +
                 "\"action\":\"Delete\"," +
+                "\"opaque\":\"someSillyUUIDforMyInternalUse\"," +
                 "\"csv\":" +
                 fileTypeInnardsStart +
                 "\"ignoreColumns\":[\"foo\"]," +
@@ -138,6 +139,7 @@ public class ControlFileTest {
                 "}";
 
         ControlFile cf = mapper.readValue(controlFileJson, ControlFile.class);
+        TestCase.assertEquals("someSillyUUIDforMyInternalUse", cf.opaque);
         TestCase.assertEquals("Delete", cf.action);
         TestCase.assertNotNull(cf.csv);
         TestCase.assertNull(cf.tsv);

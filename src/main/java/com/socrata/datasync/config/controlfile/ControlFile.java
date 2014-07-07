@@ -12,6 +12,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 public class ControlFile {
 
     public String action;
+    public String opaque;
     public FileTypeControl csv;
     public FileTypeControl tsv;
 
@@ -20,8 +21,9 @@ public class ControlFile {
     // in csvControl or tsvControl are strings, rather than arrays of strings.
     public ControlFile() {}
 
-    public ControlFile(String action, FileTypeControl csvControl, FileTypeControl tsvControl) {
+    public ControlFile(String action, String opaque, FileTypeControl csvControl, FileTypeControl tsvControl) {
         this.action = action;
+        this.opaque = opaque;
         this.csv = csvControl;
         this.tsv = tsvControl;
     }
@@ -64,9 +66,9 @@ public class ControlFile {
                 .useSocrataGeocoding(useSocrataGeocoding);
 
         if (isCsv) {
-            return new ControlFile(capitalizeFirstLetter(publishMethod), ftc, null);
+            return new ControlFile(capitalizeFirstLetter(publishMethod), null, ftc, null);
         } else {
-            return new ControlFile(capitalizeFirstLetter(publishMethod), null, ftc);
+            return new ControlFile(capitalizeFirstLetter(publishMethod), null, null, ftc);
         }
     }
 
@@ -77,6 +79,12 @@ public class ControlFile {
     private static String capitalizeFirstLetter(PublishMethod method) {
         return method.name().substring(0, 1).toUpperCase()
                 + method.name().substring(1);
+    }
+
+    public String generateAndAddOpaqueUUID() {
+        String uuid = Utils.generateRequestId();
+        this.opaque = uuid;
+        return uuid;
     }
 }
 

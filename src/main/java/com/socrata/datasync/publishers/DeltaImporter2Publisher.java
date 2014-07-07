@@ -1,9 +1,15 @@
 package com.socrata.datasync.publishers;
 
-import com.socrata.datasync.deltaimporter2.*;
+import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
-import com.socrata.datasync.HttpUtility;
+import com.socrata.datasync.deltaimporter2.BlobId;
+import com.socrata.datasync.deltaimporter2.CommitMessage;
+import com.socrata.datasync.deltaimporter2.DatasyncDirectory;
+import com.socrata.datasync.deltaimporter2.JobId;
+import com.socrata.datasync.deltaimporter2.LogItem;
+import com.socrata.datasync.deltaimporter2.ProgressingInputStream;
+import com.socrata.datasync.deltaimporter2.XZCompressInputStream;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.ssync.PatchComputer;
 import com.socrata.ssync.SignatureComputer;
@@ -20,15 +26,13 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.tukaani.xz.LZMA2Options;
-import org.tukaani.xz.XZOutputStream;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -38,8 +42,6 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
-import java.util.regex.MatchResult;
 
 public class DeltaImporter2Publisher {
 
@@ -52,6 +54,8 @@ public class DeltaImporter2Publisher {
     private static final String patchExtenstion = ".sdiff";
     private static final String compressionExtenstion = ".xz";
     private static final String finishedLogKey = "finished";
+    private static final String committingLogKey = "committing-job";
+    private static final String committedLogKey = "committed-job";
     private static final int httpRetries = 3;
     private static final int defaultChunkSize = 1024 * 4000;
 
@@ -59,7 +63,7 @@ public class DeltaImporter2Publisher {
     private static String domain;
     private static HttpUtility http;
     private static URIBuilder baseUri;
-    private ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
     private String pathToSignature = null;
     CloseableHttpResponse signatureResponse = null;
 
@@ -82,7 +86,7 @@ public class DeltaImporter2Publisher {
      * @param controlFile the control file used to specialize the resulting dataset
      * @return a job status indicating success or failure
      */
-    public JobStatus publishWithDi2OverHttp(String datasetId, File csvOrTsvFile, ControlFile controlFile) throws
+    public JobStatus publishWithDi2OverHttp(String datasetId, final File csvOrTsvFile, ControlFile controlFile) throws
             IOException {
 
         System.out.println("Publishing " + csvOrTsvFile.getName() + " via delta-importer-2 over HTTP");
@@ -92,6 +96,7 @@ public class DeltaImporter2Publisher {
         InputStream patch = null;
         JobStatus jobStatus;
         int chunkSize = fetchDatasyncChunkSize();
+        String uuid = controlFile.generateAndAddOpaqueUUID();
 
         try {
             // get signature of previous csv/tsv file
@@ -102,7 +107,7 @@ public class DeltaImporter2Publisher {
             InputStream progressingInputStream = new ProgressingInputStream(new FileInputStream(csvOrTsvFile)) {
                 @Override
                 protected void progress(long count) {
-                    System.out.println("Read " + count + " of " + fileSize + " bytes");
+                    System.out.println("\tRead " + count + " of " + fileSize + " bytes of " + csvOrTsvFile.getName());
                 }
             };
             // compute the patch between the csv/tsv file and its previous signature
@@ -117,7 +122,7 @@ public class DeltaImporter2Publisher {
                     .relativeTo(pathToSignature)
                     .chunks(blobIds)
                     .control(controlFile);
-            String jobId = commitBlobPostings(commit, datasetId);
+            String jobId = commitBlobPostings(commit, datasetId, uuid);
 
             // return status
             jobStatus = getJobStatus(datasetId, jobId);
@@ -246,7 +251,7 @@ public class DeltaImporter2Publisher {
         int bytesRead;
 
         while ((bytesRead = readChunk(patchStream, bytes, 0, bytes.length)) != -1) {
-            System.out.println("Uploading " + bytesRead + " bytes");
+            System.out.println("\tUploading " + bytesRead + " bytes of the diff");
             byte[] chunk = bytesRead == bytes.length ? bytes : Arrays.copyOf(bytes, bytesRead);
             HttpEntity entity = EntityBuilder.create().setBinary(chunk).build();
             int retries = 0;
@@ -263,7 +268,7 @@ public class DeltaImporter2Publisher {
                 }
             } while (status != HttpStatus.SC_CREATED && retries < httpRetries);
             if (retries == 5) throw new HttpException(statusLine.toString());
-            System.out.println("Uploaded " + bytesRead + " bytes");
+            System.out.println("\tUploaded " + bytesRead + " bytes");
         }
         return blobIds;
     }
@@ -274,21 +279,37 @@ public class DeltaImporter2Publisher {
      * @param datasetId the 4x4 of the dataset to which the blobs belong
      * @return the jobId of the job applying the diff
      */
-    private String commitBlobPostings(CommitMessage msg, String datasetId) throws
-            IOException, URISyntaxException, HttpException {
+    private String commitBlobPostings(CommitMessage msg, String datasetId, String uuid) throws URISyntaxException, IOException {
         System.out.println("Commiting the chunked diffs to apply the patch");
         URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + commitPath).build();
         StringEntity entity = new StringEntity(mapper.writeValueAsString(msg), ContentType.APPLICATION_JSON);
-        CloseableHttpResponse response = http.post(committingPath, entity);
-        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-            // TODO: note the time the job is sent; note the time the job was received from header (once Robert adds this)
-            //       parse logs; from time bounds should be able to determine if job is "committed"; if not can try again.
-            response.close();
-            throw new HttpException(response.getStatusLine().toString());
-        }
-        String jobId = mapper.readValue(response.getEntity().getContent(), JobId.class).jobId;
-        response.close();
-        return jobId;
+        StatusLine statusLine;
+        int status;
+        int retries = 0;
+        do {
+            try (CloseableHttpResponse response = http.post(committingPath, entity)) {
+                statusLine = response.getStatusLine();
+                status = statusLine.getStatusCode();
+                if (status != HttpStatus.SC_OK) {
+                    response.close();
+                    Commital commital = getJobCommitment(datasetId, uuid);
+                    switch(commital.status) {
+                        case COMMITTED:
+                            return commital.jobId;
+                        case COMMITTING:
+                            retries += httpRetries-1;   // we only retry this case once, since this is typically fatal
+                            break;
+                        case NOT_COMMITTING:
+                        case UNKNOWN:
+                            retries++;
+                    }
+                } else {
+                    String jobId = mapper.readValue(response.getEntity().getContent(), JobId.class).jobId;
+                    return jobId;
+                }
+            }
+        } while (status != HttpStatus.SC_OK && retries < httpRetries);
+        throw new IOException("Unable to commit job. " + statusLine.toString());
     }
 
 
@@ -334,21 +355,65 @@ public class DeltaImporter2Publisher {
         return jobStatus;
     }
 
+    private Commital getJobCommitment(String datasetId, String uuid) throws URISyntaxException {
+        URI logUri = baseUri.setPath(datasyncPath + "/" + datasetId + logPath + "/index.json").build();
+        try(CloseableHttpResponse response = http.get(logUri, ContentType.APPLICATION_JSON.getMimeType())) {
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == HttpStatus.SC_OK) {
+                LogItem[] log = mapper.readValue(response.getEntity().getContent(), LogItem[].class);
+                for (int i = 0; i < log.length; i++) {
+                    LogItem item = log[i];
+                    if (item.type.equalsIgnoreCase(committingLogKey)) {
+                        if (uuid.equals(item.getOpaqueUUID())) {
+                            String jobId = item.getJobId();
+                            Commitment c = isJobCommitted(datasetId, jobId);
+                            return new Commital(c, jobId);
+                        }
+                    }
+                }
+                return new Commital(Commitment.NOT_COMMITTING, null);
+            } else {
+                System.err.println("Unable to determine if job was committed from logs");
+            }
+        } catch (IOException e) {
+            System.err.println("Unable to determine if job was committed from logs. " + e.getMessage());
+        }
+        return new Commital(Commitment.UNKNOWN, null);
+    }
+
+    private Commitment isJobCommitted(String datasetId, String jobId) throws URISyntaxException {
+        URI logUri = baseUri.setPath(datasyncPath + "/" + datasetId + logPath + "/" + jobId + ".json").build();
+        try(CloseableHttpResponse response = http.get(logUri, ContentType.APPLICATION_JSON.getMimeType())) {
+            int statusCode = response.getStatusLine().getStatusCode();
+            if (statusCode == HttpStatus.SC_OK) {
+                LogItem[] log = mapper.readValue(response.getEntity().getContent(), LogItem[].class);
+                LogItem committed = getLogItem(log, committedLogKey);
+                if (committed != null) {
+                    return Commitment.COMMITTED;
+                } else {
+                    return Commitment.COMMITTING;
+                }
+            } else {
+                System.err.println("Unable to determine if job was committed from logs");
+            }
+        } catch (IOException e) {
+            System.err.println("Unable to determine if job was committed from logs. " + e.getMessage());
+        }
+        return Commitment.UNKNOWN;
+    }
+
+
     private void loadStatusWithCRUD(JobStatus status, URI logUri) {
-        try {
-            CloseableHttpResponse response = http.get(logUri, ContentType.APPLICATION_JSON.getMimeType());
+        try(CloseableHttpResponse response = http.get(logUri, ContentType.APPLICATION_JSON.getMimeType())) {
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_OK) {
                 LogItem[] deltaLog = mapper.readValue(response.getEntity().getContent(), LogItem[].class);
-                for (int i = 0; i < deltaLog.length; i++) {
-                    LogItem item = deltaLog[i];
-                    if (item.type.equalsIgnoreCase(finishedLogKey)) {
-                        status.rowsCreated = item.getInserted();
-                        status.rowsUpdated = item.getUpdated();
-                        status.rowsDeleted = item.getDeleted();
-                        status.errors = item.getErrors();
-                        break;
-                    }
+                LogItem deltas = getLogItem(deltaLog, finishedLogKey);
+                if (deltas != null) {
+                    status.rowsCreated = deltas.getInserted();
+                    status.rowsUpdated = deltas.getUpdated();
+                    status.rowsDeleted = deltas.getDeleted();
+                    status.errors = deltas.getErrors();
                 }
             } else {
                 System.err.println("Unable to parse out CRUD details from logs");
@@ -361,5 +426,28 @@ public class DeltaImporter2Publisher {
     private InputStream getNullSignature() throws IOException, NoSuchAlgorithmException {
         BufferedInputStream nullStream = new BufferedInputStream(new ByteArrayInputStream("" .getBytes()));
         return new SignatureComputer.SignatureFileInputStream("MD5", "MD5", 10240, nullStream);
+    }
+
+    private LogItem getLogItem(LogItem[] logItems, String key) {
+        for (int i = 0; i < logItems.length; i++) {
+            LogItem item = logItems[i];
+            if (item.type.equalsIgnoreCase(key))
+                return item;
+        }
+        return null;
+    }
+
+    private enum Commitment {
+        NOT_COMMITTING, COMMITTING, COMMITTED, UNKNOWN;
+    }
+
+    private static class Commital {
+        public Commitment status;
+        public String jobId;
+
+        public Commital(Commitment c, String id) {
+            this.status = c;
+            this.jobId = id;
+        }
     }
 }

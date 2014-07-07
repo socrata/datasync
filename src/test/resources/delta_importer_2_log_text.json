@@ -134,6 +134,24 @@
     }
   },
   {
+    "type": "failure",
+    "data": {
+      "jobId": "5e1899cd-9dbc-43ba-81bb-75d736859f7b",
+      "dataset": "2dr2-h8n4",
+      "filename": "F01_orig.csv.sdiff.xz",
+      "details": {
+        "value": "2002\/09\/16 09:53:28 PM Z",
+        "column": "mydatetimezone1",
+        "expectedType": [
+          "date"
+        ],
+        "record": 1,
+        "type": "uninterpretable-value"
+      },
+      "timestamp": "2014-06-29T02:09:42.357Z"
+    }
+  },
+  {
     "type": "processing-time",
     "data": {
       "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
