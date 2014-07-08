@@ -5,7 +5,7 @@ package com.socrata.datasync.job;
  */
 public enum JobStatus {
 	/**
-     * Job completed 
+     * Job completed
      */
     SUCCESS("Success", false),
 
@@ -13,7 +13,7 @@ public enum JobStatus {
      * Job details are valid
      */
     VALID("Valid", false),
-    
+
     /**
      * This is when an error is returned from the publish API call.
      * The error message varies so it is set with setMessage()
@@ -25,17 +25,17 @@ public enum JobStatus {
      * The error message varies so it is set with setMessage()
      */
     PORT_ERROR("", true),
-    
+
     INVALID_DOMAIN("Invalid Domain", true),
-    
+
     INVALID_DATASET_ID("Invalid Dataset ID", true),
-    
+
     MISSING_FILE_TO_PUBLISH("No File To Publish selected", true),
 
     FILE_TO_PUBLISH_DOESNT_EXIST("File To Publish does not exist", true),
 
-    FILE_TO_PUBLISH_INVALID_FORMAT("File To Publish must be a .csv or .tsv file", true),
-    
+    FILE_TO_PUBLISH_INVALID_FORMAT("Incorrect File Format: File to publish must be a .CSV or .TSV file.", true),
+
     INVALID_PUBLISH_METHOD("Invalid publish method", true),
 
     INVALID_PORT_METHOD("Invalid port method", true),
@@ -63,7 +63,7 @@ public enum JobStatus {
 
     /**
      * Private constructor (to prevent re-construction).
-     * 
+     *
      * @param newMessage
      *            the message associated with this enum value
      * @param newIsError
@@ -77,7 +77,7 @@ public enum JobStatus {
     public void setMessage(final String newMessage) {
     	message = newMessage;
     }
-    
+
     /**
      * @return a human-readable message for this enum value
      */

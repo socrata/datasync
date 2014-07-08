@@ -4,7 +4,9 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -25,13 +27,60 @@ public class FileTypeControl {
     public String timezone;
     public String dropUninterpretableRows;
     public Map<String, ColumnOverride> overrides;
-    public Map<String, LocationColumns> syntheticLocations;
+    public Map<String, LocationColumn> syntheticLocations;
     public Boolean useSocrataGeocoding;
 
     public FileTypeControl() {}
 
+    public boolean hasEncoding(){ return (encoding != null && !encoding.isEmpty()); }
+
     public boolean hasColumns(){
         return (columns != null && columns.length > 0);
+    }
+
+    public boolean hasIgnoredColumns(){
+        return (ignoreColumns != null && ignoreColumns.length > 0);
+    }
+
+    public boolean hasSyntheticLocations(){
+        return (syntheticLocations != null && syntheticLocations.size() > 0);
+    }
+
+    public boolean hasTimestampFormatting() {
+        boolean haveDatasetTimestampFormatting =
+                ((floatingTimestampFormat != null && floatingTimestampFormat.length > 0) ||
+                (fixedTimestampFormat != null && fixedTimestampFormat.length > 0));
+
+        boolean haveColumnTimestampFormatting = false;
+        if (overrides != null) {
+            for (ColumnOverride override : overrides.values()) {
+                if (override.timestampFormat != null && override.timestampFormat.length > 0) {
+                    haveColumnTimestampFormatting = true;
+                    break;
+                }
+            }
+        }
+        return haveDatasetTimestampFormatting || haveColumnTimestampFormatting;
+    }
+
+    public boolean hasOverrides() { return (overrides != null && overrides.size() > 0); }
+
+    public Set<String> lookupTimestampFormatting() {
+        Set<String> formats = new HashSet<>();
+
+        for (String format : floatingTimestampFormat)
+            formats.add(format);
+        for (String format : fixedTimestampFormat)
+            formats.add(format);
+        if (overrides != null) {
+            for (ColumnOverride override : overrides.values()) {
+                if (override.timestampFormat != null) {
+                    for (String format : override.timestampFormat)
+                        formats.add(format);
+                }
+            }
+        }
+        return formats;
     }
 
 
@@ -67,7 +116,7 @@ public class FileTypeControl {
 
     public FileTypeControl overrides(Map<String, ColumnOverride> o) { overrides = o; return this; }
 
-    public FileTypeControl syntheticLocations(Map<String, LocationColumns> s) { syntheticLocations = s; return this; }
+    public FileTypeControl syntheticLocations(Map<String, LocationColumn> s) { syntheticLocations = s; return this; }
 
     public FileTypeControl useSocrataGeocoding(boolean u) { useSocrataGeocoding = u; return this; }
 }

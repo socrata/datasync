@@ -6,6 +6,10 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonPropertyOrder(alphabetic=true)
@@ -66,19 +70,10 @@ public class ControlFile {
                 .useSocrataGeocoding(useSocrataGeocoding);
 
         if (isCsv) {
-            return new ControlFile(capitalizeFirstLetter(publishMethod), null, ftc, null);
+            return new ControlFile(Utils.capitalizeFirstLetter(publishMethod.name()), null, ftc, null);
         } else {
-            return new ControlFile(capitalizeFirstLetter(publishMethod), null, null, ftc);
+            return new ControlFile(Utils.capitalizeFirstLetter(publishMethod.name()), null, null, ftc);
         }
-    }
-
-    public boolean hasColumns() {
-        return ((csv != null && csv.hasColumns()) || (tsv != null && tsv.hasColumns()));
-    }
-
-    private static String capitalizeFirstLetter(PublishMethod method) {
-        return method.name().substring(0, 1).toUpperCase()
-                + method.name().substring(1);
     }
 
     public String generateAndAddOpaqueUUID() {

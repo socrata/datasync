@@ -1,24 +1,23 @@
 package com.socrata.datasync;
 
-import com.socrata.api.SodaDdl;
-import com.socrata.exceptions.SodaError;
-import com.socrata.model.importer.Column;
-import com.socrata.model.importer.Dataset;
+import au.com.bytecode.opencsv.CSVReader;
+import com.socrata.datasync.config.controlfile.FileTypeControl;
 
-import java.awt.*;
+import java.awt.Desktop;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Utils {
 
-    private static final String LOCATION_DATATYPE_NAME = "location";
 
     /**
      * Get file extension from the given path to a file
@@ -42,6 +41,11 @@ public class Utils {
         return requestId;
     }
 
+    public static String capitalizeFirstLetter(String s) {
+        return s.substring(0, 1).toUpperCase()
+                + s.substring(1);
+    }
+
     /**
      * @param uid to validate
      * @return true if given uid is a valid Socrata uid (e.g. abcd-1234)
@@ -52,60 +56,25 @@ public class Utils {
     }
 
     /**
-     * Returns list of dataset field names in the form: "col1","col2",...
-     *
-     * @param ddl
-     * @param datasetId
-     * @return list of field names or null if there
+     * Reads first line of the given file after skipping 'skip' lines and returns it's contents as a string array.
      */
-    public static String getDatasetFieldNamesString(SodaDdl ddl, String datasetId) throws SodaError, InterruptedException {
-        Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(datasetId);
-        return getDatasetFieldNamesString(datasetInfo);
-    }
+    public static String[] pullHeadersFromFile(File fileToPublish, FileTypeControl fileControl, int skip)
+            throws IOException {
 
-    /**
-     * Returns list of dataset field names in the form: "col1","col2",...
-     *
-     * @param datasetInfo
-     * @return list of field names or null if there are none
-     */
-    public static String getDatasetFieldNamesString(Dataset datasetInfo) {
-        String columnsValue = "";
-        List<Column> columns = datasetInfo.getColumns();
-        for(int i = 0; i < columns.size(); i++) {
-            if(i > 0)
-                columnsValue += ",";
-            columnsValue += "\"" + columns.get(i).getFieldName() + "\"";
-        }
-        return columnsValue;
-    }
+        String separator = fileControl.separator;
+        if (separator == null)
+            separator = Utils.getFileExtension(fileToPublish.getName()) == "csv" ? "," : "\t";
 
-    /**
-     * Returns an array of dataset field names.
-     *
-     * @param datasetInfo
-     * @return array of field names or null if there are none
-     */
-    public static String[] getDatasetFieldNames(Dataset datasetInfo) {
-        List<Column> columns = datasetInfo.getColumns();
-        String[] columnsArray = new String[columns.size()];
-        for(int i = 0; i < columns.size(); i++) {
-            columnsArray[i] = columns.get(i).getFieldName();
-        }
-        return columnsArray;
-    }
+        String quote = fileControl.quote == null ? "\"" : fileControl.quote;
+        String escape = fileControl.escape == null ? "\u0000" : fileControl.escape;
 
+        CSVReader reader = new CSVReader(new FileReader(fileToPublish), separator.charAt(0), quote.charAt(0),
+                escape.charAt(0), 0);
 
-    /**
-     * @return true if given dataset has one or more Location columns, false otherwise
-     */
-    public static boolean datasetHasLocationColumn(Dataset datasetInfo) {
-        List<Column> columns = datasetInfo.getColumns();
-        for(int i = 0; i < columns.size(); i++) {
-            if(columns.get(i).getDataTypeName().equals(LOCATION_DATATYPE_NAME))
-                return true;
-        }
-        return false;
+        int linesRead = 0;
+        String[] nextRecord;
+        while ((nextRecord = reader.readNext()) != null && linesRead++ < skip) {}
+        return nextRecord;
     }
 
     /**

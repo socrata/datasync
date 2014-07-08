@@ -21,7 +21,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 public class Main {
 	/**
-	 * Loads an instance of the SimpleIntegrationWizard in command line 
+	 * Loads an instance of the SimpleIntegrationWizard in command line
 	 * mode (if arguments are given) or as a GUI (if no arguments are given).
 	 */
     public static void main(String[] args) throws ParseException {
@@ -37,7 +37,9 @@ public class Main {
 			    new SimpleIntegrationRunner(jobFileToRun);
             }
 		} else {
-            // generate & run job from command line args
+		    // generate & run job from command line args
+            checkVersion();
+
             CommandLineOptions options = new CommandLineOptions();
             CommandLine cmd = options.getCommandLine(args);
             UserPreferences userPrefs = null;
@@ -75,6 +77,16 @@ public class Main {
     private static void printHelp() {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("DataSync", CommandLineOptions.options);
+    }
+
+    private static void checkVersion() {
+        if(VersionProvider.isLatestMajorVersion() == VersionProvider.VersionStatus.NOT_LATEST) {
+            String newDownloadLink = VersionProvider.getDownloadUrlForLatestVersion();
+            String newVersionDownloadMessage = newDownloadLink == null ? "\n" :
+                    "Download the new version (" + VersionProvider.getThisVersion() + ") here:\n" +
+                            newDownloadLink + "\n";
+            System.err.println("\nWARNING: DataSync is out-of-date. " + newVersionDownloadMessage);
+        }
     }
 
     // TODO: move the method below to UserPreferences when I get those set of interfaces/classes consolidated.

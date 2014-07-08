@@ -7,6 +7,7 @@ import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import com.socrata.datasync.job.JobStatus;
+import com.socrata.datasync.validation.IntegrationJobValidity;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.Dataset;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -425,7 +426,7 @@ public class IntegrationJobTab implements JobTab {
             fileChooser = chooser;
             filePathTextField = textField;
             fileChooser.setFileFilter(
-                    UIUtility.getFileChooserFilter(IntegrationJob.allowedFileToPublishExtensions));
+                    UIUtility.getFileChooserFilter(IntegrationJobValidity.allowedFileToPublishExtensions));
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -447,7 +448,7 @@ public class IntegrationJobTab implements JobTab {
             fileChooser = chooser;
             filePathTextField = textField;
             fileChooser.setFileFilter(
-                    UIUtility.getFileChooserFilter(IntegrationJob.allowedControlFileExtensions));
+                    UIUtility.getFileChooserFilter(IntegrationJobValidity.allowedControlFileExtensions));
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -578,7 +579,7 @@ public class IntegrationJobTab implements JobTab {
         private String generateControlFileContent(SodaDdl ddl, String fileToPublish, PublishMethod publishMethod,
                                                   String datasetId, boolean containsHeaderRow) throws SodaError, InterruptedException, IOException {
             Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(datasetId);
-            boolean useGeocoding = Utils.datasetHasLocationColumn(datasetInfo);
+            boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
 
             // In FTP Dropbox v2 there is only Append (append == upsert)
             //Consider factoring the ftp and http button check into a new method
@@ -588,7 +589,7 @@ public class IntegrationJobTab implements JobTab {
 
             String[] columns = null;
             if (!containsHeaderRow)
-                columns = Utils.getDatasetFieldNames(datasetInfo);
+                columns = DatasetUtils.getFieldNamesArray(datasetInfo);
 
             ControlFile control = ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding);
             ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
@@ -623,7 +624,7 @@ public class IntegrationJobTab implements JobTab {
             String datasetFieldNames = null;
             if(datasetIdValid()) {
                 try {
-                    datasetFieldNames = Utils.getDatasetFieldNamesString(
+                    datasetFieldNames = DatasetUtils.getFieldNamesString(
                             getSodaDdl(), datasetIDTextField.getText());
                 } catch (Exception e) {
                     e.printStackTrace();

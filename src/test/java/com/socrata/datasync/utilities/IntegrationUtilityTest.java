@@ -2,6 +2,7 @@ package com.socrata.datasync.utilities;
 
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
+import com.socrata.datasync.DatasetUtils;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.TestBase;
@@ -307,13 +308,13 @@ public class IntegrationUtilityTest extends TestBase {
     @Test
     public void testGetDatasetFieldNames() throws IOException, SodaError, InterruptedException {
         //UserPreferences userPrefs = new UserPreferencesJava();
-        //System.out.println(IntegrationUtility.getDatasetFieldNamesString(ddl, "6qkn-8xvw"));
+        //System.out.println(IntegrationUtility.getFieldNamesString(ddl, "6qkn-8xvw"));
         final SodaDdl ddl = createSodaDdl();
-        String datasetFieldNamesString = Utils.getDatasetFieldNamesString(ddl, UNITTEST_DATASET_ID);
+        String datasetFieldNamesString = DatasetUtils.getFieldNamesString(ddl, UNITTEST_DATASET_ID);
         TestCase.assertEquals("\"id\",\"name\",\"another_name\",\"date\"", datasetFieldNamesString);
 
         Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(UNITTEST_DATASET_ID);
-        String[] datasetFieldNames = Utils.getDatasetFieldNames(datasetInfo);
+        String[] datasetFieldNames = DatasetUtils.getFieldNamesArray(datasetInfo);
         TestCase.assertEquals("id", datasetFieldNames[0]);
         TestCase.assertEquals("name", datasetFieldNames[1]);
         TestCase.assertEquals("another_name", datasetFieldNames[2]);
@@ -324,8 +325,8 @@ public class IntegrationUtilityTest extends TestBase {
         final SodaDdl ddl = createSodaDdl();
         Dataset datasetInfoNoLocation = (Dataset) ddl.loadDatasetInfo(UNITTEST_DATASET_ID);
         Dataset datasetInfoWithLocation = (Dataset) ddl.loadDatasetInfo(UNITTEST_DATASET_ID_LOCATION_COL);
-        TestCase.assertFalse(Utils.datasetHasLocationColumn(datasetInfoNoLocation));
-        TestCase.assertTrue(Utils.datasetHasLocationColumn(datasetInfoWithLocation));
+        TestCase.assertFalse(DatasetUtils.hasLocationColumn(datasetInfoNoLocation));
+        TestCase.assertTrue(DatasetUtils.hasLocationColumn(datasetInfoWithLocation));
     }
 
 

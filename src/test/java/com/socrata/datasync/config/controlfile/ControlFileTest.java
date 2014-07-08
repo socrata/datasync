@@ -3,13 +3,18 @@ package com.socrata.datasync.config.controlfile;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.exceptions.SodaError;
 import junit.framework.TestCase;
+import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ControlFileTest {
 
@@ -99,46 +104,9 @@ public class ControlFileTest {
 
     @Test
     public void testDeserializationCompleteControlFile() throws IOException {
-        String state = "WA";
-        String otherTimezone = "PDT";
+        File controlFile = new File("src/test/resources/datasync_complex_control.json");
+        ControlFile cf = mapper.readValue(controlFile, ControlFile.class);
 
-        LocationColumns locations = new LocationColumns()
-                .address("1234 Lane")
-                .city("Seattle")
-                .state(state)
-                .zip("98125");
-
-        ColumnOverride override = new ColumnOverride()
-                .emptyTextIsNull(true)
-                .timestampFormat(new String[]{"MM/YYYY", "YYYY/MM"})
-                .useSocrataGeocoding(false)
-                .trimWhitespace(false)
-                .timezone(otherTimezone);
-
-
-        Map<String, LocationColumns> syntheticLocations = new HashMap<String, LocationColumns>();
-        syntheticLocations.put("loc1", locations);
-
-        Map<String, ColumnOverride> overrides = new HashMap<String, ColumnOverride>();
-        overrides.put("column1", override);
-        overrides.put("column2", override);
-
-        String controlFileJson = "{" +
-                "\"action\":\"Delete\"," +
-                "\"opaque\":\"someSillyUUIDforMyInternalUse\"," +
-                "\"csv\":" +
-                fileTypeInnardsStart +
-                "\"ignoreColumns\":[\"foo\"]," +
-                "\"escape\":\"\\\\\\\\\"," +
-                "\"useSocrataGeocoding\":" + useGeocoding + "," +
-                "\"separator\":\",\"," +
-                "\"dropUninterpretableRows\":\"TenPercent\"," +
-                "\"overrides\":" + mapper.writeValueAsString(overrides) + "," +
-                "\"syntheticLocations\":" + mapper.writeValueAsString(syntheticLocations) + "," +
-                fileTypeInnardsEnd +
-                "}";
-
-        ControlFile cf = mapper.readValue(controlFileJson, ControlFile.class);
         TestCase.assertEquals("someSillyUUIDforMyInternalUse", cf.opaque);
         TestCase.assertEquals("Delete", cf.action);
         TestCase.assertNotNull(cf.csv);
@@ -163,24 +131,11 @@ public class ControlFileTest {
         TestCase.assertTrue(co.emptyTextIsNull);
         TestCase.assertNull(co.trimServerWhitespace);
         TestCase.assertEquals(2, co.timestampFormat.length);
-        TestCase.assertEquals(otherTimezone, co.timezone);
+        TestCase.assertEquals("PDT", co.timezone);
 
-        LocationColumns lc = cf.csv.syntheticLocations.get("loc1");
-        TestCase.assertEquals(state, lc.state);
+        LocationColumn lc = cf.csv.syntheticLocations.get("loc1");
+        TestCase.assertEquals("WA", lc.state);
         TestCase.assertNull(lc.latitude);
-    }
-
-    @Test
-    public void testHasColumns() {
-        ControlFile noColumns = ControlFile.generateControlFile("blah.csv", PublishMethod.replace, null, false);
-        ControlFile emptyColumns = ControlFile.generateControlFile("blah.csv", PublishMethod.replace, new String[]{}, false);
-        ControlFile columnsInCsv = ControlFile.generateControlFile("blah.csv", PublishMethod.replace, new String[]{"col1"}, false);
-        ControlFile columnsInTsv = ControlFile.generateControlFile("blah.tsv", PublishMethod.replace, new String[]{"col1"}, false);
-
-        TestCase.assertFalse(noColumns.hasColumns());
-        TestCase.assertFalse(emptyColumns.hasColumns());
-        TestCase.assertTrue(columnsInCsv.hasColumns());
-        TestCase.assertTrue(columnsInTsv.hasColumns());
     }
 
     @Test
@@ -194,6 +149,19 @@ public class ControlFileTest {
                 "}";
         ControlFile cf = mapper.readValue(controlFileJson, ControlFile.class);
         TestCase.assertEquals("ISO8601", cf.csv.fixedTimestampFormat[0]);
+    }
+
+    @Test
+    public void testLookupTimestampFormatting() throws IOException {
+        File controlFile = new File("src/test/resources/datasync_complex_control.json");
+        ControlFile cf = mapper.readValue(controlFile, ControlFile.class);
+        Set<String> expectedFormats = new HashSet<>(
+                Arrays.asList("ISO8601","MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy", "MM/YYYY", "YYYY/MM"));
+        Set<String> actualFormats = cf.csv.lookupTimestampFormatting();
+        for(String expected : expectedFormats)
+            TestCase.assertTrue(actualFormats.remove(expected));
+
+        TestCase.assertEquals(0, actualFormats.size());
     }
 }
 
