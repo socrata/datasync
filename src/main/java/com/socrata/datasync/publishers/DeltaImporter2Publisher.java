@@ -43,7 +43,8 @@ import java.util.regex.MatchResult;
 
 public class DeltaImporter2Publisher {
 
-    private static final String datasyncPath = "/datasync/id";
+    private static final String datasyncBasePath = "/datasync";
+    private static final String datasyncPath = datasyncBasePath + "/id";
     private static final String statusPath = "/status";
     private static final String commitPath = "/commit";
     private static final String logPath = "/log";
@@ -52,6 +53,7 @@ public class DeltaImporter2Publisher {
     private static final String compressionExtenstion = ".xz";
     private static final String finishedLogKey = "finished";
     private static final int httpRetries = 3;
+    private static final int defaultChunkSize = 1024 * 4000;
 
 
     private static String domain;
@@ -89,6 +91,7 @@ public class DeltaImporter2Publisher {
         InputStream previousSignature = null;
         InputStream patch = null;
         JobStatus jobStatus;
+        int chunkSize = fetchDatasyncChunkSize();
 
         try {
             // get signature of previous csv/tsv file
@@ -103,10 +106,10 @@ public class DeltaImporter2Publisher {
                 }
             };
             // compute the patch between the csv/tsv file and its previous signature
-            patch = getPatch(progressingInputStream, previousSignature, useCompression);
+            patch = getPatch(progressingInputStream, previousSignature, chunkSize, useCompression);
 
             // post the patch file in blobby chunks - ewww
-            List<String> blobIds = postPatchBlobs(patch, datasetId);
+            List<String> blobIds = postPatchBlobs(patch, datasetId, chunkSize);
 
             // commit the chunks, thereby applying the diff
             CommitMessage commit = new CommitMessage()
@@ -170,7 +173,7 @@ public class DeltaImporter2Publisher {
      * @param compress whether to compress the patch using xz compression
      * @return an input stream containing the possibly compressed patch
      */
-    private InputStream getPatch(InputStream newFile, InputStream previousSignature, boolean compress) throws
+    private InputStream getPatch(InputStream newFile, InputStream previousSignature, int chunkSize, boolean compress) throws
             SignatureException, IOException, InputException, NoSuchAlgorithmException {
         System.out.println("Calculating the diff between the source file and previous signature");
         BufferedInputStream newStream = new BufferedInputStream(newFile);
@@ -179,10 +182,51 @@ public class DeltaImporter2Publisher {
             return new PatchComputer.PatchComputerInputStream(newStream, new SignatureTable(previousStream), "MD5", 102400);
         } else {
             InputStream patchStream = new PatchComputer.PatchComputerInputStream(newStream, new SignatureTable(previousStream), "MD5", 1024000);
-            return new XZCompressInputStream(patchStream, 10 * 1024 * 1024); // this number should probably be about 2*chunk_size
+            return new XZCompressInputStream(patchStream, 2 * chunkSize);
         }
     }
 
+    private int fetchDatasyncChunkSize() {
+        URI versionServicePath;
+        int retryCount = 0;
+
+        try {
+            versionServicePath = baseUri.setPath(datasyncBasePath + "/version.json").build();
+        } catch (URISyntaxException e) {
+            System.out.println("Couldn't construct version.json URI?  Using " + defaultChunkSize + " for the chunk-size");
+            return defaultChunkSize;
+        }
+
+        while(true) {
+            try(CloseableHttpResponse response = http.get(versionServicePath, ContentType.APPLICATION_JSON.getMimeType())) {
+                return mapper.readValue(response.getEntity().getContent(), Version.class).maxBlockSize;
+            } catch (Exception e) {
+                retryCount += 1;
+                if(retryCount == 5) {
+                    // The next step will probably fail too if we can't even hit DI's version service,
+                    // but might as well soldier on regardless.
+                    System.out.println("Unable to detect chunk size; using " + defaultChunkSize);
+                    return defaultChunkSize;
+                }
+            }
+        }
+    }
+
+    private static int readChunk(InputStream in, byte[] buffer, int offset, int length) throws IOException {
+        // InputStream.read isn't guaranteed to read all the bytes requested in one go.
+        // As it happens, the particular streams we use will, but only because XZCompressingInputStream
+        // goes out of its way to; if we were to ever switch to a different compression format, it might
+        // not continue to work.
+        int initialOffset = offset;
+        while(length > 0) {
+            int count = in.read(buffer, offset, length);
+            if(count == -1) break;
+            offset += count;
+            length -= count;
+        }
+        if(offset == initialOffset && length != 0) return -1;
+        return offset - initialOffset;
+    }
 
     /**
      * Chunks up the signature patch file into ~4MB chunks and posts these to delta-importer-2
@@ -190,19 +234,18 @@ public class DeltaImporter2Publisher {
      * @param datasetId the 4x4 of the dataset being patched
      * @return the list of blobIds corresponding to each successful post
      */
-    private List<String> postPatchBlobs(InputStream patchStream, String datasetId) throws
+    private List<String> postPatchBlobs(InputStream patchStream, String datasetId, int chunkSize) throws
             IOException, URISyntaxException, HttpException {
         System.out.println("Chunking and posting the diff");
 
         URI postingPath = baseUri.setPath(datasyncPath + "/" + datasetId).build();
         List<String> blobIds = new LinkedList<>();
-        int maxBytes = 1024*4000;  // we could make a call to /datasync/version for this info too
-        byte[] bytes = new byte[maxBytes];
+        byte[] bytes = new byte[chunkSize];
         StatusLine statusLine;
         int status;
         int bytesRead;
 
-        while ((bytesRead = patchStream.read(bytes, 0, bytes.length)) != -1) {
+        while ((bytesRead = readChunk(patchStream, bytes, 0, bytes.length)) != -1) {
             System.out.println("Uploading " + bytesRead + " bytes");
             byte[] chunk = bytesRead == bytes.length ? bytes : Arrays.copyOf(bytes, bytesRead);
             HttpEntity entity = EntityBuilder.create().setBinary(chunk).build();
