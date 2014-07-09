@@ -467,6 +467,11 @@ public class IntegrationJobTab implements JobTab {
         public void actionPerformed(ActionEvent e) {
             PublishMethod selectedPublishMethod =
                     (PublishMethod) publishMethodComboBox.getSelectedItem();
+            if(selectedPublishMethod.equals(PublishMethod.replace)) {
+                httpButton.setSelected(true);
+            } else {
+                publishMethodRadioButtonGroup.clearSelection();
+            }
             boolean needControlFile =
                     (selectedPublishMethod.equals(PublishMethod.replace) && (ftpButton.isSelected() || httpButton.isSelected()));
             updatePublishViaReplaceUIFields(selectedPublishMethod, needControlFile);

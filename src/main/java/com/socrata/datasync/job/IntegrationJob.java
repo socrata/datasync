@@ -311,7 +311,7 @@ public class IntegrationJob extends Job {
                 // certainly propagate later where the error message will be more appropriate
             }
 		}
-        if((publishViaFTP || publishViaDi2Http) && (controlFile == null)) {
+        if((publishViaFTP || publishViaDi2Http) && controlFile == null) {
             JobStatus controlDeserialization = null;
             if (controlFileContent != null && !controlFileContent.equals("")) {
                 controlDeserialization = deserializeControlFile(controlFileContent);
