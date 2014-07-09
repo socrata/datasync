@@ -9,6 +9,7 @@ import com.socrata.datasync.deltaimporter2.DatasyncDirectory;
 import com.socrata.datasync.deltaimporter2.JobId;
 import com.socrata.datasync.deltaimporter2.LogItem;
 import com.socrata.datasync.deltaimporter2.ProgressingInputStream;
+import com.socrata.datasync.deltaimporter2.Version;
 import com.socrata.datasync.deltaimporter2.XZCompressInputStream;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.ssync.PatchComputer;
