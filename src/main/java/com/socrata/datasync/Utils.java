@@ -144,9 +144,6 @@ public class Utils {
 
     public static int readChunk(InputStream in, byte[] buffer, int offset, int length) throws IOException {
         // InputStream.read isn't guaranteed to read all the bytes requested in one go.
-        // As it happens, the particular streams we use will, but only because XZCompressingInputStream
-        // goes out of its way to; if we were to ever switch to a different compression format, it might
-        // not continue to work.
         int initialOffset = offset;
         while(length > 0) {
             int count = in.read(buffer, offset, length);
