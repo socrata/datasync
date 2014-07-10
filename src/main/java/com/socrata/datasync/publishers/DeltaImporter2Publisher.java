@@ -1,5 +1,6 @@
 package com.socrata.datasync.publishers;
 
+import com.socrata.datasync.Utils;
 import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
@@ -218,22 +219,6 @@ public class DeltaImporter2Publisher {
         }
     }
 
-    private static int readChunk(InputStream in, byte[] buffer, int offset, int length) throws IOException {
-        // InputStream.read isn't guaranteed to read all the bytes requested in one go.
-        // As it happens, the particular streams we use will, but only because XZCompressingInputStream
-        // goes out of its way to; if we were to ever switch to a different compression format, it might
-        // not continue to work.
-        int initialOffset = offset;
-        while(length > 0) {
-            int count = in.read(buffer, offset, length);
-            if(count == -1) break;
-            offset += count;
-            length -= count;
-        }
-        if(offset == initialOffset && length != 0) return -1;
-        return offset - initialOffset;
-    }
-
     /**
      * Chunks up the signature patch file into ~4MB chunks and posts these to delta-importer-2
      * @param patchStream an inputStream to the patch
@@ -251,7 +236,7 @@ public class DeltaImporter2Publisher {
         int status;
         int bytesRead;
 
-        while ((bytesRead = readChunk(patchStream, bytes, 0, bytes.length)) != -1) {
+        while ((bytesRead = Utils.readChunk(patchStream, bytes, 0, bytes.length)) != -1) {
             System.out.println("\tUploading " + bytesRead + " bytes of the diff");
             byte[] chunk = bytesRead == bytes.length ? bytes : Arrays.copyOf(bytes, bytesRead);
             HttpEntity entity = EntityBuilder.create().setBinary(chunk).build();

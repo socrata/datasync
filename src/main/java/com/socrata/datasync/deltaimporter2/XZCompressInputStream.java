@@ -25,14 +25,7 @@ public class XZCompressInputStream extends InputStream {
 
     @Override
     public int read(byte[] bytes, int off, int len) throws IOException {
-        int count;
-        int initialLen = len;
-        while(len > 0 && (count = worker.read(bytes, off, len)) != -1) {
-            off += count;
-            len -= count;
-        }
-        if(len == initialLen) return -1;
-        else return initialLen - len;
+        return worker.read(bytes, off, len);
     }
 
     @Override

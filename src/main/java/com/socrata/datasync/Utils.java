@@ -6,6 +6,8 @@ import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
 
 import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -138,6 +140,22 @@ public class Utils {
         } catch (UnsupportedEncodingException unsupportedEncoding) {
             return "Error getting path to this executeable: " + unsupportedEncoding.getMessage();
         }
+    }
+
+    public static int readChunk(InputStream in, byte[] buffer, int offset, int length) throws IOException {
+        // InputStream.read isn't guaranteed to read all the bytes requested in one go.
+        // As it happens, the particular streams we use will, but only because XZCompressingInputStream
+        // goes out of its way to; if we were to ever switch to a different compression format, it might
+        // not continue to work.
+        int initialOffset = offset;
+        while(length > 0) {
+            int count = in.read(buffer, offset, length);
+            if(count == -1) break;
+            offset += count;
+            length -= count;
+        }
+        if(offset == initialOffset && length != 0) return -1;
+        return offset - initialOffset;
     }
 
 }
