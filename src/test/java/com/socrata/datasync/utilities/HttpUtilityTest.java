@@ -44,11 +44,8 @@ public class HttpUtilityTest extends TestBase {
                 .setHost(DOMAIN.split("//")[1])
                 .setPath("/datasync/version")
                 .build();
-        CloseableHttpResponse response = null;
-        InputStream body = null;
-        try {
-            response = http.get(getUri, ContentType.APPLICATION_JSON.getMimeType());
-            body = response.getEntity().getContent();
+        try(CloseableHttpResponse response = http.get(getUri, ContentType.APPLICATION_JSON.getMimeType());
+            InputStream body = response.getEntity().getContent()) {
             // uncomment the test below, when di2 is running in prod
             /*
             HashMap<String,String> versionNotes = mapper.readValue(body,
@@ -56,9 +53,6 @@ public class HttpUtilityTest extends TestBase {
             TestCase.assertEquals(200, response.getStatusLine().getStatusCode());
             TestCase.assertTrue(versionNotes.containsKey("version"));
             */
-        } finally {
-            response.close();
-            body.close();
         }
         http.close();
     }
@@ -74,21 +68,14 @@ public class HttpUtilityTest extends TestBase {
         byte[] data = IOUtils.toByteArray(is);
         HttpEntity entity = EntityBuilder.create().setBinary(data).build();
 
-        CloseableHttpResponse response = null;
-        InputStream body = null;
-        try {
-            response = http.post(postUri, entity);
-            body = response.getEntity().getContent();
+        try(CloseableHttpResponse response = http.post(postUri, entity);
+            InputStream body = response.getEntity().getContent()) {
             // uncomment the test below, when di2 is running in prod
             /*
             TestCase.assertEquals(201, response.getStatusLine().getStatusCode());
             String blobId = mapper.readValue(response.getEntity().getContent(), BlobId.class).blobId;
             TestCase.assertNotNull(blobId);
             */
-        } finally {
-            response.close();
-            body.close();
         }
-
     }
 }

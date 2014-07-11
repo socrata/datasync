@@ -314,24 +314,24 @@ public class DeltaImporter2Publisher {
         URI logUri = baseUri.setPath(datasyncPath + "/" + datasetId + logPath + "/" + jobId + ".json").build();
         int retries = 0;
         while (jobStatus == null && retries < httpRetries) {
-            CloseableHttpResponse response = http.get(statusUri, ContentType.APPLICATION_JSON.getMimeType());
-            statusLine = response.getStatusLine();
-            int statusCode = statusLine.getStatusCode();
-            if (statusCode == HttpStatus.SC_OK) {
-                status = IOUtils.toString(response.getEntity().getContent());
-                System.out.print("Polling the job status: " + status);
-                if (status.startsWith("SUCCESS")) {
-                    jobStatus = JobStatus.SUCCESS;
-                } else if (status.startsWith("FAILURE")) {
-                    jobStatus = JobStatus.PUBLISH_ERROR;
-                } else {
-                   Thread.sleep(1000);
+            try(CloseableHttpResponse response = http.get(statusUri, ContentType.APPLICATION_JSON.getMimeType())) {
+                statusLine = response.getStatusLine();
+                int statusCode = statusLine.getStatusCode();
+                if (statusCode == HttpStatus.SC_OK) {
+                    status = IOUtils.toString(response.getEntity().getContent());
+                    System.out.print("Polling the job status: " + status);
+                    if (status.startsWith("SUCCESS")) {
+                        jobStatus = JobStatus.SUCCESS;
+                    } else if (status.startsWith("FAILURE")) {
+                        jobStatus = JobStatus.PUBLISH_ERROR;
+                    } else {
+                        Thread.sleep(1000);
+                    }
+                } else if (statusCode != HttpStatus.SC_NOT_MODIFIED) {
+                    retries += 1;
+                    Thread.sleep(1000);
                 }
-            } else if (statusCode != HttpStatus.SC_NOT_MODIFIED) {
-                retries += 1;
-                Thread.sleep(1000);
             }
-            response.close();
         }
         if (jobStatus == null) {
             throw new HttpException(statusLine.toString());

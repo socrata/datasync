@@ -71,13 +71,14 @@ public class DatasyncDirectory {
      */
     public List<String> lsDirectory(String path) throws URISyntaxException, IOException {
         URI uri = baseUri.setPath(baseFolder + path).build();
-        CloseableHttpResponse response = http.get(uri, ContentType.APPLICATION_JSON.getMimeType());
-        int status = response.getStatusLine().getStatusCode();
-        if (status == HttpStatus.SC_OK || status == HttpStatus.SC_NOT_MODIFIED) {
-            return mapper.readValue(response.getEntity().getContent(), ArrayList.class);
-        } else {
-            // it isn't a show-stopper to be unable to read directories
-            return new ArrayList<>();
+        try(CloseableHttpResponse response = http.get(uri, ContentType.APPLICATION_JSON.getMimeType())) {
+            int status = response.getStatusLine().getStatusCode();
+            if (status == HttpStatus.SC_OK || status == HttpStatus.SC_NOT_MODIFIED) {
+                return mapper.readValue(response.getEntity().getContent(), ArrayList.class);
+            } else {
+                // it isn't a show-stopper to be unable to read directories
+                return new ArrayList<>();
+            }
         }
     }
 
