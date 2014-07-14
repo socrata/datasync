@@ -64,9 +64,12 @@ public class SimpleIntegrationWizard {
             "To view detailed logging information run the job by copying the" +
             " 'Command to execute with scheduler' and running it in your Terminal/Command Prompt (instead of clicking 'Run Job Now' button)</body></html>";
 
-    private static final String GETTING_STARTED_GUIDE_URL = "http://socrata.github.io/datasync/";
-    private static final String CONTROL_GUIDE_URL = "http://socrata.github.io/datasync/resources/ftp-control-config.html";
+    private static final String QUICK_START_GUIDE = "http://socrata.github.io/datasync/guides/quick-start.html";
+    private static final String PORTING_GUIDE = "http://socrata.github.io/datasync/guides/setup-port-job.html";
+    private static final String HEADLESS_GUIDE_URL = "http://socrata.github.io/datasync/guides/setup-standard-job-headless.html";
+    private static final String CONTROL_GUIDE_URL = "http://socrata.github.io/datasync/resources/control-config.html";
     private static final String SCHEDULING_GUIDE_URL = "http://socrata.github.io/datasync/resources/schedule-job.html";
+    private static final String FAQ_URL = "http://socrata.github.io/datasync/resources/faq-common-problems.htmll";
 
     private JTextField domainTextField, usernameTextField, apiKeyTextField;
 	private JPasswordField passwordField;
@@ -446,12 +449,18 @@ public class SimpleIntegrationWizard {
 
         JMenu helpMenu = new JMenu("Help");
         menuBar.add(helpMenu);
-        JMenuItem gettingStartedGuideItem = new JMenuItem("Getting started guide");
+        JMenuItem gettingStartedGuideItem = new JMenuItem("Quick start guide");
+        JMenuItem portingGuideItem = new JMenuItem("Port job guide");
+        JMenuItem headlessDocumentationItem = new JMenuItem("Running in headless mode");
         JMenuItem controlDocumentationItem = new JMenuItem("Control file configuration");
         JMenuItem schedulingItem = new JMenuItem("Scheduling a job");
+        JMenuItem faqItem = new JMenuItem("FAQ");
         helpMenu.add(gettingStartedGuideItem);
+        helpMenu.add(portingGuideItem);
+        helpMenu.add(headlessDocumentationItem);
         helpMenu.add(controlDocumentationItem);
         helpMenu.add(schedulingItem);
+        helpMenu.add(faqItem);
 
         newStandardJobItem.addActionListener(new NewStandardJobListener());
         newPortJobItem.addActionListener(new NewPortJobListener());
@@ -464,7 +473,23 @@ public class SimpleIntegrationWizard {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    Utils.openWebpage(new URI(GETTING_STARTED_GUIDE_URL));
+                    Utils.openWebpage(new URI(QUICK_START_GUIDE));
+                } catch (URISyntaxException e1) { e1.printStackTrace(); }
+            }
+        });
+        portingGuideItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Utils.openWebpage(new URI(PORTING_GUIDE));
+                } catch (URISyntaxException e1) { e1.printStackTrace(); }
+            }
+        });
+        headlessDocumentationItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Utils.openWebpage(new URI(HEADLESS_GUIDE_URL));
                 } catch (URISyntaxException e1) { e1.printStackTrace(); }
             }
         });
@@ -481,6 +506,14 @@ public class SimpleIntegrationWizard {
             public void actionPerformed(ActionEvent e) {
                 try {
                     Utils.openWebpage(new URI(SCHEDULING_GUIDE_URL));
+                } catch (URISyntaxException e1) { e1.printStackTrace(); }
+            }
+        });
+        faqItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Utils.openWebpage(new URI(FAQ_URL));
                 } catch (URISyntaxException e1) { e1.printStackTrace(); }
             }
         });

@@ -14,7 +14,7 @@ Whether you are a non-technical user, developer, or ETL specialist DataSync make
 DataSync takes a CSV or TSV file on a local machine or networked hard drive and publishes it to a Socrata dataset so
 that the Socrata dataset stays up-to-date. DataSync jobs can be integrated into an ETL process, scheduled using a tool
 such as the Windows Task Scheduler or Cron, or used to perform updates or create new datasets in batches. DataSync
-works on any platform that runs Java version 1.6 or higher (i.e. Windows, Mac, and Linux). This simple, yet powerful
+works on any platform that runs Java version 1.7 or higher (i.e. Windows, Mac, and Linux). This simple, yet powerful
 publishing tool lets you easily update Socrata datasets programmatically and automatically (scheduled), without
 writing a single line of code.
 
@@ -27,7 +27,7 @@ Standard jobs can be set up to take a CSV data file from a local machine or netw
 ![standard job tab](http://i.imgur.com/byN0ibq.png?1)
 
 ### Port Jobs
-Port jobs are used for moving data around that is already on the Socrata platform. Users that have publisher rights can make copies of datasets through this tool. Port jobs allow the copying of both dataset schemas (metadata and columns) and data (rows). 
+Port jobs are used for moving data around that is already on the Socrata platform. Users that have publisher rights can make copies of datasets through this tool. Port jobs allow the copying of both dataset schemas (metadata and columns) and data (rows).
 ![port job tab](http://i.imgur.com/tMz2sQP.png?1)
 
 
@@ -44,16 +44,11 @@ mvn clean install
 
 To compile the project into an executable JAR file (including all dependencies) run:
 ```
-mvn clean compile assembly:single
-```
-
-Did it work? If not, you can always skip the tests:
-```
 mvn clean compile -Dmaven.test.skip=true assembly:single
 ```
 
 This puts the JAR file into the "target" directory inside the repo.  So to open DataSync, simply:
 ```
 cd target
-java -jar DataSync-0.2-SNAPSHOT-jar-with-dependencies.jar
+java -jar DataSync-1.5-jar-with-dependencies.jar
 ```
