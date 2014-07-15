@@ -3,19 +3,26 @@ package com.socrata.datasync;
 import com.google.common.net.HttpHeaders;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import org.apache.commons.net.util.Base64;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpRequestRetryHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.protocol.HttpContext;
 
 import java.io.IOException;
 import java.net.URI;
@@ -32,9 +39,11 @@ public class HttpUtility {
     private static final String appHeader = "X-App-Token";
     private static final String userAgent = "datasync";
 
+
     public HttpUtility() { this(null, false); }
 
     public HttpUtility(UserPreferences userPrefs, boolean useAuth) {
+        HttpClientBuilder clientBuilder = HttpClients.custom();
         if (useAuth) {
             authHeader = getAuthHeader(userPrefs.getUsername(), userPrefs.getPassword());
             appToken = userPrefs.getAPIKey();
@@ -51,11 +60,14 @@ public class HttpUtility {
                     credsProvider.setCredentials(
                             new AuthScope(proxyHost, Integer.valueOf(proxyPort)),
                             new UsernamePasswordCredentials(userPrefs.getProxyUsername(), userPrefs.getProxyPassword()));
-                    httpClient = HttpClients.custom().setDefaultCredentialsProvider(credsProvider).build();
+                    clientBuilder.setDefaultCredentialsProvider(credsProvider);
                 }
             }
         }
-        if (httpClient == null) httpClient = HttpClientBuilder.create().build();
+        clientBuilder.setRetryHandler(datasyncDefaultHandler);
+        clientBuilder.setKeepAliveStrategy(datasyncDefaultKeepAliveStrategy);
+        httpClient = clientBuilder.build();
+
     }
 
     /**
@@ -112,4 +124,48 @@ public class HttpUtility {
     private boolean canUse(String option) {
         return option != null && !option.isEmpty();
     }
+
+    HttpRequestRetryHandler datasyncDefaultHandler = new HttpRequestRetryHandler() {
+
+        public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
+            // Do not retry if over max retry count
+            if (executionCount >= 5)
+                return false;
+
+            // Do not retry calls to the github api
+            HttpClientContext clientContext = HttpClientContext.adapt(context);
+            HttpRequest request = clientContext.getRequest();
+            for (Header header : request.getHeaders("Host")) {
+                if (header.getValue().contains("github"))
+                    return false;
+            }
+
+            // Do not retry calls that are not idempotent - posts in our case
+            // currently, we make 2 types of posts:
+            //  1) posting blobs - this is idempotent
+            //  2) posting commit of blob ids - this is not idempotent and we need to fall back to the logic
+            //     in DeltaImporter2Publisher.commitBlobPostings
+            boolean idempotent = !(request.getRequestLine().getUri().contains("commit"));
+            if (idempotent) { // Retry if the request is considered idempotent
+                double wait = Math.pow(3.5, executionCount);
+                System.err.println("Request failed. Retrying request in " + Math.round(wait) + " seconds");
+                try {
+                    Thread.sleep((long) wait*1000);
+                    return true;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+            return false;
+        }
+
+    };
+
+    ConnectionKeepAliveStrategy datasyncDefaultKeepAliveStrategy = new ConnectionKeepAliveStrategy() {
+        @Override
+        public long getKeepAliveDuration(HttpResponse response, HttpContext context) {
+            return 30 * 1000;
+        }
+    };
 }
