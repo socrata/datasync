@@ -15,47 +15,50 @@ DataSync jobs can be run in headless/command-line mode in one of two ways: (1) p
 ### Step 1: Establish “global” configuration (e.g. authentication details)
 The “global” configuration settings (domain, username, password, logging dataset ID, etc) apply to all DataSync jobs (i.e. they are not specific to a single job).
 
-The configuration settings are stored in a json file within a single object.  For example, you might create a file called config.json with the contents below:
+The configuration settings are stored in a json file, e.g. config.json, within a single object.  Each of the options are described in the table below, but at minimum, the four options in the example below are required:
 ```json
 {
     "domain": "<YOUR DOMAIN>",
     "username": "<YOUR USERNAME>",
     "password": "<YOUR PASSWORD>",
     "appToken": "<YOUR APP TOKEN>",
-    "adminEmail": "",
-    "emailUponError": "false",
-    "logDatasetID": "",
-    "outgoingMailServer": "",
-    "smtpPort": "",
-    "sslPort": "",
-    "smtpUsername": "",
-    "smtpPassword": "",
-    "filesizeChunkingCutoffMB": "10",
-    "numRowsPerChunk": "10000"
 }
 ```
 
-You must fill in at least the following:
-`<YOUR DOMAIN>` (e.g. https://data.cityofchicago.org)
-`<YOUR USERNAME>` (e.g. john@cityofchicago.org)
-`<YOUR PASSWORD>` (e.g. secret_password)
-`<YOUR APP TOKEN>` (e.g. fPsJQRDYN9KqZOgEZWyjoa1SG)
+| Option    | Requirement | Explanation
+| ------------- | ------------------------------
+| domain | required | The scheme and root domain of your data site.  (e.g. https://data.cityofchicago.org)
+| username | required | Your Socrata username. This user must have a Publisher role or Owner rights to at least one dataset. We recommend creating a dedicated Socrata account (with these permissions) to use with DataSync rather than tie DataSync to a particular person’s primary account. (e.g. datasyncUser@cityofchicago.org)
+| password | required | The Socrata password of the user given by `username`.  !!!!!!!  Dear me, what to say here?
+| appToken | required | An app token.   If you have not yet created one, please reference [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html).
+| logDatasetID | optional | The dataset indentifier of the log dataset. If you have not provisioned a log dataset and would like to do so, please refer to [Logging documentation]({{ site.root }}/resources/preferences-config.html#setup-logging).
+| adminEmail | required only if `emailUponError` is "true" | The email address of the administrator or user that error notifications should be sent to.
+| emailUponError | optional | Whether to send email notifications of errors that occurred while running jobs. Defaults to "false".
+| outgoingMailServer | required only if `emailUponError` is "true" | ???
+| smtpPort | required only if `emailUponError` is "true" | ???
+| sslPort | required only if `emailUponError` is "true" | ???
+| smtpUsername | required only if `emailUponError` is "true" | ???
+| smtpPassword | required only if `emailUponError` is "true" | ???
+| filesizeChunkingCutoffMB | acknowledged only for append, upsert, delete and Soda2-replace jobs | If the CSV/TSV file size is less than this, the entire file will be sent in one chunk.  Defaults to 10 MB.
+| numRowsPerChunk | acknowledged only for append, upsert, delete and Soda2-replace jobs and only if the entire file is not sent in a single chunk because of the `filesizeChunkingCutoffMB`| The number of rows to send in each chunk.  Defaults to 10,000 rows.
+| proxyHost | required if operating through a proxy | The hostname of the proxy server.
+| proxyPort | required if operating through a proxy | The port that the proxy server listens on.
+| proxyUsername | optional | The username to use if the proxy is authenticated.  If this information is sensitive, you may instead pass it in via the -pun, --proxyUsername commandline option.
+| proxyPassword | optional | The password to use if the proxy is authenticated.  If this information is sensitive, you may instead pass it in via the -ppw, --proxyPassword commandline option.
 
-`<YOUR DOMAIN>` is the root domain of your data site and must begin with https:// (e.g. https://data.cityofchicago.org). The username and password are those of a Socrata account that has a Publisher role or Owner rights to at least one dataset. Enter your App token or if you have not yet created one read [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html). We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tie DataSync to a particular person’s primary account.
-
-
-For details on the other global configuration settings refer to: [Preferences configuration](http://socrata.github.io/datasync/resources/ftp-control-config.html)
 
 There are two ways to establish the “global” DataSync configuration:
 
-**1) Load configuration from a .json file when running each job**
-This method of loading configuration requires supplying a flag pointing DataSync to config.json each time you run a job in headless/command-line mode. For example, you would run (`<OTHER FLAGS>` is where the other flags discussed in Step 5 are passed):
+-**1) Load configuration from a .json file when running each job**
+This method of loading configuration requires supplying a flag pointing DataSync to config.json each time you run a job in headless/command-line mode. For example, you would run:
 
 ```
 java -jar datasync.jar -c config.json <OTHER FLAGS> ...
 ```
 
-**2) Load configuration into the DataSync “memory”**
+where `<OTHER FLAGS>` are those discussed below
+
+-**2) Load configuration into the DataSync "memory"**
 If you load configuration this way you only need to load the configuration once and DataSync will remember the configuration (instead of passing config.json as a flag with every job). After loading configuration settings they will be saved and used to connect to the publisher API for every job you run using DataSync. To load configuration into DataSync “memory” run this command once:
 
 ```
@@ -85,7 +88,7 @@ To run a job that uses the settings in config.json as the global configuration r
 java -jar datasync.jar -c <CONFIG.json FILE> -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -sc <FTP CONTROL.json FILE>
 ```
 
-To run a job that uses global configuration previously saved in DataSync “memory” (either via a LoadPreferences job or using the DataSync GUI) simply omit the `-c config.json` flag.
+To run a standard job that uses global configuration previously saved in DataSync “memory” (either via a LoadPreferences job or using the DataSync GUI) simply omit the `-c config.json` flag.
 
 Explanation of flags:
 `*` = required flag
@@ -103,43 +106,13 @@ Explanation of flags:
 </tr><tr><td style='text-align: left;'><code>-h *</code></td><td style='text-align: left;'><code>--fileToPublishHasHeaderRow</code></td><td style='text-align: left;'>true</td><td style='text-align: left;'>Set this to <code>true</code> if the file to publish has a header row, otherwise set it to <code>false</code> (<code>true</code> and <code>false</code> are the only acceptable values)</td>
 </tr><tr><td style='text-align: left;'><code>-i *</code></td><td style='text-align: left;'><code>--datasetID</code></td><td style='text-align: left;'>m985-ywaw</td><td style='text-align: left;'>The identifier of the dataset to publish to obtained in Step 2</td>
 </tr><tr><td style='text-align: left;'><code>-m *</code></td><td style='text-align: left;'><code>--publishMethod</code></td><td style='text-align: left;'>replace</td><td style='text-align: left;'>Specifies the publish method to use (<code>replace</code>, <code>upsert</code>, <code>append</code>, and <code>delete</code> are the only acceptable values, for details on the publishing methods refer to Step 3 of the <a href='http://socrata.github.io/datasync/guides/setup-standard-job.html'>Setup a Standard Job (GUI)</a></td>
-</tr><tr><td style='text-align: left;'><code>-pf</code></td><td style='text-align: left;'><code>--publishViaFTP</code></td><td style='text-align: left;'>true</td><td style='text-align: left;'>Set this to <code>true</code> to use FTP (currently only works for <code>replace</code>), which is the preferred update method because is highly efficient and can reliably handle very large files (1 million+ rows). If <code>false</code> perform the dataset update using HTTPS (<code>false</code> is the default value)</td>
-</tr><tr><td style='text-align: left;'><code>-sc</code></td><td style='text-align: left;'><code>--pathToFTPControlFile</code></td><td style='text-align: left;'>/Users/home/control.json</td><td style='text-align: left;'>Specifies a Control file that configures &#8216;replace via FTP&#8217; jobs, and therefore should only be set if <code>-pf</code>,<code>--publishViaFTP</code> is set to <code>true</code>. When this flag is set the <em><code>-h</code>,<code>--fileToPublishHasHeaderRow</code></em> and <em><code>-m</code>,<code>--publishMethod</code></em> flags are overridden by the settings in the supplied Control.json file. Learn how to <a href='http://socrata.github.io/datasync/resources/ftp-control-config.html'>configure the FTP control file</a></td>
+</tr><tr><td style='text-align: left;'><code>-ph</code></td><td style='text-align: left;'><code>--publishViaHttp</code></td><td style='text-align: left;'>true</td><td style='text-align: left;'>Set this to <code>true</code> to use replace-via-http, which is the preferred update method because is highly efficient and can reliably handle very large files (1 million+ rows). If <code>false</code> and <code>publishViaFTP</code> is <code>false</code>, perform the dataset update using Soda2. (<code>false</code> is the default value)</td>(<code>false</code> is the default value)</td>
+</tr><tr><td style='text-align: left;'><code>-pf</code></td><td style='text-align: left;'><code>--publishViaFTP</code></td><td style='text-align: left;'>true</td><td style='text-align: left;'>Set this to <code>true</code> to use FTP (currently only works for <code>replace</code>). If <code>false</code> and <code>publishViaHttp</code> is <code>false</code>,perform the dataset update using Soda2. (<code>false</code> is the default value)</td>
+</tr><tr><td style='text-align: left;'><code>-cf</code></td><td style='text-align: left;'><code>--pathToControlFile</code></td><td style='text-align: left;'>/Users/home/control.json</td><td style='text-align: left;'>Specifies a Control file that configures &#8216;replace via HTTP&#8217; and &#8216;replace via FTP&#8217; jobs, and therefore should only be set if one of <code>-ph</code>,<code>--publishViaHttp</code> or <code>-pf</code>,<code>--publishViaFTP</code> is set to <code>true</code>. When this flag is set the <em><code>-h</code>,<code>--fileToPublishHasHeaderRow</code></em> and <em><code>-m</code>,<code>--publishMethod</code></em> flags are overridden by the settings in the supplied Control.json file. Learn how to <a href='http://socrata.github.io/datasync/resources/ftp-control-config.html'>configure the FTP control file</a></td>
 </tr>
 <tr><td style='text-align: left;'><code>-t</code></td><td style='text-align: left;'><code>--jobType</code></td><td style='text-align: left;'>LoadPreferences</td><td style='text-align: left;'>Specifies the type of job to run (the default is &#8216;IntegrationJob&#8217;, a Standard  job so in this case this flag is optional)</td>
 </tr>
 </tbody></table>
-
-**'Replace via FTP' Configuration (via the Control file)**
-Currently to use SmartUpdate you must supply a control.json file with the *`-sc`,`--pathToFTPControlFile`* flag that contains configuration specific to the dataset you are updating. Create a file called control.json according to the [FTP / Control file configuration documentation](http://socrata.github.io/datasync/resources/ftp-control-config.html).
-
-<div class="well">
-<strong>NOTE:</strong> the GUI enables generating the Control file with settings appropriate for the dataset you are publishing to. It may be easiest to use the GUI to generate the default Control file content and then make any necessary modifications before saving the file and including it with -sc,--pathToFTPControlFile flag.
-</div>
-
-Here are the contents of an example control.json file configured to do a 'replace via FTP' operation from a CSV file that has a header row containing the column identifiers (API field names) of the columns and dates in any of the following formats: ISO8601 (e.g. 2014-03-25), MM/dd/yyyy, or MM/dd/yy:
-```json
-{
-  "action" : "Replace",
-  "csv" :
-    {
-      "useSocrataGeocoding" : true,
-      "columns" : null,
-      "skip" : 0,
-      "fixedTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy"],
-      "floatingTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy"],
-      "timezone" : "UTC",
-      "separator" : ",",
-      "quote" : "\"",
-      "encoding" : "utf-8",
-      "emptyTextIsNull" : true,
-      "trimWhitespace" : true,
-      "trimServerWhitespace" : true,
-      "overrides" : {}
-    }
-}
-```
-If the file you are publishing is a TSV file, simply change the 3rd line above from `"csv" :` to `"tsv" :`
 
 ### Step 6: Running a job
 
