@@ -372,9 +372,10 @@ public class IntegrationJob extends Job {
                     connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken(), jobRequestId);
             final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
             final DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs);
-            int filesizeChunkingCutoffBytes =
+            int filesizeChunkingCutoffBytes = userPrefs.getFilesizeChunkingCutoffMB() == null ? 10 * NUM_BYTES_PER_MB :
                     Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * NUM_BYTES_PER_MB;
-            int numRowsPerChunk = Integer.parseInt(userPrefs.getNumRowsPerChunk());
+            int numRowsPerChunk = userPrefs.getNumRowsPerChunk() == null ? 10000 :
+                    Integer.parseInt(userPrefs.getNumRowsPerChunk());
 
             String publishExceptions = "";
 			try {
