@@ -13,11 +13,6 @@ mvn clean install
 
 To compile the project into an executable JAR file (including all dependencies) run:
 ```
-mvn clean compile assembly:single
-```
-
-Did it work? If not, you can always skip the tests:
-```
 mvn clean compile -Dmaven.test.skip=true assembly:single
 ```
 

@@ -7,15 +7,15 @@ bodyclass: homepage
 For information on using DataSync in GUI (Graphical User Interface) mode which we recommend reading first in any case refer to the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
 
 <div class="well">
-<strong>NOTICE: this guide only pertains to DataSync versions 1.0</strong>
+<strong>NOTICE: The guide below only pertains to DataSync versions 1.0 and higher</strong>
 </div>
 
 DataSync jobs can be run in headless/command-line mode in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was saved using the user interface which contains the job parameters. This guide focuses on (1) which enables configuring and running a DataSync job without any usage of the GUI. This enables complete control to integrate DataSync into ETL code or software systems. It is recommended that you first familiarize yourself with DataSync by using the GUI because it is often easier to start there and then move to using the tool headlessly.
 
 ### Step 1: Establish “global” configuration (e.g. authentication details)
-The “global” configuration settings (domain, username, password, logging dataset ID, etc) apply to all DataSync jobs (i.e. they are not specific to a single job). 
+The “global” configuration settings (domain, username, password, logging dataset ID, etc) apply to all DataSync jobs (i.e. they are not specific to a single job).
 
-Create a file called config.json with the contents below: 
+The configuration settings are stored in a json file within a single object.  For example, you might create a file called config.json with the contents below:
 ```json
 {
     "domain": "<YOUR DOMAIN>",
@@ -35,10 +35,10 @@ Create a file called config.json with the contents below:
 }
 ```
 
-You must fill in at least the following:  
-`<YOUR DOMAIN>` (e.g. https://data.cityofchicago.org)  
-`<YOUR USERNAME>` (e.g. john@cityofchicago.org)  
-`<YOUR PASSWORD>` (e.g. secret_password)  
+You must fill in at least the following:
+`<YOUR DOMAIN>` (e.g. https://data.cityofchicago.org)
+`<YOUR USERNAME>` (e.g. john@cityofchicago.org)
+`<YOUR PASSWORD>` (e.g. secret_password)
 `<YOUR APP TOKEN>` (e.g. fPsJQRDYN9KqZOgEZWyjoa1SG)
 
 `<YOUR DOMAIN>` is the root domain of your data site and must begin with https:// (e.g. https://data.cityofchicago.org). The username and password are those of a Socrata account that has a Publisher role or Owner rights to at least one dataset. Enter your App token or if you have not yet created one read [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html). We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tie DataSync to a particular person’s primary account.
@@ -48,14 +48,14 @@ For details on the other global configuration settings refer to: [Preferences co
 
 There are two ways to establish the “global” DataSync configuration:
 
-**1) Load configuration from a .json file when running each job**  
+**1) Load configuration from a .json file when running each job**
 This method of loading configuration requires supplying a flag pointing DataSync to config.json each time you run a job in headless/command-line mode. For example, you would run (`<OTHER FLAGS>` is where the other flags discussed in Step 5 are passed):
 
 ```
 java -jar datasync.jar -c config.json <OTHER FLAGS> ...
 ```
 
-**2) Load configuration into the DataSync “memory”**  
+**2) Load configuration into the DataSync “memory”**
 If you load configuration this way you only need to load the configuration once and DataSync will remember the configuration (instead of passing config.json as a flag with every job). After loading configuration settings they will be saved and used to connect to the publisher API for every job you run using DataSync. To load configuration into DataSync “memory” run this command once:
 
 ```
@@ -68,7 +68,7 @@ java -jar datasync.jar -t LoadPreferences -c config.json
 ### Step 2: Obtain the Dataset ID
 You will need the dataset ID of the dataset you wish to publish to. To obtain the dataset ID navigate to the dataset in your web browser and in the address bar the dataset ID is the code at the end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
 
-https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw  
+https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw
 The dataset ID is: m985-ywaw
 
 
@@ -79,7 +79,7 @@ For general help using DataSync in headless/command-line mode run:
 java -jar datasync.jar --help
 ```
 
-To run a job that uses the settings in config.json as the global configuration run the following command, replacing `<..>` with the appropriate values (flags explained below): 
+To run a job that uses the settings in config.json as the global configuration run the following command, replacing `<..>` with the appropriate values (flags explained below):
 
 ```
 java -jar datasync.jar -c <CONFIG.json FILE> -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -sc <FTP CONTROL.json FILE>
@@ -87,7 +87,7 @@ java -jar datasync.jar -c <CONFIG.json FILE> -f <FILE TO PUBLISH> -h <HAS HEADER
 
 To run a job that uses global configuration previously saved in DataSync “memory” (either via a LoadPreferences job or using the DataSync GUI) simply omit the `-c config.json` flag.
 
-Explanation of flags:  
+Explanation of flags:
 `*` = required flag
 
 <table><thead>
@@ -110,17 +110,17 @@ Explanation of flags:
 </tr>
 </tbody></table>
 
-**'Replace via FTP' Configuration (via the Control file)**  
+**'Replace via FTP' Configuration (via the Control file)**
 Currently to use SmartUpdate you must supply a control.json file with the *`-sc`,`--pathToFTPControlFile`* flag that contains configuration specific to the dataset you are updating. Create a file called control.json according to the [FTP / Control file configuration documentation](http://socrata.github.io/datasync/resources/ftp-control-config.html).
 
 <div class="well">
-<strong>NOTE:</strong> the GUI enables generating the Control file with settings appropriate for the dataset you are publishing to. It may be easiest to use the GUI to generate the default Control file content and then make any necessary modifications before saving the file and including it with -sc,--pathToFTPControlFile flag. 
+<strong>NOTE:</strong> the GUI enables generating the Control file with settings appropriate for the dataset you are publishing to. It may be easiest to use the GUI to generate the default Control file content and then make any necessary modifications before saving the file and including it with -sc,--pathToFTPControlFile flag.
 </div>
 
 Here are the contents of an example control.json file configured to do a 'replace via FTP' operation from a CSV file that has a header row containing the column identifiers (API field names) of the columns and dates in any of the following formats: ISO8601 (e.g. 2014-03-25), MM/dd/yyyy, or MM/dd/yy:
 ```json
 {
-  "action" : "Replace", 
+  "action" : "Replace",
   "csv" :
     {
       "useSocrataGeocoding" : true,
@@ -143,7 +143,7 @@ If the file you are publishing is a TSV file, simply change the 3rd line above f
 
 ### Step 6: Running a job
 
-Execute the `java -jar  datasync.jar ...` command and logging information will be output to STDOUT. If the job runs successfully a ‘Success’ message will be output to STDOUT and the program will exit with a normal status code (0). If there was a problem running the job a detailed error message will be output to STDERR and the program will exit with an error status code (1). You can capture the exit code to configure error handling logic within your ETL process. 
+Execute the `java -jar  datasync.jar ...` command and logging information will be output to STDOUT. If the job runs successfully a ‘Success’ message will be output to STDOUT and the program will exit with a normal status code (0). If there was a problem running the job a detailed error message will be output to STDERR and the program will exit with an error status code (1). You can capture the exit code to configure error handling logic within your ETL process.
 
 ### Complete example job
 
@@ -174,7 +174,7 @@ config.json contents:
 control.json contents:
 ```json
 {
-  "action" : "Replace", 
+  "action" : "Replace",
   "csv" :
     {
       "useSocrataGeocoding" : true,
@@ -196,7 +196,7 @@ control.json contents:
 
 **Running a previously saved job file (.sij file)**
 
-Simply run: 
+Simply run:
 
 ```
 java -jar datasync.jar <.sij FILE TO RUN>
@@ -217,6 +217,6 @@ java -jar datasync.jar /Users/john/Desktop/business_licenses.sij
     "publishMethod" : "replace",
     "fileToPublishHasHeaderRow" : true,
     “publishViaFTP” : true,
-    “pathToFTPControlFile” : “/Users/john/Desktop/building_permits_control.json” 
+    “pathToFTPControlFile” : “/Users/john/Desktop/building_permits_control.json”
 }
 ```

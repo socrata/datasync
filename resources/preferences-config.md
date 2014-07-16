@@ -7,7 +7,8 @@ bodyclass: homepage
 ### Contents
 - [Set up logging (using a dataset)](#setup-logging)
 - [Error Notification Auto-Email Setup](#error-notification)
-- [Chunking Configuration](#chunking-config) 
+- [Chunking Configuration](#chunking-config)
+- [Proxy Configuration](#proxy-config)
 
 {#setup-logging}
 ### Set up logging (using a dataset)
@@ -16,11 +17,11 @@ You can set up a Socrata dataset to store log information each time a DataSync j
 
 To run a Port Job in DataSync go to File -> New... -> Port Job and fill out the following fields as noted below:
 
-**Port Method:** Copy schema only  
-**Source Domain:** https://adrian.demo.socrata.com  
-**Source Dataset ID:** aywp-657c  
-**Destination Domain:** `[YOUR DOMAIN]`  
-**Publish Destination Dataset?:** Yes  
+**Port Method:** Copy schema only
+**Source Domain:** https://adrian.demo.socrata.com
+**Source Dataset ID:** aywp-657c
+**Destination Domain:** `[YOUR DOMAIN]`
+**Publish Destination Dataset?:** Yes
 
 Then click the "Run Job Now" button and it will automatically create an empty log dataset on the destination domain you entered.
 
@@ -29,24 +30,24 @@ Alternatively to using a Port Job, if you wish to create the log dataset manuall
 
 Be sure that you set the column data types to match those listed below:
 
-**Date:** Date & Time  
-**DatasetID:** Plain Text  
-**FileToPublish:** Plain Text  
-**PublishMethod:** Plain Text  
-**JobFile:** Plain Text  
-**RowsUpdated:** Number  
-**RowsCreated:** Number  
-**RowsDeleted:** Number  
-**Success:** Checkbox  
-**Errors:** Plain Text  
+**Date:** Date & Time
+**DatasetID:** Plain Text
+**FileToPublish:** Plain Text
+**PublishMethod:** Plain Text
+**JobFile:** Plain Text
+**RowsUpdated:** Number
+**RowsCreated:** Number
+**RowsDeleted:** Number
+**Success:** Checkbox
+**Errors:** Plain Text
 
 After you have created the log dataset, In DataSync go to Edit -> Preferences. In the popup window enter the dataset ID of the log dataset you just uploaded or created via DataSync Port Job.
 
 {#error-notification}<p>&nbsp;</p>
 
 ### Error Notification Auto-Email Setup
- 
-If you wish for emails to be automatically sent to an administrator if an error occurs when any DataSync job is run enter the administrator’s email address and check the box check the box labeled "Auto-email admin email upon error". The same log dataset and administrator email is used for all DataSync jobs (i.e. it is a global setting like the authentication details). For auto-emailing to work you must configure the SMTP settings to point to a server you have access to.
+
+If you wish for emails to be automatically sent to an administrator if an error occurs when any DataSync job is run enter the administrator’s email address and check the box check the box labeled "Auto-email admin upon error". The same log dataset and administrator email is used for all DataSync jobs (i.e. it is a global setting like the authentication details). For auto-emailing to work you must configure the SMTP settings to point to a server you have access to.
 
 **NOTICE:** Just like with the the authentication details, the SMTP password is stored unencrypted in the Registry on Windows platforms and in analogous locations on Mac and Linux.
 
@@ -54,17 +55,22 @@ If you do not know of an existing SMTP you can use you can register a free GMail
 
 After registering your account enter the following details to configure the SMTP settings for your new GMail account:
 
-**Outgoing Mail Server:** smtp.gmail.com  
-**SMTP Port:** 587  
-Check the “Use SSL” box  
-**SSL Port:** 465  
-**SMTP Username:** `[your GMail username]`  
-**SMTP Password:** `[your GMail password]`  
+**Outgoing Mail Server:** smtp.gmail.com
+**SMTP Port:** 587
+Check the “Use SSL” box
+**SSL Port:** 465
+**SMTP Username:** `[your GMail username]`
+**SMTP Password:** `[your GMail password]`
 
 Once you have entered all the SMTP settings, you should test they are valid by clicking “Test SMTP Settings”. If all goes well click “Save” in the preferences window. Finally, test running your job to make sure both the target dataset and the log dataset get properly updated (one new row will be created in the log dataset each time a job is run).
 
 {#chunking-config}<p>&nbsp;</p>
 
-### Chunking Configuration 
+### Chunking Configuration
 
-Chunking is useful when sending large amounts of data over HTTP. In most cases if the CSV/TSV file is very large you should use the replace via FTP method to upload it. However, in some cases it may be necessary or preferable to use chunking over HTTP. The upsert, append, and delete methods (over HTTP) will automatically split the CSV/TSV file into chunks if the file is above the 'Chunking filesize threshold'. It will automatically break the file up into chunks of rows where each chunk will contain the number of rows set by the 'Chunk size'. The default/recommended settings are a 'Chunking filesize threshold' of 10 MB and a 'Chunk size' of 10,000 rows. To modify the defaults go to Edit -> Preferences and modify the numbers.
+Chunking is handled automatically according to the defaults set in Datasync, though in some cases it may be necessary or preferable to adjust the defaults. Two options are avaible:
+
+ - 1) `Chunking filesize threshold`: If the CSV/TSV file size is less than this, the entire file will be sent in one chunk.  The default value is 10 MB.
+ - 2) `Chunk size`:  The number of rows to send in each chunk.  This is only respected if the entire file is not sent in a single chunk because of the `Chunking filesize threshold`.  The default value is 10,000 rows.
+
+ To modify the defaults go to Edit -> Preferences and modify the numbers.
