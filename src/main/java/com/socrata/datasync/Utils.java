@@ -6,12 +6,12 @@ import com.socrata.datasync.config.controlfile.FileTypeControl;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,6 +30,10 @@ public class Utils {
         if (i > 0)
             extension = file.substring(i+1).toLowerCase();
         return extension;
+    }
+
+    public static String getFilename(String path) {
+        return Paths.get(path).getFileName().toString();
     }
 
     /**

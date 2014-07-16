@@ -38,10 +38,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 public class IntegrationJob extends Job {
+
+    static AtomicInteger jobCounter = new AtomicInteger(0);
+    int jobNum = jobCounter.getAndIncrement();
+    private String defaultJobName = "Unsaved Standard Job" + " (" + jobNum + ")";
 
     // to upload entire file as a single chunk (numRowsPerChunk == 0)
     private static final int UPLOAD_SINGLE_CHUNK = 0;
@@ -196,6 +201,7 @@ public class IntegrationJob extends Job {
     @JsonProperty("publishViaDi2Http")
     public void setPublishViaDi2Http(boolean newPublishViaDi2Http) { publishViaDi2Http = newPublishViaDi2Http; }
 
+    public String getDefaultJobName() { return defaultJobName; }
 
     /**
      * Checks that the command line arguments are sensible

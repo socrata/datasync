@@ -396,7 +396,7 @@ public class IntegrationJobTab implements JobTab {
             newIntegrationJob.writeToFile(selectedJobFileLocation);
 
             // Update job tab title label
-            jobTabTitleLabel.setText(newIntegrationJob.getJobFilename());
+            jobTabTitleLabel.setText(Utils.getFilename(selectedJobFileLocation));
 
             // Update the textfield with new command
             if(updateJobCommandTextField) {

@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.collect.ImmutableMap;
 import com.socrata.api.Soda2Producer;
@@ -37,6 +38,9 @@ public class MetadataJob extends Job {
 	 * Stores a single metadata job that can be opened/run in the GUI
 	 * or in command-line mode.
 	 */
+    static AtomicInteger jobCounter = new AtomicInteger(0);
+    int jobNum = jobCounter.getAndIncrement();
+    private String defaultJobName = "Unsaved Metadata Job" + " (" + jobNum + ")";
     private UserPreferences userPrefs;
 
     private static final int DATASET_ID_LENGTH = 9;
@@ -104,6 +108,8 @@ public class MetadataJob extends Job {
         	throw new IOException(e.toString());
         }
 	}
+
+    public String getDefaultJobName() { return defaultJobName; }
 
     public void configure(CommandLine cmd) {
         //TODO when a metadata job can work from the cmd line, not just a job file

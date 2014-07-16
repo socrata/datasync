@@ -1,5 +1,6 @@
 package com.socrata.datasync.job;
 
+import com.socrata.datasync.Utils;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -10,8 +11,8 @@ import java.io.IOException;
 public abstract class Job {
 
     String pathToSavedJobFile = "";
-    String defaultJobName = "";
 
+    public abstract String getDefaultJobName();
     public abstract boolean validateArgs(CommandLine cmd);
     public abstract void configure(CommandLine cmd);
     public abstract JobStatus run() throws IOException;
@@ -29,11 +30,9 @@ public abstract class Job {
         return pathToSavedJobFile;
     }
 
-    // TODO: why are we creating the file, just to throw it away?
     public String getJobFilename() {
-        if(StringUtils.isBlank(pathToSavedJobFile)) {
-            return defaultJobName;
-        }
-        return new File(pathToSavedJobFile).getName();
+        return StringUtils.isBlank(pathToSavedJobFile) ? getDefaultJobName() : Utils.getFilename(pathToSavedJobFile);
     }
+
+
 }

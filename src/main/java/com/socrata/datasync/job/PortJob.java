@@ -19,10 +19,14 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 public class PortJob extends Job {
+    static AtomicInteger jobCounter = new AtomicInteger(0);
+    int jobNum = jobCounter.getAndIncrement();
+    private String defaultJobName = "Unsaved Port Job" + " (" + jobNum + ")";
     private UserPreferences userPrefs;
 
     private PortMethod portMethod = PortMethod.copy_all;
@@ -149,6 +153,7 @@ public class PortJob extends Job {
         this.portResult = portResult;
     }
 
+    public String getDefaultJobName() { return defaultJobName; }
 
     public boolean validateArgs(CommandLine cmd) {
         return PortJobValidity.validateArgs(cmd);

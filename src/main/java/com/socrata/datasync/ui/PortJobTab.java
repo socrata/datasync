@@ -304,13 +304,9 @@ public class PortJobTab implements JobTab {
         }
     }
 
-    public JLabel getJobTabTitleLabel() {
-        return jobTabTitleLabel;
-    }
+    public JLabel getJobTabTitleLabel() { return jobTabTitleLabel; }
 
-    public String getJobFileLocation() {
-        return jobFileLocation;
-    }
+    public String getJobFileLocation() { return jobFileLocation; }
 
     /**
      * Returns the URI to the sink dataset based on the form text fields

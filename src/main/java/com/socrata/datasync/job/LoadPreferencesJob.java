@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.util.prefs.BackingStoreException;
 
 public class LoadPreferencesJob extends Job {
+    private static final String defaultJobName = "Load Preferences Job";
+
     private UserPreferences userPrefs;
     private CommandLineOptions options = new CommandLineOptions();
 
@@ -19,6 +21,8 @@ public class LoadPreferencesJob extends Job {
     public LoadPreferencesJob(UserPreferences userPrefs) {
         this.userPrefs = userPrefs;
     }
+
+    public String getDefaultJobName() { return defaultJobName; }
 
     public boolean validateArgs(CommandLine cmd){
         if(cmd.getOptionValue(options.CONFIG_FLAG) == null) {
