@@ -209,7 +209,7 @@ public class DeltaImporter2Publisher {
                 return mapper.readValue(response.getEntity().getContent(), Version.class).maxBlockSize;
             } catch (Exception e) {
                 retryCount += 1;
-                if(retryCount == 5) {
+                if(retryCount == httpRetries) {
                     // The next step will probably fail too if we can't even hit DI's version service,
                     // but might as well soldier on regardless.
                     System.out.println("Unable to detect chunk size; using " + defaultChunkSize);
@@ -253,7 +253,8 @@ public class DeltaImporter2Publisher {
                     }
                 }
             } while (status != HttpStatus.SC_CREATED && retries < httpRetries);
-            if (retries == 5) throw new HttpException(statusLine.toString());
+            //We hit the max number of retries without success and should throw an exception accordingly.
+            if (retries == httpRetries) throw new HttpException(statusLine.toString());
             System.out.println("\tUploaded " + bytesRead + " bytes");
         }
         return blobIds;
