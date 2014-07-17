@@ -75,7 +75,7 @@ public class IntegrationJobTab implements JobTab {
     private static final String RUN_COMMAND_TIP_TEXT = "<html><body style='width: 300px'>After saving the job this field will be populated with a command-line command that can be used to run the job." +
             " This command can be input into tools such as the Windows Task Scheduler or ETL tools to run the job automatically.</body></html>";
     public static final String CONTAINS_A_HEADER_ROW_CHECKBOX_TEXT = "File to publish contains a header row";
-    public static final String PUBLISH_VIA_SODA_RADIO_TEXT = "SODA2 (legacy)";
+    public static final String PUBLISH_VIA_SODA_RADIO_TEXT = "SODA2";
     public static final String PUBLISH_VIA_FTP_RADIO_TEXT = "FTP";
     public static final String PUBLISH_VIA_HTTP_RADIO_TEXT = "HTTP";
     public static final String COPY_TO_CLIPBOARD_BUTTON_TEXT = "Copy to clipboard";
