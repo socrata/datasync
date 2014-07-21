@@ -15,17 +15,12 @@ import com.socrata.datasync.job.MetadataJob;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 
-import com.socrata.exceptions.LongRunningQueryException;
-import com.socrata.exceptions.SodaError;
-
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class SimpleIntegrationWizard {
 	/**
@@ -209,13 +204,7 @@ public class SimpleIntegrationWizard {
 	    tabPanel.setOpaque(false);
 
 	    // Create a JButton for the close tab button
-	    JButton closeTabButton = new JButton("[X]");
-	    // TODO make close button an icon rather than [X]
-	    //closeTabButton.setOpaque(false);
-	    // Configure icon and rollover icon for button
-	    //closeTabButton.setRolloverIcon(CLOSE_TAB_ICON);
-	    //closeTabButton.setRolloverEnabled(true);
-	    //closeTabButton.setIcon(RGBGrayFilter.getDisabledIcon(closeTabButton, CLOSE_TAB_ICON));
+	    JButton closeTabButton = new AwesomeButton("cross41");
 	    closeTabButton.setBorder(null);
 	    closeTabButton.setFocusable(false);
 
@@ -448,11 +437,8 @@ public class SimpleIntegrationWizard {
 		runJobItem.setAccelerator(KeyStroke.getKeyStroke(
 			KeyEvent.VK_R, ActionEvent.CTRL_MASK));
 		fileMenu.add(runJobItem);
-
-		JMenu editMenu = new JMenu("Edit");
-		menuBar.add(editMenu);
-		JMenuItem prefsItem = new JMenuItem("Preferences");
-		editMenu.add(prefsItem);
+      JMenuItem prefsItem = new JMenuItem("Preferences");
+      fileMenu.add(prefsItem);
 
         JMenu helpMenu = new JMenu("Help");
         menuBar.add(helpMenu);

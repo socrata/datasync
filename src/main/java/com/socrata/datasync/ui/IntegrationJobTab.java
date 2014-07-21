@@ -126,7 +126,7 @@ public class IntegrationJobTab implements JobTab {
 
     private void addControlFileFieldToJobPanel() {
         controlFileLabelContainer = UIUtility.generateLabelWithHelpBubble(
-                "Control file", CONTROL_FILE_TIP_TEXT, HELP_ICON_TOP_PADDING);
+                "Control file:", CONTROL_FILE_TIP_TEXT, HELP_ICON_TOP_PADDING);
         jobPanel.add(controlFileLabelContainer);
 
         controlFileSelectorContainer = new JPanel(FLOW_RIGHT);
@@ -151,7 +151,7 @@ public class IntegrationJobTab implements JobTab {
 
     private void addRunCommandFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                "Command to execute with scheduler", RUN_COMMAND_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                "Command:", RUN_COMMAND_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel runCommandTextFieldContainer = new JPanel(FLOW_RIGHT);
         runCommandTextField = new JTextField(DEFAULT_RUN_JOB_COMMAND);
         runCommandTextField.setPreferredSize(new Dimension(
@@ -167,7 +167,7 @@ public class IntegrationJobTab implements JobTab {
 
     private void addPublishMethodFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                "Publish method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                "Publish method:", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel publishMethodTextFieldContainer = new JPanel(FLOW_RIGHT);
         publishMethodComboBox = new JComboBox();
         for(PublishMethod method : PublishMethod.values()) {
@@ -208,7 +208,7 @@ public class IntegrationJobTab implements JobTab {
 
     private void addDatasetIdFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                "Dataset ID", DATASET_ID_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                "Dataset ID:", DATASET_ID_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel datasetIDTextFieldContainer = new JPanel(FLOW_RIGHT);
         datasetIDTextField = new JTextField();
         datasetIDTextField.setPreferredSize(new Dimension(
@@ -225,7 +225,7 @@ public class IntegrationJobTab implements JobTab {
 
     private void addFileToPublishFieldToJobPanel() {
         jobPanel.add(
-                UIUtility.generateLabelWithHelpBubble("File to publish", FILE_TO_PUBLISH_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                UIUtility.generateLabelWithHelpBubble("Upload File:", FILE_TO_PUBLISH_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel fileSelectorContainer = new JPanel(FLOW_RIGHT);
         fileToPublishTextField = new JTextField();
         fileToPublishTextField.setPreferredSize(new Dimension(

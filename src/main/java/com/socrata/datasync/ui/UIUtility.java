@@ -16,7 +16,6 @@ import java.awt.datatransfer.StringSelection;
  * Date: 11/27/13
  */
 public class UIUtility {
-    final static ImageIcon helpIcon = new ImageIcon(UIUtility.class.getResource("/help.png"));
     final static BalloonTipStyle helpBubbleStyle = new ToolTipBalloonStyle(Color.LIGHT_GRAY, Color.BLUE);
     final static int HELP_ICON_LEFT_PADDING = 5;
     final static int HELP_ICON_TOP_PADDING_DEFAULT = 0;
@@ -30,9 +29,9 @@ public class UIUtility {
     }
 
     public static JPanel generateLabelWithHelpBubble(String labelText, String helpBubbleText, int topOffset) {
-        JPanel labelContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, HELP_ICON_LEFT_PADDING, topOffset));
+        JPanel labelContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT, HELP_ICON_LEFT_PADDING, topOffset));
         labelContainer.add(new JLabel(labelText));
-        JLabel chunkSizeHelp = new JLabel(helpIcon);
+        JLabel chunkSizeHelp = new AwesomeLabel("question22");
         BalloonTip chunkSizeTip = new BalloonTip(chunkSizeHelp, helpBubbleText, helpBubbleStyle, false);
         ToolTipUtils.balloonToToolTip(chunkSizeTip, 100, 100000);
         labelContainer.add(chunkSizeHelp);
@@ -40,7 +39,7 @@ public class UIUtility {
     }
 
     public static JLabel generateHelpBubble(String helpBubbleText) {
-        JLabel chunkSizeHelp = new JLabel(helpIcon);
+        JLabel chunkSizeHelp = new AwesomeLabel("question22");
         BalloonTip chunkSizeTip = new BalloonTip(chunkSizeHelp, helpBubbleText, helpBubbleStyle, false);
         ToolTipUtils.balloonToToolTip(chunkSizeTip, 100, 100000);
         return chunkSizeHelp;
