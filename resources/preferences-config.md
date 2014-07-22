@@ -70,7 +70,14 @@ Once you have entered all the SMTP settings, you should test they are valid by c
 
 Chunking is handled automatically according to the defaults set in Datasync, though in some cases it may be necessary or preferable to adjust the defaults. Two options are avaible:
 
- - 1) `Chunking filesize threshold`: If the CSV/TSV file size is less than this, the entire file will be sent in one chunk.  The default value is 10 MB.
- - 2) `Chunk size`:  The number of rows to send in each chunk.  This is only respected if the entire file is not sent in a single chunk because of the `Chunking filesize threshold`.  The default value is 10,000 rows.
+  - `Chunking filesize threshold`: If the CSV/TSV file size is less than this, the entire file will be sent in one chunk.  The default value is 10 MB.
+  - `Chunk size`:  The number of rows to send in each chunk.  This is only respected if the entire file is not sent in a single chunk because of the `Chunking filesize threshold`.  The default value is 10,000 rows.
 
  To modify the defaults go to Edit -> Preferences and modify the numbers.
+
+
+{#proxy-config}
+### Proxy Configuration
+
+If you must operate behind a proxy server, DataSync can be configured to use an authenticated or unauthenticated server. Please note, this option is only available for [Standard replace jobs]({{ site.root }}/guides/setup-standard-job.html) and only if choosing
+

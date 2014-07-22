@@ -12,43 +12,51 @@ Enter your authentication details at the bottom left of DataSync (domain, userna
 **NOTICE:** DataSync stores the authentication details unencrypted in the Registry on Windows platforms (in the following location: HKEY_CURRENT_USER\Software\JavaSoft\Prefs) and in analogous locations on Mac and Linux. If you are concerned about this as a potential security issue you may want to look into alternative publishing methods. Please contact support if you have questions.
 
 
-### Step 2: Obtain the Dataset ID
+### Step 2: Enter job details
+
+Upon opening the program a new 'Untitled job' appears in a tab. You can have any number of jobs open and each will be in their own tab.
+
+** Choose the CSV or TSV File to Publish **
+
+Select the CSV or TSV file on your local machine or networked folder that you wish to publish by clicking the “Browse...” button and browsing to find the CSV or TSV file.
+
+**Does the CSV/TSV Have a Header Row ?**
+If so, keep "File to publish contains header row" checked if the CSV/TSV contains a header row. The header row should contain the identifiers of the columns (a.k.a. API Field Names) in the same order as the Socrata dataset you are publishing to. However, for certain update operations you can supply a subset of the columns or order the columns differently than the order in the dataset (more details below). To get a list of column identifiers for a dataset click the 'Get Column IDs' button after entering the Dataset ID.
+<br><br>
+If not, uncheck "File to publish contains header row". In this case the order of the columns in the CSV/TSV must exactly match that of Socrata dataset.
+
+
+** Obtain and Enter the Dataset ID ... **
+
 You will need the identifier of the dataset (dataset ID) you wish to publish to. To obtain the dataset ID navigate to the dataset in your web browser and in the address bar the dataset ID is the code at the end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
 
 https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw
 The dataset ID is: m985-ywaw
 
-### Step 3: Enter job details
+Enter your dataset's ID into the Data
 
-Upon opening the program a new 'Untitled job' appears in a tab. You can have any number of jobs open and each will be in their own tab. Select the CSV or TSV file on your local machine or networked folder that you wish to publish by clicking the “Browse...” button and browsing to find the CSV or TSV file.
 
-<div class="well">
-<strong>If the CSV/TSV Has a Header Row...</strong><br>
-Keep "File to publish contains header row" checked if the CSV/TSV contains a header row. The header row should contain the identifiers of the columns (a.k.a. API Field Names) in the same order as the Socrata dataset you are publishing to. However, for certain update operations you can supply a subset of the columns or order the columns differently than the order in the dataset (more details below). To get a list of column identifiers for a dataset click the 'Get Column IDs' button after entering the Dataset ID.
-<br><br>
-<strong>If the CSV/TSV Does NOT Have a Header Row...</strong><br>
-If the TSV/CSV file does not contain a header row then uncheck "File to publish contains header row". In this case the order of the columns in the CSV/TSV must exactly match that of Socrata dataset.
-</div>
+** Choose the Publish Method ... **
 
-Next, enter the dataset ID from Step 4. Select the 'Publish method' by selecting one of the following options:
+Select the 'Publish method' by selecting one of the following options:
 
-- replace: simply replaces the dataset with the data in the CSV/TSV file to publish which can be performed in one of three ways:
-    - 1) via HTTP using Delta-importer-2 (keep 'HTTP' checked): This is the preferred option because it
-      - a) minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
-      - b) it can reliably handle very large files (1 million+ rows)
-      - c) it allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/ftp-control-config.html)
-    * This option is available only in DataSync versions 1.5 and higher. *
-    - 2) via FTP: This functions in much the same way as the HTTP variant, with 2 notable differences:
-      - a) the entire CSV/TSV file will transfered
-      - b) if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)
-    - 3) via Soda2: *Deprecated.*  This method is not recommended because of its inefficiencies and file size limitations (< 5 MB).  This does operate over HTTP.
+- `replace`: simply replaces the dataset with the data in the CSV/TSV file to publish which can be performed in one of three ways:
+    1) via HTTP using Delta-importer-2 (keep 'HTTP' checked): This is the preferred option because it
+      a) minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
+      b) it can reliably handle very large files (1 million+ rows)
+      c) it allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/ftp-control-config.html)
+    *This option is available only in DataSync versions 1.5 and higher.*
+    2) via FTP: This functions in much the same way as the HTTP variant, with 2 notable differences:
+      a) the entire CSV/TSV file will transfered
+      b) if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)
+    3) via Soda2: *Deprecated.*  This method is not recommended because of its inefficiencies and file size limitations (< 5 MB).  This does operate over HTTP.
 
-- upsert: updates any rows that already exist and appends any new rows. This option is ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.
+- `upsert`: updates any rows that already exist and appends any new rows. This option is ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.
 *IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then all rows in the CSV/TSV file will be appended to the dataset. [Learn more about Row Identifiers and how to establish them](http://dev.socrata.com/docs/row-identifiers.html)*
 
-- append: adds all rows in the CSV/TSV as new rows. The append method cannot be used if a Row Identifier has been established on the dataset.
+- `append`: adds all rows in the CSV/TSV as new rows. The append method cannot be used if a Row Identifier has been established on the dataset.
 
-- delete: delete all rows matching Row Identifiers given in CSV/TSV file. The CSV/TSV should only contain a single column listing the Row Identifiers to delete. *IMPORTANT NOTE: delete will not work unless the dataset has a Row Identifier established.*
+- `delete`: delete all rows matching Row Identifiers given in CSV/TSV file. The CSV/TSV should only contain a single column listing the Row Identifiers to delete. *IMPORTANT NOTE: delete will not work unless the dataset has a Row Identifier established.*
 
 <div class="well">
 If you are using replace (via Soda2) or upsert or append and your TSV/CSV has a header row then you do not need to supply all columns in the CSV/TSV and the order of columns does not need to match that of the Socrata dataset.
@@ -90,5 +98,3 @@ To automate updating a dataset you must schedule the DataSync job to run automat
 ### Additional configuration
 
 To take advantage of job logging, automatic email error notification, and file chunking (for publishing large files) in DataSync refer to [Preferences configuration documentation]({{ site.root }}/resources/preferences-config.html).
-
-
