@@ -43,11 +43,10 @@ Enter your dataset's ID into the Data
 Select the 'Publish method' by selecting one of the following options:
 
 - `replace`: simply replaces the dataset with the data in the CSV/TSV file to publish which can be performed in one of three ways:
-    1. via HTTP using Delta-importer-2 (keep 'HTTP' checked): This is the preferred option because it
+    1. via HTTP using Delta-importer-2 (keep 'HTTP' checked): *This option is available only in DataSync versions 1.5 and higher.*  This is the preferred option because it
       - it minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
       - it can reliably handle very large files (1 million+ rows)
       - it allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/ftp-control-config.html)
-      *This option is available only in DataSync versions 1.5 and higher.*
     2. via FTP: This functions in much the same way as the HTTP variant, with 2 notable differences:
       - the entire CSV/TSV file will transfered
       - if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)
