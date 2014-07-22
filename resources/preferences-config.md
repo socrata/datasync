@@ -79,5 +79,15 @@ Chunking is handled automatically according to the defaults set in Datasync, tho
 {#proxy-config}
 ### Proxy Configuration
 
-If you must operate behind a proxy server, DataSync can be configured to use an authenticated or unauthenticated server. Please note, this option is only available for [Standard replace jobs]({{ site.root }}/guides/setup-standard-job.html) and only if choosing
+If you must operate behind a proxy server, DataSync can be configured to use an authenticated or unauthenticated server. Please note, this option is only available for [Standard replace jobs]({{ site.root }}/guides/setup-standard-job.html) and only if choosing 'via HTTP using Delta-importer-2'.  At minimum, the following options will need to be set:
+
+  - `Proxy Host`: The fully qualified host name of the proxy server, e.g. https://myProxyServer.com.
+  - `Proxy Port`:  The port that the proxy server listens on, e.g. 8080
+
+If the proxy server is authenticated, you may also set:
+
+  - `Proxy Username`: The username needed to log into the proxy server.
+  - `Proxy Password`: The password needed to log into the proxy server.
+
+**NOTICE:** DataSync stores the authentication details unencrypted in the Registry on Windows platforms (in the following location: HKEY_CURRENT_USER\Software\JavaSoft\Prefs) and in analogous locations on Mac and Linux. If you are concerned about this as a potential security issue you may instead [run the job headlessly]({{ site.root }}/guides/setup-standard-job-headless.html), in order to pass the needed credentials in via the commandline.
 
