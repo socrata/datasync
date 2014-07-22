@@ -13,6 +13,7 @@ Please refer to Step 1 in the [documentation for setting up a Standard job]({{ s
 You will need the dataset ID of the source dataset that you will be copying from. To obtain the dataset ID navigate to the dataset in your web browser and in the address bar the dataset ID is the code at the end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
 
 https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw
+
 The dataset ID is: m985-ywaw
 
 If you are copying data from one dataset to another already existing dataset, you will likewise need the dataset ID of the destination dataset.

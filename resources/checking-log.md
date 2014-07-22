@@ -5,17 +5,16 @@ bodyclass: homepage
 ---
 
 ### Contents
-- [1. Via FTP](#ftp-logs)
-    - [Header row / column list](#header-row)
-    - [Date/time formatting](#date-time)
-    - [Location column and geocoding configuration](#location-geocoding)
-    - [Ignoring columns](#ignore-columns)
-    - [Other options](#other-options)
-- [2. Via HTTP](#http-logs)
+- [Via FTP](#ftp-logs)
+    - [Connecting to the FTP server](#connecting-ftp)
+    - [Checking the logs and downloading CSV "snapshots"](#ftp-check-logs)
+- [Via HTTP](#http-logs)
 
 {#ftp-logs}<p>&nbsp;</p>
 
 ### Connecting to the logs via FTP
+
+{#connecting-ftp}<p>&nbsp;</p>
 
 #### Connecting to the FTP server
 You can use [Filezilla](https://filezilla-project.org/) or any other FTP client that supports FTPS to connect to the FTP server.
@@ -38,6 +37,7 @@ Save the connection and press "Connect"
 
 If you only have permission to one domain, you will be dropped into the directory for that domain. You should see the directories named with the dataset ID (e.g. b2fd-cjk2) of any dataset you have updated using DataSync replace via FTP. If you have permission to multiple domains, you will see them as subdirectories.
 
+{#ftp-check-logs}<p>&nbsp;</p>
 #### Checking the logs and downloading CSV "snapshots"
 
 Inside each dataset identifier directory there should be the following files/directories:
@@ -50,7 +50,7 @@ You can download log.txt to see the logging information for the given dataset. W
 
 
 
-{#ftp-logs}<p>&nbsp;</p>
+{#http-logs}<p>&nbsp;</p>
 
 ### Connecting to the logs via HTTP
 

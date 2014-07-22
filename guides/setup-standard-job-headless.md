@@ -26,7 +26,7 @@ The configuration settings are stored in a json file, e.g. config.json, within a
 ```
 
 | Option    | Requirement | Explanation
-| ------------- | ------------------------------
+| ------------- | ------------------------------ | -------------
 | domain | required | The scheme and root domain of your data site.  (e.g. https://data.cityofchicago.org)
 | username | required | Your Socrata username. This user must have a Publisher role or Owner rights to at least one dataset. We recommend creating a dedicated Socrata account (with these permissions) to use with DataSync rather than tie DataSync to a particular person’s primary account. (e.g. datasyncUser@cityofchicago.org)
 | password | required | The Socrata password of the user given by `username`.  !!!!!!!  Dear me, what to say here?
@@ -49,7 +49,7 @@ The configuration settings are stored in a json file, e.g. config.json, within a
 
 There are two ways to establish the “global” DataSync configuration:
 
--**1) Load configuration from a .json file when running each job**
+1. **Load configuration from a .json file when running each job**
 This method of loading configuration requires supplying a flag pointing DataSync to config.json each time you run a job in headless/command-line mode. For example, you would run:
 
 ```
@@ -58,7 +58,7 @@ java -jar datasync.jar -c config.json <OTHER FLAGS> ...
 
 where `<OTHER FLAGS>` are those discussed below
 
--**2) Load configuration into the DataSync "memory"**
+2.**Load configuration into the DataSync "memory"**
 If you load configuration this way you only need to load the configuration once and DataSync will remember the configuration (instead of passing config.json as a flag with every job). After loading configuration settings they will be saved and used to connect to the publisher API for every job you run using DataSync. To load configuration into DataSync “memory” run this command once:
 
 ```
@@ -93,26 +93,72 @@ To run a standard job that uses global configuration previously saved in DataSyn
 Explanation of flags:
 `*` = required flag
 
-<table><thead>
-<tr>
-<th>Flag - Short Name</th>
-<th>Flag - Long Name</th>
-<th>Example Values</th>
-<th>Description</th>
-</tr>
-</thead><tbody>
-<tr><td style='text-align: left;'><code>-c</code></td><td style='text-align: left;'><code>--config</code></td><td style='text-align: left;'>/Users/home/config.json</td><td style='text-align: left;'>Points to the config.json file you created in Step 3 or if not supplied configuration in DataSync &#8216;memory&#8217; is used</td>
-</tr><tr><td style='text-align: left;'><code>-f *</code></td><td style='text-align: left;'><code>--fileToPublish</code></td><td style='text-align: left;'>/Users/home/data_file.csv</td><td style='text-align: left;'>CSV or TSV file to publish</td>
-</tr><tr><td style='text-align: left;'><code>-h *</code></td><td style='text-align: left;'><code>--fileToPublishHasHeaderRow</code></td><td style='text-align: left;'>true</td><td style='text-align: left;'>Set this to <code>true</code> if the file to publish has a header row, otherwise set it to <code>false</code> (<code>true</code> and <code>false</code> are the only acceptable values)</td>
-</tr><tr><td style='text-align: left;'><code>-i *</code></td><td style='text-align: left;'><code>--datasetID</code></td><td style='text-align: left;'>m985-ywaw</td><td style='text-align: left;'>The identifier of the dataset to publish to obtained in Step 2</td>
-</tr><tr><td style='text-align: left;'><code>-m *</code></td><td style='text-align: left;'><code>--publishMethod</code></td><td style='text-align: left;'>replace</td><td style='text-align: left;'>Specifies the publish method to use (<code>replace</code>, <code>upsert</code>, <code>append</code>, and <code>delete</code> are the only acceptable values, for details on the publishing methods refer to Step 3 of the <a href='http://socrata.github.io/datasync/guides/setup-standard-job.html'>Setup a Standard Job (GUI)</a></td>
-</tr><tr><td style='text-align: left;'><code>-ph</code></td><td style='text-align: left;'><code>--publishViaHttp</code></td><td style='text-align: left;'>true</td><td style='text-align: left;'>Set this to <code>true</code> to use replace-via-http, which is the preferred update method because is highly efficient and can reliably handle very large files (1 million+ rows). If <code>false</code> and <code>publishViaFTP</code> is <code>false</code>, perform the dataset update using Soda2. (<code>false</code> is the default value)</td>(<code>false</code> is the default value)</td>
-</tr><tr><td style='text-align: left;'><code>-pf</code></td><td style='text-align: left;'><code>--publishViaFTP</code></td><td style='text-align: left;'>true</td><td style='text-align: left;'>Set this to <code>true</code> to use FTP (currently only works for <code>replace</code>). If <code>false</code> and <code>publishViaHttp</code> is <code>false</code>,perform the dataset update using Soda2. (<code>false</code> is the default value)</td>
-</tr><tr><td style='text-align: left;'><code>-cf</code></td><td style='text-align: left;'><code>--pathToControlFile</code></td><td style='text-align: left;'>/Users/home/control.json</td><td style='text-align: left;'>Specifies a Control file that configures &#8216;replace via HTTP&#8217; and &#8216;replace via FTP&#8217; jobs, and therefore should only be set if one of <code>-ph</code>,<code>--publishViaHttp</code> or <code>-pf</code>,<code>--publishViaFTP</code> is set to <code>true</code>. When this flag is set the <em><code>-h</code>,<code>--fileToPublishHasHeaderRow</code></em> and <em><code>-m</code>,<code>--publishMethod</code></em> flags are overridden by the settings in the supplied Control.json file. Learn how to <a href='http://socrata.github.io/datasync/resources/ftp-control-config.html'>configure the FTP control file</a></td>
-</tr>
-<tr><td style='text-align: left;'><code>-t</code></td><td style='text-align: left;'><code>--jobType</code></td><td style='text-align: left;'>LoadPreferences</td><td style='text-align: left;'>Specifies the type of job to run (the default is &#8216;IntegrationJob&#8217;, a Standard  job so in this case this flag is optional)</td>
-</tr>
-</tbody></table>
+<table>
+  <thead>
+    <tr>
+      <th>Flag - Short Name</th>
+      <th>Flag - Long Name</th>
+      <th>Example Values</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style='text-align: left;'><code>-c</code></td>
+      <td style='text-align: left;'><code>--config</code></td>
+      <td style='text-align: left;'>/Users/home/config.json</td>
+      <td style='text-align: left;'>Points to the config.json file you created in Step 3 or if not supplied configuration in DataSync &#8216;memory&#8217; is used</td>
+    </tr>
+    <tr>
+      <td style='text-align: left;'><code>-f *</code></td>
+      <td style='text-align: left;'><code>--fileToPublish</code></td>
+      <td style='text-align: left;'>/Users/home/data_file.csv</td>
+      <td style='text-align: left;'>CSV or TSV file to publish</td>
+    </tr>
+    <tr>
+      <td style='text-align: left;'><code>-h *</code></td>
+      <td style='text-align: left;'><code>--fileToPublishHasHeaderRow</code></td>
+      <td style='text-align: left;'>true</td>
+      <td style='text-align: left;'>Set this to <code>true</code> if the file to publish has a header row, otherwise set it to <code>false</code> (<code>true</code> and <code>false</code> are the only acceptable values)</td>
+    </tr>
+    <tr>
+      <td style='text-align: left;'><code>-i *</code></td>
+      <td style='text-align: left;'><code>--datasetID</code></td>
+      <td style='text-align: left;'>m985-ywaw</td>
+      <td style='text-align: left;'>The identifier of the dataset to publish to obtained in Step 2</td>
+    </tr>
+    <tr>
+      <td style='text-align: left;'><code>-m *</code></td>
+      <td style='text-align: left;'><code>--publishMethod</code></td>
+      <td style='text-align: left;'>replace</td>
+      <td style='text-align: left;'>Specifies the publish method to use (<code>replace</code>, <code>upsert</code>, <code>append</code>, and <code>delete</code> are the only acceptable values, for details on the publishing methods refer to Step 3 of the <a href='http://socrata.github.io/datasync/guides/setup-standard-job.html'>Setup a Standard Job (GUI)</a></td>
+    </tr>
+    <tr>
+      <td style='text-align: left;'><code>-ph</code></td>
+      <td style='text-align: left;'><code>--publishViaHttp</code></td>
+      <td style='text-align: left;'>true</td>
+      <td style='text-align: left;'>Set this to <code>true</code> to use replace-via-http, which is the preferred update method because is highly efficient and can reliably handle very large files (1 million+ rows). If <code>false</code> and <code>publishViaFTP</code> is <code>false</code>, perform the dataset update using Soda2. (<code>false</code> is the default value)</td>(<code>false</code> is the default value)</td>
+    </tr>
+    <tr>
+      <td style='text-align: left;'><code>-pf</code></td>
+      <td style='text-align: left;'><code>--publishViaFTP</code></td>
+      <td style='text-align: left;'>true</td>
+      <td style='text-align: left;'>Set this to <code>true</code> to use FTP (currently only works for <code>replace</code>). If <code>false</code> and <code>publishViaHttp</code> is <code>false</code>,perform the dataset update using Soda2. (<code>false</code> is the default value)</td>
+    </tr>
+    <tr>
+      <td style='text-align: left;'><code>-cf</code></td>
+      <td style='text-align: left;'><code>--pathToControlFile</code></td>
+      <td style='text-align: left;'>/Users/home/control.json</td>
+      <td style='text-align: left;'>Specifies a Control file that configures &#8216;replace via HTTP&#8217; and &#8216;replace via FTP&#8217; jobs, and therefore should only be set if one of <code>-ph</code>,<code>--publishViaHttp</code> or <code>-pf</code>,<code>--publishViaFTP</code> is set to <code>true</code>. When this flag is set the <em><code>-h</code>,<code>--fileToPublishHasHeaderRow</code></em> and <em><code>-m</code>,<code>--publishMethod</code></em> flags are overridden by the settings in the supplied Control.json file. Learn how to <a href='http://socrata.github.io/datasync/resources/ftp-control-config.html'>configure the FTP control file</a></td>
+    </tr>
+    <tr>
+      <td style='text-align: left;'><code>-t</code></td>
+      <td style='text-align: left;'><code>--jobType</code></td>
+      <td style='text-align: left;'>LoadPreferences</td>
+      <td style='text-align: left;'>Specifies the type of job to run (the default is &#8216;IntegrationJob&#8217;, a Standard  job so in this case this flag is optional)</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Step 6: Running a job
 

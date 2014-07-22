@@ -44,21 +44,25 @@ Select the 'Publish method' by selecting one of the following options:
 
 - `replace`: simply replaces the dataset with the data in the CSV/TSV file to publish which can be performed in one of three ways:
     1. via HTTP using Delta-importer-2 (keep 'HTTP' checked): This is the preferred option because it
-      a) minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
-      b) it can reliably handle very large files (1 million+ rows)
-      c) it allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/ftp-control-config.html)
+      - it minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
+      - it can reliably handle very large files (1 million+ rows)
+      - it allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/ftp-control-config.html)
+
     *This option is available only in DataSync versions 1.5 and higher.*
     2. via FTP: This functions in much the same way as the HTTP variant, with 2 notable differences:
-      a) the entire CSV/TSV file will transfered
-      b) if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)
+      - the entire CSV/TSV file will transfered
+      - if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)
     3. via Soda2: *Deprecated.*  This method is not recommended because of its inefficiencies and file size limitations (< 5 MB).  This does operate over HTTP.
 
 - `upsert`: updates any rows that already exist and appends any new rows. This option is ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.
+
 *IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then all rows in the CSV/TSV file will be appended to the dataset. [Learn more about Row Identifiers and how to establish them](http://dev.socrata.com/docs/row-identifiers.html)*
 
 - `append`: adds all rows in the CSV/TSV as new rows. The append method cannot be used if a Row Identifier has been established on the dataset.
 
-- `delete`: delete all rows matching Row Identifiers given in CSV/TSV file. The CSV/TSV should only contain a single column listing the Row Identifiers to delete. *IMPORTANT NOTE: delete will not work unless the dataset has a Row Identifier established.*
+- `delete`: delete all rows matching Row Identifiers given in CSV/TSV file. The CSV/TSV should only contain a single column listing the Row Identifiers to delete.
+
+*IMPORTANT NOTE: delete will not work unless the dataset has a Row Identifier established.*
 
 <div class="well">
 If you are using replace (via Soda2) or upsert or append and your TSV/CSV has a header row then you do not need to supply all columns in the CSV/TSV and the order of columns does not need to match that of the Socrata dataset.

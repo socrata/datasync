@@ -11,7 +11,7 @@ No data is upserted until all the following conditions are met.
   - If the dataset does not have a row id, then all fields in the dataset must be provided in the CSV.
   - All columns specified in the header must be present in the dataset.
   - All values can be interpreted as the appropriate type.
-  - If `syntheticLocation` is provided, the name of the column that is constructed must not conflict with one already in the CSV.  You can use the `ignoreColumns` option to ignore the one in the CSV.
+  - If `syntheticLocation` is provided in the [control file]({{ site.root }}/resources/ftp-control-config.html), the name of the column that is constructed must not conflict with one already in the CSV.  You can use the `ignoreColumns` option to ignore the one in the CSV.
 
   #### Datatype Restrictions
 
@@ -26,15 +26,7 @@ No data is upserted until all the following conditions are met.
 | Percent | The percent symbol must not be present. 45% should be represented as 45 not 0.45.
 | Date & Time | If the `floatingTimestampFormat` is "ISO8601" data must be in the following format:  yyyy-mm-ddTHH:mm:ss
 | Date & Time (with timezone) | If the `fixedTimestampFormat` is "ISO8601" data must be in the following format:  yyyy-mm-ddTHH:mm:ssz, where "z" is a four-digit-plus-sign offset from UTC (e.g., "-0800") or "Z" (which is  a synonym for "+0000").
-| Location | A human-readable US address with a (latitude, longitude) pair.  Example (Note that this must be all a single CSV value, and therefore quoted appropriately):
-
-123 Main St.
-Mytown, YN 12345
-(-123.4324235, 33.234546324)
-
-The address, city, state, zip, and coordinate sub-parts are all optional.  The system will guess about breaking it apart into the location value’s constituent parts.  If your data does not include the coordinate pair, the server will attempt to geocode the address, and so `ignoreServerLatLong` should be set to "true" for the column so that the geocoded values do not cause unnecessary replacement of rows.
-
-See also `syntheticLocations` for a possibly more reliable way to construct location columns.
+| Location | A human-readable US address with a (latitude, longitude) pair.  Example (Note that this must be all a single CSV value, and therefore quoted appropriately): "123 Main St. Mytown, YN 12345 (-123.4324235, 33.234546324)". The address, city, state, zip, and coordinate sub-parts are all optional.  The system will guess about breaking it apart into the location value’s constituent parts.  If your data does not include the coordinate pair, the server will attempt to geocode the address, and so `ignoreServerLatLong` should be set to "true" for the column so that the geocoded values do not cause unnecessary replacement of rows. See also `syntheticLocations` for a possibly more reliable way to construct location columns.
 | Website URL | Must be a bare URL, such as http://www.google.com, or in the format 'Google (http://www.google.com)'.
 | Email | Must be in the format foo@foo.com.
 | Checkbox | Either "true" or "false". For data stored in the old backend, missing values are treated as false.

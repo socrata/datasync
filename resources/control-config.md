@@ -5,12 +5,12 @@ bodyclass: homepage
 ---
 
 ### Contents
-- [1. Basic control file setup](#setup-control)
+- [Basic control file setup](#setup-control)
     - [Header row / column list](#header-row)
     - [Date/time formatting](#date-time)
     - [Location column and geocoding configuration](#location-geocoding)
     - [Ignoring columns](#ignore-columns)
-- [2. Complete control file settings](#complete-control)
+- [Complete control file settings](#complete-control)
 
 
 {#setup-control}
@@ -19,7 +19,7 @@ bodyclass: homepage
 <strong>NOTICE:</strong> this guide pertains to using the replace method via FTP or HTTP (and not via Soda2).
 </div>
 
-### 1. Basic control file setup
+### Basic control file setup
 
 The control file is a JSON-formatted file that is used to configure a Standard DataSync job that uses the 'replace via FTP' or 'replace via HTTP' method. Control files are specific to the dataset you are updating.
 
@@ -50,7 +50,7 @@ This guide will describe how to use the different options within the control fil
 
 {#header-row}<p>&nbsp;</p>
 
-### a. Header row/column list
+#### Header row/column list
 
 The `columns` and `skip` options enable configuration of how the columns within the CSV/TSV align with those of the dataset.
 
@@ -81,9 +81,9 @@ If the first line of the CSV/TSV is data (there is no header row), for example y
 
 {#date-time}<p>&nbsp;</p>
 
-### b. Date/time formatting
+#### Date/time formatting
 
-#### Timestamp Format Options
+##### Timestamp Format Options
 
 The `floatingTimestampFormat` and `fixedTimestampFormat` options specify how date/time data is formatted in the CSV/TSV file. `floatingTimestampFormat` applies to ("Date & Time" datatype columns) and `fixedTimestampFormat` functions in the same way but applies to Fixed Timestamps ("Date & Time (with timezone)" datatype columns). If the format does not specify a time zone, the zone may be given via the `timezone` option.  If no zone information is provided, UTC is assumed.
 
@@ -103,7 +103,7 @@ If you want to allow a date with or without a time value (e.g. both "2014-04-22"
 "floatingTimestampFormat" : ["yyyy-MM-dd", "yyyy-MM-dd HH:mm:ss"],
 ```
 
-#### Timezone option
+##### Timezone option
 `timezone` specifies the timezones for FixedTimestamps ("Date & Time (with timezone)" columns). This only has an effect if the timestamp format does not specify a time zone.
 
 You can set this to one of the following:
@@ -112,7 +112,7 @@ You can set this to one of the following:
 
 {#location-geocoding}<p>&nbsp;</p>
 
-### 1c. Location column and geocoding configuration
+#### Location column and geocoding configuration
 
 The `syntheticLocations` option allows configuring a Location datatype column to populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV.
 
@@ -144,7 +144,7 @@ When you provide any combination of location information but do not fill in lati
 
 {#ignore-columns}<p>&nbsp;</p>
 
-### e. Ignoring Columns
+#### Ignoring Columns
 
 The `ignoreColumns` options you to exclude columns within the CSV/TSV.  This may be necessary if the dataset lacks a column within the CSV or if a synthetic location is provided in the CSV, but you would still like it constructed from individual address fields.
 
@@ -153,7 +153,7 @@ The `ignoreColumns` options you to exclude columns within the CSV/TSV.  This may
 
 {#complete-control}<p>&nbsp;</p>
 
-### 2. Complete control file settings
+### Complete control file settings
 
 The control file is comprised of the
 - [Action setting](#action-setting)
@@ -184,39 +184,47 @@ The following are options available to both CSV files or TSV files within the `c
 | separator | Field separator. Typically "," or "\t".
 | quote | Used to quote values which contain the separator character. Separators between quotes will be treated as part of the value. Typical values are "\"" for double-quotes, "'" for single-quotes and "\u0000" for no quote character.
 | escape | Used to specify the escape character. Typically this is "\\", a single backslash. Note that in CSV’s you can always escape a double-quote by doubling it up (e.g. "This is just one "" string.").
-| columns | JSON list of column names. If null then the first line of the csv after any skipped records is used. If specified, it must be an array of strings and must not contain nulls.
-
-Note that the column names, whether provided in “columns” or in the first row of the CSV, must match the API field name, not the display name of the columns.
+| columns | JSON list of column names. If null then the first line of the csv after any skipped records is used. If specified, it must be an array of strings and must not contain nulls. Note that the column names, whether provided in “columns” or in the first row of the CSV, must match the API field name, not the display name of the columns.
 | ignoreColumns | Specifies any columns in the CSV/TSV file that are to be ignored. These must be given as an array of strings and must be present in `columns`.
 | skip | Specifies the number of rows to skip. The first row that will be read is `skip` + 1; whether this is treated as data or a header row depends on how `columns` is set.  If `columns` is null, this row will be treated as the header; otherwise it is treated as data.
 | trimWhitespace | Trims leading and trailing whitespace before inserting the data into the dataset. Note that it also trims quoted values so " Foo" would be converted to "Foo".
 | trimServerWhitespace | Trims leading and trailing whitespace that already exists in the dataset. This flag is generally only necessary if data was previously added to the dataset with whitespace (due to trimWhitespace being false).
 | useSocrataGeocoding | This is relevant only to Location columns and controls how comparisons are made between values in the CSV/TSV file and the data we have stored in our servers.  If you are not providing the latitude and longitude in the synthetic location (e.g. Socrata will geocode the location), set this to "true" to minimize perceived changes to your data. If you are providing the latitude and longitude in the synthetic location, set this to "false".
-| emptyTextIsNull | For old backend datasets, set this to “true”.  The old backend converts empty strings to null and if “false”, every empty string will be viewed as a change to your dataset, slowing down the upsert time considerably.
-
-For new backend datasets, this will affect how data is imported into text fields. If true, then empty text (not whitespace) will be treated as NULL. If false, it will be treated as the empty string.
+| emptyTextIsNull | For old backend datasets, set this to “true”.  The old backend converts empty strings to null and if “false”, every empty string will be viewed as a change to your dataset, slowing down the upsert time considerably. For new backend datasets, this will affect how data is imported into text fields. If true, then empty text (not whitespace) will be treated as NULL. If false, it will be treated as the empty string.
 | floatingTimestampFormat | Specifies how Floating Timestamps (“Date & Time” columns) are interpreted. Typical values are "ISO8601" or "yyyy-MM-dd".  Any [joda-formated string](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html) is acceptable. If you want to allow multiple formats to be accepted, then you can specify a list of values rather than a single value (e.g. ["ISO8601", "MM.dd.yyyy"]).
 | fixedTimestampFormat | Same as floatingTimestampFormat but for Fixed Timestamps (“Date & Time (with timezone)”).  If the format does not specify a time zone, the zone named by the `timezone` field is used.
 | dropUninterpretbleRows | If specified limits the amount of uninterpretable data allowable in each row. (Vaguely speaking these are the values grayed out in the UI). Options are "Never", in which case a job will fail if the CSV/TSV has any uninterpretable values, and "TenPercent", in which case 10% of values can be uninterpretable before the job fails.
 | timezone | Specifies the timezones for FixedTimestamps (“Date & Time (with timezone)” columns).  This only has an effect if the timestamp format does not specify a time zone. Typical values are "UTC" or "US/Pacific".  A list of accepted names is at [http://joda-time.sourceforge.net/timezones.html](http://joda-time.sourceforge.net/timezones.html). *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time).
 | syntheticLocations | Allows transformation of multiple columns into one or more Location columns during insert. See See the [Location column and geocoding configuration](#location-geocoding) section for an example.
-| overrides | A map whose keys are field names, and whose values are objects containing per-column overrides for the `timestampFormat`, `timezone`, `emptyTextIsNull`, `trimWhitespace`, `trimServerWhitespace` and `useSocrataGeocoding` settings.  For example:
+| overrides | A map whose keys are field names, and whose values are objects containing per-column overrides for the `timestampFormat`, `timezone`, `emptyTextIsNull`, `trimWhitespace`, `trimServerWhitespace` and `useSocrataGeocoding` settings.  Note that “timestampFormat” applies to both fixed and floating timestamps. For an example, see below:
 
-"overrides" : {
-  "my_time_column" : {
-    "timestampFormat" : "YYYY-MM-dd HH:mm:ss",
-    "timezone" : "US/Central"
-  },
-  "my_text_column" : {
-    "emptyTextIsNull" : true
-  }
-  "my_location_column" {
-    "useSocrataGeocoding" : false
+
+Example of using column-level overrides:
+
+```json
+{
+  "action" : "Replace",
+  "csv" : {
+    "useSocrataGeocoding" : true,
+    "fixedTimestampFormat" : "ISO8601",
+    "floatingTimestampFormat" : "ISO8601",
+    "timezone" : "UTC",
+    "overrides" : {
+      "my_time_column" : {
+        "timestampFormat" : "YYYY-MM-dd HH:mm:ss",
+        "timezone" : "US/Central"
+      },
+      "my_text_column" : {
+        "emptyTextIsNull" : true
+      }
+      "my_location_column" {
+        "useSocrataGeocoding" : false
+      }
+    }
   }
 }
+```
 
-
-Note that “timestampFormat” applies to both fixed and floating timestamps
 
 
 
