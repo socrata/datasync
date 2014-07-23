@@ -112,7 +112,7 @@ public class SimpleIntegrationWizard {
 		frame = new JFrame(TITLE);
 		frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
 
-        jobTabs = new ArrayList<JobTab>();
+        jobTabs = new ArrayList<>();
 		// save tabs on close
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.addWindowListener(new WindowAdapter() {
@@ -457,7 +457,7 @@ public class SimpleIntegrationWizard {
         JMenu helpMenu = new JMenu("Help");
         menuBar.add(helpMenu);
         JMenuItem gettingStartedGuideItem = new JMenuItem("Getting started guide");
-        JMenuItem controlDocumentationItem = new JMenuItem("FTP control file configuration");
+        JMenuItem controlDocumentationItem = new JMenuItem("Control file configuration");
         JMenuItem schedulingItem = new JMenuItem("Scheduling a job");
         helpMenu.add(gettingStartedGuideItem);
         helpMenu.add(controlDocumentationItem);

@@ -76,7 +76,7 @@ public class IntegrationJobTab implements JobTab {
     private static final String RUN_COMMAND_TIP_TEXT = "<html><body style='width: 300px'>After saving the job this field will be populated with a command-line command that can be used to run the job." +
             " This command can be input into tools such as the Windows Task Scheduler or ETL tools to run the job automatically.</body></html>";
     public static final String CONTAINS_A_HEADER_ROW_CHECKBOX_TEXT = "File to publish contains a header row";
-    public static final String PUBLISH_VIA_SODA_RADIO_TEXT = "SODA2 (legacy)";
+    public static final String PUBLISH_VIA_SODA_RADIO_TEXT = "SODA2";
     public static final String PUBLISH_VIA_FTP_RADIO_TEXT = "FTP";
     public static final String PUBLISH_VIA_HTTP_RADIO_TEXT = "HTTP";
     public static final String COPY_TO_CLIPBOARD_BUTTON_TEXT = "Copy to clipboard";
@@ -125,6 +125,8 @@ public class IntegrationJobTab implements JobTab {
         addRunCommandFieldToJobPanel();
 
         loadJobDataIntoUIFields(job);
+        if(job.getPublishMethod() == null)
+            publishMethodComboBox.setSelectedItem(PublishMethod.replace);
     }
 
     private void addControlFileFieldToJobPanel() {
@@ -172,10 +174,7 @@ public class IntegrationJobTab implements JobTab {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
                 "Publish method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel publishMethodTextFieldContainer = new JPanel(FLOW_RIGHT);
-        publishMethodComboBox = new JComboBox();
-        for(PublishMethod method : PublishMethod.values()) {
-            publishMethodComboBox.addItem(method);
-        }
+        publishMethodComboBox = new JComboBox(PublishMethod.values());
         publishMethodComboBox.addActionListener(new PublishMethodComboBoxListener());
 
         publishMethodTextFieldContainer.add(publishMethodComboBox);
@@ -268,8 +267,7 @@ public class IntegrationJobTab implements JobTab {
         publishMethodComboBox.setSelectedItem(jobPublishMethod);
         fileToPublishHasHeaderCheckBox.setSelected(job.getFileToPublishHasHeaderRow());
 
-        updatePublishViaReplaceUIFields(job.getPublishMethod(),
-                job.getPublishViaFTP() || job.getPublishViaDi2Http());
+        updatePublishViaReplaceUIFields(job.getPublishViaFTP() || job.getPublishViaDi2Http());
 
         //Set the defaults on the button correctly.
         setReplaceRadioButtons(job);
@@ -294,10 +292,8 @@ public class IntegrationJobTab implements JobTab {
             usingControlFile = true;
     }
 
-    private void updatePublishViaReplaceUIFields(PublishMethod publishMethod,
-                                                        boolean showFileInfo) {
-        publishViaFTPLabelContainer.setVisible(
-                publishMethod.equals(PublishMethod.replace));
+    private void updatePublishViaReplaceUIFields(boolean showFileInfo) {
+        publishViaFTPLabelContainer.setVisible(true);
         if(showFileInfo) {
             controlFileLabelContainer.setVisible(true);
             controlFileSelectorContainer.setVisible(true);
@@ -452,27 +448,20 @@ public class IntegrationJobTab implements JobTab {
     private class PublishMethodComboBoxListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
             PublishMethod selectedPublishMethod =
-                    (PublishMethod) publishMethodComboBox.getSelectedItem();
-            if(selectedPublishMethod.equals(PublishMethod.replace)) {
-                httpButton.setSelected(true);
-            } else {
-                publishMethodRadioButtonGroup.clearSelection();
-            }
-            boolean needControlFile =
-                    (selectedPublishMethod.equals(PublishMethod.replace) && (ftpButton.isSelected() || httpButton.isSelected()));
-            updatePublishViaReplaceUIFields(selectedPublishMethod, needControlFile);
+                (PublishMethod) publishMethodComboBox.getSelectedItem();
+            ftpButton.setVisible(PublishMethod.replace.equals(selectedPublishMethod));
+            httpButton.setSelected(true);
+            updatePublishViaReplaceUIFields(controlFileNeeded());
         }
+    }
+
+    private boolean controlFileNeeded() {
+        return httpButton.isSelected() || ftpButton.isSelected();
     }
 
     private class PublishViaReplaceListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
-            updatePublishViaReplaceUIFields(
-                    (PublishMethod) publishMethodComboBox.getSelectedItem(),
-                    controlFileNeeded());
-        }
-
-        private boolean controlFileNeeded() {
-            return httpButton.isSelected() || ftpButton.isSelected();
+            updatePublishViaReplaceUIFields(controlFileNeeded());
         }
     }
 
