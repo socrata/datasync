@@ -10,6 +10,8 @@ bodyclass: homepage
     - [Checking the logs and downloading CSV "snapshots"](#ftp-check-logs)
 - [Via HTTP](#http-logs)
 
+Customers who are using DataSync via FTP or HTTP can get detailed debugging information by retrieving the logs for each job.  Details of how to access those logs can be found below. 
+
 {#ftp-logs}<p>&nbsp;</p>
 
 ### Connecting to the logs via FTP
@@ -53,5 +55,22 @@ You can download log.txt to see the logging information for the given dataset. W
 {#http-logs}<p>&nbsp;</p>
 
 ### Connecting to the logs via HTTP
+You can access the logs for all DataSync over HTTP jobs your domain by visiting:
 
-Details forthcoming.
+https://<domain>/datasync/log.json
+
+DataSync logs for a specific dataset can be found by visiting: 
+
+https://<domain>/datasync/id/<dataset_id>/log/index.json
+
+DataSync logs for a specific job can be found by visiting 
+
+https://<domain>/datasync/id/<dataset_id>/log/<job_id>.json
+
+Where
+<domain> is your domain
+<dataset_id> is the identifier of the dataset
+<job_id> is the identifier of the job (typically returned in the output of DataSync)
+
+
+
