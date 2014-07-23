@@ -4,19 +4,19 @@ title: Setup a Port Job (Headlessly)
 bodyclass: homepage
 ---
 
-Port jobs are used for moving data around that is already on the Socrata platform. Users that have publisher rights can make copies of existing datasets using this this tool. Port jobs allow the copying of both dataset schemas (metadata and columns) and data (rows).  This guide shows how to setup and run a Port Job using the command line interface.
+Port jobs are used for moving data that is already on the Socrata platform. Users that have publisher rights can make copies of existing datasets using this this tool. Port jobs allow the copying of both dataset schemas (metadata and columns) and data (rows).  This guide shows how to setup and run a Port Job using the command line interface.
 
 ### Step 1: Establish “global” configuration (e.g. authentication details)
-Please refer to Step 1 in the [documentation for setting up a Standard job]({{ site.root }}/guides/setup-standard-job-headless.html).
+Please refer to Step 1 in the [documentation for setting up a Standard job]({{ site.root }}/guides/setup-standard-job-headless.html).  This will result in a global configuration file that you'll use later in step 3. 
 
 ### Step 2: Obtain the Dataset ID(s)
-You will need the dataset ID of the source dataset that you will be copying from. To obtain the dataset ID navigate to the dataset in your web browser and in the address bar the dataset ID is the code at the end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
+You will need the dataset ID of the source dataset that you will be copying. To obtain the dataset ID navigate to the dataset in your web browser and inspect the address bar.  The dataset ID can be found at end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
 
 https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw
 
 The dataset ID is: m985-ywaw
 
-If you are copying data from one dataset to another already existing dataset, you will likewise need the dataset ID of the destination dataset.
+If you are copying data from one dataset to another existing dataset, you will also need the dataset ID of the destination dataset.
 
 ### Step 3: Configure job details
 For general help using DataSync in headless/command-line mode run:
@@ -25,13 +25,11 @@ For general help using DataSync in headless/command-line mode run:
 java -jar datasync.jar --help
 ```
 
-To run a job that uses the settings in config.json as the global configuration run the following command, replacing `<..>` with the appropriate values (flags explained below):
+To run a job execute the following command, replacing `<..>` with the appropriate values (flags explained below):
 
 ```
 java -jar datasync.jar -c <CONFIG FILE> -t PortJob -pm copy_all -pd1 <SOURCE DOMAIN> -pi1 <SOURCE DATASET ID> -pd2 <DESTINATION DOMAIN>  -pdt <TITLE OF NEW DATASET> -pp true
 ```
-
-To run a port job that uses global configuration previously saved in DataSync “memory” (either via a LoadPreferences job or using the DataSync GUI) simply omit the `-c config.json` flag.
 
 Explanation of flags:
 `*` = required flag
@@ -56,7 +54,7 @@ Explanation of flags:
       <td style='text-align: left;'><code>-c</code></td>
       <td style='text-align: left;'><code>--config</code></td>
       <td style='text-align: left;'>/Users/home/config.json</td>
-      <td style='text-align: left;'>Points to the config.json file you created in Step 3 or if not supplied configuration in DataSync &#8216;memory&#8217; is used</td>
+      <td style='text-align: left;'>Points to the config.json file you created in Step 1 or if not supplied configuration in DataSync &#8216;memory&#8217; is used</td>
     </tr>
     <tr>
       <td style='text-align: left;'><code>-pm *</code></td>
@@ -110,9 +108,11 @@ Explanation of flags:
   </tbody>
 </table>
 
-### Step 6: Running a job
+DataSync can also be run using a global configuration stored in memory as part of a LoadPreferences job.  To run a port job that uses global configuration simply omit the `-c config.json` flag.
 
-Execute the `java -jar  datasync.jar ...` command and logging information will be output to STDOUT. If the job runs successfully a ‘Success’ message will be output to STDOUT, the destination dataset id will be printed out and the program will exit with a normal status code (0). If there was a problem running the job a detailed error message will be output to STDERR and the program will exit with an error status code (1). You can capture the exit code to configure error handling logic within your ETL process.
+### Step 4: Job output
+
+Information about the status of the job will be output to STDOUT. If the job runs successfully a ‘Success’ message will be output to STDOUT, the destination dataset id will be printed out and the program will exit with a normal status code (0). If there was a problem running the job a detailed error message will be output to STDERR and the program will exit with an error status code (1). You can capture the exit code to configure error handling logic within your ETL process.
 
 ### Complete example job
 
