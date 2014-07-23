@@ -4,7 +4,7 @@ title: Conditions and Restrictions
 bodyclass: homepage
 ---
 
-No data is upserted until all the following conditions are met.
+DataSync enforces particular restrictions on both the format of the CSV, as well as the data types within the CSV, when updating a dataset.  No data is added until all the following conditions are met:
 
   - Every row in the CSV/TSV, including the header, must have the same number of columns. Unbalanced quotation marks almost always create unequal numbers of columns, so be certain to balance these.
   - If the dataset has a row id, that field must be provided in the CSV/TSV.
@@ -15,18 +15,18 @@ No data is upserted until all the following conditions are met.
 
   #### Datatype Restrictions
 
-  Here are some specific notes for how data should be formatted in order to pass validation
+  Data must be formatted as follows to pass validation:
 
   | Datatype    | Restrictions/Notes
 | ------------- | ------------------------------
 | Text | If `emptyTextIsNull` is true, an empty cell will be converted to a SoQL "null" value.  Otherwise it will be stored as an empty text value.
-| Formatted Text | Note that because core significantly processes formatted text, the presence of formatted text in a dataset will cause many replace operations to be full replaces.
+| Formatted Text | Due to the complexity involved in analyzing formatted text, DataSync assumes that all formatted text columns represent changes.  Because of this datasets containing formatted text may take longer to ingress. 
 | Number | Must use only numerals plus a decimal point (period), possibly with scientific notation (e.g., 6.02e+23). There can be no commas grouping digits. This applies even if the dataset is in a locale that uses a comma as the decimal point and a period to group digits.
 | Money | The currency symbol must not be present. Follows the same rules as Number.
 | Percent | The percent symbol must not be present. 45% should be represented as 45 not 0.45.
 | Date & Time | If the `floatingTimestampFormat` is "ISO8601" data must be in the following format:  yyyy-mm-ddTHH:mm:ss
 | Date & Time (with timezone) | If the `fixedTimestampFormat` is "ISO8601" data must be in the following format:  yyyy-mm-ddTHH:mm:ssz, where "z" is a four-digit-plus-sign offset from UTC (e.g., "-0800") or "Z" (which is  a synonym for "+0000").
-| Location | A human-readable US address with a (latitude, longitude) pair.  Example (Note that this must be all a single CSV value, and therefore quoted appropriately): "123 Main St. Mytown, YN 12345 (-123.4324235, 33.234546324)". The address, city, state, zip, and coordinate sub-parts are all optional.  The system will guess about breaking it apart into the location value’s constituent parts.  If your data does not include the coordinate pair, the server will attempt to geocode the address, and so `ignoreServerLatLong` should be set to "true" for the column so that the geocoded values do not cause unnecessary replacement of rows. See also `syntheticLocations` for a possibly more reliable way to construct location columns.
+| Location | A human-readable US address with a (latitude, longitude) pair.  Example (Note that this must be all a single CSV value, and therefore quoted appropriately): "123 Main St. Mytown, YN 12345 (-123.4324235, 33.234546324)". The address, city, state, zip, and coordinate sub-parts are all optional.  The system will guess about breaking it apart into the location value’s constituent parts.  If your data does not include the coordinate pair, the server will attempt to geocode the address.  For fastest performance when using Socrata geocoding, `ignoreServerLatLong` should be set to "true" so that the geocoded values do not cause unnecessary replacement of rows. See also `syntheticLocations`.
 | Website URL | Must be a bare URL, such as http://www.google.com, or in the format 'Google (http://www.google.com)'.
 | Email | Must be in the format foo@foo.com.
 | Checkbox | Either "true" or "false". For data stored in the old backend, missing values are treated as false.
