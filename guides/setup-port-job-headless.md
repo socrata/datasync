@@ -6,8 +6,8 @@ bodyclass: homepage
 
 Port jobs are used for moving data that is already on the Socrata platform. Users that have publisher rights can make copies of existing datasets using this this tool. Port jobs allow the copying of both dataset schemas (metadata and columns) and data (rows).  This guide shows how to setup and run a Port Job using the command line interface.
 
-### Step 1: Establish “global” configuration (e.g. authentication details)
-Please refer to Step 1 in the [documentation for setting up a Standard job]({{ site.root }}/guides/setup-standard-job-headless.html).  This will result in a global configuration file that you'll use later in step 3. 
+### Step 1: Setup your configuration 
+Information about your domain, username, password and a number of other global settings can be passed either through memory, or through a configuration file (preferred).  This guide will assume that you have created a global configuration file.  If you have not yet created that file, please refer to Step 1 in the [documentation for setting up a Standard job]({{ site.root }}/guides/setup-standard-job-headless.html).  
 
 ### Step 2: Obtain the Dataset ID(s)
 You will need the dataset ID of the source dataset that you will be copying. To obtain the dataset ID navigate to the dataset in your web browser and inspect the address bar.  The dataset ID can be found at end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
