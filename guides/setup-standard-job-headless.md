@@ -4,18 +4,18 @@ title: Setup a standard job (headless)
 bodyclass: homepage
 ---
 
-For information on using DataSync in GUI (Graphical User Interface) mode which we recommend reading first in any case refer to the [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
+NOTICE: Before using DataSync in headless mode, we recommend familiarizing yourself with DataSync through the UI.  For information on using DataSync's UI please see [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
 
 <div class="well">
 <strong>NOTICE: The guide below only pertains to DataSync versions 1.0 and higher</strong>
 </div>
 
-DataSync jobs can be run in headless/command-line mode in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was saved using the user interface which contains the job parameters. This guide focuses on (1) which enables configuring and running a DataSync job without any usage of the GUI. This enables complete control to integrate DataSync into ETL code or software systems. It is recommended that you first familiarize yourself with DataSync by using the GUI because it is often easier to start there and then move to using the tool headlessly.
+DataSync's command line interface, or "headless mode," enables easy integration of DataSync into ETL code or other software systems.  DataSync jobs can be run from the command line in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was previously saved using the user interface. This guide focuses on (1). 
 
 ### Step 1: Establish “global” configuration (e.g. authentication details)
 The “global” configuration settings (domain, username, password, logging dataset ID, etc) apply to all DataSync jobs (i.e. they are not specific to a single job).
 
-The configuration settings are stored in a json file, e.g. config.json, within a single object.  Each of the options are described in the table below, but at minimum, the four options in the example below are required:
+The configuration settings are stored in a json file, e.g. config.json, within a single object.  The four options in the example below are required:
 ```json
 {
     "domain": "<YOUR DOMAIN>",
@@ -24,32 +24,32 @@ The configuration settings are stored in a json file, e.g. config.json, within a
     "appToken": "<YOUR APP TOKEN>",
 }
 ```
-
+The full set of options is as follows:
 | Option    | Requirement | Explanation
 | ------------- | ------------------------------ | -------------
 | domain | required | The scheme and root domain of your data site.  (e.g. https://data.cityofchicago.org)
 | username | required | Your Socrata username. This user must have a Publisher role or Owner rights to at least one dataset. We recommend creating a dedicated Socrata account (with these permissions) to use with DataSync rather than tie DataSync to a particular person’s primary account. (e.g. datasyncUser@cityofchicago.org)
-| password | required | The Socrata password of the user given by `username`.  !!!!!!!  Dear me, what to say here?
-| appToken | required | An app token.   If you have not yet created one, please reference [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html).
+| password | required | Your Socrata password. Note that this will be stored in clear-text as part of the file. We recommend taking additional precautions to protect this file, including potentially only adding it when your ETL process runs. 
+| appToken | required | An app token.   If do not yet have an app token, please reference [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html).
 | logDatasetID | optional | The dataset indentifier of the log dataset. If you have not provisioned a log dataset and would like to do so, please refer to [Logging documentation]({{ site.root }}/resources/preferences-config.html#setup-logging).
 | adminEmail | required only if `emailUponError` is "true" | The email address of the administrator or user that error notifications should be sent to.
 | emailUponError | optional | Whether to send email notifications of errors that occurred while running jobs. Defaults to "false".
-| outgoingMailServer | required only if `emailUponError` is "true" | ???
-| smtpPort | required only if `emailUponError` is "true" | ???
-| sslPort | required only if `emailUponError` is "true" | ???
-| smtpUsername | required only if `emailUponError` is "true" | ???
-| smtpPassword | required only if `emailUponError` is "true" | ???
-| filesizeChunkingCutoffMB | acknowledged only for append, upsert, delete and Soda2-replace jobs | If the CSV/TSV file size is less than this, the entire file will be sent in one chunk.  Defaults to 10 MB.
-| numRowsPerChunk | acknowledged only for append, upsert, delete and Soda2-replace jobs and only if the entire file is not sent in a single chunk because of the `filesizeChunkingCutoffMB`| The number of rows to send in each chunk.  Defaults to 10,000 rows.
+| outgoingMailServer | required only if `emailUponError` is "true" | The address of your SMTP server
+| smtpPort | required only if `emailUponError` is "true" | The port of your SMTP server
+| sslPort | required only if `emailUponError` is "true" | If SSL port of your SMTP server
+| smtpUsername | required only if `emailUponError` is "true" | Your SMTP username
+| smtpPassword | required only if `emailUponError` is "true" | Your SMTP password
+| filesizeChunkingCutoffMB | Used only for append, upsert, delete and Soda2-replace jobs | If the CSV/TSV file size is less than this, the entire file will be sent in one chunk.  Defaults to 10 MB.
+| numRowsPerChunk | Used only for append, upsert, delete and Soda2-replace jobs | The number of rows to send in each chunk.  If the CSV/TSV file size is less than  `filesizeChunkingCutoffMB`, all rows will be sent in one chunk. Defaults to 10,000 rows.
 | proxyHost | required if operating through a proxy | The hostname of the proxy server.
 | proxyPort | required if operating through a proxy | The port that the proxy server listens on.
-| proxyUsername | optional | The username to use if the proxy is authenticated.  If this information is sensitive, you may instead pass it in via the -pun, --proxyUsername commandline option.
-| proxyPassword | optional | The password to use if the proxy is authenticated.  If this information is sensitive, you may instead pass it in via the -ppw, --proxyPassword commandline option.
+| proxyUsername | optional | The username to use if the proxy is authenticated.  If this information is sensitive, you may instead pass it at runtime via the -pun, --proxyUsername commandline option.
+| proxyPassword | optional | The password to use if the proxy is authenticated.  If this information is sensitive, you may instead pass it at runtime via the -ppw, --proxyPassword commandline option.
 
 
 There are two ways to establish the “global” DataSync configuration:
 
-1. **Load configuration from a .json file when running each job**
+1. **Load configuration from a .json file when running each job** (RECOMMENDED)
 This method of loading configuration requires supplying a flag pointing DataSync to config.json each time you run a job in headless/command-line mode. For example, you would run:
 
 ```
@@ -59,7 +59,7 @@ java -jar datasync.jar -c config.json <OTHER FLAGS> ...
 where `<OTHER FLAGS>` are those discussed below
 
 2.**Load configuration into the DataSync "memory"**
-If you load configuration this way you only need to load the configuration once and DataSync will remember the configuration (instead of passing config.json as a flag with every job). After loading configuration settings they will be saved and used to connect to the publisher API for every job you run using DataSync. To load configuration into DataSync “memory” run this command once:
+DataSync also provides the ability to load your configuration once into memory, at which point it will be used for all future jobs.  To load configuration into DataSync “memory” run this command once:
 
 ```
 java -jar datasync.jar -t LoadPreferences -c config.json
@@ -81,14 +81,10 @@ For general help using DataSync in headless/command-line mode run:
 ```
 java -jar datasync.jar --help
 ```
-
-To run a job that uses the settings in config.json as the global configuration run the following command, replacing `<..>` with the appropriate values (flags explained below):
-
+To run a job execute the following command, replacing <..> with the appropriate values (flags explained below):
 ```
 java -jar datasync.jar -c <CONFIG.json FILE> -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -sc <FTP CONTROL.json FILE>
 ```
-
-To run a standard job that uses global configuration previously saved in DataSync “memory” (either via a LoadPreferences job or using the DataSync GUI) simply omit the `-c config.json` flag.
 
 Explanation of flags:
 `*` = required flag
@@ -160,9 +156,11 @@ Explanation of flags:
   </tbody>
 </table>
 
-### Step 6: Running a job
+To run a standard job that uses global configuration previously saved in DataSync “memory” (either via a LoadPreferences job or using the DataSync GUI) simply omit the `-c config.json` flag.
 
-Execute the `java -jar  datasync.jar ...` command and logging information will be output to STDOUT. If the job runs successfully a ‘Success’ message will be output to STDOUT and the program will exit with a normal status code (0). If there was a problem running the job a detailed error message will be output to STDERR and the program will exit with an error status code (1). You can capture the exit code to configure error handling logic within your ETL process.
+
+### Step 4: Job Output
+Information about the status of the job will be output to STDOUT. If the job runs successfully a ‘Success’ message will be output to STDOUT, the destination dataset id will be printed out and the program will exit with a normal status code (0). If there was a problem running the job a detailed error message will be output to STDERR and the program will exit with an error status code (1). You can capture the exit code to configure error handling logic within your ETL process.
 
 ### Complete example job
 
