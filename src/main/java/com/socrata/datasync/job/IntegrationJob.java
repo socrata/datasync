@@ -58,7 +58,7 @@ public class IntegrationJob extends Job {
     private UserPreferences userPrefs;
     private String datasetID = "";
 	private String fileToPublish = "";
-	private PublishMethod publishMethod = PublishMethod.replace;
+	private PublishMethod publishMethod = null;
     private boolean fileToPublishHasHeaderRow = true;
 	private String pathToControlFile = null;
     private String controlFileContent = null;
@@ -221,15 +221,18 @@ public class IntegrationJob extends Job {
      */
     public void configure(CommandLine cmd) {
         CommandLineOptions options = new CommandLineOptions();
+        String method = cmd.getOptionValue(options.PUBLISH_METHOD_FLAG);
 
         setDatasetID(cmd.getOptionValue(options.DATASET_ID_FLAG));
         setFileToPublish(cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG));
-        setPublishMethod(PublishMethod.valueOf(cmd.getOptionValue(options.PUBLISH_METHOD_FLAG, "replace")));
+        if(method != null)
+            setPublishMethod(PublishMethod.valueOf(method));
         setFileToPublishHasHeaderRow(Boolean.parseBoolean(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG, "false")));
         setPublishViaFTP(Boolean.parseBoolean(cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG, options.DEFAULT_PUBLISH_VIA_FTP)));
         setPublishViaDi2Http(Boolean.parseBoolean(cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG, options.DEFAULT_PUBLISH_VIA_DI2)));
         String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
-        if (controlFilePath == null) controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
+        if (controlFilePath == null)
+            controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
         setPathToControlFile(controlFilePath);
     }
 
@@ -248,9 +251,9 @@ public class IntegrationJob extends Job {
         JobStatus validationStatus = IntegrationJobValidity.validateJobParams(connectionInfo, this);
         if(validationStatus.isError()) {
 			runStatus = validationStatus;
-		} else if((publishViaFTP || publishViaDi2Http) && !publishMethod.equals(PublishMethod.replace)) {
+		} else if(publishViaFTP && !PublishMethod.replace.equals(publishMethod)) {
             runStatus = JobStatus.PUBLISH_ERROR;
-            runStatus.setMessage("FTP and di2/HTTP does not currently support upsert, append or delete");
+            runStatus.setMessage("FTP does not currently support upsert, append or delete");
         } else {
             File fileToPublishFile = new File(fileToPublish);
             // attach a requestId to all Producer API calls (for error tracking purposes)
@@ -264,13 +267,19 @@ public class IntegrationJob extends Job {
             int numRowsPerChunk = userPrefs.getNumRowsPerChunk() == null ? 10000 :
                     Integer.parseInt(userPrefs.getNumRowsPerChunk());
 
+            if (publishMethod == null)
+                publishMethod = (PublishMethod.valueOf(controlFile.action.toLowerCase()));
             String publishExceptions = "";
-			try {
+            try {
                  switch (publishMethod) {
                      case upsert:
                      case append:
-                         result = doAppendOrUpsertViaHTTP(
-                                 producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+                         if (publishViaDi2Http) {
+                             runStatus = publisher.publishWithDi2OverHttp(datasetID, fileToPublishFile, controlFile);
+                         } else {
+                             result = doAppendOrUpsertViaHTTP(
+                                     producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+                         }
                          break;
                      case replace:
                          if (publishViaFTP) {
@@ -337,7 +346,8 @@ public class IntegrationJob extends Job {
         newCols.put("Date", currentDateTime);
         newCols.put("DatasetID", job.getDatasetID());
         newCols.put("FileToPublish", job.getFileToPublish());
-        newCols.put("PublishMethod", job.getPublishMethod());
+        if(job.getPublishMethod() != null)
+            newCols.put("PublishMethod", job.getPublishMethod());
         newCols.put("JobFile", job.getPathToSavedFile());
         if(result != null) {
             newCols.put("RowsUpdated", result.rowsUpdated);

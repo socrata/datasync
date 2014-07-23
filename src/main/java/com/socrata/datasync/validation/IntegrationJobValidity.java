@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,7 +88,7 @@ public class IntegrationJobValidity {
             schema = (Dataset) importer.loadDatasetInfo(job.getDatasetID());
             rowIdentifier = DatasetUtils.getRowIdentifierName(schema);
 
-            if(job.getPublishMethod().equals(PublishMethod.append) && rowIdentifier != null) {
+            if(PublishMethod.append.equals(job.getPublishMethod()) && rowIdentifier != null) {
                 JobStatus status = JobStatus.INVALID_PUBLISH_METHOD;
                 status.setMessage("Append can only be performed on a dataset without a Row Identifier set" +
                         ". Dataset with ID '" + job.getDatasetID() + "' has '" + rowIdentifier + "' set as the Row " +
@@ -125,7 +126,7 @@ public class IntegrationJobValidity {
                 if (controlHeaderAgreement.isError())
                     return controlHeaderAgreement;
 
-                JobStatus controlSensibility = validateControlFile(fileControl, connectionInfo.getUrl());
+                JobStatus controlSensibility = validateControlFile(fileControl, control.action, job, connectionInfo.getUrl());
                 if (controlSensibility.isError())
                     return controlSensibility;
             }
@@ -142,8 +143,7 @@ public class IntegrationJobValidity {
         if(controlFilePath != null) {
             String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
             String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
-            if ((publishingWithFtp == null || publishingWithFtp.equalsIgnoreCase("false")) &&
-                    (publishingWithDi2 == null || publishingWithDi2.equalsIgnoreCase("false"))) {
+            if (isNullOrFalse(publishingWithFtp) && isNullOrFalse(publishingWithDi2)) {
                 System.err.println("Invalid argument: Neither -sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG +
                         " -cf,--" + options.PATH_TO_CONTROL_FILE_FLAG + " can be supplied " +
                         "unless -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is 'true' or " +
@@ -153,12 +153,6 @@ public class IntegrationJobValidity {
         }
 
         if(controlFilePath != null) {
-            // TODO remove this when flags override other parameters
-            if(cmd.getOptionValue(options.PUBLISH_METHOD_FLAG) != null) {
-                System.out.println("WARNING: -m,--" + options.PUBLISH_METHOD_FLAG + " is being ignored because " +
-                        "-sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG +  " or " +
-                        "-cf,--" + options.PATH_TO_CONTROL_FILE_FLAG +  " was supplied");
-            }
             if(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG) != null) {
                 System.out.println("WARNING: -h,--" + options.HAS_HEADER_ROW_FLAG + " is being ignored because " +
                         "-sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG +  " or " +
@@ -179,7 +173,7 @@ public class IntegrationJobValidity {
         }
         if (publishingWithFtp.equalsIgnoreCase("true")) {
             String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
-            if (publishingWithDi2 != null && publishingWithFtp.equalsIgnoreCase("true")) {
+            if (publishingWithDi2 != null && publishingWithDi2.equalsIgnoreCase("true")) {
                 System.err.println("Only one of -pf,--" + options.PUBLISH_VIA_DI2_FLAG + " and " +
                         "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " may be set to 'true'");
                 return false;
@@ -229,8 +223,7 @@ public class IntegrationJobValidity {
         String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
         if(haveHeader == null) {
             if (controlFilePath == null) {
-                if (publishingWithFtp == null || publishingWithFtp.equalsIgnoreCase("false") ||
-                        publishingWithDi2 == null || publishingWithDi2.equalsIgnoreCase("false")) {
+                if (isNullOrFalse(publishingWithFtp) && isNullOrFalse(publishingWithDi2)) {
                     System.err.println("Missing required argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " is required");
                     return false;
                 } else {
@@ -273,8 +266,7 @@ public class IntegrationJobValidity {
         String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
         if(method == null) {
             if (controlFilePath == null) {
-                if (publishingWithFtp == null || publishingWithFtp.equalsIgnoreCase("false") ||
-                        publishingWithDi2 == null || publishingWithDi2.equalsIgnoreCase("false")) {
+                if (isNullOrFalse(publishingWithFtp) && isNullOrFalse(publishingWithDi2)) {
                     System.err.println("Missing required argument: -m,--" + options.PUBLISH_METHOD_FLAG + " is required");
                     return false;
                 } else {
@@ -340,7 +332,12 @@ public class IntegrationJobValidity {
         }
     }
 
-    private static JobStatus validateControlFile(FileTypeControl fileControl, String urlBase) {
+    private static JobStatus validateControlFile(FileTypeControl fileControl, String action, IntegrationJob job, String urlBase) {
+
+        JobStatus actionOkay = checkAction(action, job);
+        if (actionOkay.isError())
+            return actionOkay;
+
         if (fileControl == null) return JobStatus.VALID;
 
         JobStatus goodTimestampFormats = checkTimeFormattingValidity(fileControl);
@@ -351,6 +348,32 @@ public class IntegrationJobValidity {
         if (goodEncoding.isError())
             return goodEncoding;
 
+        return JobStatus.VALID;
+    }
+
+    private static JobStatus checkAction(String action, IntegrationJob job) {
+        StringBuilder methods = new StringBuilder();
+        boolean okAction = false;
+        for (PublishMethod m : PublishMethod.values()) {
+            methods.append("\t" + m.name() + "\n");
+            if (m.name().equalsIgnoreCase(action))
+                okAction = true;
+        }
+        if (!okAction) {
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage("Unknown Publish Method: " +
+                    "The control file must specify the publishing method via the 'action' option as one of: \n" +
+                    methods.toString());
+            return status;
+        }
+        PublishMethod publishMethod = job.getPublishMethod();
+        if (publishMethod != null && !action.equalsIgnoreCase(publishMethod.name())) {
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage("Conflicting Publish Methods: " +
+                    "The publish method selected was '" + publishMethod.name() +
+                    "', but the 'action' option in the control file specifies the publish method as '" + action + ".");
+            return status;
+        }
         return JobStatus.VALID;
     }
 
@@ -576,6 +599,10 @@ public class IntegrationJobValidity {
             }
         }
         return JobStatus.VALID;
+    }
+
+    private static boolean isNullOrFalse(String s) {
+        return s == null || s.equalsIgnoreCase("false");
     }
 
 }
