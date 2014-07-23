@@ -108,6 +108,8 @@ public class IntegrationJobTab implements JobTab {
     private JTextArea controlFileContentTextArea;
     private JTextField runCommandTextField;
 
+    private boolean usingControlFile;
+
     // build Container with all tab components populated with given job data
     public IntegrationJobTab(IntegrationJob job, JFrame containingFrame) {
         mainFrame = containingFrame;
@@ -143,7 +145,7 @@ public class IntegrationJobTab implements JobTab {
         controlFileSelectorContainer.add(controlFileTextField);
         JFileChooser controlFileChooser = new JFileChooser();
         browseForControlFileButton = new JButton(BROWSE_BUTTON_TEXT);
-        FtpControlFileSelectorListener chooserListener = new FtpControlFileSelectorListener(
+        ControlFileSelectorListener chooserListener = new ControlFileSelectorListener(
                 controlFileChooser, controlFileTextField);
         browseForControlFileButton.addActionListener(chooserListener);
         controlFileSelectorContainer.add(browseForControlFileButton);
@@ -272,7 +274,6 @@ public class IntegrationJobTab implements JobTab {
         //Set the defaults on the button correctly.
         setReplaceRadioButtons(job);
 
-
         updateControlFileInputs(job.getPathToControlFile(), job.getControlFileContent());
 
         jobFileLocation = job.getPathToSavedFile();
@@ -287,28 +288,10 @@ public class IntegrationJobTab implements JobTab {
     }
 
     private void updateControlFileInputs(final String pathToControlFile, final String controlFileContent) {
-        if((pathToControlFile == null || pathToControlFile.equals(""))
-                && (controlFileContent == null || controlFileContent.equals(""))) {
-            setFtpControlFileSelectorEnabled(true);
-            setEditGenerateFtpControlFileButtonEnabled(true);
-        } else if(pathToControlFile != null && !pathToControlFile.equals("")) {
-            controlFileTextField.setText(pathToControlFile);
-            setFtpControlFileSelectorEnabled(true);
-            setEditGenerateFtpControlFileButtonEnabled(false);
-        } else {
-            controlFileContentTextArea.setText(controlFileContent);
-            setFtpControlFileSelectorEnabled(false);
-            setEditGenerateFtpControlFileButtonEnabled(true);
-        }
-    }
-
-    private void setFtpControlFileSelectorEnabled(boolean setSelectFtpControlFileEnabled) {
-        controlFileTextField.setEnabled(setSelectFtpControlFileEnabled);
-        browseForControlFileButton.setEnabled(setSelectFtpControlFileEnabled);
-    }
-
-    private void setEditGenerateFtpControlFileButtonEnabled(boolean setEditGenerateFtpControlFileEnabled) {
-        generateEditControlFileButton.setEnabled(setEditGenerateFtpControlFileEnabled);
+        controlFileContentTextArea.setText(controlFileContent);
+        controlFileTextField.setText(pathToControlFile);
+        if (pathToControlFile != null && !pathToControlFile.equals(""))
+            usingControlFile = true;
     }
 
     private void updatePublishViaReplaceUIFields(PublishMethod publishMethod,
@@ -338,8 +321,11 @@ public class IntegrationJobTab implements JobTab {
         jobToRun.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
         jobToRun.setPublishViaFTP(ftpButton.isSelected());
         jobToRun.setPublishViaDi2Http(httpButton.isSelected());
-        jobToRun.setPathToControlFile(controlFileTextField.getText());
-        jobToRun.setControlFileContent(controlFileContentTextArea.getText());
+        if (usingControlFile) {
+            jobToRun.setPathToControlFile(controlFileTextField.getText());
+        } else {
+            jobToRun.setControlFileContent(controlFileContentTextArea.getText());
+        }
         try {
             return jobToRun.run();
         } catch (IOException e) {
@@ -440,11 +426,11 @@ public class IntegrationJobTab implements JobTab {
         }
     }
 
-    private class FtpControlFileSelectorListener implements ActionListener {
+    private class ControlFileSelectorListener implements ActionListener {
         JFileChooser fileChooser;
         JTextField filePathTextField;
 
-        public FtpControlFileSelectorListener(JFileChooser chooser, JTextField textField) {
+        public ControlFileSelectorListener(JFileChooser chooser, JTextField textField) {
             fileChooser = chooser;
             filePathTextField = textField;
             fileChooser.setFileFilter(
@@ -456,8 +442,7 @@ public class IntegrationJobTab implements JobTab {
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 filePathTextField.setText(file.getAbsolutePath());
-                setFtpControlFileSelectorEnabled(true);
-                setEditGenerateFtpControlFileButtonEnabled(false);
+                usingControlFile = true;
             } else {
                 // Open command cancelled by user: do nothing
             }
@@ -545,8 +530,8 @@ public class IntegrationJobTab implements JobTab {
             if(generateControlFileErrorMessage == null) {
                 int clickedOkOrCancel = showEditControlFileDialog(controlFileContent);
                 if(clickedOkOrCancel == JOptionPane.OK_OPTION) {
-                    setFtpControlFileSelectorEnabled(false);
-                    setEditGenerateFtpControlFileButtonEnabled(true);
+                    usingControlFile = false;
+                    controlFileTextField.setText("");
                 } else if (clickedOkOrCancel == JOptionPane.CANCEL_OPTION) {
                     // Set control file content to its previous content
                     controlFileContentTextArea.setText(previousControlFileContent);
