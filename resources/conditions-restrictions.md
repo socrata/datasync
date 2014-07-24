@@ -17,7 +17,7 @@ DataSync enforces particular restrictions on both the format of the CSV, as well
 
 Data must be formatted as follows to pass validation:
 
-  | Datatype    | Restrictions/Notes
+| Datatype    | Restrictions/Notes
 | ------------- | ------------------------------
 | Text | If `emptyTextIsNull` is true, an empty cell will be converted to a SoQL "null" value.  Otherwise it will be stored as an empty text value.
 | Formatted Text | Due to the complexity involved in analyzing formatted text, DataSync assumes that all formatted text columns represent changes.  Because of this datasets containing formatted text may take longer to ingress. 
