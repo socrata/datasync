@@ -13,9 +13,9 @@ DataSync enforces particular restrictions on both the format of the CSV, as well
   - All values can be interpreted as the appropriate type.
   - If `syntheticLocation` is provided in the [control file]({{ site.root }}/resources/ftp-control-config.html), the name of the column that is constructed must not conflict with one already in the CSV.  You can use the `ignoreColumns` option to ignore the one in the CSV.
 
-  #### Datatype Restrictions
+### Datatype Restrictions
 
-  Data must be formatted as follows to pass validation:
+Data must be formatted as follows to pass validation:
 
   | Datatype    | Restrictions/Notes
 | ------------- | ------------------------------
