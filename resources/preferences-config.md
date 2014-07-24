@@ -52,7 +52,7 @@ After registering your account enter the following details to configure the SMTP
 
 - **Outgoing Mail Server:** smtp.gmail.com
 - **SMTP Port:** 587
-- *SSL Port:** 465 (note that you must check the use SSL box)
+- **SSL Port:** 465 (note that you must check the use SSL box)
 - **SMTP Username:** `[your GMail username]`
 - **SMTP Password:** `[your GMail password]`
 
