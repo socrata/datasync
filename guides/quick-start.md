@@ -9,7 +9,7 @@ This guide covers provides an overview of the minimal set of steps to use DataSy
 **NOTICE:** The steps in this guide will replace the entire contents of the dataset with the contents of the CSV.  For a more in depth guide of using DataSync, including information on how to use DataSync to update and append information to a dataset,  please see [setting up a standard job]({{ site.root }}/guides/setup-standard-job.html).
 
 ### Step 1: Download DataSync
-Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}, and download the latest version. 
+Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and download the latest version. 
 
 ### Step 2: Launching DataSync
 Launch DataSync navigating to the folder containing the Datasync JAR file that you downloaded previously and run the following command:
