@@ -10,7 +10,7 @@ This guide covers how to schedule a Socrata DataSync job to run automatically at
 
 #### Step 1: Copy the command from DataSync
 
-After you save or open a job with DataSync the text field called "Command to execute with scheduler" is populated with the command to run the given job. Simply click the "Copy to clipboard" button to copy the command to the clipboard. You can also click on the text field (which will automatically highlight the entire command) and then press Ctrl+C to copy the command to the clipboard.
+After you save or open a job with DataSync the text field called "Command to execute with scheduler" is automatically populated with the command to run the given job. Simply click the "Copy to clipboard" button to copy the command to the clipboard. You can also click on the text field (which will automatically highlight the entire command) and then press Ctrl+C to copy the command to the clipboard.
 
 
 #### Step 2: Create a new task using the Windows Task Scheduler
@@ -27,7 +27,7 @@ You may want to test run the task by finding the task you just created in the ta
 
 
 ### Using Crontab (Mac or Linux)
-Here is a good introduction to using Linux Crontab (Crontab is included with essentially any Linux distro):
+A good introduction to using Crontab (Crontab is included with essentially any Linux distro) can be found here:
 [http://kvz.io/blog/2007/07/29/schedule-tasks-on-linux-using-crontab/](http://kvz.io/blog/2007/07/29/schedule-tasks-on-linux-using-crontab/)
 
 To schedule a DataSync job simply copy the text within the "Command to execute with scheduler" field (after you save or open a job in DataSync) and use that command in place of the `/bin/execute/this/script.sh` in the above guide. For example, to schedule a job to run daily at midnight your Crontab content might look like:
