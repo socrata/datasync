@@ -35,3 +35,7 @@ Redownload the DataSync JAR from: [https://github.com/socrata/datasync/releases]
 ### How do I use DataSync to accept any date/time format?
 
 This is only possible in DataSync version 1.0 and higher. Refer to [this documentation](http://socrata.github.io/datasync/resources/ftp-control-config.html#date-time). 
+
+### I'm still stuck.  What can I do?
+
+Verify that your CSV meets all of the restrictions detailed in the [conditions and restrictions]({{ site.root }}/resources/conditions-restrictions.html) guide.  If you are still having trouble, please contact your Socrata representive for support.
