@@ -24,7 +24,8 @@ The configuration settings are stored in a json file, e.g. config.json, within a
     "appToken": "<YOUR APP TOKEN>",
 }
 ```
-The full set of options is as follows:
+The full set of options is:
+
 | Option    | Requirement | Explanation
 | ------------- | ------------------------------ | -------------
 | domain | required | The scheme and root domain of your data site.  (e.g. https://data.cityofchicago.org)
