@@ -5,13 +5,12 @@ bodyclass: homepage
 ---
 
 ### Contents
-- [Set up logging (using a dataset)](#setup-logging)
+- [Set up logging (using a dataset)](###setting up logging (using a dataset)
 - [Error Notification Auto-Email Setup](#error-notification)
 - [Chunking Configuration](#chunking-config)
 - [Proxy Configuration](#proxy-config)
 
-#setup-logging
-### Set up logging (using a dataset)
+### Setting up logging (using a dataset)
 
 You can set up a Socrata dataset to store log information each time a DataSync jobs runs. This is especially useful if you will be [scheduling your jobs]({{ site.root }}/resources/schedule-job.html) to run automatically at some specified interval. You first need to manually create a log dataset. You should probably keep this dataset private (rather than set it as public). The easiest way to se this up is to run a DataSync Port Job that copies the schema from [this example log dataset](https://adrian.demo.socrata.com/dataset/DataSync-Log/aywp-657c).
 
