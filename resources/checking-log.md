@@ -7,8 +7,8 @@ bodyclass: homepage
 ### Contents
 - [Via FTP](#connecting-to-the-logs-via-ftp)
     - [Connecting to the FTP server](#connecting-to-the-ftp-server)
-    - [Checking the logs and downloading CSV "snapshots"](#checking-the-logs-and-downloading-CSV-snapshots)
-- [Via HTTP](#connecting-to-the-logs-via-HTTP)
+    - [Checking the logs and downloading CSV "snapshots"](#checking-the-logs-and-downloading-csv-snapshots)
+- [Via HTTP](#connecting-to-the-logs-via-http)
 
 Customers who are using DataSync via FTP or HTTP can get detailed debugging information by retrieving the logs for each job.  Details of how to access those logs can be found below. 
 
