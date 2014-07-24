@@ -6,8 +6,8 @@ bodyclass: homepage
 
 ### Contents
 - [Basic control file setup](#basic-control-file-setup)
-    - [Header row / column list](#header-row)
-    - [Date/time formatting](#date-time)
+    - [Header row / column list](#header-rowcolumn-list)
+    - [Date/time formatting](#datetime-formatting)
     - [Location column and geocoding configuration](#location-column-and-geocoding-configuration)
     - [Ignoring columns](#ignoring-columns)
 - [Complete control file settings](#complete-control-file-settings)
@@ -17,7 +17,6 @@ bodyclass: homepage
 </div>
 
 ### Basic control file setup
-
 The control file is a JSON-formatted file that is used to configure a Standard DataSync job that uses the 'replace via FTP' or 'replace via HTTP' method. Control files are specific to the dataset you are updating.
 
 An example of a typical control file:
@@ -46,7 +45,6 @@ An example of a typical control file:
 This guide will describe how to use the different options within the control file.
 
 #### Header row/column list
-
 The `columns` and `skip` options enable configuration of how the columns within the CSV/TSV align with those of the dataset.
 
 `columns`: List of column names in the following format `["col_id1","col_id2",..]`. If it’s `null` then the first line of the CSV/TSV after any skipped records is used. If specified, it must be an array of strings, and must not contain nulls.
@@ -77,7 +75,6 @@ If the first line of the CSV/TSV is data (there is no header row), for example y
 #### Date/time formatting
 
 ##### Timestamp Format Options
-
 The `floatingTimestampFormat` and `fixedTimestampFormat` options specify how date/time data is formatted in the CSV/TSV file. `floatingTimestampFormat` applies to ("Date & Time" datatype columns).  `fixedTimestampFormat` functions similarly but applies  ("Date & Time (with timezone)" datatype columns). If the format does not specify a time zone, the zone may be given via the `timezone` option.  If no zone information is provided, UTC is assumed.
 
 Both `floatingTimestampFormat` and `fixedTimestampFormat` accept a string (e.g. "ISO8601") or a JSON-formatted list of formats including "ISO8601" and any date/time "Joda time" format-string. Joda time syntax is documented in detail here: [http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html)
@@ -106,7 +103,6 @@ You can set this to one of the following:
 {#location-geocoding}<p>&nbsp;</p>
 
 #### Location column and geocoding configuration
-
 The `syntheticLocations` option allows configuring a Location datatype column to populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV.
 
 For example:
