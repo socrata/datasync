@@ -28,11 +28,11 @@ The full set of options is:
 
 | Option    | Requirement | Explanation
 | ------------- | ------------------------------ | -------------
-| domain | required | The scheme and root domain of your data site.  (e.g. https://data.cityofchicago.org)
-| username | required | Your Socrata username. This user must have a Publisher role or Owner rights to at least one dataset. We recommend creating a dedicated Socrata account (with these permissions) to use with DataSync rather than tie DataSync to a particular person’s primary account. (e.g. datasyncUser@cityofchicago.org)
+| domain | required | The scheme and root domain of your data site.  (e.g. https://opendata.socrata.com)
+| username | required | Your Socrata username. This user must have a Publisher role or Owner rights to at least one dataset. We recommend creating a dedicated Socrata account (with these permissions) to use with DataSync rather than tie DataSync to a particular person’s primary account. (e.g. publisher@opendata.socrata.com)
 | password | required | Your Socrata password. Note that this will be stored in clear-text as part of the file. We recommend taking additional precautions to protect this file, including potentially only adding it when your ETL process runs. 
 | appToken | required | An app token.   If do not yet have an app token, please reference [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html).
-| logDatasetID | optional | The dataset indentifier of the log dataset. If you have not provisioned a log dataset and would like to do so, please refer to [Logging documentation]({{ site.root }}/resources/preferences-config.html#setup-logging).
+| logDatasetID | optional | The dataset indentifier of the log dataset. If you have not provisioned a log dataset and would like to do so, please refer to [Logging documentation]({{ site.root }}/resources/preferences-config.html).
 | adminEmail | required only if `emailUponError` is "true" | The email address of the administrator or user that error notifications should be sent to.
 | emailUponError | optional | Whether to send email notifications of errors that occurred while running jobs. Defaults to "false".
 | outgoingMailServer | required only if `emailUponError` is "true" | The address of your SMTP server
@@ -73,6 +73,7 @@ java -jar datasync.jar -t LoadPreferences -c config.json
 You will need the dataset ID of the dataset you wish to publish to. To obtain the dataset ID navigate to the dataset in your web browser and in the address bar the dataset ID is the code at the end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
 
 https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw
+
 The dataset ID is: m985-ywaw
 
 
@@ -80,11 +81,11 @@ The dataset ID is: m985-ywaw
 For general help using DataSync in headless/command-line mode run:
 
 ```
-java -jar datasync.jar --help
+java -jar DataSync-1.5-jar-with-dependencies.jar --help
 ```
 To run a job execute the following command, replacing <..> with the appropriate values (flags explained below):
 ```
-java -jar datasync.jar -c <CONFIG.json FILE> -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -sc <FTP CONTROL.json FILE>
+java -jar DataSync-1.5-jar-with-dependencies.jar -c <CONFIG.json FILE> -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -sc <FTP CONTROL.json FILE>
 ```
 
 Explanation of flags:
@@ -104,7 +105,7 @@ Explanation of flags:
       <td style='text-align: left;'><code>-c</code></td>
       <td style='text-align: left;'><code>--config</code></td>
       <td style='text-align: left;'>/Users/home/config.json</td>
-      <td style='text-align: left;'>Points to the config.json file you created in Step 3 or if not supplied configuration in DataSync &#8216;memory&#8217; is used</td>
+      <td style='text-align: left;'>Points to the config.json file you created in Step 1</td>
     </tr>
     <tr>
       <td style='text-align: left;'><code>-f *</code></td>
@@ -116,7 +117,7 @@ Explanation of flags:
       <td style='text-align: left;'><code>-h *</code></td>
       <td style='text-align: left;'><code>--fileToPublishHasHeaderRow</code></td>
       <td style='text-align: left;'>true</td>
-      <td style='text-align: left;'>Set this to <code>true</code> if the file to publish has a header row, otherwise set it to <code>false</code> (<code>true</code> and <code>false</code> are the only acceptable values)</td>
+      <td style='text-align: left;'>Set this to <code>true</code> if the file to publish has a header row, otherwise set it to <code>false</code></td>
     </tr>
     <tr>
       <td style='text-align: left;'><code>-i *</code></td>
@@ -146,34 +147,31 @@ Explanation of flags:
       <td style='text-align: left;'><code>-cf</code></td>
       <td style='text-align: left;'><code>--pathToControlFile</code></td>
       <td style='text-align: left;'>/Users/home/control.json</td>
-      <td style='text-align: left;'>Specifies a Control file that configures &#8216;replace via HTTP&#8217; and &#8216;replace via FTP&#8217; jobs, and therefore should only be set if one of <code>-ph</code>,<code>--publishViaHttp</code> or <code>-pf</code>,<code>--publishViaFTP</code> is set to <code>true</code>. When this flag is set the <em><code>-h</code>,<code>--fileToPublishHasHeaderRow</code></em> and <em><code>-m</code>,<code>--publishMethod</code></em> flags are overridden by the settings in the supplied Control.json file. Learn how to <a href='http://socrata.github.io/datasync/resources/ftp-control-config.html'>configure the FTP control file</a></td>
+      <td style='text-align: left;'>Specifies a Control file that configures &#8216;replace via HTTP&#8217; and &#8216;replace via FTP&#8217; jobs.  Only required when <code>-ph</code>,<code>--publishViaHttp</code> or <code>-pf</code>,<code>--publishViaFTP</code> is set to <code>true</code>. When this flag is set the <em><code>-h</code>,<code>--fileToPublishHasHeaderRow</code></em> and <em><code>-m</code>,<code>--publishMethod</code></em> flags are overridden by the settings in the supplied Control.json file. For more information on creating a control file, please see <a href='http://socrata.github.io/datasync/resources/ftp-control-config.html' Creating your control file></a></td>
     </tr>
     <tr>
       <td style='text-align: left;'><code>-t</code></td>
       <td style='text-align: left;'><code>--jobType</code></td>
       <td style='text-align: left;'>LoadPreferences</td>
-      <td style='text-align: left;'>Specifies the type of job to run (the default is &#8216;IntegrationJob&#8217;, a Standard  job so in this case this flag is optional)</td>
+      <td style='text-align: left;'>Specifies the type of job to run (default is &#8216;IntegrationJob&#8217;)</td>
     </tr>
   </tbody>
 </table>
 
-To run a standard job that uses global configuration previously saved in DataSync “memory” (either via a LoadPreferences job or using the DataSync GUI) simply omit the `-c config.json` flag.
-
-
 ### Step 4: Job Output
-Information about the status of the job will be output to STDOUT. If the job runs successfully a ‘Success’ message will be output to STDOUT, the destination dataset id will be printed out and the program will exit with a normal status code (0). If there was a problem running the job a detailed error message will be output to STDERR and the program will exit with an error status code (1). You can capture the exit code to configure error handling logic within your ETL process.
+Information about the status of the job will be output to STDOUT. If the job runs successfully a ‘Success’ message will be output to STDOUT.  DataSync will also return with the destination dataset id and exit with a normal status code (0). If there was a problem running the job a detailed error message will be output to STDERR and the program will exit with an error status code (1). You can capture the exit code to configure error handling logic within your ETL process.
 
 ### Complete example job
 
 ```
-java -jar datasync.jar -c config.json -f business_licenses_2014-02-10.csv -h true -i 7tgi-grrk -m replace -pf true -sc control.json
+java -jar DataSync-1.5-jar-with-dependencies.jar -c config.json -f business_licenses_2014-02-10.csv -h true -i 7tgi-grrk -m replace -pf true -sc control.json
 ```
 
 config.json contents:
 ```json
 {
-    "domain": "https://data.cityofchicago.org",
-    "username": "john.smith@cityofchicago.org",
+    "domain": "https://opendata.socrata.com",
+    "username": "publisher@opendata.socrata.com",
     "password": "secret_password",
     "appToken": "fPsJQRDYN9KqZOgEZWyjoa1SG",
     "adminEmail": "",
@@ -217,13 +215,13 @@ control.json contents:
 Simply run:
 
 ```
-java -jar datasync.jar <.sij FILE TO RUN>
+java -jar DataSync-1.5-jar-with-dependencies.jar <.sij FILE TO RUN>
 ```
 
 For example:
 
 ```
-java -jar datasync.jar /Users/john/Desktop/business_licenses.sij
+java -jar DataSync-1.5-jar-with-dependencies.jar /Users/john/Desktop/business_licenses.sij
 ```
 
 **NOTE:** you can also create an .sij file directly (rather than saving a job using the DataSync UI) which stores the job details in JSON format. Here is an example:
