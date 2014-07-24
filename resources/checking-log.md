@@ -54,6 +54,10 @@ DataSync logs for a specific dataset can be found by visiting:
 
     https://<Your domain>/datasync/id/<Your dataset ID>/log/index.json
 
+The status of an in-progress job on a specific dataset can be found by visiting:
+
+    https://<Your domain>/datasync/id/<Your dataset ID>/status/index.json
+
 DataSync logs for a specific job can be found by visiting 
 
     https://<Your domain>/datasync/id/<Your dataset ID>/log/<Your job ID>.json
