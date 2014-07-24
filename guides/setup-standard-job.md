@@ -66,7 +66,7 @@ Select the 'Publish method' by selecting one of the following options:
 
 *IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then DataSync will not be able to determine what rows to update and all rows in the CSV/TSV file will be appended to the dataset. [Learn more about Row Identifiers and how to establish them](http://dev.socrata.com/docs/row-identifiers.html)*
 
-- `append`: uses same code path as upsert.  Enforces append-only behavior by ensuring that a row identifier does not exist on the dataset.  
+- `append`: same as upsert.  Deprecated
 
 - `delete`: delete all rows matching Row Identifiers given in CSV/TSV file. The CSV/TSV should only contain a single column listing the Row Identifiers to delete.
 
