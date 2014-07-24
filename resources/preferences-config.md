@@ -73,9 +73,7 @@ If you wish for emails to be automatically sent to an administrator if an error 
 
 **NOTICE:** Just like with the the authentication details, the SMTP password is stored unencrypted in the Registry on Windows platforms and in analogous locations on Mac and Linux.
 
-If you do not know of an existing SMTP you can use you can register a free GMail account to act as your SMTP server. [Register a new account](https://accounts.google.com/SignUp?service=mail).
-
-After registering your account enter the following details to configure the SMTP settings for your new GMail account:
+If you do not know of an existing SMTP server you can use GMail with the following settings:  
 
 - **Outgoing Mail Server:** smtp.gmail.com
 - **SMTP Port:** 587
