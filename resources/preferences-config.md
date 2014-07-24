@@ -5,7 +5,7 @@ bodyclass: homepage
 ---
 
 ### Contents
-- [Set up logging (using a dataset)](#seting-up-logging-using-a-dataset)
+- [Set up logging (using a dataset)](#setting-up-logging-using-a-dataset)
 - [Error Notification Auto-Email Setup](#error-notification-auto-email-setup)
 - [Chunking Configuration](#chunking-configuration)
 - [Proxy Configuration](#proxy-configuration)
