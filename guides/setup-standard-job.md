@@ -7,7 +7,7 @@ bodyclass: homepage
 This guide covers how to set up a job using Socrata DataSync's UI. For more information on running Datasync from a command line please see [headlessly (in command-line mode)]({{ site.root }}/guides/setup-standard-job-headless.html).
 
 ### Step 1: Download DataSync
-Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}, and download the latest version. 
+Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and download the latest version. 
 
 ### Step 2: Launching DataSync
 Launch DataSync navigating to the folder containing the Datasync JAR file that you downloaded previously and run the following command:
