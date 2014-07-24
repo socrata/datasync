@@ -135,8 +135,8 @@ The `ignoreColumns` options you to exclude columns within the CSV/TSV.  This may
 
 ### Complete control file settings
 The control file is comprised of the
-- [Action setting](#action-setting)
-- [File type settings](#filetype-settings)
+- [Action setting](#actions)
+- [CSV or TSV settings](#csv-or-tsv-settings)
 
 #### Actions
 The action is given by one of the following strings:
@@ -147,8 +147,6 @@ The action is given by one of the following strings:
 | Append | Use if the CSV/TSV contains rows to append to append to the dataset. If the dataset does not have a RowID, then all rows in the CSV are added, even if they duplicate existing rows. If the dataset does have a RowID, then matching row IDs will be updated.  New row IDs will be appended to the dataset.  *This is not yet supported in DataSync.*
 | Delete | Use if the CSV/TSV contains row IDs of rows to delete. This option requires that a [row indentifier](http://dev.socrata.com/docs/row-identifiers.html) be set on the dataset.
 
-
-{#filetype-settings}<p>&nbsp;</p>
 
 #### CSV or TSV Settings
 The following are options available to both CSV files or TSV files within the `csv` or `tsv` object:
