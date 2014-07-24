@@ -17,10 +17,12 @@ To run a Port Job in DataSync go to File -> New... -> Port Job and fill out the 
 
 **Port Method:** Copy schema only
 
-
 **Source Domain:** https://adrian.demo.socrata.com
+
 **Source Dataset ID:** aywp-657c
+
 **Destination Domain:** `[YOUR DOMAIN]`
+
 **Publish Destination Dataset?:** Yes
 
 Then click the "Run Job Now" button and it will automatically create an empty log dataset on the destination domain you entered.
@@ -31,14 +33,23 @@ Alternatively to using a Port Job, if you wish to create the log dataset manuall
 Be sure that you set the column data types to match those listed below:
 
 **Date:** Date & Time
+
 **DatasetID:** Plain Text
+
 **FileToPublish:** Plain Text
+
 **PublishMethod:** Plain Text
+
 **JobFile:** Plain Text
+
 **RowsUpdated:** Number
+
 **RowsCreated:** Number
+
 **RowsDeleted:** Number
+
 **Success:** Checkbox
+
 **Errors:** Plain Text
 
 After you have created the log dataset, In DataSync go to Edit -> Preferences. In the popup window enter the dataset ID of the log dataset you just uploaded or created via DataSync Port Job.
@@ -53,10 +64,14 @@ If you do not know of an existing SMTP you can use you can register a free GMail
 After registering your account enter the following details to configure the SMTP settings for your new GMail account:
 
 **Outgoing Mail Server:** smtp.gmail.com
+
 **SMTP Port:** 587
+
 Check the “Use SSL” box
 **SSL Port:** 465
+
 **SMTP Username:** `[your GMail username]`
+
 **SMTP Password:** `[your GMail password]`
 
 Once you have entered all the SMTP settings, you should test they are valid by clicking “Test SMTP Settings”. If all goes well click “Save” in the preferences window. Finally, test running your job to make sure both the target dataset and the log dataset get properly updated (one new row will be created in the log dataset each time a job is run).
