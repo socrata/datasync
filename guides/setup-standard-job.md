@@ -6,12 +6,22 @@ bodyclass: homepage
 
 This guide covers how to set up a job using Socrata DataSync's UI. For more information on running Datasync from a command line please see [headlessly (in command-line mode)]({{ site.root }}/guides/setup-standard-job-headless.html).
 
-### Step 1: Enter authentication details
-Enter your authentication details at the bottom left of DataSync (domain, username, password, and app token). The domain is the root domain of your data site and must begin with https:// (i.e. [https://data.cityofchicago.org](https://data.cityofchicago.org)). The username and password are those of a Socrata account that has a Publisher role. Enter your App token.  If you do not yet have an app token, please see [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html). The username, password and application token will be saved as part of the job configuration.  We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tying DataSync to a particular person’s account.
+### Step 1: Download DataSync
+Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}, and download the latest version. 
+
+### Step 2: Launching DataSync
+Launch DataSync navigating to the folder containing the Datasync JAR file that you downloaded previously and run the following command:
+
+```
+java -jar DataSync-1.5-jar-with-dependencies.jar
+```
+
+### Step 3: Enter authentication details
+Enter your authentication details at the bottom left of DataSync (domain, username, password, and app token). The domain is the root domain of your data site and must begin with https:// (i.e. [https://opendata.socrata.com](https://opendata.socrata.com)). The username and password are those of a Socrata account that has a Publisher role. Enter your App token.  If you do not yet have an app token, please see [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html). The username, password and application token will be saved as part of the job configuration.  We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tying DataSync to a particular person’s account.
 
 **NOTICE:** DataSync stores the authentication details unencrypted in the Registry on Windows platforms (in the following location: HKEY_CURRENT_USER\Software\JavaSoft\Prefs) and in analogous locations on Mac and Linux. If you are concerned about this as a potential security issue you may want to look into alternative publishing methods. Please contact support if you have questions.
 
-### Step 2: Enter job details
+### Step 4: Enter job details
 
 Upon opening the program a new 'Untitled job' appears in a tab. You can have any number of jobs open and each will be in their own tab.
 
@@ -83,7 +93,7 @@ When using replace via FTP or HTTP you must supply or generate a control file. I
 
 For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/control-config.html)
 
-### Step 3: Run the job and optionally save it
+### Step 5: Run the job and optionally save it
 You can run your job by clicking the “Run Job Now” button. A loading spinner will appear as the job runs.  The length of the job will depend on the size of the CSV / TSV uploaded. Once complete, a popup will indicate if the job was successful or notify you of any errors. 
 
 If the job was successful you can save the job to a file on the computer by clicking “Save Job” and selecting a location to save the file on your computer (job files are saved as .sij files). When saving your job we recommend choosing a filename that does not contain spaces (e.g. 'my_job.sij', do not use a name like 'my job.sij'). After saving the file the '*Command to execute with scheduler*' field is populated with the command to run the given job. Customers can use this field to run DataSync from the command line on a scheduled basis. You can later open a previously saved job by going to File -> Open and finding the job file you saved previously.
@@ -94,7 +104,7 @@ If the job was successful you can save the job to a file on the computer by clic
 When running jobs in the UI DataSync does not display detailed logging information. To view detailed logging information you will need to run DataSync from the command line.  To do so, copy the 'Command to execute with scheduler' (click 'Copy to clipboard' next to the textbox) and runn that command in your Terminal/Command Prompt. The terminal will output detailed logging information as the job runs.
 </div>
 
-### Step 4: Scheduling your jobs to run at a specified interval
+### Step 6: Scheduling your jobs to run at a specified interval
 To automate updating a dataset you must schedule the DataSync job to run automatically at a specified interval (i.e once per day). This can be done with standard tools such as the Windows Task Scheduler or Cron.
 
 [Read the documentation for how to schedule a saved job]({{ site.root }}/resources/schedule-job.html)
