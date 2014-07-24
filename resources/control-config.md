@@ -77,7 +77,7 @@ If the first line of the CSV/TSV is data (there is no header row), for example y
 ##### Timestamp Format Options
 The `floatingTimestampFormat` and `fixedTimestampFormat` options specify how date/time data is formatted in the CSV/TSV file. `floatingTimestampFormat` applies to ("Date & Time" datatype columns).  `fixedTimestampFormat` functions similarly but applies  ("Date & Time (with timezone)" datatype columns). If the format does not specify a time zone, the zone may be given via the `timezone` option.  If no zone information is provided, UTC is assumed.
 
-Both `floatingTimestampFormat` and `fixedTimestampFormat` accept a string (e.g. "ISO8601") or a JSON-formatted list of formats including "ISO8601" and any date/time "Joda time" format-string. Joda time syntax is documented in detail here: [http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html)
+Both `floatingTimestampFormat` and `fixedTimestampFormat` accept a string (e.g. "ISO8601") or a JSON-formatted list of formats including "ISO8601" and any date/time "Joda time" format-string. Joda time syntax is documented in detail here: [http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html).  Note that time specification "z" cannot be used; it is an output only formatter. 
 
 Example syntax to accept four of the most common date/time formats:
 ```
