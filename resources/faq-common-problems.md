@@ -13,7 +13,7 @@ Typically, this is caused for one of three reasons:
 
 To fix the first two bullets, verify that the column names in your control file match the field names in the dataset, and that the list is comprehensive.  
 
-To fix the latter, either remove the column from your dataset, or use the ignoreColumns option found in the [control file]({{ site.root }}/resources/ftp-control-config.html) guide.
+To fix the latter, either remove the column from your dataset, or use the ignoreColumns option found in the [control file]({{ site.root }}/resources/control-config.html) guide.
 
 
 ### What does this error mean? ‘java.lang.UnsupportedClassVersionError: com/socrata/exceptions/SodaError : Unsupported major.minor version 51.0’
