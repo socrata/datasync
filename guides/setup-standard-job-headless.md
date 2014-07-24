@@ -12,59 +12,7 @@ NOTICE: Before using DataSync in headless mode, we recommend familiarizing yours
 
 DataSync's command line interface, or "headless mode," enables easy integration of DataSync into ETL code or other software systems.  DataSync jobs can be run from the command line in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was previously saved using the user interface. This guide focuses on (1). 
 
-### Step 1: Establish “global” configuration (e.g. authentication details)
-The configuration settings are stored in a json file, e.g. config.json, which can then be passed to each job.  The four options in the example below are required:
-```json
-{
-    "domain": "<YOUR DOMAIN>",
-    "username": "<YOUR USERNAME>",
-    "password": "<YOUR PASSWORD>",
-    "appToken": "<YOUR APP TOKEN>",
-}
-```
-The full set of options is:
-
-| Option    | Requirement | Explanation
-| ------------- | ------------------------------ | -------------
-| domain | required | The scheme and root domain of your data site.  (e.g. https://opendata.socrata.com)
-| username | required | Your Socrata username. This user must have a Publisher role or Owner rights to at least one dataset. We recommend creating a dedicated Socrata account (with these permissions) to use with DataSync rather than tie DataSync to a particular person’s primary account. (e.g. publisher@opendata.socrata.com)
-| password | required | Your Socrata password. Note that this will be stored in clear-text as part of the file. We recommend taking additional precautions to protect this file, including potentially only adding it when your ETL process runs. 
-| appToken | required | An app token.   If do not yet have an app token, please reference [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html).
-| logDatasetID | optional | The dataset indentifier of the log dataset. If you have not provisioned a log dataset and would like to do so, please refer to [Logging documentation]({{ site.root }}/resources/preferences-config.html).
-| adminEmail | required only if `emailUponError` is "true" | The email address of the administrator or user that error notifications should be sent to.
-| emailUponError | optional | Whether to send email notifications of errors that occurred while running jobs. Defaults to "false".
-| outgoingMailServer | required only if `emailUponError` is "true" | The address of your SMTP server
-| smtpPort | required only if `emailUponError` is "true" | The port of your SMTP server
-| sslPort | required only if `emailUponError` is "true" | If SSL port of your SMTP server
-| smtpUsername | required only if `emailUponError` is "true" | Your SMTP username
-| smtpPassword | required only if `emailUponError` is "true" | Your SMTP password
-| filesizeChunkingCutoffMB | Used only for append, upsert, delete and Soda2-replace jobs | If the CSV/TSV file size is less than this, the entire file will be sent in one chunk.  Defaults to 10 MB.
-| numRowsPerChunk | Used only for append, upsert, delete and Soda2-replace jobs | The number of rows to send in each chunk.  If the CSV/TSV file size is less than  `filesizeChunkingCutoffMB`, all rows will be sent in one chunk. Defaults to 10,000 rows.
-| proxyHost | required if operating through a proxy | The hostname of the proxy server.
-| proxyPort | required if operating through a proxy | The port that the proxy server listens on.
-| proxyUsername | optional | The username to use if the proxy is authenticated.  If this information is sensitive, you may instead pass it at runtime via the -pun, --proxyUsername commandline option.
-| proxyPassword | optional | The password to use if the proxy is authenticated.  If this information is sensitive, you may instead pass it at runtime via the -ppw, --proxyPassword commandline option.
-
-
-There are two ways to establish the “global” DataSync configuration:
-
-1. **Load configuration from a .json file when running each job** (RECOMMENDED)
-This method of loading configuration requires supplying a flag pointing DataSync to config.json each time you run a job in headless/command-line mode. For example, you would run:
-
-```
-java -jar datasync.jar -c config.json <OTHER FLAGS> ...
-```
-
-where `<OTHER FLAGS>` are those discussed below
-
-2.**Load configuration into the DataSync "memory"**
-DataSync also provides the ability to load your configuration once into memory, at which point it will be used for all future jobs.  To load configuration into DataSync “memory” run this command once:
-
-```
-java -jar datasync.jar -t LoadPreferences -c config.json
-```
-
-**NOTICE:** DataSync stores the authentication details unencrypted in the Registry on Windows platforms (in the following location: HKEY_CURRENT_USER\Software\JavaSoft\Prefs) and in analogous locations on Mac and Linux. If you are concerned about this as a potential security issue you may want to look into alternative publishing methods. Please contact support if you have questions.
+### Step 1: Establish your configuration (e.g. authentication details)
 
 
 ### Step 2: Obtain the Dataset ID
