@@ -11,7 +11,6 @@ bodyclass: homepage
 - [Proxy Configuration](#proxy-configuration)
 
 ### Setting up logging (using a dataset)
-
 You can set up a Socrata dataset to store log information each time a DataSync jobs runs. This is especially useful if you will be [scheduling your jobs]({{ site.root }}/resources/schedule-job.html) to run automatically at some specified interval. You first need to manually create a log dataset. You should probably keep this dataset private (rather than set it as public). The easiest way to se this up is to run a DataSync Port Job that copies the schema from [this example log dataset](https://adrian.demo.socrata.com/dataset/DataSync-Log/aywp-657c).
 
 To run a Port Job in DataSync go to File -> New... -> Port Job and fill out the following fields as noted below:
@@ -43,7 +42,6 @@ Be sure that you set the column data types to match those listed below:
 After you have created the log dataset, In DataSync go to Edit -> Preferences. In the popup window enter the dataset ID of the log dataset you just uploaded or created via DataSync Port Job.
 
 ### Error Notification Auto-Email Setup
-
 If you wish for emails to be automatically sent to an administrator if an error occurs when any DataSync job is run enter the administrator’s email address and check the box check the box labeled "Auto-email admin upon error". The same log dataset and administrator email is used for all DataSync jobs (i.e. it is a global setting like the authentication details). For auto-emailing to work you must configure the SMTP settings to point to a server you have access to.
 
 **NOTICE:** Just like with the the authentication details, the SMTP password is stored unencrypted in the Registry on Windows platforms and in analogous locations on Mac and Linux.
@@ -62,7 +60,6 @@ Check the “Use SSL” box
 Once you have entered all the SMTP settings, you should test they are valid by clicking “Test SMTP Settings”. If all goes well click “Save” in the preferences window. Finally, test running your job to make sure both the target dataset and the log dataset get properly updated (one new row will be created in the log dataset each time a job is run).
 
 ### Chunking Configuration
-
 Chunking is handled automatically according to the defaults set in Datasync, though in some cases it may be necessary or preferable to adjust the defaults. Two options are avaible:
 
   - `Chunking filesize threshold`: If the CSV/TSV file size is less than this, the entire file will be sent in one chunk.  The default value is 10 MB.
@@ -71,8 +68,7 @@ Chunking is handled automatically according to the defaults set in Datasync, tho
  To modify the defaults go to Edit -> Preferences and modify the numbers.
 
 ### Proxy Configuration
-
-You can configure DataSync ot use an authenticated or unauthenticated proxy server. Please note, this option is only available for [Standard replace jobs]({{ site.root }}/guides/setup-standard-job.html) and only if choosing 'via HTTP using Delta-importer-2'.  At minimum, the following options will need to be set:
+You can configure DataSync to use an authenticated or unauthenticated proxy server. Please note, this option is only available for [Standard replace jobs]({{ site.root }}/guides/setup-standard-job.html) and only if choosing 'via HTTP using Delta-importer-2'.  At minimum, the following options will need to be set:
 
   - `Proxy Host`: The fully qualified host name of the proxy server, e.g. https://myProxyServer.com.
   - `Proxy Port`:  The port that the proxy server listens on, e.g. 8080
