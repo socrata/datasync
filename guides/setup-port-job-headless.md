@@ -22,13 +22,14 @@ If you are copying data from one dataset to another existing dataset, you will a
 For general help using DataSync in headless/command-line mode run:
 
 ```
-java -jar datasync.jar --help
+java -jar DataSync-1.5-jar-with-dependencies.jar
+ --help
 ```
 
 To run a job execute the following command, replacing `<..>` with the appropriate values (flags explained below):
 
 ```
-java -jar datasync.jar -c <CONFIG FILE> -t PortJob -pm copy_all -pd1 <SOURCE DOMAIN> -pi1 <SOURCE DATASET ID> -pd2 <DESTINATION DOMAIN>  -pdt <TITLE OF NEW DATASET> -pp true
+java -jar DataSync-1.5-jar-with-dependencies.jar -c <CONFIG FILE> -t PortJob -pm copy_all -pd1 <SOURCE DOMAIN> -pi1 <SOURCE DATASET ID> -pd2 <DESTINATION DOMAIN>  -pdt <TITLE OF NEW DATASET> -pp true
 ```
 
 Explanation of flags:
