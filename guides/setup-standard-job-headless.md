@@ -5,11 +5,12 @@ bodyclass: homepage
 ---
 
 <div class="well">
-<strong>NOTICE: The guide below only pertains to DataSync versions 1.0 and higher</strong>
+<strong>NOTICE:</strong> The guide below only pertains to DataSync versions 1.0 and higher
 </div>
 
+
 <div class="well">
-<strong>NOTICE: Before using DataSync in headless mode, we recommend familiarizing yourself with DataSync through the UI.  For information on using DataSync's UI please see [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)</strong>
+<strong>NOTICE:</strong> Before using DataSync in headless mode, we recommend familiarizing yourself with DataSync through the UI.  For information on using DataSync's UI please see [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
 </div>
 
 
