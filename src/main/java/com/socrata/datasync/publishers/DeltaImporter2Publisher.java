@@ -45,7 +45,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-public class DeltaImporter2Publisher {
+public class DeltaImporter2Publisher implements AutoCloseable {
 
     private static final String datasyncBasePath = "/datasync";
     private static final String datasyncPath = datasyncBasePath + "/id";
@@ -77,6 +77,7 @@ public class DeltaImporter2Publisher {
                 .setHost(domain);
     }
 
+    @Override
     public void close() throws IOException {
         http.close();
     }

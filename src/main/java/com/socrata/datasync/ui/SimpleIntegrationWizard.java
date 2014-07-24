@@ -291,20 +291,24 @@ public class SimpleIntegrationWizard {
             runJobNowButton.setEnabled(true);
 
             // show popup with returned status
-            if(!jobStatus.isError() && jobTabToRun.getClass().equals(PortJobTab.class)) {
-                PortJobTab selectedPortJobTab = (PortJobTab) jobTabToRun;
-                Object[] options = {"Yes", "No"};
-                int n = JOptionPane.showOptionDialog(frame,
-                        "Port job completed successfully. Would you like to open the destination dataset?\n",
-                        "Port Job Successful",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE,
-                        null, options, options[0]);
-                if (n == JOptionPane.YES_OPTION) {
-                    Utils.openWebpage(selectedPortJobTab.getURIToSinkDataset());
-                }
+            if(jobStatus.isError()) {
+                JOptionPane.showMessageDialog(frame, "Job completed with errors: " + jobStatus.getMessage());
             } else {
-                JOptionPane.showMessageDialog(frame, jobStatus.getMessage());
+                if (jobTabToRun.getClass().equals(PortJobTab.class)) {
+                    PortJobTab selectedPortJobTab = (PortJobTab) jobTabToRun;
+                    Object[] options = {"Yes", "No"};
+                    int n = JOptionPane.showOptionDialog(frame,
+                            "Port job completed successfully. Would you like to open the destination dataset?\n",
+                            "Port Job Successful",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null, options, options[0]);
+                    if (n == JOptionPane.YES_OPTION) {
+                        Utils.openWebpage(selectedPortJobTab.getURIToSinkDataset());
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Job completed successfully. " + jobStatus.getMessage());
+                }
             }
         }
     }

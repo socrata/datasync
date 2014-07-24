@@ -104,7 +104,12 @@ public class IntegrationJobValidity {
                     case "csv": fileControl = control.csv; break;
                     case "tsv": fileControl = control.tsv; break;
                 }
-                if (fileControl == null) {
+
+                JobStatus actionOkay = checkAction(control.action, job, schema);
+                if (actionOkay.isError())
+                    return actionOkay;
+
+                if (fileControl == null && !control.action.equalsIgnoreCase(PublishMethod.delete.name())) {
                     JobStatus noFileTypeContent = JobStatus.PUBLISH_ERROR;
                     noFileTypeContent.setMessage("The control file for '" + publishFile.getName() +
                             "' requires that the '" + fileExtension + "' option be filled in");
@@ -126,7 +131,7 @@ public class IntegrationJobValidity {
                 if (controlHeaderAgreement.isError())
                     return controlHeaderAgreement;
 
-                JobStatus controlSensibility = validateControlFile(fileControl, control.action, job, connectionInfo.getUrl());
+                JobStatus controlSensibility = validateControlFile(fileControl, connectionInfo.getUrl());
                 if (controlSensibility.isError())
                     return controlSensibility;
             }
@@ -332,11 +337,7 @@ public class IntegrationJobValidity {
         }
     }
 
-    private static JobStatus validateControlFile(FileTypeControl fileControl, String action, IntegrationJob job, String urlBase) {
-
-        JobStatus actionOkay = checkAction(action, job);
-        if (actionOkay.isError())
-            return actionOkay;
+    private static JobStatus validateControlFile(FileTypeControl fileControl, String urlBase) {
 
         if (fileControl == null) return JobStatus.VALID;
 
@@ -351,7 +352,7 @@ public class IntegrationJobValidity {
         return JobStatus.VALID;
     }
 
-    private static JobStatus checkAction(String action, IntegrationJob job) {
+    private static JobStatus checkAction(String action, IntegrationJob job, Dataset schema) {
         StringBuilder methods = new StringBuilder();
         boolean okAction = false;
         for (PublishMethod m : PublishMethod.values()) {
@@ -366,12 +367,25 @@ public class IntegrationJobValidity {
                     methods.toString());
             return status;
         }
+        if (!PublishMethod.replace.name().equalsIgnoreCase(action) && job.getPublishViaFTP()) {
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage("FTP does not currently support upsert, append or delete");
+            return status;
+        }
         PublishMethod publishMethod = job.getPublishMethod();
         if (publishMethod != null && !action.equalsIgnoreCase(publishMethod.name())) {
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage("Conflicting Publish Methods: " +
                     "The publish method selected was '" + publishMethod.name() +
                     "', but the 'action' option in the control file specifies the publish method as '" + action + ".");
+            return status;
+        }
+        String rowIdentifier = DatasetUtils.getRowIdentifierName(schema);
+        if (rowIdentifier == null && PublishMethod.delete.name().equalsIgnoreCase(action)) {
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage("Dataset Requirement Unfulfilled: " +
+                    "To delete from a dataset, a row identifier must be set. Dataset '" + schema.getId() +
+                    "' does not have a row identifier set");
             return status;
         }
         return JobStatus.VALID;

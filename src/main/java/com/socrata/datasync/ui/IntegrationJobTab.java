@@ -322,13 +322,7 @@ public class IntegrationJobTab implements JobTab {
         } else {
             jobToRun.setControlFileContent(controlFileContentTextArea.getText());
         }
-        try {
-            return jobToRun.run();
-        } catch (IOException e) {
-            JobStatus status = JobStatus.PUBLISH_ERROR;
-            status.setMessage(e.getMessage());
-            return status;
-        }
+        return jobToRun.run();
     }
 
     public void saveJob() {

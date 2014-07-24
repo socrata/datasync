@@ -13,7 +13,7 @@ import java.io.IOException;
 public class SimpleIntegrationRunner {
 	/**
 	 * @author Adrian Laurenzi
-	 * 
+	 *
 	 * A command-line interface to DataSync
 	 */
 
@@ -21,7 +21,7 @@ public class SimpleIntegrationRunner {
         File jobFile = new File(jobFileToRun);
         if(jobFile.exists()) {
             try {
-            	Job job = null;
+            	Job job;
             	//TODO BW: Follow how port jobs are run from command line?
             	if (jobFileToRun.endsWith(MetadataJobTab.JOB_FILE_EXTENSION)) {
             		job = new MetadataJob(jobFileToRun);
@@ -31,10 +31,12 @@ public class SimpleIntegrationRunner {
             	}
                 JobStatus status = job.run();
                 if(status.isError()) {
+                    System.err.print("Job completed with errors: ");
                     System.err.println(status.getMessage());
                     System.exit(1);
                 } else {
                     // job ran successfully!
+                    System.out.println("Job completed successfully");
                     System.out.println(status.getMessage());
                 }
             } catch (IOException e) {
@@ -53,9 +55,11 @@ public class SimpleIntegrationRunner {
         try {
             status = job.run();
             if(status.isError()) {
+                System.err.print("Job completed with errors: ");
                 System.err.println(status.getMessage());
                 System.exit(1);
             } else {
+                System.out.println("Job completed successfully");
                 if(job.getClass() == PortJob.class) {
                     System.out.println(status.getMessage() + ". " +
                         "Your newly created dataset is at:\n" +
@@ -68,5 +72,5 @@ public class SimpleIntegrationRunner {
             System.exit(1);
         }
     }
-
 }
+
