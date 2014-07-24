@@ -4,7 +4,7 @@ title: Setup a Standard Job (GUI)
 bodyclass: homepage
 ---
 
-This guide covers how to set up a job using Socrata DataSync's UI. DataSync can also be run [headlessly (in command-line mode)]({{ site.root }}/guides/setup-standard-job-headless.html).
+This guide covers how to set up a job using Socrata DataSync's UI. For more information on running Datasync from a command line please see [headlessly (in command-line mode)]({{ site.root }}/guides/setup-standard-job-headless.html).
 
 ### Step 1: Enter authentication details
 Enter your authentication details at the bottom left of DataSync (domain, username, password, and app token). The domain is the root domain of your data site and must begin with https:// (i.e. [https://data.cityofchicago.org](https://data.cityofchicago.org)). The username and password are those of a Socrata account that has a Publisher role. Enter your App token.  If you do not yet have an app token, please see [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html). The username, password and application token will be saved as part of the job configuration.  We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tying DataSync to a particular person’s account.
@@ -46,7 +46,7 @@ Select the 'Publish method' by selecting one of the following options:
       - gracefully handles network failures
       - minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
       - can reliably handle very large files (1 million+ rows)
-      - allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/ftp-control-config.html)
+      - allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/control-config.html)
     2. via FTP: This functions in much the same way as the HTTP variant, with 2 notable differences:
       - the entire CSV/TSV file will transfered
       - if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)
@@ -81,7 +81,7 @@ When using replace via FTP or HTTP you must supply or generate a control file. I
 * If you wish to set the timezone of the dates being imported
 
 
-For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/ftp-control-config.html)
+For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/control-config.html)
 
 ### Step 3: Run the job and optionally save it
 You can run your job by clicking the “Run Job Now” button. A loading spinner will appear as the job runs.  The length of the job will depend on the size of the CSV / TSV uploaded. Once complete, a popup will indicate if the job was successful or notify you of any errors. 
