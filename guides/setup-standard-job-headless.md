@@ -13,7 +13,7 @@ NOTICE: Before using DataSync in headless mode, we recommend familiarizing yours
 DataSync's command line interface, or "headless mode," enables easy integration of DataSync into ETL code or other software systems.  DataSync jobs can be run from the command line in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was previously saved using the user interface. This guide focuses on (1). 
 
 ### Step 1: Establish your configuration (e.g. authentication details)
-
+Information about your domain, username, password, app token and a number of other global settings can be passed either through memory, or through a configuration file (preferred).  This guide will assume that you have created a global configuration file.  If you have not yet created that file, please refer to the creating a configuration file section of the  [configuration guide]({{ site.root }}/resources/preferences-config.md#creating-a-configuration-file-for-running-headless-jobs).  Note that the user running the job must have publisher rights on the dataset.
 
 ### Step 2: Obtain the Dataset ID
 You will need the dataset ID of the dataset you wish to publish to. To obtain the dataset ID navigate to the dataset in your web browser and in the address bar the dataset ID is the code at the end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
