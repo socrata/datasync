@@ -14,7 +14,7 @@ DataSync preferences determine the core set of global configuration for use with
 - [Creating a configuration file for running headless jobs](#creating-a-configuration-file-for-running-headless-jobs)
 
 ### Available configuration
-The following options are available for configuring DataSync
+The following options are available to config DataSync
 
 | Option    | Requirement | Explanation
 | ------------- | ------------------------------ | -------------
