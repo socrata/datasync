@@ -35,5 +35,5 @@ To schedule a DataSync job simply copy the text within the "Command to execute w
 0 0 * * * java -jar datasync.jar /path/to/myjob.sij
 ```
 
-The above guide also applies to Mac OSX but you can find a more Mac-specific guide here:
+A more Mac-specific guide here:
 [http://www.maclife.com/article/columns/terminal_101_creating_cron_jobs](http://www.maclife.com/article/columns/terminal_101_creating_cron_jobs)
