@@ -6,16 +6,26 @@ bodyclass: homepage
 
 Port jobs are used for copying datasets that are already on the Socrata platform. Port jobs allow users with publishing rights to copy both dataset schemas (metadata and columns) and data (rows). This guide shows how to setup and run a Port Job using the graphical user interface.
 
-### Step 1: Create a new Port Job.
+### Step 1: Download DataSync
+Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and download the latest version. 
+
+### Step 2: Launching DataSync
+Launch DataSync navigating to the folder containing the Datasync JAR file that you downloaded previously and run the following command:
+
+```
+java -jar DataSync-1.5-jar-with-dependencies.jar
+```
+
+### Step 3: Create a new Port Job.
 
 In the DataSync UI go to `File -> New... -> Port Job`. This will open up a new Port Job
 
-### Step 2: Enter authentication details
+### Step 4: Enter authentication details
 Enter your authentication details at the bottom left of DataSync (domain, username, password, and app token). The domain is the root domain of your data site and must begin with https:// (i.e. [https://data.cityofchicago.org](https://data.cityofchicago.org)). The username and password are those of a Socrata account that has a Publisher role. Enter your App token.  If you do not yet have an app token, please see [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html). The username, password and application token will be saved as part of the job configuration.  We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tying DataSync to a particular person’s account.
 
 **NOTICE:** DataSync stores the authentication details unencrypted in the Registry on Windows platforms (in the following location: HKEY_CURRENT_USER\Software\JavaSoft\Prefs) and in analogous locations on Mac and Linux. If you are concerned about this as a potential security issue you may want to look into alternative publishing methods. Please contact support if you have questions.
 
-### Step 3:  Configure the Port Job.
+### Step 5:  Configure the Port Job.
 
 The configurable options to run a Port Job are:
 
@@ -44,5 +54,5 @@ The configurable options to run a Port Job are:
   2. No, create a working copy: This will leave the destination dataset as a working copy.
 
 
-### Step 4:  Run, save and schedule the Job.
+### Step 6:  Run, save and schedule the Job.
 Once your job is setup, you can run it like any other job.  For more details, please see steps 4 and 5 of the [Setting up a Standard Job (GUI)]({{ site.root }}/guides/setup-standard-job.html) Guide.
