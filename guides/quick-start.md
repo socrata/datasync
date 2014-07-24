@@ -12,10 +12,10 @@ This guide covers provides an overview of the minimal set of steps to use DataSy
 Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}, and download the latest version. 
 
 ### Step 2: Boot DataSync
-Launch DataSync navigating to the folder containing the Datasync1.5.jar that you downloaded previously and run the following command:
+Launch DataSync navigating to the folder containing the Datasync JAR file that you downloaded previously and run the following command:
 
 ```
-java -jar datasync1.5.jar
+java -jar datasync.jar
 ```
 
 ### Step 3: Enter authentication details
