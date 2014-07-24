@@ -33,7 +33,7 @@ Select the CSV or TSV file on your local machine or networked folder that you wi
 
 If the CSV contains a header row, keep "File to publish contains header row" checked if the CSV/TSV contains a header row. The header row should contain the identifiers of the columns (a.k.a. API Field Names).
 <br><br>
-If the CSV does not contain a header row, uncheck "File to publish contains header row". In this case the order of the columns in the CSV/TSV must exactly match that of Socrata dataset.
+If the CSV does not contain a header row, uncheck "File to publish contains header row".  In this case, the control file must contain the list of columns, in the order in which they appear in the CSV.
 
 
 **Obtain and Enter the Dataset ID ...**
