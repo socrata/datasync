@@ -5,15 +5,12 @@ bodyclass: homepage
 ---
 
 ### Contents
-- [Basic control file setup](#setup-control)
+- [Basic control file setup](#basic-control-file-setup)
     - [Header row / column list](#header-row)
     - [Date/time formatting](#date-time)
-    - [Location column and geocoding configuration](#location-geocoding)
-    - [Ignoring columns](#ignore-columns)
-- [Complete control file settings](#complete-control)
-
-
-{#setup-control}
+    - [Location column and geocoding configuration](#location-column-and-geocoding-configuration)
+    - [Ignoring columns](#ignoring-columns)
+- [Complete control file settings](#complete-control-file-settings)
 
 <div class="well">
 <strong>NOTICE:</strong> This guide in only applicable when using the replace method via FTP or HTTP.
@@ -48,8 +45,6 @@ An example of a typical control file:
 
 This guide will describe how to use the different options within the control file.
 
-{#header-row}<p>&nbsp;</p>
-
 #### Header row/column list
 
 The `columns` and `skip` options enable configuration of how the columns within the CSV/TSV align with those of the dataset.
@@ -78,8 +73,6 @@ If the first line of the CSV/TSV is data (there is no header row), for example y
 "columns": ["first_name","last_name","age"],
 "skip": 0,
 ```
-
-{#date-time}<p>&nbsp;</p>
 
 #### Date/time formatting
 
@@ -141,19 +134,12 @@ When you provide any combination of location information but do not fill in lati
 <strong>IMPORTANT:</strong> If you are providing the latitude and longitude values as inputs to the Location column (i.e. you are NOT using Socrata's geocoding), you should set the `useSocrataGeocoding` option to `false`.  If you are not providing the latitude and longitude, you should to set this to `true`.  This will minimize the number of perceived changes to the dataset, decreasing the time it takes to complete your job.  If you are constructing multiple Location columns and they require different `useSocrataGeocoding` settings, you may use the `overrides` option.
 </div>
 
-{#ignore-columns}<p>&nbsp;</p>
-
 #### Ignoring Columns
-
 The `ignoreColumns` options you to exclude columns within the CSV/TSV.  This may be necessary if the dataset lacks a column within the CSV or if a synthetic location is provided in the CSV, but you would still like it constructed from individual address fields.
 
 `ignoreColumns`: List of column names in the following format `["col_id1","col_id2",..]`. These must be present in `columns`.
 
-
-{#complete-control}<p>&nbsp;</p>
-
 ### Complete control file settings
-
 The control file is comprised of the
 - [Action setting](#action-setting)
 - [File type settings](#filetype-settings)
@@ -161,7 +147,6 @@ The control file is comprised of the
 {#action-setting}<p>&nbsp;</p>
 
 #### Actions
-
 The action is given by one of the following strings:
 
 | Option    | Explanation
@@ -174,7 +159,6 @@ The action is given by one of the following strings:
 {#filetype-settings}<p>&nbsp;</p>
 
 #### CSV or TSV Settings
-
 The following are options available to both CSV files or TSV files within the `csv` or `tsv` object:
 
 | Option    | Explanation
