@@ -17,19 +17,20 @@ Customers who are using DataSync via FTP or HTTP can get detailed debugging info
 #### Connecting to the FTP server
 You can use [Filezilla](https://filezilla-project.org/) or any other FTP client that supports FTPS to connect to the FTP server.
 
-In Filezilla go to `File -> Site Manager`
+In Filezilla go to
+    `File -> Site Manager`
 
 Set up a new connection with the following details:
 
-**Host:** production.ftp.socrata.net
-**Port:** 22222
-**Protocol:** FTP
-**Encryption:** Require explicitly FTP over TLS
-**User:** `<Your Socrata username>`
-**Password:** `<Your Socrata password>`
+- **Host:** production.ftp.socrata.net
+- **Port:** 22222
+- **Protocol:** FTP
+- **Encryption:** Require explicitly FTP over TLS
+- **User:** `<Your Socrata username>`
+- **Password:** `<Your Socrata password>`
 
 Ensure the transfer mode is 'Passive' by going to:
-`Transfer Settings -> Transfer mode : Passive.`
+    `Transfer Settings -> Transfer mode : Passive.`
 
 Save the connection and press "Connect"
 
