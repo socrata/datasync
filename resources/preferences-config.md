@@ -16,6 +16,8 @@ You can set up a Socrata dataset to store log information each time a DataSync j
 To run a Port Job in DataSync go to File -> New... -> Port Job and fill out the following fields as noted below:
 
 **Port Method:** Copy schema only
+
+
 **Source Domain:** https://adrian.demo.socrata.com
 **Source Dataset ID:** aywp-657c
 **Destination Domain:** `[YOUR DOMAIN]`
