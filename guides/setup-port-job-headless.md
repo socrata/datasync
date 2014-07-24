@@ -22,8 +22,7 @@ If you are copying data from one dataset to another existing dataset, you will a
 For general help using DataSync in headless/command-line mode run:
 
 ```
-java -jar DataSync-1.5-jar-with-dependencies.jar
- --help
+java -jar DataSync-1.5-jar-with-dependencies.jar --help
 ```
 
 To run a job execute the following command, replacing `<..>` with the appropriate values (flags explained below):
@@ -118,14 +117,14 @@ Information about the status of the job will be output to STDOUT. If the job run
 ### Complete example job
 
 ```
-java -jar datasync.jar -c config.json -t PortJob -pm copy_schema -pd1 https://data.cityofchicago.org -pi1 97wa-y6ff -pd2 https://data.cityofchicago.org -pdt ‘Port Job Test Title’ -pp true
+java -jar DataSync-1.5-jar-with-dependencies.jar -c config.json -t PortJob -pm copy_schema -pd1 https://opendata.socrata.com -pi1 97wa-y6ff -pd2 https://opendata.socrata.com -pdt ‘Port Job Test Title’ -pp true
 ```
 
 config.json contents:
 ```json
 {
-    "domain": "https://data.cityofchicago.org",
-    "username": "john.smith@cityofchicago.org",
+    "domain": "https://opendata.socrata.com",
+    "username": "publisher@socrata.com",
     "password": "secret_password",
     "appToken": "fPsJQRDYN9KqZOgEZWyjoa1SG",
 }
@@ -136,13 +135,13 @@ config.json contents:
 Simply run:
 
 ```
-java -jar datasync.jar <.spj FILE TO RUN>
+java -jar DataSync-1.5-jar-with-dependencies.jar <.spj FILE TO RUN>
 ```
 
 For example:
 
 ```
-java -jar datasync.jar /Users/john/Desktop/business_licenses.spj
+java -jar DataSync-1.5-jar-with-dependencies.jar /Users/john/Desktop/business_licenses.spj
 ```
 
 **NOTE:** you can also create an .spj file directly (rather than saving a job using the DataSync UI) which stores the job details in JSON format. Here is an example:
