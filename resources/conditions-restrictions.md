@@ -26,7 +26,11 @@ Data must be formatted as follows to pass validation:
 | Percent | The percent symbol must not be present. 45% should be represented as 45 not 0.45.
 | Date & Time | If the `floatingTimestampFormat` is "ISO8601" data must be in the following format:  yyyy-mm-ddTHH:mm:ss
 | Date & Time (with timezone) | If the `fixedTimestampFormat` is "ISO8601" data must be in the following format:  yyyy-mm-ddTHH:mm:ssz, where "z" is a four-digit-plus-sign offset from UTC (e.g., "-0800") or "Z" (which is  a synonym for "+0000").
-| Location | A human-readable US address with a (latitude, longitude) pair.  Example (Note that this must be all a single CSV value, and therefore quoted appropriately): "123 Main St. Mytown, YN 12345 (-123.4324235, 33.234546324)". The address, city, state, zip, and coordinate sub-parts are all optional.  The system will guess about breaking it apart into the location value’s constituent parts.  If your data does not include the coordinate pair, the server will attempt to geocode the address.  For fastest performance when using Socrata geocoding, `ignoreServerLatLong` should be set to "true" so that the geocoded values do not cause unnecessary replacement of rows. See also `syntheticLocations`.
+| Location | A human-readable US address with a (latitude, longitude) pair.  Example (Note that this must be all a single CSV value, and therefore quoted appropriately): "123 Main St. Mytown, YN 12345 (-123.4324235, 33.234546324)". 
+
+The address, city, state, zip, and coordinate sub-parts are all optional.  If not provided, the system will guess about how to break the field into the location’s constituent parts.  Note that this parsing is often non-deterministic and may result in unexpected values in your location column. 
+
+If your data does not include the coordinate pair, the server will attempt to geocode the address.  For fastest performance when using Socrata geocoding, `ignoreServerLatLong` should be set to "true" so that the geocoded values do not cause unnecessary replacement of rows. See also `syntheticLocations`.
 | Website URL | Must be a bare URL, such as http://www.google.com, or in the format 'Google (http://www.google.com)'.
 | Email | Must be in the format foo@foo.com.
 | Checkbox | Either "true" or "false". For data stored in the old backend, missing values are treated as false.
