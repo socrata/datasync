@@ -100,8 +100,6 @@ You can set this to one of the following:
 1. "UTC"
 2. A timezone name (e.g. "US/Pacific").  The list of accepted names can be found at [http://joda-time.sourceforge.net/timezones.html](http://joda-time.sourceforge.net/timezones.html). *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time).*
 
-{#location-geocoding}<p>&nbsp;</p>
-
 #### Location column and geocoding configuration
 The `syntheticLocations` option allows configuring a Location datatype column to populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV.
 
@@ -139,8 +137,6 @@ The `ignoreColumns` options you to exclude columns within the CSV/TSV.  This may
 The control file is comprised of the
 - [Action setting](#action-setting)
 - [File type settings](#filetype-settings)
-
-{#action-setting}<p>&nbsp;</p>
 
 #### Actions
 The action is given by one of the following strings:
