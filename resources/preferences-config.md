@@ -4,7 +4,7 @@ title: Preferences Configuration
 bodyclass: homepage
 ---
 ### Contents
-DataSync preferences determine the global configuration to be used by DataSync when running your job.  These preferences can be set either through the UI, or as part of a JSON formatted file for use when running your jobs headlessly.  The full set of options available to you can be found in the table below. Later sections will detail the specifics of many of these options.
+DataSync preferences determine the global configuration to be used by DataSync when running your job.  These preferences can be set either through the UI, or as part of a JSON formatted file for use when running your jobs headlessly.  The full set of options available to you can be found in the table below. Later sections will detail how to take advantage of these settings in specific scenarios.
 
 - [Available options](#available-configuration)
 - [Set up logging (using a dataset)](#setting-up-logging-using-a-dataset)
