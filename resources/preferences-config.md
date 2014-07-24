@@ -14,7 +14,8 @@ DataSync preferences determine the core set of global configuration for use with
 - [Creating a configuration file for running headless jobs](#creating-a-configuration-file-for-running-headless-jobs)
 
 ### Available configuration
-The following options are available for configurating DataSync
+The following options are available for configuring DataSync
+
 | Option    | Requirement | Explanation
 | ------------- | ------------------------------ | -------------
 | domain | required | The scheme and root domain of your data site.  (e.g. https://opendata.socrata.com)
