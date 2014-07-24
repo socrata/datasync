@@ -15,7 +15,6 @@ Customers who are using DataSync via FTP or HTTP can get detailed debugging info
 ### Connecting to the logs via FTP
 
 #### Connecting to the FTP server
-
 You can use [Filezilla](https://filezilla-project.org/) or any other FTP client that supports FTPS to connect to the FTP server.
 
 In Filezilla go to `File -> Site Manager`
@@ -37,7 +36,6 @@ Save the connection and press "Connect"
 If you only have permission to one domain, you will be dropped into the directory for that domain. You should see the directories named with the dataset ID (e.g. b2fd-cjk2) of any dataset you have updated using DataSync replace via FTP. If you have permission to multiple domains, you will see them as subdirectories.
 
 #### Checking the logs and downloading CSV "snapshots"
-
 Inside each dataset identifier directory there should be the following files/directories:
 - active-control.json
 - log.txt
@@ -47,7 +45,6 @@ Inside each dataset identifier directory there should be the following files/dir
 You can download log.txt to see the logging information for the given dataset. Within the ‘completed’ directory you can find CSVs/TSVs and control.json files archived by date (there are nested folders for year, month, and day). After each successful update operation using DataSync replace via FTP, the CSV/TSV and control.json files that were used to perform the update are archived. Archived files will be stored for the most recent 10 successful update operations (or possibly more). Contact Socrata support if you would like additonal information about archiving.
 
 ### Connecting to the logs via HTTP
-
 You can access the logs for all DataSync over HTTP jobs your domain by visiting:
 
 https://<domain>/datasync/log.json
