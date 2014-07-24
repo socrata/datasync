@@ -5,12 +5,14 @@ bodyclass: homepage
 ---
 
 <div class="well">
-<strong>NOTICE: Before using DataSync in headless mode, we recommend familiarizing yourself with DataSync through the UI.  For information on using DataSync's UI please see [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)</strong>
+<strong>NOTICE: The guide below only pertains to DataSync versions 1.0 and higher</strong>
 </div>
 
 <div class="well">
-<strong>NOTICE: The guide below only pertains to DataSync versions 1.0 and higher</strong>
+<strong>NOTICE: Before using DataSync in headless mode, we recommend familiarizing yourself with DataSync through the UI.  For information on using DataSync's UI please see [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)</strong>
 </div>
+
+
 
 DataSync's command line interface, or "headless mode," enables easy integration of DataSync into ETL code or other software systems.  DataSync jobs can be run from the command line in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was previously saved using the user interface. This guide focuses on (1). 
 
