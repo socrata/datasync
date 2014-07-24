@@ -4,6 +4,18 @@ title: FAQ / Common Problems
 bodyclass: homepage
 ---
 
+### DataSync keeps failing with "field-not-in-dataset."  What can I do to fix this? 
+
+Typically, this is caused for one of three reasons:
+- You're referencing the display names in your control file
+- You haven't specified all of the fields in the dataset.  
+- Your CSV contains more columns than the dataset.  
+
+To fix the first two bullets, verify that the column names in your control file match the field names in the dataset, and that the list is comprehensive.  
+
+To fix the latter, either remove the column from your dataset, or use the ignoreColumns option found in the [control file]({{ site.root }}/resources/ftp-control-config.html) guide.
+
+
 ### What does this error mean? ‘java.lang.UnsupportedClassVersionError: com/socrata/exceptions/SodaError : Unsupported major.minor version 51.0’
 
 Your version of Java is too old, you should update to at least Java 7. Get the [latest version of Java here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
