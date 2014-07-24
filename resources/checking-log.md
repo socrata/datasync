@@ -47,15 +47,15 @@ You can download log.txt to see the logging information for the given dataset. W
 ### Connecting to the logs via HTTP
 You can access the logs for all DataSync over HTTP jobs your domain by visiting:
 
-    https://`<Your domain>`/datasync/log.json
+    https://<Your domain>/datasync/log.json
 
 DataSync logs for a specific dataset can be found by visiting: 
 
-    https://`<Your domain>`/datasync/id/`<Your dataset ID>`/log/index.json
+    https://<Your domain>/datasync/id/<Your dataset ID>/log/index.json
 
 DataSync logs for a specific job can be found by visiting 
 
-    https://`<Your domain>`/datasync/id/`<Your dataset ID>`/log/`<Your job ID>`.json
+    https://<Your domain>/datasync/id/<Your dataset ID>/log/<Your job ID>.json
 
 Where
 `<Your domain>` is your domain
