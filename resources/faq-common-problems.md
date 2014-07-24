@@ -14,6 +14,8 @@ To fix the first two bullets, verify that the column names in your control file 
 
 To fix the latter, either remove the column from your dataset, or use the ignoreColumns option found in the [control file]({{ site.root }}/resources/control-config.html) guide.
 
+### My synthetic location column is causing my job to fail, or resulting in unexpected data in my address column
+When all fields are not explicitly specified for the location column, the system will attempt to guess at the components by parsing the address.  While this parsing normally works there are notable places where it will fail. To work around this, we recommend explicitly breaking out your address locations into consistuent columns (e.g. address, city, state, zip) and then passing those directly to the synthetic location. 
 
 ### What does this error mean? ‘java.lang.UnsupportedClassVersionError: com/socrata/exceptions/SodaError : Unsupported major.minor version 51.0’
 Your version of Java is too old, you should update to at least Java 7. Get the [latest version of Java here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
