@@ -58,9 +58,7 @@ DataSync logs for a specific job can be found by visiting
     https://<Your domain>/datasync/id/<Your dataset ID>/log/<Your job ID>.json
 
 Where
-`<Your domain>` is your domain
-`<Your dataset ID>` is the identifier of the dataset
-`<Your job ID>` is the identifier of the job (typically returned in the output of DataSync)
+`<Your domain>` is your domain, `<Your dataset ID>` is the identifier of the dataset and `<Your job ID>` is the identifier of the job (typically returned in the output of DataSync)
 
 
 
