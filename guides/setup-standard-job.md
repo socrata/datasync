@@ -33,9 +33,19 @@ Select the CSV or TSV file on your local machine or networked folder that you wi
 
 **Does the CSV/TSV Have a Header Row ?**
 
-If so, keep "File to publish contains header row" checked if the CSV/TSV contains a header row. The header row should contain the API field names of each column.  Please note these may differ from the column names shown in your browser. To get the list of API field names for a dataset, click the 'Get Column IDs' button after entering the Dataset ID.  Typically, the ordering of the columns in the CSV/TSV and the ordering of the columns in the dataset should agree. However, based on the publishing method (see below), you may be ablie to supply a subset of the columns or order the columns differently.
-<br><br>
-If not, uncheck "File to publish contains header row". If using a control file (see below), the control file must contain the list of columns, in the order in which they appear in the CSV. If not using a control file, the order of the columns in the CSV/TSV must exactly match that of Socrata dataset.
+If so, keep "File to publish contains header row" checked. If not, uncheck "File to publish contains header row".
+
+  - Header naming
+
+   Header rows should contain the API field names of each column.  Please note these may differ from the column names shown in your browser. To get the list of API field names for a dataset, click the 'Get Column IDs' button after entering the Dataset ID.  You may also view the API field names from your browser, by hovering over the information icon on any column.
+
+  - Column order
+
+  Columns can safely be reorderd as long as header information is provided. Header information can either be supplied within the CSV/TSV file or through use of the control file (see below).  If header information is missing and you are publishing via Soda2, the order of the columns in the CSV/TSV must exactly match that of Socrata dataset. Note that header information is a requirement if you are publishing by either FTP or HTTP.
+
+  - Column inclusion
+
+  If using Soda2, you needn't supply all of the columnns.  If using FTP or HTTP, typically you will need to supply all of the columns present in the Socrata dataset.  If the Socrata dataset lacks a [row identifier](http://dev.socrata.com/docs/row-identifiers.html), including all columns is a requirement. If the
 
 
 **Obtain and Enter the Dataset ID ...**
