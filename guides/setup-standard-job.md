@@ -43,9 +43,11 @@ If so, keep "File to publish contains header row" checked. If not, uncheck "File
 
   Columns can safely be reorderd as long as header information is provided. Header information can either be supplied within the CSV/TSV file or through use of the control file (see below).  If header information is missing and you are publishing via Soda2, the order of the columns in the CSV/TSV must exactly match that of Socrata dataset. Note that header information is a requirement if you are publishing by either FTP or HTTP.
 
-  - Column inclusion
+  - Column inclusion/exclusion
 
-  If using Soda2, you needn't supply all of the columnns.  If using FTP or HTTP, typically you will need to supply all of the columns present in the Socrata dataset.  If the Socrata dataset lacks a [row identifier](http://dev.socrata.com/docs/row-identifiers.html), including all columns is a requirement. If the
+  If using Soda2, you needn't supply all of the columnns.  If using FTP or HTTP, the ability to exclude columns from the CSV/TSV file is based on whether the Socrata dataset has a [row identifier](http://dev.socrata.com/docs/row-identifiers.html)set. If so, you may omit any columns but the identifier. If not, all columns must be provided.
+
+  If using Soda2, you may include extraneous columns; these will be ignored.  If using FTP or HTTP, you may include extraneous columns, but these must be ignored by listing them in the 'ignoreColumns' option of the control file.
 
 
 **Obtain and Enter the Dataset ID ...**
@@ -63,26 +65,28 @@ Enter your dataset's ID into the Dataset ID field
 
 Select the 'Publish method' by selecting one of the following options:
 
-- `replace`: Replaces the dataset with the data in the CSV/TSV file.  DataSync offers three ways to upload your data
+- `replace`: Replaces the dataset with the data in the CSV/TSV file.
+- `upsert`: Updates any rows that already exist and inserts rows which do not. Ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.
+
+  *IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then DataSync will not be able to determine what rows to update and all rows in the CSV/TSV file will be appended to the dataset. [Learn more about Row Identifiers and how to establish them](http://dev.socrata.com/docs/row-identifiers.html)*
+
+- `append`: Same as upsert.  Deprecated
+
+- `delete`: Delete all rows matching Row Identifiers given in CSV/TSV file. The CSV/TSV should only contain a single column listing the Row Identifiers to delete.
+
+  *IMPORTANT NOTE: delete will not work unless the dataset has a Row Identifier established.*
+
+
+DataSync offers three ways to upload your data
     1. via HTTP: *This option is available only in DataSync versions 1.5 and higher.*  This is the preferred option because it...
       - gracefully handles network failures
       - minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
       - can reliably handle very large files (1 million+ rows)
       - allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/control-config.html)
-    2. via FTP: This functions in much the same way as the HTTP variant, with 2 notable differences:
+    2. via FTP (only available for `replace`): This functions in much the same way as the HTTP variant, with 2 notable differences:
       - the entire CSV/TSV file will transfered
       - if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)
     3. via Soda2: *Deprecated.*  This method is not recommended because of its inefficiencies and file size limitations (< 5 MB).
-
-- `upsert`: updates any rows that already exist and inserts and rows which do not. Ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.
-
-*IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then DataSync will not be able to determine what rows to update and all rows in the CSV/TSV file will be appended to the dataset. [Learn more about Row Identifiers and how to establish them](http://dev.socrata.com/docs/row-identifiers.html)*
-
-- `append`: same as upsert.  Deprecated
-
-- `delete`: delete all rows matching Row Identifiers given in CSV/TSV file. The CSV/TSV should only contain a single column listing the Row Identifiers to delete.
-
-*IMPORTANT NOTE: delete will not work unless the dataset has a Row Identifier established.*
 
 <div class="well">
 If you are using replace via Soda2, upsert or append and your TSV/CSV has a header row then you do not need to supply all columns in the CSV/TSV.
@@ -95,11 +99,12 @@ When using replace via HTTP If the dataset you are publishing to has a Row Ident
 </div>
 
 **Control File Configuration (needed for replace via FTP or HTTP)**
+
 When using replace via FTP or HTTP you must supply or generate a control file. In many cases simply clicking the 'Generate/Edit' and using the default configuration will be sufficient for the job to run successfully. Do not click 'Generate/Edit' if you want to use a Control file that is saved as a file, instead click 'Browse...' and select the file. The cases where you will need to modify the Control file content include, but are not limited to:
 
 * If your CSV contains date/time data in a format other than: [ISO8601](http://en.wikipedia.org/wiki/ISO_8601), MM/dd/yyyy, MM/dd/yy, or dd-MMM-yyyy (e.g. "2014-04-22", "2014-04-22T05:44:38", "04/22/2014", "4/22/2014", "4/22/14", and "22-Apr-2014" would all be fine).
-* Dataset has a Location column that will be populated from existing columns (e.g. address, city, state, zipcode)
-* Dataset has a Location column and you are <strong>not</strong> using Socrata's geocoding (you provide latitude/longitude in CSV/TSV file)
+* The Socrata dataset has a Location column that will be populated from existing columns (e.g. address, city, state, zipcode)
+* The Socrata dataset has a Location column and you are <strong>not</strong> using Socrata's geocoding (you provide latitude/longitude in CSV/TSV file)
 * If you wish to set the timezone of the dates being imported
 
 

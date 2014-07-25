@@ -4,18 +4,12 @@ title: Setup a standard job (headless)
 bodyclass: homepage
 ---
 
-<div class="well">
-<strong>NOTICE:</strong> The guide below only pertains to DataSync versions 1.0 and higher
-</div>
+*NOTICE*:The guide below only pertains to DataSync versions 1.0 and higher.
+
+*NOTICE*: Before using DataSync in headless mode, we recommend familiarizing yourself with DataSync through the UI.  For information on using DataSync's UI please see [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
 
 
-<div class="well">
-<strong>NOTICE:</strong> Before using DataSync in headless mode, we recommend familiarizing yourself with DataSync through the UI.  For information on using DataSync's UI please see [guide to setup a standard job (GUI)]({{ site.root }}/guides/setup-standard-job.html)
-</div>
-
-
-
-DataSync's command line interface, or "headless mode," enables easy integration of DataSync into ETL code or other software systems.  DataSync jobs can be run from the command line in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was previously saved using the user interface. This guide focuses on (1). 
+DataSync's command line interface, or "headless mode," enables easy integration of DataSync into ETL code or other software systems.  DataSync jobs can be run from the command line in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was previously saved using the user interface. This guide focuses on (1).
 
 ### Step 1: Establish your configuration (e.g. authentication details)
 Information about your domain, username, password, app token and a number of other global settings can be passed either through memory, or through a configuration file (preferred).  This guide will assume that you have created a global configuration file.  If you have not yet created that file, please refer to the creating a configuration file section of the  [configuration guide]({{ site.root }}/resources/preferences-config.md#creating-a-configuration-file-for-running-headless-jobs).  Note that the user running the job must have publisher rights on the dataset.
