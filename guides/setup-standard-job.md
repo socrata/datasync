@@ -35,30 +35,24 @@ Select the CSV or TSV file on your local machine or networked folder that you wi
 
 If so, keep "File to publish contains header row" checked. If not, uncheck "File to publish contains header row".
 
-  - Header naming
+  - *Header naming*
 
    Header rows should contain the [API field names]({{ site.root }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html) of each column.  Please note these may differ from the display names shown in your browser.
 
-  - Column order
+  - *Column order*
 
   Columns can safely be reorderd as long as header information is provided. Header information can either be supplied within the CSV/TSV file or through use of the control file (see below).  If header information is missing and you are publishing via Soda2, the order of the columns in the CSV/TSV must exactly match that of Socrata dataset. Note that header information is a requirement if you are publishing by either FTP or HTTP.
 
-  - Column inclusion/exclusion
+  - *Column inclusion/exclusion*
 
   If using Soda2, you needn't supply all of the columnns.  If using FTP or HTTP, the ability to exclude columns from the CSV/TSV file is based on whether the Socrata dataset has a [row identifier](http://dev.socrata.com/docs/row-identifiers.html)set. If so, you may omit any columns but the identifier. If not, all columns must be provided.
 
   If using Soda2, you may include extraneous columns; these will be ignored.  If using FTP or HTTP, you may include extraneous columns, but these must be ignored by listing them in the 'ignoreColumns' option of the control file.
 
 
-**Obtain and Enter the Dataset ID ...**
+**Enter the Dataset ID ...**
 
-You will need the identifier of the dataset (dataset ID) that you want to update. To obtain the dataset ID navigate to the dataset in your web browser and inspect the address bar. The dataset ID can be found at end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
-
-https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw
-
-The dataset ID is: m985-ywaw
-
-Enter your dataset's ID into the Dataset ID field
+You will need the identifier of the dataset (i.e. [the dataset ID](http://socrata.github.io/datasync/resources/fac-common-problems.html#what-is-the-id-of-my-dataset)) that you want to update. Enter your dataset's ID into the Dataset ID field.
 
 
 **Choose the Publish Method ...**
@@ -78,25 +72,21 @@ Select the 'Publish method' by selecting one of the following options:
 
 
 DataSync offers three ways to upload your data
+
     1. via HTTP: *This option is available only in DataSync versions 1.5 and higher.*  This is the preferred option because it...
+
       - gracefully handles network failures
       - minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
       - can reliably handle very large files (1 million+ rows)
       - allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/control-config.html)
+
     2. via FTP (only available for `replace`): This functions in much the same way as the HTTP variant, with 2 notable differences:
+
       - the entire CSV/TSV file will transfered
       - if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)
+
     3. via Soda2: *Deprecated.*  This method is not recommended because of its inefficiencies and file size limitations (< 5 MB).
 
-<div class="well">
-If you are using replace via Soda2, upsert or append and your TSV/CSV has a header row then you do not need to supply all columns in the CSV/TSV.
-
-<!--
-TODO: WHAT HAPPENS TO OMITTED COLUMNS (TEST THIS!!!)...is this different than DELTA IMPORTER 2??
--->
-<br><br>
-When using replace via HTTP If the dataset you are publishing to has a Row Identifier established then you may also omit columns in the CSV/TSV.
-</div>
 
 **Control File Configuration (needed for replace via FTP or HTTP)**
 
