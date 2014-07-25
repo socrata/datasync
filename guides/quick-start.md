@@ -4,16 +4,17 @@ title: Quick start
 bodyclass: homepage
 ---
 
-This quick start guide provides an overview of how to use DataSync to sync a local CSV with a dataset.  
+This quick start guide provides an overview of how to use DataSync to sync a local CSV with a dataset.
 
 **NOTICE:** The steps in this guide will replace the entire contents of the dataset with the contents of the CSV.  For a more in depth guide of using DataSync, including information on how to use DataSync to update and append information to a dataset,  please see [setting up a standard job]({{ site.root }}/guides/setup-standard-job.html).
 
 ### Step 1: Download DataSync
-Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and download the latest version. 
+Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and download the latest version.
 
 ### Step 2: Launching DataSync
 Launch DataSync navigating to the folder containing the Datasync JAR file that you downloaded previously and run the following command:
 
+<!--- TODO: update the jar name when we release -->
 ```
 java -jar DataSync-1.5-jar-with-dependencies.jar
 ```
@@ -49,24 +50,25 @@ Enter your dataset's ID into the Dataset ID field
 
 **Choose the Publish Method ...**
 
-Leave the default option "replace via HTTP" selecte.d  This option will...
-      - gracefully handles network failures
-      - minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
-      - can reliably handle very large files (1 million+ rows)
-      - allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/control-config.html)
+Leave the default option "replace via HTTP" selected  This option will:
+
+- gracefully handles network failures
+- minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
+- can reliably handle very large files (1 million+ rows)
+- allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/control-config.html)
 
 **Create a control file**
-A control file is needed to help DataSync interpret the data within the CSV. In most cases simply clicking the 'Generate/Edit' button to generate a control file with the default configuration will be sufficient for the job to run successfully. 
+A control file is needed to help DataSync interpret the data within the CSV. In most cases simply clicking the 'Generate/Edit' button to generate a control file with the default configuration will be sufficient for the job to run successfully.
 
 For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/control-config.html)
 
 ### Step 5: Run the job
 
-Run the job by clicking the “Run Job Now” button. A loading spinner will appear as the job runs.  The length of the job will depend on the size of the CSV / TSV uploaded. Once complete, a popup will indicate if the job was successful or notify you of any errors. 
+Run the job by clicking the “Run Job Now” button. A loading spinner will appear as the job runs.  The length of the job will depend on the size of the CSV / TSV uploaded. Once complete, a popup will indicate if the job was successful or notify you of any errors.
 
 ### Step 6: Save the job for later use
 
-If the job was successful you can save the job to a file on the computer by clicking “Save Job” and selecting a location to save the file on your computer (job files are saved as .sij files). When saving your job we recommend choosing a filename that does not contain spaces (e.g. 'my_job.sij', do not use a name like 'my job.sij'). 
+If the job was successful you can save the job to a file on the computer by clicking “Save Job” and selecting a location to save the file on your computer (job files are saved as .sij files). When saving your job we recommend choosing a filename that does not contain spaces (e.g. 'my_job.sij', do not use a name like 'my job.sij').
 
 After saving the file the '*Command to execute with scheduler*' field is populated with the command to run the given job. Customers can use this field to run DataSync from the command line on a scheduled basis. You can later open a previously saved job by going to File -> Open and finding the job file you saved previously.
 

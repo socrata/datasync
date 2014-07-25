@@ -7,10 +7,12 @@ bodyclass: homepage
 This guide covers how to set up a job using Socrata DataSync's UI. For more information on running Datasync from a command line please see [headlessly (in command-line mode)]({{ site.root }}/guides/setup-standard-job-headless.html).
 
 ### Step 1: Download DataSync
-Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and download the latest version. 
+Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and download the latest version.
 
 ### Step 2: Launching DataSync
 Launch DataSync navigating to the folder containing the Datasync JAR file that you downloaded previously and run the following command:
+
+<!--- TODO: update the jar name when we release -->
 
 ```
 java -jar DataSync-1.5-jar-with-dependencies.jar
@@ -31,9 +33,9 @@ Select the CSV or TSV file on your local machine or networked folder that you wi
 
 **Does the CSV/TSV Have a Header Row ?**
 
-If so, keep "File to publish contains header row" checked if the CSV/TSV contains a header row. The header row should contain the identifiers of the columns (a.k.a. API Field Names). However, for certain update operations you can supply a subset of the columns or order the columns differently than the order in the dataset (more details below). To get a list of column identifiers for a dataset click the 'Get Column IDs' button after entering the Dataset ID.
+If so, keep "File to publish contains header row" checked if the CSV/TSV contains a header row. The header row should contain the API field names of each column.  Please note these may differ from the column names shown in your browser. To get the list of API field names for a dataset, click the 'Get Column IDs' button after entering the Dataset ID.  Typically, the ordering of the columns in the CSV/TSV and the ordering of the columns in the dataset should agree. However, based on the publishing method (see below), you may be ablie to supply a subset of the columns or order the columns differently.
 <br><br>
-If not, uncheck "File to publish contains header row". In this case, the control file must contain the list of columns, in the order in which they appear in the CSV.
+If not, uncheck "File to publish contains header row". If using a control file (see below), the control file must contain the list of columns, in the order in which they appear in the CSV. If not using a control file, the order of the columns in the CSV/TSV must exactly match that of Socrata dataset.
 
 
 **Obtain and Enter the Dataset ID ...**
@@ -60,7 +62,7 @@ Select the 'Publish method' by selecting one of the following options:
     2. via FTP: This functions in much the same way as the HTTP variant, with 2 notable differences:
       - the entire CSV/TSV file will transfered
       - if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)
-    3. via Soda2: *Deprecated.*  This method is not recommended because of its inefficiencies and file size limitations (< 5 MB). 
+    3. via Soda2: *Deprecated.*  This method is not recommended because of its inefficiencies and file size limitations (< 5 MB).
 
 - `upsert`: updates any rows that already exist and inserts and rows which do not. Ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.
 
@@ -73,7 +75,7 @@ Select the 'Publish method' by selecting one of the following options:
 *IMPORTANT NOTE: delete will not work unless the dataset has a Row Identifier established.*
 
 <div class="well">
-If you are using replace via Soda2, upsert or append and your TSV/CSV has a header row then you do not need to supply all columns in the CSV/TSV.  
+If you are using replace via Soda2, upsert or append and your TSV/CSV has a header row then you do not need to supply all columns in the CSV/TSV.
 
 <!--
 TODO: WHAT HAPPENS TO OMITTED COLUMNS (TEST THIS!!!)...is this different than DELTA IMPORTER 2??
@@ -94,7 +96,7 @@ When using replace via FTP or HTTP you must supply or generate a control file. I
 For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/control-config.html)
 
 ### Step 5: Run the job and optionally save it
-You can run your job by clicking the “Run Job Now” button. A loading spinner will appear as the job runs.  The length of the job will depend on the size of the CSV / TSV uploaded. Once complete, a popup will indicate if the job was successful or notify you of any errors. 
+You can run your job by clicking the “Run Job Now” button. A loading spinner will appear as the job runs.  The length of the job will depend on the size of the CSV / TSV uploaded. Once complete, a popup will indicate if the job was successful or notify you of any errors.
 
 If the job was successful you can save the job to a file on the computer by clicking “Save Job” and selecting a location to save the file on your computer (job files are saved as .sij files). When saving your job we recommend choosing a filename that does not contain spaces (e.g. 'my_job.sij', do not use a name like 'my job.sij'). After saving the file the '*Command to execute with scheduler*' field is populated with the command to run the given job. Customers can use this field to run DataSync from the command line on a scheduled basis. You can later open a previously saved job by going to File -> Open and finding the job file you saved previously.
 
