@@ -15,7 +15,7 @@ Launch DataSync navigating to the folder containing the Datasync JAR file that y
 <!--- TODO: update the jar name when we release -->
 
 ```
-java -jar DataSync-1.5-jar-with-dependencies.jar
+java -jar <DATASYNC_JAR>
 ```
 
 ### Step 3: Enter authentication details
@@ -37,7 +37,7 @@ If so, keep "File to publish contains header row" checked. If not, uncheck "File
 
   - Header naming
 
-   Header rows should contain the API field names of each column.  Please note these may differ from the column names shown in your browser. To get the list of API field names for a dataset, click the 'Get Column IDs' button after entering the Dataset ID.  You may also view the API field names from your browser, by hovering over the information icon on any column.
+   Header rows should contain the [API field names]({{ site.root }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html) of each column.  Please note these may differ from the display names shown in your browser.
 
   - Column order
 

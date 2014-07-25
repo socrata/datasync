@@ -32,7 +32,7 @@ A good introduction to using Crontab (Crontab is included with essentially any L
 
 To schedule a DataSync job simply copy the text within the "Command to execute with scheduler" field (after you save or open a job in DataSync) and use that command in place of the `/bin/execute/this/script.sh` in the above guide. For example, to schedule a job to run daily at midnight your Crontab content might look like:
 ```
-0 0 * * * java -jar DataSync-1.5-jar-with-dependencies.jar /path/to/myjob.sij
+0 0 * * * java -jar <DATASYNC_JAR> /path/to/myjob.sij
 ```
 
 A more Mac-specific guide here:

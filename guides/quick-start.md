@@ -14,9 +14,8 @@ Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and
 ### Step 2: Launching DataSync
 Launch DataSync navigating to the folder containing the Datasync JAR file that you downloaded previously and run the following command:
 
-<!--- TODO: update the jar name when we release -->
 ```
-java -jar DataSync-1.5-jar-with-dependencies.jar
+java -jar <DATASYNC_JAR>
 ```
 
 ### Step 3: Enter authentication details
@@ -32,7 +31,7 @@ Select the CSV or TSV file on your local machine or networked folder that you wi
 
 **Does the CSV/TSV Have a Header Row ?**
 
-If the CSV contains a header row, keep "File to publish contains header row" checked if the CSV/TSV contains a header row. The header row should contain the identifiers of the columns (a.k.a. API Field Names).
+If the CSV contains a header row, keep "File to publish contains header row" checked. The header row should contain the [API Field Names]({{ site.root }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html)) of the columns in your dataset.
 <br><br>
 If the CSV does not contain a header row, uncheck "File to publish contains header row".  In this case, the control file must contain the list of columns, in the order in which they appear in the CSV.
 

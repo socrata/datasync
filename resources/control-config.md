@@ -13,11 +13,11 @@ bodyclass: homepage
 - [Complete control file settings](#complete-control-file-settings)
 
 <div class="well">
-<strong>NOTICE:</strong> This guide in only applicable when using the replace method via FTP or HTTP.
+<strong>NOTICE:</strong> This guide in only applicable when using the FTP or HTTP methods (i.e. it is not applicable when using Soda2).
 </div>
 
 ### Basic control file setup
-The control file is a JSON-formatted file that is used to configure a Standard DataSync job that uses the 'replace via FTP' or 'replace via HTTP' method. Control files are specific to the dataset you are updating.
+The control file is a JSON-formatted file that is used to configure a Standard DataSync job that uses the FTP or HTTP means of transfering data.Control files are specific to the dataset you are updating.
 
 An example of a typical control file:
 ```json
@@ -48,7 +48,7 @@ This guide will describe how to use the different options within the control fil
 The `columns` and `skip` options enable configuration of how the columns within the CSV/TSV align with those of the dataset.
 
 `columns`: List of column names in the following format `["col_id1","col_id2",..]`. If it’s `null` then the first line of the CSV/TSV after any skipped records is used. If specified, it must be an array of strings, and must not contain nulls.
-**IMPORTANT NOTE:** the column names, whether provided in “columns” or in the first row of the CSV/TSV, must be column identifiers (API field names), not the display name of the columns.
+**IMPORTANT NOTE:** the column names, whether provided in “columns” or in the first row of the CSV/TSV, must be the [API field names]({{ site.root }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html), not the display name of the columns.
 
 `skip`: Specifies the number of rows to skip before reaching the header.
 
@@ -77,7 +77,7 @@ If the first line of the CSV/TSV is data (there is no header row), for example y
 ##### Timestamp Format Options
 The `floatingTimestampFormat` and `fixedTimestampFormat` options specify how date/time data is formatted in the CSV/TSV file. `floatingTimestampFormat` applies to ("Date & Time" datatype columns).  `fixedTimestampFormat` functions similarly but applies  ("Date & Time (with timezone)" datatype columns). If the format does not specify a time zone, the zone may be given via the `timezone` option.  If no zone information is provided, UTC is assumed.
 
-Both `floatingTimestampFormat` and `fixedTimestampFormat` accept a string (e.g. "ISO8601") or a JSON-formatted list of formats including "ISO8601" and any date/time "Joda time" format-string. Joda time syntax is documented in detail here: [http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html).  Note that time specification "z" cannot be used; it is an output only formatter. 
+Both `floatingTimestampFormat` and `fixedTimestampFormat` accept a string (e.g. "ISO8601") or a JSON-formatted list of formats including "ISO8601" and any date/time "Joda time" format-string. Joda time syntax is documented in detail here: [http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html).  Note that time specification "z" cannot be used; it is an output only formatter.
 
 Example syntax to accept four of the most common date/time formats:
 ```
@@ -97,8 +97,9 @@ If you want to allow a date with or without a time value (e.g. both "2014-04-22"
 `timezone` specifies the timezones for FixedTimestamps ("Date & Time (with timezone)" columns). This only has an effect if the timestamp format does not specify a time zone.
 
 You can set this to one of the following:
-1. "UTC"
-2. A timezone name (e.g. "US/Pacific").  The list of accepted names can be found at [http://joda-time.sourceforge.net/timezones.html](http://joda-time.sourceforge.net/timezones.html). *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time).*
+
+ 1. "UTC"
+ 2. A timezone name (e.g. "US/Pacific").  The list of accepted names can be found at [http://joda-time.sourceforge.net/timezones.html](http://joda-time.sourceforge.net/timezones.html). *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time).*
 
 #### Location column and geocoding configuration
 The `syntheticLocations` option allows configuring a Location datatype column to populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV.
@@ -124,12 +125,11 @@ The synthetic location `location_col_id` should not be present in the CSV.  If i
 
 When you provide any combination of location information but do not fill in latitude or longitude then Socrata geocode the information automatically to generate the latitude and longitude values. For more information on Socrata geocoding, please see [this guide](http://support.socrata.com/entries/27849363-Location-Information-Data-which-can-be-geocoded).
 
-<div class="well">
 <strong>IMPORTANT:</strong> If you are providing the latitude and longitude values as inputs to the Location column (i.e. you are NOT using Socrata's geocoding), you should set the `useSocrataGeocoding` option to `false`.  If you are not providing the latitude and longitude, you should to set this to `true`.  This will minimize the number of perceived changes to the dataset, decreasing the time it takes to complete your job.  If you are constructing multiple Location columns and they require different `useSocrataGeocoding` settings, you may use the `overrides` option.
-</div>
+
 
 #### Ignoring Columns
-The `ignoreColumns` options you to exclude columns within the CSV/TSV.  This may be necessary if the dataset lacks a column within the CSV or if a synthetic location is provided in the CSV, but you would still like it constructed from individual address fields.
+The `ignoreColumns` option allows you to exclude columns within the CSV/TSV.  This may be necessary if the dataset lacks a column within the CSV or if a synthetic location is provided in the CSV, but you would still like it constructed from individual address fields.
 
 `ignoreColumns`: List of column names in the following format `["col_id1","col_id2",..]`. These must be present in `columns`.
 
@@ -144,8 +144,9 @@ The action is given by one of the following strings:
 | Option    | Explanation
 | ------------- | ------------------------------
 | Replace |  Use if the the CSV/TSV represents the desired new state for the dataset. DataSync will calculate the minimal set of changes required, updating the dataset accordingly.
-| Append | Use if the CSV/TSV contains rows to append to append to the dataset. If the dataset does not have a RowID, then all rows in the CSV are added, even if they duplicate existing rows. If the dataset does have a RowID, then matching row IDs will be updated.  New row IDs will be appended to the dataset.  *This is not yet supported in DataSync.*
-| Delete | Use if the CSV/TSV contains row IDs of rows to delete. This option requires that a [row indentifier](http://dev.socrata.com/docs/row-identifiers.html) be set on the dataset.
+| Append | Deprecated.  See Upsert.
+| Upsert | Use if the CSV/TSV contains updates to the dataset, rather than the complete dataset. If the dataset does not have a RowID, then all rows in the CSV are appended, even if they duplicate existing rows. If the dataset does have a RowID, then matching row IDs will be updated and new row IDs will be appended.  *This is not yet supported in DataSync.*
+| Delete | Use if the CSV/TSV contains row IDs of rows to delete. This option requires that a [row indentifier](http://dev.socrata.com/docs/row-identifiers.html) be set on the dataset. *This is not yet supported in DataSync.*
 
 
 #### CSV or TSV Settings
@@ -156,9 +157,9 @@ The following are options available to both CSV files or TSV files within the `c
 | encoding | "utf-8", or any other encoding that the JVM understands.  The list is available at /datasync/charsets.json from your socrata domain (e.g. https://opendata.socrata.com/datasync/charsets.json).
 | separator | Field separator. Typically "," or "\t".
 | quote | Used to quote values which contain the separator character. Separators between quotes will be treated as part of the value. Typical values are "\"" for double-quotes, "'" for single-quotes and "\u0000" for no quote character.
-| escape | Used to specify the escape character. Typically this is "\\", a single backslash. 
-| columns | JSON list of column names. If null then the first line of the csv after any skipped records is used. If specified, it must be an array of strings and must not contain nulls. Note that the column names, whether provided in “columns” or in the first row of the CSV, must match the <strong>API field name</strong>, not the display name of the columns.
-| ignoreColumns | Specifies any columns in the CSV/TSV file that are to be ignored. These must be given as an array of strings and must be present in `columns`.
+| escape | Used to specify the escape character. Typically this is "\\", a single backslash.
+| columns | JSON list of column names. If null then the first line of the CSV after any skipped records is used. If specified, it must be an array of strings and must not contain nulls. Note that the column names, whether provided in “columns” or in the first row of the CSV, must match the [API field names]({{ site.root }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html), not the display name of the columns.
+| ignoreColumns | Specifies any columns in the CSV/TSV file that are to be ignored. These must be given as an array of strings, each of which must be listed within `columns`.
 | skip | Specifies the number of rows to skip. The first row that will be read is `skip` + 1; may be read as a header or a data row depending on how `columns` is set.  If `columns` is null, the first row read will be treated as the header; otherwise it is treated as data.
 | trimWhitespace | Trims leading and trailing whitespace before inserting the data into the dataset. Also trims quoted values (e.g. " Foo" would be converted to "Foo").
 | trimServerWhitespace | Trims leading and trailing whitespace that already exists in the dataset. This flag is generally only necessary if data was previously added to the dataset with whitespace (due to trimWhitespace being false).
@@ -167,7 +168,7 @@ The following are options available to both CSV files or TSV files within the `c
 | floatingTimestampFormat | Specifies how Floating Timestamps (“Date & Time” columns) are interpreted. Typical values are "ISO8601" or "yyyy-MM-dd".  Any [joda-formated string](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html) is acceptable. If you want to allow multiple formats to be accepted, then you can specify a list of values rather than a single value (e.g. ["ISO8601", "MM.dd.yyyy"]).
 | fixedTimestampFormat | Same as floatingTimestampFormat but for Fixed Timestamps (“Date & Time (with timezone)”).  If the format does not specify a time zone, the zone named by the `timezone` field is used.
 | dropUninterpretableRows | If specified limits the amount of uninterpretable data allowable in each row. (Vaguely speaking these are the values grayed out in the UI). Options are "Never", in which case a job will fail if the CSV/TSV has any uninterpretable values, and "TenPercent", in which case 10% of values can be uninterpretable before the job fails.
-| timezone | Specifies the timezones for FixedTimestamps (“Date & Time (with timezone)” columns).  This only has an effect if the timestamp format does not specify a time zone. Typical values are "UTC" or "US/Pacific".  A list of accepted names is at [http://joda-time.sourceforge.net/timezones.html](http://joda-time.sourceforge.net/timezones.html). *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time).
+| timezone | Specifies the timezones for FixedTimestamps (“Date & Time (with timezone)” columns).  This only has an effect if the timestamp format does not specify a time zone. Typical values are "UTC" or "US/Pacific".  A list of accepted names is at [http://joda-time.sourceforge.net/timezones.html](http://joda-time.sourceforge.net/timezones.html). *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time)*.
 | syntheticLocations | Allows transformation of multiple columns into one or more Location columns during insert. See See the [Location column and geocoding configuration](#location-geocoding) section for an example.
 | overrides | A map whose keys are field names, and whose values are objects containing per-column overrides for the `timestampFormat`, `timezone`, `emptyTextIsNull`, `trimWhitespace`, `trimServerWhitespace` and `useSocrataGeocoding` settings.  Note that “timestampFormat” applies to both fixed and floating timestamps. For an example, see below:
 

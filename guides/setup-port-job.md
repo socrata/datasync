@@ -7,13 +7,13 @@ bodyclass: homepage
 Port jobs are used for copying datasets that are already on the Socrata platform. Port jobs allow users with publishing rights to copy both dataset schemas (metadata and columns) and data (rows). This guide shows how to setup and run a Port Job using the graphical user interface.
 
 ### Step 1: Download DataSync
-Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and download the latest version. 
+Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and download the latest version.
 
 ### Step 2: Launching DataSync
 Launch DataSync navigating to the folder containing the Datasync JAR file that you downloaded previously and run the following command:
 
 ```
-java -jar DataSync-1.5-jar-with-dependencies.jar
+java -jar <DATASYNC_JAR>
 ```
 
 ### Step 3: Create a new Port Job.
@@ -29,29 +29,26 @@ Enter your authentication details at the bottom left of DataSync (domain, userna
 
 The configurable options to run a Port Job are:
 
-- `Port Method`:  Choose one of the following:
-  1. Copy schema only:  This will copy the metadata and columns of the source dataset into a new dataset.  No row data is copied over.
-  2. Copy schema and data:  This copies both the metadata/column info and all row data, effectively making a duplicate of the source dataset.
-  3. Copy data only:  This copies the row data from the source dataset into the destination dataset.  The effect on the destination dataset is determined by the `Publish Method` option below.  Please note, this option will only succeed if the schemas of the source and destination dataset agree.
+- *Port Method*:  Choose one of the following:
+  1. `Copy schema only`:  This will copy the metadata and columns of the source dataset into a new dataset.  No row data is copied over.
+  2. `Copy schema and data`:  This copies both the metadata/column info and all row data, effectively making a duplicate of the source dataset.
+  3. `Copy data only`:  This copies the row data from the source dataset into the destination dataset.  The effect on the destination dataset is determined by the `Publish Method` option below.  Please note, this option will only succeed if the schemas of the source and destination dataset agree.
 
-- `Source Domain`:  The domain to which the source dataset belongs.
+- *Source Domain*:  The domain to which the source dataset belongs.
 
-- `Source Dataset ID`:  The identifier of the source dataset. To obtain the dataset ID navigate to the dataset in your web browser and inspect the address bar. The dataset ID can be found at end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
+- *Source Dataset ID*:  The [dataset identifier](http://socrata.github.io/datasync/resources/fac-common-problems.html#what-is-the-id-of-my-dataset) of the source dataset.
 
-    https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw
-    The dataset ID is: m985-ywaw
+- *Destination Domain*:  The domain where the source dataset will be copied to
 
-- `Destination Domain`:  The domain where the source dataset will be copied to
+- *Destination Dataset ID*:  The [dataset identifier](http://socrata.github.io/datasync/resources/fac-common-problems.html#what-is-the-id-of-my-dataset) of the destination dataset. This is only needed if selecting `Copy data only` as the PortMethod.
 
-- `Destination Dataset ID`:  Only needed if selecting "Copy data only" as the `PortMethod`.  Similar to the `Source Dataset ID`, this is the identifier of the destination dataset.
+- *Publish Method*:  Only relevant if selecting `Copy data only` as the PortMethod. Choose one of the following:
+  1. `upsert`:  This will upsert the data from the source dataset into the destination dataset, updating rows that exist already, inserting those that do not.
+  2. `replace`: This will replace the data in the destination dataset with that in the source dataset.
 
-- `Publish Method`:  Only relevant if selecting "Copy data only" as the `PortMethod`. Choose one of the following:
-  1. upsert:  This will upsert the data from the source dataset into the destination dataset, updating rows that exist already, inserting those that do not. 
-  2. replace: This will replace the data in the destination dataset with that in the source dataset.
-
-- `Publish Destination Dataset`:  Only relevant if not copying the schema via "Copy schema only" or "Copy schema and data" as the `PortMethod`. Choose one of the following:
-  1. Yes:  This will publish the destination dataset to complete the Port Job.
-  2. No, create a working copy: This will leave the destination dataset as a working copy.
+- *Publish Destination Dataset*:  Only relevant if not copying the schema via `Copy schema only` or `Copy schema and data` as the PortMethod. Choose one of the following:
+  1. `Yes`:  This will publish the destination dataset to complete the Port Job.
+  2. `No`, create a working copy: This will leave the destination dataset as a working copy.
 
 
 ### Step 6:  Run, save and schedule the Job.

@@ -11,16 +11,15 @@ DataSync preferences determine the global configuration to be used by DataSync w
 - [Error Notification Auto-Email Setup](#error-notification-auto-email-setup)
 - [Chunking Configuration](#chunking-configuration)
 - [Proxy Configuration](#proxy-configuration)
-- [Creating a configuration file for running headless jobs](#creating-a-configuration-file-for-running-headless-jobs)
 
 ### Available configuration
-The following options are available to config DataSync
+The following options are available to configure DataSync
 
 | Option    | Requirement | Explanation
 | ------------- | ------------------------------ | -------------
 | domain | required | The scheme and root domain of your data site.  (e.g. https://opendata.socrata.com)
 | username | required | Your Socrata username. This user must have a Publisher role or Owner rights to at least one dataset. We recommend creating a dedicated Socrata account (with these permissions) to use with DataSync rather than tie DataSync to a particular person’s primary account. (e.g. publisher@opendata.socrata.com)
-| password | required | Your Socrata password. Note that this will be stored in clear-text as part of the file. We recommend taking additional precautions to protect this file, including potentially only adding it when your ETL process runs. 
+| password | required | Your Socrata password. Note that this will be stored in clear-text as part of the file. We recommend taking additional precautions to protect this file, including potentially only adding it when your ETL process runs.
 | appToken | required | An app token.   If do not yet have an app token, please reference [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html).
 | logDatasetID | optional | The dataset indentifier of the log dataset. If you have not provisioned a log dataset and would like to do so, please refer to [Logging documentation]({{ site.root }}/resources/preferences-config.html).
 | adminEmail | required only if `emailUponError` is "true" | The email address of the administrator or user that error notifications should be sent to.
@@ -36,6 +35,27 @@ The following options are available to config DataSync
 | proxyPort | required if operating through a proxy | The port that the proxy server listens on.
 | proxyUsername | optional | The username to use if the proxy is authenticated.  If this information is sensitive, you may instead pass it at runtime via the -pun, --proxyUsername commandline option.
 | proxyPassword | optional | The password to use if the proxy is authenticated.  If this information is sensitive, you may instead pass it at runtime via the -ppw, --proxyPassword commandline option.
+
+
+To access, edit and save these options into DataSync &#8216;memory&#8217; using the GUI, navigate to Edit->Preferences.
+
+To save these options into a file, specify them within a single JSON formatted object.  For example, the smallest possible configuration file would resemble:
+
+```json
+{
+    "domain": "<YOUR DOMAIN>",
+    "username": "<YOUR USERNAME>",
+    "password": "<YOUR PASSWORD>",
+    "appToken": "<YOUR APP TOKEN>"
+}
+```
+Additional options can be added by simply adding the setting name to the file and setting its value accordingly.
+
+To load these options into DataSync &#8216;memory&#8217; without use of the GUI, you can run a LoadPreferences job:
+
+```
+java -jar <DATASYNC_JAR> -t LoadPreferences -c <CONFIG_FILE>
+```
 
 ### Setting up logging (using a dataset)
 You can set up a Socrata dataset to store log information each time a DataSync jobs runs. This is especially useful if you will be [scheduling your jobs]({{ site.root }}/resources/schedule-job.html) to run automatically at some specified interval. You first need to manually create a log dataset. You should probably keep this dataset private (rather than set it as public). The easiest way to se this up is to run a DataSync Port Job that copies the schema from [this example log dataset](https://adrian.demo.socrata.com/dataset/DataSync-Log/aywp-657c).
@@ -73,7 +93,7 @@ If you wish for emails to be automatically sent to an administrator if an error 
 
 **NOTICE:** Just like with the the authentication details, the SMTP password is stored unencrypted in the Registry on Windows platforms and in analogous locations on Mac and Linux.
 
-If you do not know of an existing SMTP server you can use GMail with the following settings:  
+If you do not know of an existing SMTP server you can use GMail with the following settings:
 
 - **Outgoing Mail Server:** smtp.gmail.com
 - **SMTP Port:** 587
@@ -87,7 +107,7 @@ Once you have entered all the SMTP settings, you should test they are valid by c
 Chunking is handled automatically according to the defaults set in Datasync, though in some cases it may be necessary or preferable to adjust the defaults. Two options are avaible:
 
   - **Chunking filesize threshold:** If the CSV/TSV file size is less than this, the entire file will be sent in one chunk.  The default value is 10 MB.
-  - **Chunk size:**  The number of rows to send in each chunk.  The default value is 10,000 rows.  This is only respected if the entire file is not sent in a single chunk because of the `Chunking filesize threshold`.  
+  - **Chunk size:**  The number of rows to send in each chunk.  The default value is 10,000 rows.  This is only respected if the entire file is not sent in a single chunk because of the `Chunking filesize threshold`.
 
  To modify the defaults go to Edit -> Preferences and modify the numbers.
 
@@ -104,15 +124,3 @@ If the proxy server is authenticated, you may also set:
 
 **NOTICE:** DataSync stores the authentication details unencrypted in the Registry on Windows platforms (in the following location: HKEY_CURRENT_USER\Software\JavaSoft\Prefs) and in analogous locations on Mac and Linux. If you are concerned about this as a potential security issue you may instead [run the job headlessly]({{ site.root }}/guides/setup-standard-job-headless.html), in order to pass the needed credentials in via the commandline.
 
-### Creating a configuration file for running headless jobs
-The configuration file is a simple JSON formatted object, passed on the command line to DataSync.  To create a configuration file, simply copy the following required fields into a text editor and save it locally.  
-
-```json
-{
-    "domain": "<YOUR DOMAIN>",
-    "username": "<YOUR USERNAME>",
-    "password": "<YOUR PASSWORD>",
-    "appToken": "<YOUR APP TOKEN>",
-}
-```
-Additional options can be added by simply adding the setting name to the file and setting its value accordingly. 
