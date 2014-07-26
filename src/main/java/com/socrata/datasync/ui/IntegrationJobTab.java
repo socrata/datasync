@@ -104,11 +104,14 @@ public class IntegrationJobTab implements JobTab {
     private JButton browseForControlFileButton;
     private JPanel controlFileLabelContainer;
     private JPanel controlFileSelectorContainer;
+
+
     private JButton generateEditControlFileButton;
     private JTextArea controlFileContentTextArea;
     private JTextField runCommandTextField;
 
     private boolean usingControlFile;
+    private boolean regenerateControlFile;
 
     // build Container with all tab components populated with given job data
     public IntegrationJobTab(IntegrationJob job, JFrame containingFrame) {
@@ -215,6 +218,7 @@ public class IntegrationJobTab implements JobTab {
         datasetIDTextField = new JTextField();
         datasetIDTextField.setPreferredSize(new Dimension(
                 DATASET_ID_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
+        datasetIDTextField.addActionListener(new RegenerateControlFileListener());
         datasetIDTextFieldContainer.add(datasetIDTextField);
 
         JButton getColumnIdsButton = new JButton(GET_COLUMN_IDS_BUTTON_TEXT);
@@ -243,6 +247,7 @@ public class IntegrationJobTab implements JobTab {
 
         jobPanel.add(new JLabel(""));
         fileToPublishHasHeaderCheckBox = new JCheckBox(CONTAINS_A_HEADER_ROW_CHECKBOX_TEXT);
+        fileToPublishHasHeaderCheckBox.addActionListener(new RegenerateControlFileListener());
 
         JPanel hasHeaderRowLabelContainer = new JPanel(FLOW_LEFT);
         hasHeaderRowLabelContainer.add(fileToPublishHasHeaderCheckBox);
@@ -416,6 +421,12 @@ public class IntegrationJobTab implements JobTab {
         }
     }
 
+    private class RegenerateControlFileListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            regenerateControlFile = true;
+        }
+    }
+
     private class ControlFileSelectorListener implements ActionListener {
         JFileChooser fileChooser;
         JTextField filePathTextField;
@@ -425,6 +436,7 @@ public class IntegrationJobTab implements JobTab {
             filePathTextField = textField;
             fileChooser.setFileFilter(
                     UIUtility.getFileChooserFilter(IntegrationJobValidity.allowedControlFileExtensions));
+            regenerateControlFile = true;
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -446,6 +458,7 @@ public class IntegrationJobTab implements JobTab {
             ftpButton.setVisible(PublishMethod.replace.equals(selectedPublishMethod));
             httpButton.setSelected(true);
             updatePublishViaReplaceUIFields(controlFileNeeded());
+            regenerateControlFile = true;
         }
     }
 
@@ -488,11 +501,8 @@ public class IntegrationJobTab implements JobTab {
             String previousControlFileContent = controlFileContentTextArea.getText();
             String controlFileContent = previousControlFileContent;
 
-            if(previousControlFileContent.equals(EMPTY_TEXTAREA_CONTENT)) {
-                if(!fileToPublishIsSelected()) {
-                    generateControlFileErrorMessage = "Error generating control file: " +
-                            "you must select a File to Publish";
-                } else if(!datasetIdValid()) {
+            if(previousControlFileContent.equals(EMPTY_TEXTAREA_CONTENT) || regenerateControlFile) {
+                if(!datasetIdValid()) {
                     generateControlFileErrorMessage = "Error generating control file: " +
                             "you must enter valid Dataset ID";
                 } else {
@@ -503,6 +513,7 @@ public class IntegrationJobTab implements JobTab {
                                 (PublishMethod) publishMethodComboBox.getSelectedItem(),
                                 datasetIDTextField.getText(),
                                 fileToPublishHasHeaderCheckBox.isSelected());
+                        regenerateControlFile = false;
                     } catch (Exception e) {
                         e.printStackTrace();
                         generateControlFileErrorMessage = "Error generating control file: " + e.getMessage();
@@ -549,15 +560,13 @@ public class IntegrationJobTab implements JobTab {
             Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(datasetId);
             boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
 
-            // In FTP Dropbox v2 there is only Append (append == upsert)
-            //Consider factoring the ftp and http button check into a new method
-            if ((ftpButton.isSelected()||httpButton.isSelected()) && publishMethod.equals(PublishMethod.upsert)) {
-                publishMethod = PublishMethod.append;
-            }
-
             String[] columns = null;
-            if (!containsHeaderRow)
-                columns = DatasetUtils.getFieldNamesArray(datasetInfo);
+            if (!containsHeaderRow) {
+                if (PublishMethod.delete.equals(publishMethod))
+                    columns = new String[]{DatasetUtils.getRowIdentifierName(datasetInfo)};
+                else
+                    columns = DatasetUtils.getFieldNamesArray(datasetInfo);
+            }
 
             ControlFile control = ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding);
             ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);

@@ -1,14 +1,12 @@
 package com.socrata.datasync.config.controlfile;
 
-import com.socrata.datasync.Utils;
 import com.socrata.datasync.PublishMethod;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
+import com.socrata.datasync.Utils;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.HashMap;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -48,26 +46,31 @@ public class ControlFile {
                                                   final String[] columns,
                                                   final boolean useSocrataGeocoding) {
 
-        int skip = 0;
         String fileToPublishExtension = Utils.getFileExtension(fileToPublish);
         boolean isCsv = fileToPublishExtension.equalsIgnoreCase("csv");
-        String separator = isCsv ? "," : "\t";
         String quote = isCsv ? "\"" : "\u0000";
-        String[] timeFormats = new String[]{"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy"};
 
         FileTypeControl ftc = new FileTypeControl()
                 .columns(columns)
-                .emptyTextIsNull(true)
                 .encoding("utf-8")
-                .fixedTimestampFormat(timeFormats)
-                .floatingTimestampFormat(timeFormats)
-                .quote(quote)
-                .separator(separator)
-                .skip(skip)
-                .timezone("UTC")
-                .trimWhitespace(true)
-                .trimServerWhitespace(true)
-                .useSocrataGeocoding(useSocrataGeocoding);
+                .quote(quote);
+
+        if (!PublishMethod.delete.equals(publishMethod)) {
+            int skip = 0;
+            String separator = isCsv ? "," : "\t";
+            String[] timeFormats = new String[]{"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy"};
+            ftc.emptyTextIsNull(true)
+               .ignoreColumns(new String[]{})
+               .fixedTimestampFormat(timeFormats)
+               .floatingTimestampFormat(timeFormats)
+               .separator(separator)
+               .skip(skip)
+               .timezone("UTC")
+               .useSocrataGeocoding(useSocrataGeocoding)
+               .trimWhitespace(true)
+               .trimServerWhitespace(true)
+               .overrides(new HashMap<String, ColumnOverride>());
+        }
 
         if (isCsv) {
             return new ControlFile(Utils.capitalizeFirstLetter(publishMethod.name()), null, ftc, null);

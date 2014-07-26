@@ -3,7 +3,6 @@ package com.socrata.datasync.config.controlfile;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.exceptions.SodaError;
 import junit.framework.TestCase;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
@@ -11,9 +10,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 public class ControlFileTest {
@@ -31,7 +28,9 @@ public class ControlFileTest {
             "\"emptyTextIsNull\":" + emptyTextIsNull + "," +
             "\"encoding\":\"" + encoding + "\"," +
             "\"fixedTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\"]," +
-            "\"floatingTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\"],";
+            "\"floatingTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\"]," +
+            "\"ignoreColumns\":[]," +
+            "\"overrides\":{},";
     String fileTypeInnardsEnd =
             "\"skip\":" + skip + "," +
             "\"timezone\":\"" + timezone + "\"," +
@@ -43,7 +42,7 @@ public class ControlFileTest {
     ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     @Test
-    public void testDefaultControlFileGenerationCsv() throws SodaError, InterruptedException, IOException {
+    public void testDefaultControlFileGenerationReplaceCsv() throws SodaError, InterruptedException, IOException {
         String expectedJson = "{" +
                 "\"action\":\"Replace\"," +
                 "\"csv\":" +
@@ -54,6 +53,20 @@ public class ControlFileTest {
                 "}";
 
         ControlFile control = ControlFile.generateControlFile("some_file.csv", PublishMethod.replace, columns, true);
+        String actualJson = mapper.writeValueAsString(control);
+        TestCase.assertEquals(expectedJson, actualJson);
+    }
+
+    @Test
+    public void testDefaultControlFileGenerationDeleteCsv() throws SodaError, InterruptedException, IOException {
+        String expectedJson = "{" +
+                "\"action\":\"Delete\"," +
+                "\"csv\":{" +
+                    "\"columns\":[\"myid\"]," +
+                    "\"encoding\":\"utf-8\"," +
+                    "\"quote\":\"\\\"\"" +
+                "}}";
+        ControlFile control = ControlFile.generateControlFile("some_file.csv", PublishMethod.delete, new String[]{"myid"}, true);
         String actualJson = mapper.writeValueAsString(control);
         TestCase.assertEquals(expectedJson, actualJson);
     }
@@ -98,7 +111,6 @@ public class ControlFileTest {
         TestCase.assertEquals(trimSpace, cf.csv.trimWhitespace);
         TestCase.assertNull(cf.csv.escape);
         TestCase.assertTrue(cf.csv.useSocrataGeocoding);
-        TestCase.assertNull(cf.csv.overrides);
         TestCase.assertNull(cf.csv.syntheticLocations);
     }
 
