@@ -32,18 +32,18 @@ public class UIUtility {
     public static JPanel generateLabelWithHelpBubble(String labelText, String helpBubbleText, int topOffset) {
         JPanel labelContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, HELP_ICON_LEFT_PADDING, topOffset));
         labelContainer.add(new JLabel(labelText));
-        JLabel chunkSizeHelp = new JLabel(helpIcon);
-        BalloonTip chunkSizeTip = new BalloonTip(chunkSizeHelp, helpBubbleText, helpBubbleStyle, false);
+        JLabel help = new JLabel(helpIcon);
+        BalloonTip chunkSizeTip = new BalloonTip(help, helpBubbleText, helpBubbleStyle, false);
         ToolTipUtils.balloonToToolTip(chunkSizeTip, 100, 100000);
-        labelContainer.add(chunkSizeHelp);
+        labelContainer.add(help);
         return labelContainer;
     }
 
     public static JLabel generateHelpBubble(String helpBubbleText) {
-        JLabel chunkSizeHelp = new JLabel(helpIcon);
-        BalloonTip chunkSizeTip = new BalloonTip(chunkSizeHelp, helpBubbleText, helpBubbleStyle, false);
+        JLabel help = new JLabel(helpIcon);
+        BalloonTip chunkSizeTip = new BalloonTip(help, helpBubbleText, helpBubbleStyle, false);
         ToolTipUtils.balloonToToolTip(chunkSizeTip, 100, 100000);
-        return chunkSizeHelp;
+        return help;
     }
 
     public static FileNameExtensionFilter getFileChooserFilter(java.util.List<String> allowedExtensions) {
@@ -60,23 +60,23 @@ public class UIUtility {
                 extensionsMsg, allowedFileExtensions);
         return filter;
     }
-    
+
     public static GridBagConstraints getGridBagLabelConstraints(int xpos, int ypos) {
-        GridBagConstraints labelConstraints = new GridBagConstraints();        
+        GridBagConstraints labelConstraints = new GridBagConstraints();
         labelConstraints.gridx = xpos;
         labelConstraints.gridy = ypos;
         labelConstraints.weightx = 1.0;
         labelConstraints.anchor = GridBagConstraints.LINE_START;
         return labelConstraints;
     }
-    
+
     public static GridBagConstraints getGridBagFieldConstraints(int xpos, int ypos) {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = xpos;
-        constraints.gridy = ypos; 
+        constraints.gridy = ypos;
         constraints.weightx = 0;
         constraints.anchor = GridBagConstraints.LINE_START;
-        constraints.ipadx = 10;    
+        constraints.ipadx = 10;
         return constraints;
     }
 
