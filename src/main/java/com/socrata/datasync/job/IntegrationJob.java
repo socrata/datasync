@@ -248,58 +248,63 @@ public class IntegrationJob extends Job {
         String publishExceptions = "";
         JobStatus runStatus = JobStatus.SUCCESS;
 
-        deserializeControlFile();
-        JobStatus validationStatus = IntegrationJobValidity.validateJobParams(connectionInfo, this);
-        if(validationStatus.isError()) {
-			runStatus = validationStatus;
-		} else {
-            Soda2Producer producer = null;
-            try {
-                File fileToPublishFile = new File(fileToPublish);
-                if (publishViaDi2Http) {
-                    try (DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs)) {
-                        // "upsert" == "append" in di2
-                        if (controlFile.action.equalsIgnoreCase("upsert"))
-                            controlFile.action = "Append";
-                        // TODO: remove the next line when di2 is updated to accept lowercase variants
-                        controlFile.action = Utils.capitalizeFirstLetter(controlFile.action);
-                        runStatus = publisher.publishWithDi2OverHttp(datasetID, fileToPublishFile, controlFile);
+        JobStatus controlDeserialization = deserializeControlFile();
+        if (controlDeserialization.isError()) {
+            runStatus = controlDeserialization;
+        } else {
+            JobStatus validationStatus = IntegrationJobValidity.validateJobParams(connectionInfo, this);
+            if (validationStatus.isError()) {
+                runStatus = validationStatus;
+            } else {
+                Soda2Producer producer = null;
+                try {
+                    File fileToPublishFile = new File(fileToPublish);
+                    if (publishViaDi2Http) {
+                        try (DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs)) {
+                            // "upsert" == "append" in di2
+                            if ("upsert".equalsIgnoreCase(controlFile.action))
+                                controlFile.action = "Append";
+                            // TODO: remove the next line when di2 is updated to accept lowercase variants
+                            controlFile.action = Utils.capitalizeFirstLetter(controlFile.action);
+                            runStatus = publisher.publishWithDi2OverHttp(datasetID, fileToPublishFile, controlFile);
+                        }
+                    } else if (publishViaFTP) {
+                        runStatus = doPublishViaFTPv2(fileToPublishFile);
+                    } else {
+                        // attach a requestId to all Producer API calls (for error tracking purposes)
+                        String jobRequestId = Utils.generateRequestId();
+                        producer = Soda2Producer.newProducerWithRequestId(
+                                connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken(), jobRequestId);
+                        final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
+                        int filesizeChunkingCutoffBytes = userPrefs.getFilesizeChunkingCutoffMB() == null ? 10 * NUM_BYTES_PER_MB :
+                                Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * NUM_BYTES_PER_MB;
+                        int numRowsPerChunk = userPrefs.getNumRowsPerChunk() == null ? 10000 :
+                                Integer.parseInt(userPrefs.getNumRowsPerChunk());
+                        switch (publishMethod) {
+                            case upsert:
+                            case append:
+                                result = doAppendOrUpsertViaHTTP(
+                                        producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+                                break;
+                            case replace:
+                                result = Soda2Publisher.replaceNew(
+                                        producer, importer, datasetID, fileToPublishFile, fileToPublishHasHeaderRow);
+                                break;
+                            case delete:
+                                result = doDeleteViaHTTP(
+                                        producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
+                                break;
+                            default:
+                                runStatus = JobStatus.INVALID_PUBLISH_METHOD;
+                        }
                     }
-                } else if (publishViaFTP) {
-                    runStatus = doPublishViaFTPv2(fileToPublishFile);
-                } else {
-                    // attach a requestId to all Producer API calls (for error tracking purposes)
-                    String jobRequestId = Utils.generateRequestId();
-                    producer = Soda2Producer.newProducerWithRequestId(
-                            connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken(), jobRequestId);
-                    final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
-                    int filesizeChunkingCutoffBytes = userPrefs.getFilesizeChunkingCutoffMB() == null ? 10 * NUM_BYTES_PER_MB :
-                            Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * NUM_BYTES_PER_MB;
-                    int numRowsPerChunk = userPrefs.getNumRowsPerChunk() == null ? 10000 :
-                            Integer.parseInt(userPrefs.getNumRowsPerChunk());
-                    switch (publishMethod) {
-                        case upsert:
-                        case append:
-                            result = doAppendOrUpsertViaHTTP(
-                                    producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
-                            break;
-                        case replace:
-                            result = Soda2Publisher.replaceNew(
-                                    producer, importer, datasetID, fileToPublishFile, fileToPublishHasHeaderRow);
-                            break;
-                        case delete:
-                            result = doDeleteViaHTTP(
-                                    producer, importer, fileToPublishFile, filesizeChunkingCutoffBytes, numRowsPerChunk);
-                            break;
-                        default:
-                            runStatus = JobStatus.INVALID_PUBLISH_METHOD;
-                    }
+
+                } catch (IOException | SodaError | InterruptedException e) {
+                    publishExceptions = e.getMessage();
+                    e.printStackTrace();
+                } finally {
+                    if (producer != null) producer.close();
                 }
-            } catch (IOException | SodaError | InterruptedException e) {
-                publishExceptions = e.getMessage();
-                e.printStackTrace();
-            } finally {
-               if (producer != null) producer.close();
             }
         }
 
