@@ -83,18 +83,8 @@ public class IntegrationJobValidity {
 
         final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
         Dataset schema;
-        String rowIdentifier;
         try {
             schema = (Dataset) importer.loadDatasetInfo(job.getDatasetID());
-            rowIdentifier = DatasetUtils.getRowIdentifierName(schema);
-
-            if(PublishMethod.append.equals(job.getPublishMethod()) && rowIdentifier != null) {
-                JobStatus status = JobStatus.INVALID_PUBLISH_METHOD;
-                status.setMessage("Append can only be performed on a dataset without a Row Identifier set" +
-                        ". Dataset with ID '" + job.getDatasetID() + "' has '" + rowIdentifier + "' set as the Row " +
-                        "Identifier. You probably want to use the upsert method instead." );
-                return status;
-            }
 
             if(job.getPublishViaDi2Http() || job.getPublishViaFTP()) {
 
