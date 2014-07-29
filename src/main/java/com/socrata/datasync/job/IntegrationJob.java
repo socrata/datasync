@@ -249,7 +249,7 @@ public class IntegrationJob extends Job {
         JobStatus runStatus = JobStatus.SUCCESS;
 
         JobStatus controlDeserialization = deserializeControlFile();
-        if (controlDeserialization.isError()) {
+        if (controlDeserialization.isError() && (publishViaDi2Http || publishViaFTP)) {
             runStatus = controlDeserialization;
         } else {
             JobStatus validationStatus = IntegrationJobValidity.validateJobParams(connectionInfo, this);
