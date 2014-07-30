@@ -274,7 +274,7 @@ public class IntegrationJobValidity {
         } else {  // non-null method given
             boolean publishMethodValid = false;
             for (PublishMethod m : PublishMethod.values()) {
-                if (method.equals(m.name()))
+                if (m.name().equalsIgnoreCase(method))
                     publishMethodValid = true;
             }
             if (!publishMethodValid) {
@@ -461,13 +461,13 @@ public class IntegrationJobValidity {
             boolean[] componentsInFile = new boolean[]{location.address == null, location.city == null,
                     location.state == null, location.zip == null, location.latitude == null, location.longitude == null};
             for (String header : headers) {     // O(M)  M = a couple dozen?
-                if (field.equals(header)) {
+                if (field.equalsIgnoreCase(header)) {
                     locationInFile = true;
                     break;
                 }
                 for (int j = 0; j < componentsInFile.length; j++) {   // O(1)  constant at 6
                     if (!componentsInFile[j])
-                        componentsInFile[j] = header.equals(locationComponents[j]);
+                        componentsInFile[j] = header.equalsIgnoreCase(locationComponents[j]);
                 }
             }
             if (locationInFile) {
@@ -567,7 +567,8 @@ public class IntegrationJobValidity {
 
         boolean headerHasRowId = false;
         for (String field : headers) {
-            if (field.equals(rowIdentifier)) headerHasRowId = true;
+            field = field.toLowerCase();
+            if (field.equalsIgnoreCase(rowIdentifier)) headerHasRowId = true;
 
             if (!columnNames.contains(field)) {
                 JobStatus status = JobStatus.PUBLISH_ERROR;
