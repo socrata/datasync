@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -503,7 +502,7 @@ public class IntegrationJobValidity {
      * @return true if each component column has a supported type; false if any have an unsupported type
      */
     private static JobStatus locationTypesSupported(String locationName, LocationColumn location, Map<String,String> typeMapping) {
-        Map<String,String> componentColumns = location.getComponentColumns();
+        Map<String,String> componentColumns = location.findComponentColumns();
         for (String component : componentColumns.keySet()){
             String fieldname = componentColumns.get(component);
             String[] supportedTypes;

@@ -17,7 +17,7 @@ public class LocationColumn {
     public String latitude;
     public String longitude;
 
-    public Map<String, String> getComponentColumns() {
+    public Map<String, String> findComponentColumns() {
         Map<String,String> components = new HashMap<>();
         for (String s : new String[] {"address", "city", "state", "zip", "latitude", "longitude"}) {
             String fieldname = null;
