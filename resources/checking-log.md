@@ -9,6 +9,7 @@ bodyclass: homepage
     - [Connecting to the FTP server](#connecting-to-the-ftp-server)
     - [Checking the logs and downloading CSV "snapshots"](#checking-the-logs-and-downloading-csv-snapshots-when-using-ftp)
 - [Via HTTP](#connecting-to-the-logs-via-http)
+    - [Checking the logs](#checking-the-logs)  
     - [Downloading CSV "snapshots"](#downloading-csv-snapshots-when-using-http)
 
 Customers who are using DataSync via FTP or HTTP can get detailed debugging information by retrieving the logs for each job.  Details of how to access those logs can be found below. 
@@ -47,6 +48,7 @@ Inside each dataset identifier directory there should be the following files/dir
 You can download log.txt to see the logging information for the given dataset. Within the ‘completed’ directory you can find CSVs/TSVs and control.json files archived by date (there are nested folders for year, month, and day). After each successful update operation using DataSync replace via FTP, the CSV/TSV and control.json files that were used to perform the update are archived. Archived files will be stored for the most recent 10 successful update operations (or possibly more). Contact Socrata support if you would like additonal information about archiving.
 
 ### Connecting to the logs via HTTP
+#### Checking the logs
 You must be signed in with an account with publisher rights before you can view the logs.  Once signed in, you can access the logs for all DataSync over HTTP jobs your domain by visiting:
 
     https://<Your domain>/datasync/log.json
