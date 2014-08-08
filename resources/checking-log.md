@@ -7,8 +7,9 @@ bodyclass: homepage
 ### Contents
 - [Via FTP](#connecting-to-the-logs-via-ftp)
     - [Connecting to the FTP server](#connecting-to-the-ftp-server)
-    - [Checking the logs and downloading CSV "snapshots"](#checking-the-logs-and-downloading-csv-snapshots)
+    - [Checking the logs and downloading CSV "snapshots"](#checking-the-logs-and-downloading-csv-snapshots-when-using-ftp)
 - [Via HTTP](#connecting-to-the-logs-via-http)
+    - [Downloading CSV "snapshots"](#downloading-csv-snapshots-when-using-http)
 
 Customers who are using DataSync via FTP or HTTP can get detailed debugging information by retrieving the logs for each job.  Details of how to access those logs can be found below. 
 
@@ -36,7 +37,7 @@ Save the connection and press "Connect"
 
 If you only have permission to one domain, you will be dropped into the directory for that domain. You should see the directories named with the dataset ID (e.g. b2fd-cjk2) of any dataset you have updated using DataSync replace via FTP. If you have permission to multiple domains, you will see them as subdirectories.
 
-#### Checking the logs and downloading CSV "snapshots"
+#### Checking the logs and downloading CSV "snapshots" when using FTP
 Inside each dataset identifier directory there should be the following files/directories:
 - active-control.json
 - log.txt
@@ -64,6 +65,15 @@ DataSync logs for a specific job can be found by visiting
 
 Where
 `<Your domain>` is your domain, `<Your dataset ID>` is the identifier of the dataset and `<Your job ID>` is the identifier of the job (typically returned in the output of DataSync)
+
+#### Downloading CSV "snapshots" when using HTTP
+Each CSV uploaded through DataSync over HTTP is available for at least 30 days after upload.  The CSV can be found by generating an URL with the following pattern
+
+    https://<Your domain>/datasync/id/<Your Dataset ID>/completed/yyyy/mm/dd/<Your file name>.csv
+
+Where `<Your domain>` is your domain, `<Your dataset ID>` is the identifier of the dataset and `<Your file name>` is the name of the CSV you uploaded.
+
+Note that all paths below /completed/ are navigable. 
 
 
 
