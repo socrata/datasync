@@ -12,6 +12,9 @@ public class CommitMessage {
     public String relativeTo;
     public List<String> chunks;
 
+    @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL) // this is technically optional
+    public Long expectedSize;
+
     @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
     public ControlFile control;
 
@@ -23,4 +26,6 @@ public class CommitMessage {
     public CommitMessage chunks(List<String> c) { chunks = c; return this; }
 
     public CommitMessage control(ControlFile c) { control = c; return this; }
+
+    public CommitMessage expectedSize(Long s) { expectedSize = s; return this; }
 }

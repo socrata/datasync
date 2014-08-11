@@ -52,7 +52,8 @@ public class DeltaImporter2PublisherTest extends TestBase {
                 .filename("hoo-ya.csv")
                 .relativeTo("datasync/id/some-4by4/completed/2014/6/2/hoo-ya.csv")
                 .chunks(Arrays.asList("1234", "2345"))
-                .control(cf);
+                .control(cf)
+                .expectedSize(11001001L);
         String expectedJson = "{" +
                 "\"chunks\":[\"1234\",\"2345\"]," +
                 "\"control\":{" +
@@ -61,6 +62,7 @@ public class DeltaImporter2PublisherTest extends TestBase {
                         "\"floatingTimestampFormat\":[\"ISO8601\"]" +
                     "}" +
                 "}," +
+                "\"expectedSize\":11001001," +
                 "\"filename\":\"hoo-ya.csv\"," +
                 "\"relativeTo\":\"datasync/id/some-4by4/completed/2014/6/2/hoo-ya.csv\"" +
             "}";

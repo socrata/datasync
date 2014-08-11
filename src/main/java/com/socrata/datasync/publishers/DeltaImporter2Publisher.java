@@ -1,5 +1,6 @@
 package com.socrata.datasync.publishers;
 
+import com.socrata.datasync.SizeCountingInputStream;
 import com.socrata.datasync.Utils;
 import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.config.controlfile.ControlFile;
@@ -96,7 +97,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
         DatasyncDirectory datasyncDir = new DatasyncDirectory(http, domain, datasetId);
         boolean useCompression = true;
         InputStream previousSignature = null;
-        InputStream patch = null;
+        SizeCountingInputStream patch = null;
         JobStatus jobStatus;
         int chunkSize = fetchDatasyncChunkSize();
         String uuid = controlFile.generateAndAddOpaqueUUID();
@@ -114,7 +115,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                 }
             };
             // compute the patch between the csv/tsv file and its previous signature
-            patch = getPatch(progressingInputStream, previousSignature, chunkSize, useCompression);
+            patch = new SizeCountingInputStream(getPatch(progressingInputStream, previousSignature, chunkSize, useCompression));
 
             // post the patch file in blobby chunks - ewww
             List<String> blobIds = postPatchBlobs(patch, datasetId, chunkSize);
@@ -124,7 +125,8 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                     .filename(csvOrTsvFile.getName() + patchExtenstion + (useCompression ? compressionExtenstion : ""))
                     .relativeTo(pathToSignature)
                     .chunks(blobIds)
-                    .control(controlFile);
+                    .control(controlFile)
+                    .expectedSize(patch.getTotal());
             String jobId = commitBlobPostings(commit, datasetId, uuid);
 
             // return status
