@@ -64,10 +64,16 @@ public class HttpUtility {
                 }
             }
         }
+
+        RequestConfig requestConfig = RequestConfig.custom().
+                setConnectTimeout(15000). // 15s
+                setSocketTimeout(60000). // 1m
+                build();
+
         clientBuilder.setRetryHandler(datasyncDefaultHandler);
         clientBuilder.setKeepAliveStrategy(datasyncDefaultKeepAliveStrategy);
+        clientBuilder.setDefaultRequestConfig(requestConfig);
         httpClient = clientBuilder.build();
-
     }
 
     /**
