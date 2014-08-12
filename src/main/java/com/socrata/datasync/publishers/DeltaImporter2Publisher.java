@@ -5,14 +5,7 @@ import com.socrata.datasync.Utils;
 import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
-import com.socrata.datasync.deltaimporter2.BlobId;
-import com.socrata.datasync.deltaimporter2.CommitMessage;
-import com.socrata.datasync.deltaimporter2.DatasyncDirectory;
-import com.socrata.datasync.deltaimporter2.JobId;
-import com.socrata.datasync.deltaimporter2.LogItem;
-import com.socrata.datasync.deltaimporter2.ProgressingInputStream;
-import com.socrata.datasync.deltaimporter2.Version;
-import com.socrata.datasync.deltaimporter2.XZCompressInputStream;
+import com.socrata.datasync.deltaimporter2.*;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.ssync.PatchComputer;
 import com.socrata.ssync.SignatureComputer;
@@ -20,15 +13,14 @@ import com.socrata.ssync.SignatureTable;
 import com.socrata.ssync.exceptions.input.InputException;
 import com.socrata.ssync.exceptions.signature.SignatureException;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
-import org.apache.http.HttpStatus;
-import org.apache.http.StatusLine;
+import org.apache.http.*;
 import org.apache.http.client.entity.EntityBuilder;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -62,6 +54,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
     private static final int httpRetries = 3;
     private static final int defaultChunkSize = 1024 * 4000;
 
+    private static class CompletelyRestartJob extends Exception {}
 
     private static String domain;
     private static HttpUtility http;
@@ -98,50 +91,56 @@ public class DeltaImporter2Publisher implements AutoCloseable {
         boolean useCompression = true;
         InputStream previousSignature = null;
         SizeCountingInputStream patch = null;
-        JobStatus jobStatus;
         int chunkSize = fetchDatasyncChunkSize();
         String uuid = controlFile.generateAndAddOpaqueUUID();
+        int retryCount = 0;
 
-        try {
-            // get signature of previous csv/tsv file
-            pathToSignature = datasyncDir.getPathToSignature();
-            previousSignature = getPreviousSignature(pathToSignature);
+        do {
+            try {
+                // get signature of previous csv/tsv file
+                pathToSignature = datasyncDir.getPathToSignature();
+                previousSignature = getPreviousSignature(pathToSignature);
 
-            final long fileSize = csvOrTsvFile.length();
-            InputStream progressingInputStream = new ProgressingInputStream(new FileInputStream(csvOrTsvFile)) {
-                @Override
-                protected void progress(long count) {
-                    System.out.println("\tRead " + count + " of " + fileSize + " bytes of " + csvOrTsvFile.getName());
-                }
-            };
-            // compute the patch between the csv/tsv file and its previous signature
-            patch = new SizeCountingInputStream(getPatch(progressingInputStream, previousSignature, chunkSize, useCompression));
+                final long fileSize = csvOrTsvFile.length();
+                InputStream progressingInputStream = new ProgressingInputStream(new FileInputStream(csvOrTsvFile)) {
+                    @Override
+                    protected void progress(long count) {
+                        System.out.println("\tRead " + count + " of " + fileSize + " bytes of " + csvOrTsvFile.getName());
+                    }
+                };
+                // compute the patch between the csv/tsv file and its previous signature
+                patch = new SizeCountingInputStream(getPatch(progressingInputStream, previousSignature, chunkSize, useCompression));
 
-            // post the patch file in blobby chunks - ewww
-            List<String> blobIds = postPatchBlobs(patch, datasetId, chunkSize);
+                // post the patch file in blobby chunks - ewww
+                List<String> blobIds = postPatchBlobs(patch, datasetId, chunkSize);
 
-            // commit the chunks, thereby applying the diff
-            CommitMessage commit = new CommitMessage()
-                    .filename(csvOrTsvFile.getName() + patchExtenstion + (useCompression ? compressionExtenstion : ""))
-                    .relativeTo(pathToSignature)
-                    .chunks(blobIds)
-                    .control(controlFile)
-                    .expectedSize(patch.getTotal());
-            String jobId = commitBlobPostings(commit, datasetId, uuid);
+                // commit the chunks, thereby applying the diff
+                CommitMessage commit = new CommitMessage()
+                        .filename(csvOrTsvFile.getName() + patchExtenstion + (useCompression ? compressionExtenstion : ""))
+                        .relativeTo(pathToSignature)
+                        .chunks(blobIds)
+                        .control(controlFile)
+                        .expectedSize(patch.getTotal());
+                String jobId = commitBlobPostings(commit, datasetId, uuid);
 
-            // return status
-            jobStatus = getJobStatus(datasetId, jobId);
-
-        } catch (ParseException | NoSuchAlgorithmException | InputException | URISyntaxException |
-                SignatureException |InterruptedException | HttpException e) {
-            e.printStackTrace();
-            jobStatus = JobStatus.PUBLISH_ERROR;
-            jobStatus.setMessage(e.getMessage());
-        } finally {
-            if (previousSignature != null) { previousSignature.close(); }
-            if (patch != null) { patch.close(); }
-            if (signatureResponse != null) { signatureResponse.close(); }
-        }
+                // return status
+                return getJobStatus(datasetId, jobId);
+            } catch (CompletelyRestartJob e) {
+                retryCount += 1;
+            } catch (ParseException | NoSuchAlgorithmException | InputException | URISyntaxException |
+                    SignatureException |InterruptedException | HttpException e) {
+                e.printStackTrace();
+                JobStatus jobStatus = JobStatus.PUBLISH_ERROR;
+                jobStatus.setMessage(e.getMessage());
+                return jobStatus;
+            } finally {
+                if (previousSignature != null) { previousSignature.close(); }
+                if (patch != null) { patch.close(); }
+                if (signatureResponse != null) { signatureResponse.close(); }
+            }
+        } while(retryCount < httpRetries);
+        JobStatus jobStatus = JobStatus.PUBLISH_ERROR;
+        jobStatus.setMessage("Couldn't get the request through; too many retries"); // TODO Better message
         return jobStatus;
     }
 
@@ -212,7 +211,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                 return mapper.readValue(response.getEntity().getContent(), Version.class).maxBlockSize;
             } catch (Exception e) {
                 retryCount += 1;
-                if(retryCount == httpRetries) {
+                if(retryCount >= httpRetries) {
                     // The next step will probably fail too if we can't even hit DI's version service,
                     // but might as well soldier on regardless.
                     System.out.println("Unable to detect chunk size; using " + defaultChunkSize);
@@ -257,11 +256,12 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                 }
             } while (status != HttpStatus.SC_CREATED && retries < httpRetries);
             //We hit the max number of retries without success and should throw an exception accordingly.
-            if (retries == httpRetries) throw new HttpException(statusLine.toString());
+            if (retries >= httpRetries) throw new HttpException(statusLine.toString());
             System.out.println("\tUploaded " + bytesRead + " bytes");
         }
         return blobIds;
     }
+
 
     /**
      * Commits the blobs that were posted.
@@ -269,39 +269,110 @@ public class DeltaImporter2Publisher implements AutoCloseable {
      * @param datasetId the 4x4 of the dataset to which the blobs belong
      * @return the jobId of the job applying the diff
      */
-    private String commitBlobPostings(CommitMessage msg, String datasetId, String uuid) throws URISyntaxException, IOException {
+    private String commitBlobPostings(final CommitMessage msg, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
         System.out.println("Commiting the chunked diffs to apply the patch");
-        URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + commitPath).build();
-        StringEntity entity = new StringEntity(mapper.writeValueAsString(msg), ContentType.APPLICATION_JSON);
-        StatusLine statusLine;
-        int status;
-        int retries = 0;
-        do {
-            try (CloseableHttpResponse response = http.post(committingPath, entity)) {
-                statusLine = response.getStatusLine();
-                status = statusLine.getStatusCode();
-                if (status != HttpStatus.SC_OK) {
-                    response.close();
-                    Commital commital = getJobCommitment(datasetId, uuid);
-                    switch(commital.status) {
-                        case COMMITTED:
-                            return commital.jobId;
-                        case COMMITTING:
-                            retries += httpRetries-1;   // we only retry this case once, since this is typically fatal
-                            break;
-                        case NOT_COMMITTING:
-                        case UNKNOWN:
-                            retries++;
-                    }
-                } else {
-                    String jobId = mapper.readValue(response.getEntity().getContent(), JobId.class).jobId;
-                    return jobId;
+        final URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + commitPath).build();
+
+        // This is kinda ugly (kinda?) -- since this request isn't idempotent, we're handling retry logic ourselves
+        // with checks to make sure that the request didn't actually go through on a failure.
+        class PostStateMachine {
+            String jobId = null;
+            IOException lastPostException = null;
+            int retries = 0;
+
+            void go() throws IOException, URISyntaxException, CompletelyRestartJob {
+                StringEntity entity = new StringEntity(mapper.writeValueAsString(msg), ContentType.APPLICATION_JSON);
+                try (CloseableHttpResponse response = doPost(entity)) {
+                    if(response == null) handleIOErrorPath();
+                    else handleHttpResponsePath(response);
                 }
             }
-        } while (status != HttpStatus.SC_OK && retries < httpRetries);
-        throw new IOException("Unable to commit job. " + statusLine.toString());
-    }
 
+            CloseableHttpResponse doPost(HttpEntity entity) {
+                try {
+                    return http.post(committingPath, entity);
+                } catch (IOException e) {
+                    lastPostException = e;
+                    return null;
+                }
+            }
+
+            void handleIOErrorPath() throws IOException, URISyntaxException {
+                checkCommitment();
+                if(retries >= httpRetries) throw lastPostException;
+            }
+
+            void checkCommitment() throws URISyntaxException {
+                Commital commital = getJobCommitment(datasetId, uuid);
+                switch(commital.status) {
+                    case COMMITTED:
+                        jobId = commital.jobId;
+                        break;
+                    case COMMITTING:
+                        retries += httpRetries-1;   // we only retry this case once, since this is typically fatal
+                        break;
+                    case NOT_COMMITTING:
+                    case UNKNOWN:
+                        retries++;
+                }
+            }
+
+            void handleHttpResponsePath(CloseableHttpResponse response) throws IOException, URISyntaxException, CompletelyRestartJob {
+                StatusLine statusLine = response.getStatusLine();
+                int status = statusLine.getStatusCode();
+                if (status != HttpStatus.SC_OK) {
+                    DI2Error error = null;
+                    if(status == HttpStatus.SC_BAD_REQUEST) {
+                        try {
+                            error = mapper.readValue(response.getEntity().getContent(), DI2Error.class);
+                        } catch (JsonProcessingException e) {
+                            // Bad request response which wasn't from DI2, and hence not JSON or not in the
+                            // format we require?
+                        } catch (IOException e) {
+                            lastPostException = e;
+                            handleIOErrorPath();
+                            return;
+                        }
+                    }
+                    response.close();
+
+                    if(error == null) {
+                        // it wasn't a failure due to something we sent (or if it was, it's a cause
+                        // we don't know about!), so let's see if the commitment went through anyway.
+                        checkCommitment();
+                    } else {
+                        switch(error.type) {
+                            case NON_UNIFORM_CHUNK:
+                            case NONEXISTANT_CHUNK:
+                            case SIZE_MISMATCH:
+                                // these can all be plausibly caused by errors in DataSync's network handling
+                                // (non-uniform chunk less so than the others) so we'll retry.
+                                // TODO: report this to Socrata!
+                                throw new CompletelyRestartJob();
+                            case FILENAME_BAD_CHARACTERS:
+                            case FILENAME_TOO_LONG:
+                                // These are caused by the human and won't be fixed by retrying.  Bad human, no cookie!
+                                // But we should give them a human-readable error at least (preferably we should prevent
+                                // it from happening in the first place).  That's a TODO
+                                //
+                                // For now, fall through to the "terminate processing" case.
+                            default:
+                                // anything else is a bug in datasync.  TODO: report this to Socrata!
+                                retries = httpRetries;
+                        }
+                    }
+                    if(retries >= httpRetries) throw new IOException("Unable to commit job. " + statusLine.toString());
+                } else {
+                    jobId = mapper.readValue(response.getEntity().getContent(), JobId.class).jobId;
+                }
+            }
+        }
+        PostStateMachine psm = new PostStateMachine();
+        do {
+            psm.go();
+        } while (psm.jobId == null);
+        return psm.jobId;
+    }
 
     /**
      * Requests the job status for the given jobId associated with given datasetId
