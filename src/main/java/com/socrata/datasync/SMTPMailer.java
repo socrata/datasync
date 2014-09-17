@@ -66,21 +66,25 @@ public class SMTPMailer {
         props.setProperty("mail.smtp.socketFactory.fallback", "false");
         props.setProperty("mail.smtp.port", userPrefs.getSmtpPort());
         String sslPort = userPrefs.getSslPort();
-        if(!sslPort.equals("")) {
+
+        boolean useSSL = !(sslPort.equals(""));
+
+
+        if(useSSL) {
+
         	props.setProperty("mail.smtp.socketFactory.class", SSL_FACTORY);
         	props.setProperty("mail.smtp.socketFactory.port", sslPort);
-        }
-        props.setProperty("mail.smtps.auth", "true");
-
-        /*
-        If set to false, the QUIT command is sent and the connection is immediately closed. If set 
+            props.setProperty("mail.smtps.auth", "true");
+            /*
+        If set to false, the QUIT command is sent and the connection is immediately closed. If set
         to true (the default), causes the transport to wait for the response to the QUIT command.
 
         ref :   http://java.sun.com/products/javamail/javadocs/com/sun/mail/smtp/package-summary.html
                 http://forum.java.sun.com/thread.jspa?threadID=5205249
                 smtpsend.java - demo program from javamail
         */
-        props.put("mail.smtps.quitwait", "false");
+            props.put("mail.smtps.quitwait", "false");
+        }
 
         Session session = Session.getInstance(props, null);
 
@@ -99,7 +103,10 @@ public class SMTPMailer {
         msg.setText(message, "utf-8");
         msg.setSentDate(new Date());
 
-        SMTPTransport t = (SMTPTransport)session.getTransport("smtps");
+
+        SMTPTransport t = (SMTPTransport)session.getTransport("smtp");
+        if (useSSL)
+            t = (SMTPTransport)session.getTransport("smtps");
         
         t.connect(userPrefs.getOutgoingMailServer(), userPrefs.getSmtpUsername(), userPrefs.getSmtpPassword());
         t.sendMessage(msg, msg.getAllRecipients());      
