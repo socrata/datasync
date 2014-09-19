@@ -17,7 +17,7 @@ bodyclass: homepage
 </div>
 
 ### Basic control file setup
-The control file is a JSON-formatted file that is used to configure a Standard DataSync job that uses the FTP or HTTP means of transfering data.Control files are specific to the dataset you are updating.
+The control file is a JSON-formatted file that is used to configure a Standard DataSync job that uses the FTP or HTTP means of transfering data. Control files are specific to the dataset you are updating.
 
 An example of a typical control file:
 ```json
@@ -47,7 +47,7 @@ This guide will describe how to use the different options within the control fil
 #### Header row/column list
 The `columns` and `skip` options enable configuration of how the columns within the CSV/TSV align with those of the dataset.
 
-`columns`: List of column names in the following format `["col_id1","col_id2",..]`. If it’s `null` then the first line of the CSV/TSV after any skipped records is used. If specified, it must be an array of strings, and must not contain nulls.
+`columns`: List of column names in the following format `["col_id1","col_id2",..]`. If `null`, the first line of the CSV/TSV after any skipped records is assumed to contain the column names. If specified, `columns` must be an array of strings, and must not contain nulls.
 **IMPORTANT NOTE:** the column names, whether provided in “columns” or in the first row of the CSV/TSV, must be the [API field names]({{ site.root }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html), not the display name of the columns.
 
 `skip`: Specifies the number of rows to skip before reaching the header.
@@ -60,13 +60,13 @@ If the first line of the CSV/TSV is the list of column identifiers:
 "skip": 0,
 ```
 
-If the first line of the CSV is the columns incorrectly formatted, for example with human-readable names instead of column identifiers, for example:
+If the first line of the CSV is the columns incorrectly formatted, for example with human-readable names instead of column identifiers:
 ```
 "columns": ["first_name","last_name","age"],
 "skip": 1,
 ```
 
-If the first line of the CSV/TSV is data (there is no header row), for example you would use:
+If the first line of the CSV/TSV is data (there is no header row):
 ```
 "columns": ["first_name","last_name","age"],
 "skip": 0,
@@ -119,11 +119,11 @@ For example:
 ```
 
 The following fields are optional: "address", "city", "state", "zip", "latitude", and "longitude".
-Those that are are not provided are omitted from the generated location.  The column field names must exist in the CSV. In the above example, a Location datatype column with the identifier `location_col_id` would pull in the "address" from the column with identifier `address_col_id`, the "city" from column with identifier `city_col_id`.
+Those that are are not provided are omitted from the generated location.  The column field names must exist in the CSV. In the above example, a Location datatype column with the identifier `location_col_id` would pull in the "address" from the column with identifier `address_col_id` and the "city" from column with identifier `city_col_id`.
 
 The synthetic location `location_col_id` should not be present in the CSV.  If it is, you can ignore this column using the `ignoreColumns option`.
 
-When you provide any combination of location information but do not fill in latitude or longitude then Socrata geocode the information automatically to generate the latitude and longitude values. For more information on Socrata geocoding, please see [this guide](http://support.socrata.com/entries/27849363-Location-Information-Data-which-can-be-geocoded).
+When you provide any combination of location information but do not fill in latitude or longitude then Socrata geocodes the information automatically to generate the latitude and longitude values. For more information on Socrata geocoding, please see [this guide](http://support.socrata.com/entries/27849363-Location-Information-Data-which-can-be-geocoded).
 
 <strong>IMPORTANT:</strong> If you are providing the latitude and longitude values as inputs to the Location column (i.e. you are NOT using Socrata's geocoding), you should set the `useSocrataGeocoding` option to `false`.  If you are not providing the latitude and longitude, you should to set this to `true`.  This will minimize the number of perceived changes to the dataset, decreasing the time it takes to complete your job.  If you are constructing multiple Location columns and they require different `useSocrataGeocoding` settings, you may use the `overrides` option.
 
@@ -145,8 +145,8 @@ The action is given by one of the following strings:
 | ------------- | ------------------------------
 | Replace |  Use if the the CSV/TSV represents the desired new state for the dataset. DataSync will calculate the minimal set of changes required, updating the dataset accordingly.
 | Append | Deprecated.  See Upsert.
-| Upsert | Use if the CSV/TSV contains updates to the dataset, rather than the complete dataset. If the dataset does not have a RowID, then all rows in the CSV are appended, even if they duplicate existing rows. If the dataset does have a RowID, then matching row IDs will be updated and new row IDs will be appended.  *This is not yet supported in DataSync.*
-| Delete | Use if the CSV/TSV contains row IDs of rows to delete. This option requires that a [row indentifier](http://dev.socrata.com/docs/row-identifiers.html) be set on the dataset. *This is not yet supported in DataSync.*
+| Upsert | Use if the CSV/TSV contains updates to the dataset, rather than the complete dataset. If the dataset does not have a RowID, then all rows in the CSV are appended, even if they duplicate existing rows. If the dataset does have a RowID, then matching row IDs will be updated and new row IDs will be appended.
+| Delete | Use if the CSV/TSV contains row IDs of rows to delete. This option requires that a [row indentifier](http://dev.socrata.com/docs/row-identifiers.html) be set on the dataset.
 
 
 #### CSV or TSV Settings
@@ -160,7 +160,7 @@ The following are options available to both CSV files or TSV files within the `c
 | escape | Used to specify the escape character. Typically this is "\\", a single backslash.
 | columns | JSON list of column names. If null then the first line of the CSV after any skipped records is used. If specified, it must be an array of strings and must not contain nulls. Note that the column names, whether provided in “columns” or in the first row of the CSV, must match the [API field names]({{ site.root }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html), not the display name of the columns.
 | ignoreColumns | Specifies any columns in the CSV/TSV file that are to be ignored. These must be given as an array of strings, each of which must be listed within `columns`.
-| skip | Specifies the number of rows to skip. The first row that will be read is `skip` + 1; may be read as a header or a data row depending on how `columns` is set.  If `columns` is null, the first row read will be treated as the header; otherwise it is treated as data.
+| skip | Specifies the number of rows to skip. The first row that will be read is `skip` + 1 and will be read as a header or a data row depending on how `columns` is set.  If `columns` is null, the first row read will be treated as the header; otherwise it is treated as data.
 | trimWhitespace | Trims leading and trailing whitespace before inserting the data into the dataset. Also trims quoted values (e.g. " Foo" would be converted to "Foo").
 | trimServerWhitespace | Trims leading and trailing whitespace that already exists in the dataset. This flag is generally only necessary if data was previously added to the dataset with whitespace (due to trimWhitespace being false).
 | useSocrataGeocoding | Relevant only to Location columns.  Controls how comparisons are made between values in the CSV/TSV file and the data we have stored in our servers.  If you are not providing the latitude and longitude in the synthetic location (e.g. Socrata will geocode the location), set this to "true" to minimize perceived changes to your data. If you are providing the latitude and longitude in the synthetic location, set this to "false".

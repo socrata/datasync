@@ -4,7 +4,7 @@ title: Setup a Standard Job (GUI)
 bodyclass: homepage
 ---
 
-This guide covers how to set up a job using Socrata DataSync's UI. For more information on running Datasync from a command line please see [headlessly (in command-line mode)]({{ site.root }}/guides/setup-standard-job-headless.html).
+This guide covers how to set up a job using Socrata DataSync's UI. Alternatively, [DataSync can also be run from the command line in headless mode]({{ site.root }}/guides/setup-standard-job-headless.html).
 
 ### Step 1: Download DataSync
 Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and download the latest version.
@@ -45,7 +45,7 @@ If so, keep "File to publish contains header row" checked. If not, uncheck "File
 
   - *Column inclusion/exclusion*
 
-  If using Soda2, you needn't supply all of the columnns.  If using FTP or HTTP, the ability to exclude columns from the CSV/TSV file is based on whether the Socrata dataset has a [row identifier](http://dev.socrata.com/docs/row-identifiers.html)set. If so, you may omit any columns but the identifier. If not, all columns must be provided.
+  If using Soda2, you needn't supply all of the columnns.  If using FTP or HTTP, the ability to exclude columns from the CSV/TSV file is based on whether the Socrata dataset has a [row identifier](http://dev.socrata.com/docs/row-identifiers.html) set. If so, you may omit any columns but the identifier. If not, all columns must be provided.
 
   If using Soda2, you may include extraneous columns; these will be ignored.  If using FTP or HTTP, you may include extraneous columns, but these must be ignored by listing them in the 'ignoreColumns' option of the control file.
 
@@ -62,9 +62,9 @@ Select the 'Publish method' by selecting one of the following options:
 - `replace`: Replaces the dataset with the data in the CSV/TSV file.
 - `upsert`: Updates any rows that already exist and inserts rows which do not. Ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.
 
-  *IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then DataSync will not be able to determine what rows to update and all rows in the CSV/TSV file will be appended to the dataset. [Learn more about Row Identifiers and how to establish them](http://dev.socrata.com/docs/row-identifiers.html)*
+  *IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then DataSync will not be able to determine what rows to update and all rows in the CSV/TSV file will be appended to the dataset. [Learn more about Row Identifiers and how to establish them](http://dev.socrata.com/docs/row-identifiers.html).*
 
-- `append`: Same as upsert.  Deprecated
+- `append`: Same as upsert.  Deprecated.
 
 - `delete`: Delete all rows matching Row Identifiers given in CSV/TSV file. The CSV/TSV should only contain a single column listing the Row Identifiers to delete.
 
@@ -73,29 +73,25 @@ Select the 'Publish method' by selecting one of the following options:
 
 DataSync offers three ways to upload your data
 
-    1. via HTTP: *This option is available only in DataSync versions 1.5 and higher.*  This is the preferred option because it...
-
-      - gracefully handles network failures
-      - minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
-      - can reliably handle very large files (1 million+ rows)
-      - allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/control-config.html)
-
-    2. via FTP (only available for `replace`): This functions in much the same way as the HTTP variant, with 2 notable differences:
-
-      - the entire CSV/TSV file will transfered
-      - if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)
-
-    3. via Soda2: *Deprecated.*  This method is not recommended because of its inefficiencies and file size limitations (< 5 MB).
+  1. via HTTP: *This option is available only in DataSync versions 1.5 and higher.*  This is the preferred option because it...
+    - gracefully handles network failures
+    - minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
+    - can reliably handle very large files (1 million+ rows)
+    - allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/control-config.html)
+  2. via FTP (only available for `replace`): This functions in much the same way as the HTTP variant, with 2 notable differences:
+    - the entire CSV/TSV file will transfered
+    - if you are running DataSync behind a firewall it must be configured to allow FTP traffic through ports 22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)
+  3. via Soda2: *Deprecated.*  This method is not recommended because of its inefficiencies and file size limitations (< 5 MB).
 
 
 **Control File Configuration (needed for replace via FTP or HTTP)**
 
-When using replace via FTP or HTTP you must supply or generate a control file. In many cases simply clicking the 'Generate/Edit' and using the default configuration will be sufficient for the job to run successfully. Do not click 'Generate/Edit' if you want to use a Control file that is saved as a file, instead click 'Browse...' and select the file. The cases where you will need to modify the Control file content include, but are not limited to:
+When using replace via FTP or HTTP you must supply or generate a control file. In many cases simply clicking the 'Generate/Edit' button and using the default configuration will be sufficient for the job to run successfully. Do not click 'Generate/Edit' if you want to use a Control file that is saved as a file, instead click 'Browse...' and select the file. The cases where you will need to modify the Control file content include, but are not limited to:
 
 * If your CSV contains date/time data in a format other than: [ISO8601](http://en.wikipedia.org/wiki/ISO_8601), MM/dd/yyyy, MM/dd/yy, or dd-MMM-yyyy (e.g. "2014-04-22", "2014-04-22T05:44:38", "04/22/2014", "4/22/2014", "4/22/14", and "22-Apr-2014" would all be fine).
-* The Socrata dataset has a Location column that will be populated from existing columns (e.g. address, city, state, zipcode)
-* The Socrata dataset has a Location column and you are <strong>not</strong> using Socrata's geocoding (you provide latitude/longitude in CSV/TSV file)
-* If you wish to set the timezone of the dates being imported
+* The Socrata dataset has a Location column that will be populated from existing columns (e.g. address, city, state, zipcode).
+* The Socrata dataset has a Location column and you are <strong>not</strong> using Socrata's geocoding (i.e. you are providing the latitude/longitude coordinates in the CSV/TSV file).
+* If you wish to set the timezone of the dates being imported.
 
 
 For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/control-config.html)
@@ -108,14 +104,14 @@ If the job was successful you can save the job to a file on the computer by clic
 **NOTE:** You should always close DataSync after you are finished.  Failure to do so may cause issues when jobs are run using the scheduler.
 
 <div class="well">
-When running jobs in the UI DataSync does not display detailed logging information. To view detailed logging information you will need to run DataSync from the command line.  To do so, copy the 'Command to execute with scheduler' (click 'Copy to clipboard' next to the textbox) and runn that command in your Terminal/Command Prompt. The terminal will output detailed logging information as the job runs.
+When running jobs in the UI DataSync does not display detailed logging information. To view detailed logging information you will need to run DataSync from the command line.  To do so, copy the 'Command to execute with scheduler' (click 'Copy to clipboard' next to the textbox) and run that command in your Terminal/Command Prompt. The terminal will output detailed logging information as the job runs.
 </div>
 
 ### Step 6: Scheduling your jobs to run at a specified interval
 To automate updating a dataset you must schedule the DataSync job to run automatically at a specified interval (i.e once per day). This can be done with standard tools such as the Windows Task Scheduler or Cron.
 
-[Read the documentation for how to schedule a saved job]({{ site.root }}/resources/schedule-job.html)
+[Read the documentation for how to schedule a saved job]({{ site.root }}/resources/schedule-job.html).
 
 ### Additional configuration
 
-To take advantage of job logging, automatic email error notification, and file chunking (for publishing large files) in DataSync refer to [Preferences configuration documentation]({{ site.root }}/resources/preferences-config.html).
+To take advantage of job logging, automatic email error notification, proxy support or file chunking (for publishing large files) in DataSync refer to the [preferences configuration documentation]({{ site.root }}/resources/preferences-config.html).

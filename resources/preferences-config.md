@@ -21,7 +21,7 @@ The following options are available to configure DataSync
 | username | required | Your Socrata username. This user must have a Publisher role or Owner rights to at least one dataset. We recommend creating a dedicated Socrata account (with these permissions) to use with DataSync rather than tie DataSync to a particular person’s primary account. (e.g. publisher@opendata.socrata.com)
 | password | required | Your Socrata password. Note that this will be stored in clear-text as part of the file. We recommend taking additional precautions to protect this file, including potentially only adding it when your ETL process runs.
 | appToken | required | An app token.   If do not yet have an app token, please reference [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html).
-| logDatasetID | optional | The dataset indentifier of the log dataset. If you have not provisioned a log dataset and would like to do so, please refer to [Logging documentation]({{ site.root }}/resources/preferences-config.html).
+| logDatasetID | optional | The dataset indentifier of the log dataset. If you have not provisioned a log dataset and would like to do so, please refer to the [logging documentation]({{ site.root }}/resources/preferences-config.html).
 | adminEmail | required only if `emailUponError` is "true" | The email address of the administrator or user that error notifications should be sent to.
 | emailUponError | optional | Whether to send email notifications of errors that occurred while running jobs. Defaults to "false".
 | outgoingMailServer | required only if `emailUponError` is "true" | The address of your SMTP server
@@ -58,7 +58,7 @@ java -jar <DATASYNC_JAR> -t LoadPreferences -c <CONFIG_FILE>
 ```
 
 ### Setting up logging (using a dataset)
-You can set up a Socrata dataset to store log information each time a DataSync jobs runs. This is especially useful if you will be [scheduling your jobs]({{ site.root }}/resources/schedule-job.html) to run automatically at some specified interval. You first need to manually create a log dataset. You should probably keep this dataset private (rather than set it as public). The easiest way to se this up is to run a DataSync Port Job that copies the schema from [this example log dataset](https://adrian.demo.socrata.com/dataset/DataSync-Log/aywp-657c).
+You can set up a Socrata dataset to store log information each time a DataSync jobs runs. This is especially useful if you will be [scheduling your jobs]({{ site.root }}/resources/schedule-job.html) to run automatically at some specified interval. You first need to manually create a log dataset. You should probably keep this dataset private (rather than set it as public). The easiest way to set this up is to run a DataSync Port Job that copies the schema from [this example log dataset](https://adrian.demo.socrata.com/dataset/DataSync-Log/aywp-657c).
 
 To run a Port Job in DataSync go to File -> New... -> Port Job and fill out the following fields as noted below:
 
@@ -112,7 +112,7 @@ Chunking is handled automatically according to the defaults set in Datasync, tho
  To modify the defaults go to Edit -> Preferences and modify the numbers.
 
 ### Proxy Configuration
-You can configure DataSync to use an authenticated or unauthenticated proxy server. Please note, this option is only available for [Standard replace jobs]({{ site.root }}/guides/setup-standard-job.html) and only if choosing 'via HTTP using Delta-importer-2'.  At minimum, the following options will need to be set:
+You can configure DataSync to use an authenticated or unauthenticated proxy server. Please note, this option is only available if running jobs 'via HTTP using Delta-importer-2'.  At minimum, the following options will need to be set:
 
   - **Proxy Host:** The fully qualified host name of the proxy server, e.g. https://myProxyServer.com.
   - **Proxy Port:**  The port that the proxy server listens on, e.g. 8080

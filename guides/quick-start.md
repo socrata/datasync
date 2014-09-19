@@ -44,7 +44,7 @@ https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw
 
 The dataset ID is: m985-ywaw
 
-Enter your dataset's ID into the Dataset ID field
+Enter your dataset's ID into the Dataset ID field.
 
 
 **Choose the Publish Method ...**
@@ -59,7 +59,7 @@ Leave the default option "replace via HTTP" selected  This option will:
 **Create a control file**
 A control file is needed to help DataSync interpret the data within the CSV. In most cases simply clicking the 'Generate/Edit' button to generate a control file with the default configuration will be sufficient for the job to run successfully.
 
-For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/control-config.html)
+For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/control-config.html).
 
 ### Step 5: Run the job
 
@@ -75,7 +75,7 @@ After saving the file the '*Command to execute with scheduler*' field is populat
 
 To automate updating a dataset you must schedule the DataSync job to run automatically at a specified interval (i.e once per day). This can be done with standard tools such as the Windows Task Scheduler or Cron.
 
-[Read the documentation for how to schedule a saved job]({{ site.root }}/resources/schedule-job.html)
+[Read the documentation for how to schedule a saved job]({{ site.root }}/resources/schedule-job.html).
 
 ### Additional information
 

@@ -12,7 +12,7 @@ https://data.seattle.gov/Public-Safety/Fire-911/m985-ywaw
 The dataset ID is: `m985-ywaw`
 
 ### How do I find the API field names for my columns?
-Columns within a dataset have both a display name and an API field name.  Datasync operates wholly from the API field names.  If using the DataSync GUI, you can get the list of API field names by clicking the 'Get Column IDs' button after entering the Dataset ID.  You may also view the API field names from your browser, by hovering over the information icon on any column.
+Columns within a dataset have both a display name and an API field name.  Datasync only operates using API field names.  If using the DataSync GUI, you can get the list of API field names by clicking the 'Get Column IDs' button after entering the Dataset ID.  You may also view the API field names from your browser, by hovering over the information icon on any column.
 
 ### What datatypes does DataSync support?
 
@@ -34,7 +34,7 @@ When all fields are not explicitly specified for the location column, the system
 ### What does this error mean? ‘java.lang.UnsupportedClassVersionError: com/socrata/exceptions/SodaError : Unsupported major.minor version 51.0’
 Your version of Java is too old, you should update to at least Java 7. Get the [latest version of Java here](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
-### After running a job successfully some or all of the columns in the dataset appear as blank instead of the data in the uploaded CSV.
+### After running a Soda2 job successfully some or all of the columns in the dataset appear as blank instead of the data in the uploaded CSV.
 Your header row containing the column names in the dataset does not exactly match the column names in the dataset. Note that the column names are case sensitive. It is best to use the column identifiers (a.k.a. API field names) in your header row, which can be easily obtained for a dataset by clicking the “Get Column ID” button within DataSync.
 
 ### What does this error mean? '...PRIX certificate validation failed'

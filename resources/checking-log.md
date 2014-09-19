@@ -9,18 +9,17 @@ bodyclass: homepage
     - [Connecting to the FTP server](#connecting-to-the-ftp-server)
     - [Checking the logs and downloading CSV "snapshots"](#checking-the-logs-and-downloading-csv-snapshots-when-using-ftp)
 - [Via HTTP](#connecting-to-the-logs-via-http)
-    - [Checking the logs](#checking-the-logs)  
+    - [Checking the logs](#checking-the-logs)
     - [Downloading CSV "snapshots"](#downloading-csv-snapshots-when-using-http)
 
-Customers who are using DataSync via FTP or HTTP can get detailed debugging information by retrieving the logs for each job.  Details of how to access those logs can be found below. 
+Customers who are using DataSync via FTP or HTTP can get detailed debugging information by retrieving the logs for each job.  Details of how to access those logs can be found below.
 
 ### Connecting to the logs via FTP
 
 #### Connecting to the FTP server
 You can use [Filezilla](https://filezilla-project.org/) or any other FTP client that supports FTPS to connect to the FTP server.
 
-In Filezilla go to
-    `File -> Site Manager`
+In Filezilla go to `File -> Site Manager`.
 
 Set up a new connection with the following details:
 
@@ -32,9 +31,9 @@ Set up a new connection with the following details:
 - **Password:** `<Your Socrata password>`
 
 Ensure the transfer mode is 'Passive' by going to:
-    `Transfer Settings -> Transfer mode : Passive.`
+    `Transfer Settings -> Transfer mode : Passive`.
 
-Save the connection and press "Connect"
+Save the connection and press "Connect".
 
 If you only have permission to one domain, you will be dropped into the directory for that domain. You should see the directories named with the dataset ID (e.g. b2fd-cjk2) of any dataset you have updated using DataSync replace via FTP. If you have permission to multiple domains, you will see them as subdirectories.
 
@@ -43,30 +42,36 @@ Inside each dataset identifier directory there should be the following files/dir
 - active-control.json
 - log.txt
 - status.txt
-- completed (a directory with subdirectories for each day starting on 1/1/2013)
+- completed
 
-You can download log.txt to see the logging information for the given dataset. Within the ‘completed’ directory you can find CSVs/TSVs and control.json files archived by date (there are nested folders for year, month, and day). After each successful update operation using DataSync replace via FTP, the CSV/TSV and control.json files that were used to perform the update are archived. Archived files will be stored for the most recent 10 successful update operations (or possibly more). Contact Socrata support if you would like additonal information about archiving.
+You can download log.txt to see the logging information for the given dataset. Within the ‘completed’ directory you can find CSVs/TSVs and control.json files archived by date (there are nested folders for year, month, and day). After each successful update operation using DataSync replace via FTP, the CSV/TSV and control.json files that were used to perform the update are archived. Archived files will are stored for 30 days. Contact Socrata support if you would like additonal information about archiving.
 
 ### Connecting to the logs via HTTP
 #### Checking the logs
-You must be signed in with an account with publisher rights before you can view the logs.  Once signed in, you can access the logs for all DataSync over HTTP jobs your domain by visiting:
+You must be signed in with an account with publisher rights before you can view the logs.  Logs are offered in a plain text form or in a json format by using either the first or second url in each pair below respectively.
 
-    https://<Your domain>/datasync/log.json
+Logs for all DataSync over HTTP jobs run on your domain by visiting:
 
-DataSync logs for a specific dataset can be found by visiting: 
+    https://<Your domain>/datasync/log
+    https://<Your domain>/datasync/log/index.json
 
+DataSync logs for a specific dataset can be found by visiting:
+
+    https://<Your domain>/datasync/id/<Your dataset ID>/log/
     https://<Your domain>/datasync/id/<Your dataset ID>/log/index.json
 
 The status of an in-progress job on a specific dataset can be found by visiting:
 
+    https://<Your domain>/datasync/id/<Your dataset ID>/status/
     https://<Your domain>/datasync/id/<Your dataset ID>/status/index.json
 
-DataSync logs for a specific job can be found by visiting 
+DataSync logs for a specific job can be found by visiting
 
+    https://<Your domain>/datasync/id/<Your dataset ID>/log/<Your job ID>
     https://<Your domain>/datasync/id/<Your dataset ID>/log/<Your job ID>.json
 
 Where
-`<Your domain>` is your domain, `<Your dataset ID>` is the identifier of the dataset and `<Your job ID>` is the identifier of the job (typically returned in the output of DataSync)
+`<Your domain>` is your domain, `<Your dataset ID>` is the [identifier](http://socrata.github.io/datasync/resources/fac-common-problems.html#what-is-the-id-of-my-dataset) of the dataset and `<Your job ID>` is the identifier of the job.  The job identifier is a 32-length character string and is included in all of the logs listed above.
 
 #### Downloading CSV "snapshots" when using HTTP
 Each CSV uploaded through DataSync over HTTP is available for at least 30 days after upload.  The CSV can be found by generating an URL with the following pattern
@@ -75,7 +80,10 @@ Each CSV uploaded through DataSync over HTTP is available for at least 30 days a
 
 Where `<Your domain>` is your domain, `<Your dataset ID>` is the identifier of the dataset and `<Your file name>` is the name of the CSV you uploaded.
 
-Note that all paths below /completed/ are navigable. 
+Note that all paths below /completed/ are navigable.  For example, to see which months still contain snapshots, you can use:
+
+    https://<Your domain>/datasync/id/<Your Dataset ID>/completed/yyyy/
+
 
 
 

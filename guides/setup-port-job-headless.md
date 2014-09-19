@@ -74,7 +74,7 @@ Explanation of flags:
     <tr>
       <td style='text-align: left;'>-pi2</td>
       <td style='text-align: left;'>--destinationDatasetId</td>
-      <td style='text-align: left;'>m985-ywaw</td>
+      <td style='text-align: left;'>ax36-bgg2</td>
       <td style='text-align: left;'>The <a href='http://socrata.github.io/datasync/resources/fac-common-problems.html#what-is-the-id-of-my-dataset'>dataset identifier</a> of the destination dataset.; only relevant if choosing <code>copy_data</code> for the --portMethod</td>
     </tr>
     <tr>

@@ -18,7 +18,7 @@ java -jar <DATASYNC_JAR>
 
 ### Step 3: Create a new Port Job.
 
-In the DataSync UI go to `File -> New... -> Port Job`. This will open up a new Port Job
+In the DataSync UI go to `File -> New... -> Port Job`. This will open up a new Port Job.
 
 ### Step 4: Enter authentication details
 Enter your authentication details at the bottom left of DataSync (domain, username, password, and app token). The domain is the root domain of your data site and must begin with https:// (i.e. [https://data.cityofchicago.org](https://data.cityofchicago.org)). The username and password are those of a Socrata account that has a Publisher role. Enter your App token.  If you do not yet have an app token, please see [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html). The username, password and application token will be saved as part of the job configuration.  We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tying DataSync to a particular person’s account.
@@ -46,7 +46,7 @@ The configurable options to run a Port Job are:
   1. `upsert`:  This will upsert the data from the source dataset into the destination dataset, updating rows that exist already, inserting those that do not.
   2. `replace`: This will replace the data in the destination dataset with that in the source dataset.
 
-- *Publish Destination Dataset*:  Only relevant if not copying the schema via `Copy schema only` or `Copy schema and data` as the PortMethod. Choose one of the following:
+- *Publish Destination Dataset*:  Only relevant if copying the schema via `Copy schema only` or `Copy schema and data` as the PortMethod. Choose one of the following:
   1. `Yes`:  This will publish the destination dataset to complete the Port Job.
   2. `No`, create a working copy: This will leave the destination dataset as a working copy.
 
