@@ -31,6 +31,8 @@ public class Main {
         } else if(args.length == 1) {
     		if(args[0].equals("-?") || args[0].equals("--help")) {
                 printHelp();
+            } else if (args[0].equals("-v") || args[0].equals("--version")) {
+                System.out.println("DataSync version " + VersionProvider.getThisVersion());
             } else {
                 // Run a job file (.sij) in command-line mode
                 String jobFileToRun = args[0];

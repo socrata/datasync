@@ -74,6 +74,7 @@ public class CommandLineOptions {
         options.addOption("pdt", DESTINATION_DATASET_TITLE_FLAG, true, "Destination Dataset Title (optional) [PortJob]");
 
         options.addOption("?", "help", false, "Help");
+        options.addOption("v", "version", false, "DataSync version");
     }
 
     public static CommandLine getCommandLine(String[] args) throws ParseException, ParseException {

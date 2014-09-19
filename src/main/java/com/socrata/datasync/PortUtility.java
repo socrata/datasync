@@ -175,9 +175,12 @@ public class PortUtility {
      * with a grouping_aggregrate but no group-by).  The editing of the field name is necessary for subsequent
      * data loading, since the data from soda2 expectst aggregated columns to include the grouping_aggregate.
      * Also removes drill-down formatting info, as this is non-sensical without the unaggregated data
+     * Also removing the resourceName - no port job can succeed with one present.
      * @param schema the Dataset from soda-java representing the schema
      */
      public static void adaptSchemaForAggregates(Dataset schema) {
+        // TODO: give users the option to choose a new resource name; in the meanwhile, it can be set after the job completes
+        schema.setResourceName(null);
         List<Column> columns = schema.getColumns();
         for (int i = 0; i < columns.size(); i++) {
             Column col = columns.get(i);
