@@ -69,7 +69,7 @@ public class SimpleIntegrationWizard {
     private static final String HEADLESS_GUIDE_URL = "http://socrata.github.io/datasync/guides/setup-standard-job-headless.html";
     private static final String CONTROL_GUIDE_URL = "http://socrata.github.io/datasync/resources/control-config.html";
     private static final String SCHEDULING_GUIDE_URL = "http://socrata.github.io/datasync/resources/schedule-job.html";
-    private static final String FAQ_URL = "http://socrata.github.io/datasync/resources/faq-common-problems.htmll";
+    private static final String FAQ_URL = "http://socrata.github.io/datasync/resources/faq-common-problems.html";
 
     private JTextField domainTextField, usernameTextField, apiKeyTextField;
 	private JPasswordField passwordField;
