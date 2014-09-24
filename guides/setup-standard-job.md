@@ -7,16 +7,13 @@ bodyclass: homepage
 This guide covers how to set up a job using Socrata DataSync's UI. Alternatively, [DataSync can also be run from the command line in headless mode]({{ site.root }}/guides/setup-standard-job-headless.html).
 
 ### Step 1: Download DataSync
-Navigate to the DataSync [download page]({{site.root}}/datasync/releases}}), and download the latest version.
+Navigate to the DataSync [download page]({{site.root}}/datasync/releases), and download the latest version.
 
 ### Step 2: Launching DataSync
-Launch DataSync navigating to the folder containing the Datasync JAR file that you downloaded previously and run the following command:
+Launch DataSync navigating to the folder containing the Datasync JAR file that you downloaded previously and either double-click the jar or run the following command:
 
-<!--- TODO: update the jar name when we release -->
+    java -jar <DATASYNC_JAR>
 
-```
-java -jar <DATASYNC_JAR>
-```
 
 ### Step 3: Enter authentication details
 Enter your authentication details at the bottom left of DataSync (domain, username, password, and app token). The domain is the root domain of your data site and must begin with https:// (i.e. [https://opendata.socrata.com](https://opendata.socrata.com)). The username and password are those of a Socrata account that has a Publisher role. Enter your App token.  If you do not yet have an app token, please see [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html). The username, password and application token will be saved as part of the job configuration.  We recommend creating a dedicated Socrata account (with a Publisher role or Owner permissions to specific datasets) to use with DataSync rather than tying DataSync to a particular person’s account.

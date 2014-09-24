@@ -41,21 +41,19 @@ To access, edit and save these options into DataSync &#8216;memory&#8217; using 
 
 To save these options into a file, specify them within a single JSON formatted object.  For example, the smallest possible configuration file would resemble:
 
-```json
-{
-    "domain": "<YOUR DOMAIN>",
-    "username": "<YOUR USERNAME>",
-    "password": "<YOUR PASSWORD>",
-    "appToken": "<YOUR APP TOKEN>"
-}
-```
+    {
+        "domain": "<YOUR DOMAIN>",
+        "username": "<YOUR USERNAME>",
+        "password": "<YOUR PASSWORD>",
+        "appToken": "<YOUR APP TOKEN>"
+    }
+
 Additional options can be added by simply adding the setting name to the file and setting its value accordingly.
 
 To load these options into DataSync &#8216;memory&#8217; without use of the GUI, you can run a LoadPreferences job:
 
-```
-java -jar <DATASYNC_JAR> -t LoadPreferences -c <CONFIG_FILE>
-```
+    java -jar <DATASYNC_JAR> -t LoadPreferences -c <CONFIG_FILE>
+
 
 ### Setting up logging (using a dataset)
 You can set up a Socrata dataset to store log information each time a DataSync jobs runs. This is especially useful if you will be [scheduling your jobs]({{ site.root }}/resources/schedule-job.html) to run automatically at some specified interval. You first need to manually create a log dataset. You should probably keep this dataset private (rather than set it as public). The easiest way to set this up is to run a DataSync Port Job that copies the schema from [this example log dataset](https://adrian.demo.socrata.com/dataset/DataSync-Log/aywp-657c).

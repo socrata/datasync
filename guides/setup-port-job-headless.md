@@ -12,15 +12,13 @@ Information about your domain, username, password and app token is required for 
 ### Step 2: Configure job details
 For general help using DataSync in headless/command-line mode run:
 
-```
-java -jar <DATASYNC_JAR> --help
-```
+    java -jar <DATASYNC_JAR> --help
+
 
 To run a job execute the following command, replacing `<..>` with the appropriate values (flags explained below):
 
-```
-java -jar <DATASYNC_JAR> -c <CONFIG FILE> -t PortJob -pm copy_all -pd1 <SOURCE DOMAIN> -pi1 <SOURCE DATASET ID> -pd2 <DESTINATION DOMAIN>  -pdt <TITLE OF NEW DATASET> -pp true
-```
+    java -jar <DATASYNC_JAR> -c <CONFIG FILE> -t PortJob -pm copy_all -pd1 <SOURCE DOMAIN> -pi1 <SOURCE DATASET ID> -pd2 <DESTINATION DOMAIN>  -pdt <TITLE OF NEW DATASET> -pp true
+
 
 Explanation of flags:
 `*` = required flag
@@ -105,48 +103,41 @@ Information about the status of the job will be output to STDOUT. If the job run
 
 ### Complete example job
 
-```
-java -jar <DATASYNC_JAR> -c config.json -t PortJob -pm copy_schema -pd1 https://opendata.socrata.com -pi1 97wa-y6ff -pd2 https://opendata.socrata.com -pdt ‘Port Job Test Title’ -pp true
-```
+    java -jar <DATASYNC_JAR> -c config.json -t PortJob -pm copy_schema -pd1 https://opendata.socrata.com -pi1 97wa-y6ff -pd2 https://opendata.socrata.com -pdt ‘Port Job Test Title’ -pp true
+
 
 config.json contents:
-```json
-{
-    "domain": "https://opendata.socrata.com",
-    "username": "publisher@socrata.com",
-    "password": "secret_password",
-    "appToken": "fPsJQRDYN9KqZOgEZWyjoa1SG",
-}
-```
+    {
+        "domain": "https://opendata.socrata.com",
+        "username": "publisher@socrata.com",
+        "password": "secret_password",
+        "appToken": "fPsJQRDYN9KqZOgEZWyjoa1SG",
+    }
+
 
 **Running a previously saved job file (.spj file)**
 
 Simply run:
 
-```
-java -jar <DATASYNC_JAR> <.spj FILE TO RUN>
-```
+    java -jar <DATASYNC_JAR> <.spj FILE TO RUN>
 
 For example:
 
-```
-java -jar <DATASYNC_JAR> /Users/john/Desktop/business_licenses.spj
-```
+    java -jar <DATASYNC_JAR> /Users/john/Desktop/business_licenses.spj
+
 
 **NOTE:** you can also create an .spj file directly (rather than saving a job using the DataSync UI) which stores the job details in JSON format. Here is an example:
 
-```json
-{
-  "portMethod": "copy_all",
-  "sourceSiteDomain": "https://louis.demo.socrata.com",
-  "sourceSetID": "w8e5-buaa",
-  "sinkSiteDomain": "https://louis.demo.socrata.com",
-  "sinkSetID": "",
-  "publishMethod": "upsert",
-  "publishDataset": "publish",
-  "portResult": "",
-  "jobFilename": "job_saved_v0.3.spj",
-  "fileVersionUID": 1,
-  "pathToSavedJobFile": "/home/louis/Socrata/Github/datasync/src/test/resources/job_saved_v0.3.spj"
-}
-```
+    {
+      "portMethod": "copy_all",
+      "sourceSiteDomain": "https://louis.demo.socrata.com",
+      "sourceSetID": "w8e5-buaa",
+      "sinkSiteDomain": "https://louis.demo.socrata.com",
+      "sinkSetID": "",
+      "publishMethod": "upsert",
+      "publishDataset": "publish",
+      "portResult": "",
+      "jobFilename": "job_saved_v0.3.spj",
+      "fileVersionUID": 1,
+      "pathToSavedJobFile": "/home/louis/Socrata/Github/datasync/src/test/resources/job_saved_v0.3.spj"
+    }

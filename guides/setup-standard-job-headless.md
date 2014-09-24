@@ -17,13 +17,12 @@ Information about your domain, username, password and app token is required for 
 ### Step 2: Configure job details
 For general help using DataSync in headless/command-line mode run:
 
-```
-java -jar <DATASYNC_JAR> --help
-```
+    java -jar <DATASYNC_JAR> --help
+
 To run a job execute the following command, replacing <..> with the appropriate values (flags explained below):
-```
-java -jar <DATASYNC_JAR> -c <CONFIG.json FILE> -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -pf <PUBLISH VIA HTTP> -cf <FTP CONTROL.json FILE>
-```
+
+    java -jar <DATASYNC_JAR> -c <CONFIG.json FILE> -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -pf <PUBLISH VIA HTTP> -cf <FTP CONTROL.json FILE>
+
 
 Explanation of flags:
 `*` = required flag
@@ -100,74 +99,67 @@ Information about the status of the job will be output to STDOUT. If the job run
 
 ### Complete example job
 
-```
-java -jar <DATASYNC_JAR> -c config.json -f business_licenses_2014-02-10.csv -h true -i 7tgi-grrk -m replace -pf true -sc control.json
-```
+    java -jar <DATASYNC_JAR> -c config.json -f business_licenses_2014-02-10.csv -h true -i 7tgi-grrk -m replace -pf true -sc control.json
 
 config.json contents:
-```json
-{
-    "domain": "https://opendata.socrata.com",
-    "username": "publisher@opendata.socrata.com",
-    "password": "secret_password",
-    "appToken": "fPsJQRDYN9KqZOgEZWyjoa1SG",
-    "adminEmail": "",
-    "emailUponError": "false",
-    "logDatasetID": "",
-    "outgoingMailServer": "",
-    "smtpPort": "",
-    "sslPort": "",
-    "smtpUsername": "",
-    "smtpPassword": ""
-}
-```
+
+    {
+        "domain": "https://opendata.socrata.com",
+        "username": "publisher@opendata.socrata.com",
+        "password": "secret_password",
+        "appToken": "fPsJQRDYN9KqZOgEZWyjoa1SG",
+        "adminEmail": "",
+        "emailUponError": "false",
+        "logDatasetID": "",
+        "outgoingMailServer": "",
+        "smtpPort": "",
+        "sslPort": "",
+        "smtpUsername": "",
+        "smtpPassword": ""
+    }
+
 
 control.json contents:
-```json
-{
-  "action" : "Replace",
-  "csv" :
+
     {
-      "useSocrataGeocoding" : true,
-      "columns" : null,
-      "skip" : 0,
-      "fixedTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy"],
-      "floatingTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy"],
-      "timezone" : "UTC",
-      "separator" : ",",
-      "quote" : "\"",
-      "encoding" : "utf-8",
-      "emptyTextIsNull" : true,
-      "trimWhitespace" : true,
-      "trimServerWhitespace" : true,
-      "overrides" : {}
+      "action" : "Replace",
+      "csv" :
+        {
+          "useSocrataGeocoding" : true,
+          "columns" : null,
+          "skip" : 0,
+          "fixedTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy"],
+          "floatingTimestampFormat" : ["ISO8601","MM/dd/yy","MM/dd/yyyy"],
+          "timezone" : "UTC",
+          "separator" : ",",
+          "quote" : "\"",
+          "encoding" : "utf-8",
+          "emptyTextIsNull" : true,
+          "trimWhitespace" : true,
+          "trimServerWhitespace" : true,
+          "overrides" : {}
+        }
     }
-}
-```
+
 
 **Running a previously saved job file (.sij file)**
 
 Simply run:
 
-```
-java -jar <DATASYNC_JAR> <.sij FILE TO RUN>
-```
+    java -jar <DATASYNC_JAR> <.sij FILE TO RUN>
+
 
 For example:
 
-```
-java -jar D<DATASYNC_JAR> /Users/john/Desktop/business_licenses.sij
-```
+    java -jar D<DATASYNC_JAR> /Users/john/Desktop/business_licenses.sij
 
 **NOTE:** you can also create an .sij file directly (rather than saving a job using the DataSync UI) which stores the job details in JSON format. Here is an example:
 
-```json
-{
-    "datasetID" : "2bw7-dr67",
-    "fileToPublish" : "/Users/john/Desktop/building_permits_2014-12-05.csv",
-    "publishMethod" : "replace",
-    "fileToPublishHasHeaderRow" : true,
-    “publishViaFTP” : true,
-    “pathToFTPControlFile” : “/Users/john/Desktop/building_permits_control.json”
-}
-```
+    {
+        "datasetID" : "2bw7-dr67",
+        "fileToPublish" : "/Users/john/Desktop/building_permits_2014-12-05.csv",
+        "publishMethod" : "replace",
+        "fileToPublishHasHeaderRow" : true,
+        “publishViaFTP” : true,
+        “pathToFTPControlFile” : “/Users/john/Desktop/building_permits_control.json”
+    }
