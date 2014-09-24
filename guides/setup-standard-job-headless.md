@@ -12,7 +12,7 @@ bodyclass: homepage
 DataSync's command line interface, or "headless mode," enables easy integration of DataSync into ETL code or other software systems.  DataSync jobs can be run from the command line in one of two ways: (1) passing job parameters as command-line arguments/flags or (2) running an .sij file that was previously saved using the user interface. This guide focuses on (1).
 
 ### Step 1: Establish your configuration (e.g. authentication details)
-Information about your domain, username, password and app token is required for all DataSync jobs.  Note that the user running the job must have publisher rights on the dataset. A number of other global settings, such as logging and emailing preferences can also be configured.  Please refer to the [configuration guide]({{ site.root }}/resources/preferences-config.md) to establish your credentials and preferences.
+Information about your domain, username, password and app token is required for all DataSync jobs.  Note that the user running the job must have publisher rights on the dataset. A number of other global settings, such as logging and emailing preferences can also be configured.  Please refer to the [configuration guide]({{ site.root }}/resources/preferences-config.html) to establish your credentials and preferences.
 
 ### Step 2: Configure job details
 For general help using DataSync in headless/command-line mode run:
