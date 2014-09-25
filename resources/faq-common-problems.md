@@ -40,6 +40,15 @@ Your header row containing the column names in the dataset does not exactly matc
 ### What does this error mean? '...PRIX certificate validation failed'
 This error is caused by the version of Java being out-of-date and as a result failing to validate the SSL certificate. To correct the issue you must update Java JDK or JRE on the machine running DataSync or, alternatively, specifically add the necessary certificates into their trusted certificate stores. If you are still getting the error please contact Socrata support.
 
+### My job is failing because of a "Corrupt SSync patch"
+This error is most likely caused by insufficient heap space.  Try starting up DataSync with additional heap space using one of the options below:
+
+    java -jar -Xmx500m <DATASYNC_JAR>
+
+    java -jar -Xmx1g <DATASYNC_JAR>
+
+The former allows java to use 500 MB of space and the latter 1 GB of space.  If the problem persists please contact your Socrata representive for support.
+
 ### I am getting an ‘invalid/corrupt JAR file’ message when trying to open JAR
 Redownload the DataSync JAR from: [https://github.com/socrata/datasync/releases](https://github.com/socrata/datasync/releases)
 
