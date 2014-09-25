@@ -74,15 +74,21 @@ Where
 `<Your domain>` is your domain, `<Your dataset ID>` is the [identifier](http://socrata.github.io/datasync/resources/fac-common-problems.html#what-is-the-id-of-my-dataset) of the dataset and `<Your job ID>` is the identifier of the job.  The job identifier is a 32-length character string and is included in all of the logs listed above.
 
 #### Downloading CSV "snapshots" when using HTTP
-Each CSV uploaded through DataSync over HTTP is available for at least 30 days after upload.  The CSV can be found by generating an URL with the following pattern
+Each CSV uploaded through DataSync over HTTP is available for at least 30 days after upload.  The CSV can be found by generating a URL with the following pattern
 
-    https://<Your domain>/datasync/id/<Your Dataset ID>/completed/yyyy/mm/dd/<Your file name>.csv
+    https://<Your domain>/datasync/id/<Your Dataset ID>/completed/yyyy/mm/dd/hh:mm:ss.xxx-<Your file name>.csv
 
 Where `<Your domain>` is your domain, `<Your dataset ID>` is the identifier of the dataset and `<Your file name>` is the name of the CSV you uploaded.
 
-Note that all paths below /completed/ are navigable.  For example, to see which months still contain snapshots, you can use:
+The date information within the path can be found by navigating the /completed/ directory.  For example, to see which months still contain snapshots, you can use:
 
     https://<Your domain>/datasync/id/<Your Dataset ID>/completed/yyyy/
+
+And to determine the complete file name, including the hour, minute, seconds and milliseconds, you can use
+
+    https://<Your domain>/datasync/id/<Your Dataset ID>/completed/yyyy/mm/dd/
+
+noting that the resulting file will be url-encoded.
 
 
 
