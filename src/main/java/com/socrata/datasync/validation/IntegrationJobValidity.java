@@ -14,6 +14,7 @@ import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.model.importer.Dataset;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.ContentType;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -112,7 +113,8 @@ public class IntegrationJobValidity {
                     return noHeaders;
                 }
 
-                JobStatus csvDatasetAgreement = checkColumnAgreement(schema, headers, fileControl.ignoreColumns, publishFile.getName());
+                Set<String> synthetics = fileControl.syntheticLocations.keySet();
+                JobStatus csvDatasetAgreement = checkColumnAgreement(schema, headers, synthetics, publishFile.getName());
                 if (csvDatasetAgreement.isError())
                     return csvDatasetAgreement;
 
@@ -554,10 +556,11 @@ public class IntegrationJobValidity {
      * @param schema the soda-java Dataset that provides dataset info
      * @param headers the columns that will be uploaded; taken from either the file or the control
      *                file and minus the ignoredColumns
+     * @param synthetics the synthetic columns that will be generated from the csv
      * @param csvFilename the file name, for printing purposes.
      * @return
      */
-    private static JobStatus checkColumnAgreement(Dataset schema, String[] headers, String[] ignoredColumns, String csvFilename) {
+    private static JobStatus checkColumnAgreement(Dataset schema, String[] headers, Set<String> synthetics, String csvFilename) {
 
         if (schema == null) return JobStatus.VALID;
 
@@ -581,9 +584,9 @@ public class IntegrationJobValidity {
                 columnNames.remove(field);
             }
         }
-        for (String ignored : ignoredColumns) {
-            if (columnNames.contains(ignored))
-                columnNames.remove(ignored);
+        for (String synth : synthetics) {
+            if (columnNames.contains(synth))
+                columnNames.remove(synth);
         }
         if (columnNames.size() > 0) {
             if (rowIdentifier == null) {
