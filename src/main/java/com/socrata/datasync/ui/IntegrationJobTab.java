@@ -436,7 +436,6 @@ public class IntegrationJobTab implements JobTab {
             filePathTextField = textField;
             fileChooser.setFileFilter(
                     UIUtility.getFileChooserFilter(IntegrationJobValidity.allowedControlFileExtensions));
-            regenerateControlFile = true;
         }
 
         public void actionPerformed(ActionEvent e) {
