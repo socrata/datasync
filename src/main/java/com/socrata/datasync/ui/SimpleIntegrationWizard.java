@@ -314,9 +314,11 @@ public class SimpleIntegrationWizard {
 		}
 	}
 
-	private class OpenJobListener implements ActionListener {
+	private File openToDirectory = new File(".");
+    private class OpenJobListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			JFileChooser savedJobFileChooser = new JFileChooser();
+            savedJobFileChooser.setCurrentDirectory(openToDirectory);
             String fileExtensionsAllowed = "*." + STANDARD_JOB_FILE_EXTENSION + ", *." + PORT_JOB_FILE_EXTENSION + ", *." + METADATA_JOB_FILE_EXTENSION;
         	FileNameExtensionFilter filter = new FileNameExtensionFilter(
                     "Socrata Job File (" + fileExtensionsAllowed + ")",
@@ -327,6 +329,7 @@ public class SimpleIntegrationWizard {
 				File openedFile = savedJobFileChooser.getSelectedFile();
 				// Ensure file exists
 				if(openedFile.exists()) {
+					openToDirectory = savedJobFileChooser.getCurrentDirectory();
 					// ensure this job is not already open
 					String openedFileLocation = openedFile.getAbsolutePath();
                     int indexOfAlreadyOpenFile = -1;
