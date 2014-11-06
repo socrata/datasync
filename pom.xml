@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>DataSync</groupId>
     <artifactId>DataSync</artifactId>
-    <version>1.5</version>
+    <version>1.5.2</version>
     <developers>
         <developer>
             <name>Adrian Laurenzi</name>

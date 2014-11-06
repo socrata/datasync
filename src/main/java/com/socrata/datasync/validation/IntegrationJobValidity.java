@@ -1,6 +1,5 @@
 package com.socrata.datasync.validation;
 
-import com.socrata.api.SodaImporter;
 import com.socrata.datasync.DatasetUtils;
 import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.PublishMethod;
@@ -14,7 +13,6 @@ import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.model.importer.Dataset;
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.ContentType;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -81,10 +79,9 @@ public class IntegrationJobValidity {
         if(!allowedFileToPublishExtensions.contains(fileExtension))
             return JobStatus.FILE_TO_PUBLISH_INVALID_FORMAT;
 
-        final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
         Dataset schema;
         try {
-            schema = (Dataset) importer.loadDatasetInfo(job.getDatasetID());
+            schema = DatasetUtils.getDatasetInfo(connectionInfo.getUrl(), job.getDatasetID());
 
             if(job.getPublishViaDi2Http() || job.getPublishViaFTP()) {
 

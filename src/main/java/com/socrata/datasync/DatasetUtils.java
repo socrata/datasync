@@ -1,10 +1,19 @@
 package com.socrata.datasync;
 
-import com.socrata.api.SodaDdl;
-import com.socrata.exceptions.SodaError;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
+import org.apache.http.HttpException;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.utils.URIBuilder;
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +23,34 @@ import java.util.Set;
 public class DatasetUtils {
 
     private static final String LOCATION_DATATYPE_NAME = "location";
+    private static HttpUtility http = new HttpUtility(new UserPreferencesJava(), true);
+    private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+
+    public static Dataset getDatasetInfo(String domain, String viewId) throws URISyntaxException, IOException, HttpException {
+        String[] schemaAndDomain = domain.trim().split("//");
+        String justDomain = schemaAndDomain[schemaAndDomain.length -1];
+        URI absolutePath = new URIBuilder()
+                .setScheme("https")
+                .setHost(justDomain)
+                .setPath("/api/views/" + viewId)
+                .build();
+        StatusLine statusLine;
+        int status;
+        int retriesAvailable = 3;
+        int retries = 0;
+        do {
+            try (CloseableHttpResponse resp = http.get(absolutePath, "application/json")) {
+                statusLine = resp.getStatusLine();
+                status = statusLine.getStatusCode();
+                if (status != HttpStatus.SC_OK) {
+                    retries += 1;
+                } else {
+                    return mapper.readValue(resp.getEntity().getContent(), Dataset.class);
+                }
+            }
+        } while (status != HttpStatus.SC_OK && retries < retriesAvailable);
+        throw new HttpException(statusLine.toString());
+    }
 
     /**
      * Retruns the field name of the row identifier, if there is one, else null
@@ -27,15 +64,16 @@ public class DatasetUtils {
         }
     }
 
+
     /**
      * Returns list of dataset field names in the form: "col1","col2",...
      *
-     * @param ddl
+     * @param domain
      * @param datasetId
      * @return list of field names or null if there
      */
-    public static String getFieldNamesString(SodaDdl ddl, String datasetId) throws SodaError, InterruptedException {
-        Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(datasetId);
+    public static String getFieldNamesString(String domain, String datasetId) throws HttpException, IOException, URISyntaxException {
+        Dataset datasetInfo = getDatasetInfo(domain, datasetId);
         return getFieldNamesString(datasetInfo);
     }
 

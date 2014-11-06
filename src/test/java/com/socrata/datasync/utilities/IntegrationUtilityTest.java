@@ -15,10 +15,12 @@ import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Dataset;
 import junit.framework.TestCase;
+import org.apache.http.HttpException;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 /**
@@ -306,11 +308,11 @@ public class IntegrationUtilityTest extends TestBase {
     }
 
     @Test
-    public void testGetDatasetFieldNames() throws IOException, SodaError, InterruptedException {
+    public void testGetDatasetFieldNames() throws InterruptedException, HttpException, URISyntaxException, IOException, SodaError {
         //UserPreferences userPrefs = new UserPreferencesJava();
         //System.out.println(IntegrationUtility.getFieldNamesString(ddl, "6qkn-8xvw"));
         final SodaDdl ddl = createSodaDdl();
-        String datasetFieldNamesString = DatasetUtils.getFieldNamesString(ddl, UNITTEST_DATASET_ID);
+        String datasetFieldNamesString = DatasetUtils.getFieldNamesString(DOMAIN, UNITTEST_DATASET_ID);
         TestCase.assertEquals("\"id\",\"name\",\"another_name\",\"date\"", datasetFieldNamesString);
 
         Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(UNITTEST_DATASET_ID);
