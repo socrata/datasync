@@ -79,4 +79,5 @@ public class LoadPreferencesJob extends Job {
     }
 
     public UserPreferences getUserPrefs() { return userPrefs; }
+    public void setUserPrefs(UserPreferences prefs) { this.userPrefs = prefs; }
 }

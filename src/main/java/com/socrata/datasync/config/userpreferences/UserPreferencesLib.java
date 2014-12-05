@@ -1,6 +1,7 @@
 package com.socrata.datasync.config.userpreferences;
 
 import com.socrata.datasync.SocrataConnectionInfo;
+import com.socrata.datasync.job.LoadPreferencesJob;
 
 /**
  * Author: Adrian Laurenzi
@@ -57,25 +58,25 @@ public class UserPreferencesLib implements UserPreferences {
         this.domain = domain;
     }
 
-    public String getUsername() {
-        return username;
-    }
+    public UserPreferencesLib domain(String domain) { setDomain(domain); return this; }
+
+    public String getUsername() { return username; }
 
     public void setUsername(String username) {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
-    }
+    public UserPreferencesLib username(String username) { setUsername(username); return this; }
+
+    public String getPassword() { return password; }
 
     public void setPassword(String password) {
         this.password = password;
     }
 
-    public String getAPIKey() {
-        return appToken;
-    }
+    public UserPreferencesLib password(String password) { setPassword(password); return this; }
+
+    public String getAPIKey() { return appToken; }
 
     public String getAppToken() {
         return appToken;
@@ -85,17 +86,19 @@ public class UserPreferencesLib implements UserPreferences {
         this.appToken = appToken;
     }
 
+    public UserPreferencesLib appToken(String appToken) { setAppToken(appToken); return this; }
+
     public String getProxyHost() { return proxyHost; }
 
-    public void setProxyHost(String host) {
-        this.proxyHost = host;
-    }
+    public void setProxyHost(String host) { this.proxyHost = host; }
+
+    public UserPreferencesLib proxyHost(String host) { setProxyHost(host); return this; }
 
     public String getProxyPort() { return proxyPort; }
 
-    public void setProxyPort(String port) {
-        this.proxyPort = port;
-    }
+    public void setProxyPort(String port) { this.proxyPort = port; }
+
+    public UserPreferencesLib proxyPort(String port) { setProxyPort(port); return this; }
 
     public String getProxyUsername() {
         return proxyUsername;
@@ -105,6 +108,8 @@ public class UserPreferencesLib implements UserPreferences {
         this.proxyUsername = username;
     }
 
+    public UserPreferencesLib proxyUsername(String username) { setProxyUsername(username); return this; }
+
     public String getProxyPassword() {
         return proxyPassword;
     }
@@ -112,6 +117,8 @@ public class UserPreferencesLib implements UserPreferences {
     public void setProxyPassword(String password) {
         this.proxyPassword = password;
     }
+
+    public UserPreferencesLib proxyPassword(String password) { setProxyPassword(password); return this; }
 
     public String getAdminEmail() {
         return adminEmail;
@@ -121,6 +128,8 @@ public class UserPreferencesLib implements UserPreferences {
         this.adminEmail = adminEmail;
     }
 
+    public UserPreferencesLib adminEmail(String adminEmail) { setAdminEmail(adminEmail); return this; }
+
     public boolean emailUponError() {
         return emailUponError;
     }
@@ -128,6 +137,8 @@ public class UserPreferencesLib implements UserPreferences {
     public void setEmailUponError(boolean emailUponError) {
         this.emailUponError = emailUponError;
     }
+
+    public UserPreferencesLib emailUponError(boolean emailUponError) { setEmailUponError(emailUponError); return this; }
 
     public String getLogDatasetID() {
         return logDatasetID;
@@ -137,13 +148,17 @@ public class UserPreferencesLib implements UserPreferences {
         this.logDatasetID = logDatasetID;
     }
 
+    public UserPreferencesLib logDatasetID(String logDatasetID) { setLogDatasetID(logDatasetID); return this; }
+
     public String getOutgoingMailServer() {
         return outgoingMailServer;
     }
 
-    public void setOutgoingMailServer(String outgoingMailServer) {
-        this.outgoingMailServer = outgoingMailServer;
+    public void setOutgoingMailServer(String mailServer) {
+        this.outgoingMailServer = mailServer;
     }
+
+    public UserPreferencesLib outgoingMailServer(String mailServer) { setOutgoingMailServer(mailServer); return this; }
 
     public String getSmtpPort() {
         return smtpPort;
@@ -153,6 +168,8 @@ public class UserPreferencesLib implements UserPreferences {
         this.smtpPort = smtpPort;
     }
 
+    public UserPreferencesLib smtpPort(String smtpPort) { setSmtpPort(smtpPort); return this; }
+
     public String getSslPort() {
         return sslPort;
     }
@@ -160,6 +177,8 @@ public class UserPreferencesLib implements UserPreferences {
     public void setSslPort(String sslPort) {
         this.sslPort = sslPort;
     }
+
+    public UserPreferencesLib sslPort(String sslPort) { setSslPort(sslPort); return this; }
 
     public String getSmtpUsername() {
         return smtpUsername;
@@ -169,6 +188,8 @@ public class UserPreferencesLib implements UserPreferences {
         this.smtpUsername = smtpUsername;
     }
 
+    public UserPreferencesLib smtpUsername(String smtpUsername) { setSmtpUsername(smtpUsername); return this; }
+
     public String getSmtpPassword() {
         return smtpPassword;
     }
@@ -177,13 +198,15 @@ public class UserPreferencesLib implements UserPreferences {
         this.smtpPassword = smtpPassword;
     }
 
+    public UserPreferencesLib smtpPassword(String smtpPassword) { setSmtpPassword(smtpPassword); return this; }
+
     public String getFilesizeChunkingCutoffMB() {
         return filesizeChunkingCutoffMB;
     }
 
-    public void setFilesizeChunkingCutoffMB(String filesizeChunkingCutoffMB) {
-        this.filesizeChunkingCutoffMB = filesizeChunkingCutoffMB;
-    }
+    public void setFilesizeChunkingCutoffMB(String mb) { this.filesizeChunkingCutoffMB = mb; }
+
+    public UserPreferencesLib filesizeChunkingCutoffMB(String mb) { setFilesizeChunkingCutoffMB(mb); return this; }
 
     public String getNumRowsPerChunk() {
         return numRowsPerChunk;
@@ -192,6 +215,8 @@ public class UserPreferencesLib implements UserPreferences {
     public void setNumRowsPerChunk(String numRowsPerChunk) {
         this.numRowsPerChunk = numRowsPerChunk;
     }
+
+    public UserPreferencesLib numRowsPerChunk(String numRows) { setNumRowsPerChunk(numRows); return this; }
 
     public boolean getUseNewBackend() {
         return false;
@@ -217,5 +242,12 @@ public class UserPreferencesLib implements UserPreferences {
         } else {
             return null;
         }
+    }
+
+    public UserPreferencesLib load() {
+        LoadPreferencesJob j = new LoadPreferencesJob();
+        j.setUserPrefs(this);
+        j.run();
+        return this;
     }
 }

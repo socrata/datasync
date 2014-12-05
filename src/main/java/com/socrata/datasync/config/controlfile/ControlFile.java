@@ -2,6 +2,7 @@ package com.socrata.datasync.config.controlfile;
 
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.Utils;
+import com.socrata.datasync.job.IntegrationJob;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -32,15 +33,15 @@ public class ControlFile {
 
 
     /**
-     * Generates the default ControlFile object based on given job parameters
-     *
-     * @param fileToPublish filename of file to publish (.tsv or .csv file)
-     * @param publishMethod to use to publish (upsert, append, replace, or delete)
-     *               NOTE: this option will be overriden if this control file is for an ftp job
-     * @param columns the column headers correcsponding to the filetoPublish, needed if it lacks headers
-     * @param useSocrataGeocoding if true use Socrata's geocoding to geocode Location columns
-     * @return content of control.json based on given job parameters
-     */
+    * Generates the default ControlFile object based on given job parameters
+    *
+    * @param fileToPublish filename of file to publish (.tsv or .csv file)
+    * @param publishMethod to use to publish (upsert, append, replace, or delete)
+    *               NOTE: this option will be overriden if this control file is for an ftp job
+    * @param columns the column headers correcsponding to the filetoPublish, needed if it lacks headers
+    * @param useSocrataGeocoding if true use Socrata's geocoding to geocode Location columns
+    * @return content of control.json based on given job parameters
+    */
     public static ControlFile generateControlFile(final String fileToPublish,
                                                   final PublishMethod publishMethod,
                                                   final String[] columns,

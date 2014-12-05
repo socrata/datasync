@@ -12,6 +12,7 @@ import com.socrata.datasync.config.CommandLineOptions;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
+import com.socrata.datasync.config.userpreferences.UserPreferencesLib;
 import com.socrata.datasync.publishers.DeltaImporter2Publisher;
 import com.socrata.datasync.publishers.FTPDropbox2Publisher;
 import com.socrata.datasync.publishers.Soda2Publisher;
@@ -129,20 +130,14 @@ public class IntegrationJob extends Job {
 
 
     @JsonProperty("fileVersionUID")
-    public long getFileVersionUID() {
-        return fileVersionUID;
-    }
+    public long getFileVersionUID() { return fileVersionUID; }
 
-    public ControlFile getControlFile() {
-        return controlFile;
-    }
+    public ControlFile getControlFile() { return controlFile; }
 
     public void setControlFile(ControlFile cf) { controlFile = cf; }
 
     @JsonProperty("datasetID")
-    public void setDatasetID(String newDatasetID) {
-        datasetID = newDatasetID;
-    }
+    public void setDatasetID(String newDatasetID) { datasetID = newDatasetID; }
 
     @JsonProperty("datasetID")
     public String getDatasetID() {
@@ -150,9 +145,7 @@ public class IntegrationJob extends Job {
     }
 
     @JsonProperty("fileToPublish")
-    public void setFileToPublish(String newFileToPublish) {
-        fileToPublish = newFileToPublish;
-    }
+    public void setFileToPublish(String newFileToPublish) { fileToPublish = newFileToPublish; }
 
     @JsonProperty("fileToPublish")
     public String getFileToPublish() {
@@ -170,46 +163,34 @@ public class IntegrationJob extends Job {
     }
 
     @JsonProperty("fileToPublishHasHeaderRow")
-    public boolean getFileToPublishHasHeaderRow() {
-        return fileToPublishHasHeaderRow;
-    }
+    public boolean getFileToPublishHasHeaderRow() { return fileToPublishHasHeaderRow; }
 
     @JsonProperty("fileToPublishHasHeaderRow")
-    public void setFileToPublishHasHeaderRow(boolean newFileToPublishHasHeaderRow) {
-        fileToPublishHasHeaderRow = newFileToPublishHasHeaderRow;
-    }
+    public void setFileToPublishHasHeaderRow(boolean has) { fileToPublishHasHeaderRow = has; }
 
     @JsonProperty("pathToControlFile")
     public String getPathToControlFile() { return pathToControlFile; }
 
     @JsonProperty("pathToControlFile")
-    public void setPathToControlFile(String newPathToControlFile) {
-        pathToControlFile = newPathToControlFile;
-    }
+    public void setPathToControlFile(String path) { pathToControlFile = path; }
 
     @JsonProperty("pathToFTPControlFile")
     public String getFTPPathToControlFile() { return pathToControlFile; }
 
     @JsonProperty("pathToFTPControlFile")
-    public void setPathToFTPControlFile(String newPathToControlFile) {
-        pathToControlFile = newPathToControlFile;
-    }
+    public void setPathToFTPControlFile(String path) { pathToControlFile = path; }
 
     @JsonProperty("controlFileContent")
     public String getControlFileContent() { return controlFileContent; }
 
     @JsonProperty("controlFileContent")
-    public void setControlFileContent(String newcontrolFileContent) {
-        controlFileContent = newcontrolFileContent;
-    }
+    public void setControlFileContent(String content) { controlFileContent = content; }
 
     @JsonProperty("ftpControlFileContent")
     public String getFTPControlFileContent() { return controlFileContent; }
 
     @JsonProperty("ftpControlFileContent")
-    public void setFTPControlFileContent(String newcontrolFileContent) {
-        controlFileContent = newcontrolFileContent;
-    }
+    public void setFTPControlFileContent(String content) { controlFileContent = content; }
 
     @JsonProperty("publishViaFTP")
     public boolean getPublishViaFTP() { return publishViaFTP; }
