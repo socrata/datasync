@@ -32,8 +32,8 @@ public class SimpleIntegrationWizard {
     private static final String LOGO_FILE_PATH = "/datasync_logo.png";
 	private static final String LOADING_SPINNER_FILE_PATH = "/loading_spinner.gif";
 	private static final int FRAME_WIDTH = 800;
-	private static final int FRAME_HEIGHT = 500;
-	private static final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 305);
+	private static final int FRAME_HEIGHT = 550;
+	private static final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 350);
     private static final Dimension BUTTON_PANEL_DIMENSION = new Dimension(780, 40);
     private static final int SSL_PORT_TEXTFIELD_HEIGHT = 26;
 	private static final int DEFAULT_TEXTFIELD_COLS = 25;
@@ -357,6 +357,15 @@ public class SimpleIntegrationWizard {
                             }
                             // Switch to opened file's tab
                             jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
+                        } catch(IntegrationJob.ControlDisagreementException ex) {
+                            JOptionPane.showMessageDialog(frame, "Warning: \n" + ex.getMessage() + " found in \n'" +
+                                openedFileLocation + "'. \nLoading job, but please confirm the contents of your control file are accurate.");
+                            try {
+                                addJobTab(new IntegrationJob(openedFileLocation, true));
+                                jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
+                            } catch(Exception e2) {
+                                JOptionPane.showMessageDialog(frame, "Error opening " + openedFileLocation + ": " + e2.toString());
+                            }
                         } catch(Exception e2) {
                             JOptionPane.showMessageDialog(frame, "Error opening " + openedFileLocation + ": " + e2.toString());
                         }

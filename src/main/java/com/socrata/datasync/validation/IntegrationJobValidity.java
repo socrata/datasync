@@ -353,7 +353,7 @@ public class IntegrationJobValidity {
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage("Unknown Publish Method: " +
                     "The control file must specify the publishing method via the 'action' option as one of: \n" +
-                    methods.toString());
+                    methods.toString() + "\n The action provided was '" + action + "'");
             return status;
         }
         if (!PublishMethod.replace.name().equalsIgnoreCase(action) && job.getPublishViaFTP()) {

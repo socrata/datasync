@@ -82,31 +82,51 @@ public class IntegrationJob extends Job {
         this.userPrefs = userPrefs;
     }
 
-	/**
+    /**
 	 * Loads integration job data from a file and
 	 * uses the saved data to populate the fields
 	 * of this object
 	 */
-	public IntegrationJob(String pathToFile) throws IOException {
+	public IntegrationJob(String pathToFile) throws IOException, ControlDisagreementException {
+        this(pathToFile, false);
+	}
+
+    /**
+     * Loads integration job data from a file and
+     * uses the saved data to populate the fields
+     * of this object
+     */
+    public IntegrationJob(String pathToFile, boolean ignoreControlInconsistencies) throws IOException, ControlDisagreementException {
         userPrefs = new UserPreferencesJava();
         // first try reading the 'current' format
         ObjectMapper mapper = new ObjectMapper();
+        IntegrationJob loadedJob;
         try {
-            IntegrationJob loadedJob = mapper.readValue(new File(pathToFile), IntegrationJob.class);
-            setDatasetID(loadedJob.getDatasetID());
-            setFileToPublish(loadedJob.getFileToPublish());
-            setPublishMethod(loadedJob.getPublishMethod());
-            setFileToPublishHasHeaderRow(loadedJob.getFileToPublishHasHeaderRow());
-            setPathToSavedFile(pathToFile);
-            setPathToControlFile(loadedJob.getPathToControlFile());
-            setControlFileContent(loadedJob.getControlFileContent());
-            setPublishViaFTP(loadedJob.getPublishViaFTP());
-            setPublishViaDi2Http(loadedJob.getPublishViaDi2Http());
+            loadedJob = mapper.readValue(new File(pathToFile), IntegrationJob.class);
         } catch (IOException e) {
             // if reading new format fails...try reading old format into this object
             loadOldSijFile(pathToFile);
+            return;
         }
-	}
+        String controlPath = loadedJob.getPathToControlFile();
+        String controlContent = loadedJob.getControlFileContent();
+        try {
+            setControlFile(controlPath, controlContent);
+        } catch (ControlDisagreementException e) {
+            if (!ignoreControlInconsistencies)
+                throw e;
+        }
+        setDatasetID(loadedJob.getDatasetID());
+        setFileToPublish(loadedJob.getFileToPublish());
+        setPublishMethod(loadedJob.getPublishMethod());
+        setFileToPublishHasHeaderRow(loadedJob.getFileToPublishHasHeaderRow());
+        setPathToSavedFile(pathToFile);
+        setPathToControlFile(loadedJob.getPathToControlFile());
+        setControlFileContent(loadedJob.getControlFileContent());
+        setPublishViaFTP(loadedJob.getPublishViaFTP());
+        setPublishViaDi2Http(loadedJob.getPublishViaDi2Http());
+    }
+
 
     @JsonProperty("fileVersionUID")
     public long getFileVersionUID() {
@@ -116,6 +136,8 @@ public class IntegrationJob extends Job {
     public ControlFile getControlFile() {
         return controlFile;
     }
+
+    public void setControlFile(ControlFile cf) { controlFile = cf; }
 
     @JsonProperty("datasetID")
     public void setDatasetID(String newDatasetID) {
@@ -517,6 +539,42 @@ public class IntegrationJob extends Job {
             status.setMessage("Unable to read in and interpret control file contents: " + e);
             return status;
         }
+    }
+
+    public class ControlDisagreementException extends Exception {
+        public ControlDisagreementException(String msg) {
+            super(msg);
+        }
+    }
+
+    /**
+     * Sets up the control file from the two possible sources in an sij file.
+     * @param controlFilePath the path to the control file
+     * @param controlFileContent the content of the control file
+     * @throw ControlDisagreementException the content of the two sources disagrees
+     */
+    private void setControlFile(String controlFilePath, String controlFileContent) throws IOException, ControlDisagreementException {
+        ControlFile controlFileFromFile = null;
+        ControlFile controlFileFromContents = null;
+
+        if (!Utils.nullOrEmpty(controlFileContent)) {
+            controlFileFromContents = controlFileMapper.readValue(controlFileContent, ControlFile.class);
+            controlFile = controlFileFromFile;
+        }
+        if (!Utils.nullOrEmpty(controlFilePath)) {
+            controlFileFromFile = controlFileMapper.readValue(new File(controlFilePath), ControlFile.class);
+            controlFile = controlFileFromFile;
+        }
+
+        if (controlFileFromFile != null && controlFileFromContents != null) {
+            String controlTextFromFile = controlFileMapper.writeValueAsString(controlFileFromFile);
+            String controlTextFromContents = controlFileMapper.writeValueAsString(controlFileFromContents);
+            if(!controlTextFromFile.equals(controlTextFromContents)) {
+                throw new ControlDisagreementException("The contents of control file \n'" + controlFilePath +
+                        "' differ from the contents in the .sij file");
+            }
+        }
+
     }
 
     /**

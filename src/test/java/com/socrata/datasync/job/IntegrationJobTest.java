@@ -66,7 +66,7 @@ public class IntegrationJobTest extends TestBase {
     }
 
     @Test
-    public void testDataSyncV0dot1JobFileDeserialization() throws IOException {
+    public void testDataSyncV0dot1JobFileDeserialization() throws IOException, IntegrationJob.ControlDisagreementException {
         IntegrationJob job = new IntegrationJob(PATH_TO_SAVED_JOB_FILE_V0dot1);
 
         TestCase.assertEquals(
@@ -81,7 +81,7 @@ public class IntegrationJobTest extends TestBase {
     }
 
     @Test
-    public void testDataSyncJSONJobFileDeserialization() throws IOException {
+    public void testDataSyncJSONJobFileDeserialization() throws IOException, IntegrationJob.ControlDisagreementException {
         IntegrationJob job = new IntegrationJob(PATH_TO_SAVED_JOB_FILE_V0dot3);
 
         TestCase.assertEquals(
@@ -96,7 +96,7 @@ public class IntegrationJobTest extends TestBase {
     }
 
     @Test
-    public void testDataSyncJSONv0dot4JobFileDeserialization() throws IOException {
+    public void testDataSyncJSONv0dot4JobFileDeserialization() throws IOException, IntegrationJob.ControlDisagreementException {
         IntegrationJob job = new IntegrationJob(PATH_TO_SAVED_JOB_FILE_V0dot4);
         TestCase.assertEquals("E:\\tm\\02.26.2014.17.59.22.0.0695675217148733.csv", job.getFileToPublish());
         TestCase.assertEquals("kwgk-zc5k", job.getDatasetID());
@@ -104,12 +104,12 @@ public class IntegrationJobTest extends TestBase {
         TestCase.assertEquals("src/test/resources/job_saved_v0.4.sij", job.getPathToSavedFile());
         TestCase.assertEquals(true, job.getFileToPublishHasHeaderRow());
         TestCase.assertEquals(true, job.getPublishViaFTP());
-        TestCase.assertEquals("E:\\tm\\control.json", job.getPathToControlFile());
+        TestCase.assertEquals("", job.getPathToControlFile());
         TestCase.assertEquals("job_saved_v0.4.sij", job.getJobFilename());
     }
 
    @Test
-    public void testDataSyncJSONv0dot4ControlContentJobFileDeserialization() throws IOException {
+    public void testDataSyncJSONv0dot4ControlContentJobFileDeserialization() throws IOException, IntegrationJob.ControlDisagreementException {
         IntegrationJob job = new IntegrationJob(PATH_TO_SAVED_JOB_FILE_V0dot4_CONTROL_CONTENT);
         TestCase.assertEquals("/Users/file.csv", job.getFileToPublish());
         TestCase.assertEquals("geue-g9cw", job.getDatasetID());

@@ -206,4 +206,8 @@ public class Utils {
     public static String ordinal(int i) {
         return i % 100 == 11 || i % 100 == 12 || i % 100 == 13 ? i + "th" : i + new String[]{"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"}[i % 10];
     }
+
+    public static boolean nullOrEmpty(String s) {
+        return (s == null || s.equals(""));
+    }
 }

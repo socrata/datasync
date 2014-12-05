@@ -1,23 +1,29 @@
 package com.socrata.datasync.ui;
 
-import com.socrata.api.SodaDdl;
-import com.socrata.datasync.*;
+import com.socrata.datasync.DatasetUtils;
+import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.Utils;
 import com.socrata.datasync.config.controlfile.ControlFile;
-import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
+import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.validation.IntegrationJobValidity;
 import com.socrata.model.importer.Dataset;
 import org.apache.http.HttpException;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import java.awt.event.*;
 import java.awt.*;
+import java.awt.dnd.InvalidDnDOperationException;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -38,7 +44,7 @@ public class IntegrationJobTab implements JobTab {
     private static final FlowLayout FLOW_RIGHT = new FlowLayout(FlowLayout.LEFT, 0, JOB_FIELD_VGAP);
 
     private static final String DEFAULT_RUN_JOB_COMMAND = "(Generates when job is saved)";
-    private static final String BROWSE_BUTTON_TEXT = "Browse...";
+    private static final String BROWSE_BUTTON_TEXT = "Browse";
     private static final String EMPTY_TEXTAREA_CONTENT = "";
 
     private static final String JOB_FILE_NAME = "Socrata Integration Job";
@@ -81,7 +87,9 @@ public class IntegrationJobTab implements JobTab {
     public static final String PUBLISH_VIA_FTP_RADIO_TEXT = "FTP";
     public static final String PUBLISH_VIA_HTTP_RADIO_TEXT = "HTTP";
     public static final String COPY_TO_CLIPBOARD_BUTTON_TEXT = "Copy to clipboard";
-    public static final String GENERATE_EDIT_CONTROL_FILE_BUTTON_TEXT = "Generate/Edit";
+    public static final String EDIT_CONTROL_FILE_BUTTON_TEXT = "Edit Control File";
+    public static final String EDIT_GENERATED_CONTROL_FILE_BUTTON_TEXT = "Edit Generated Control File";
+    public static final String GENERATE_CONTROL_FILE_BUTTON_TEXT = "Generate";
     public static final String GET_COLUMN_IDS_BUTTON_TEXT = "Get Column ID List";
     public static final int COPY_TO_CLIPBOARD_OPTION_INDEX = 1;
 
@@ -101,20 +109,24 @@ public class IntegrationJobTab implements JobTab {
     private JRadioButton httpButton;
     //private JCheckBox publishViaFTPCheckBox;
     private JPanel publishViaFTPLabelContainer;
+    private JTextField filePathTextField;
     private JTextField controlFileTextField;
     private JButton browseForControlFileButton;
-    private JPanel controlFileLabelContainer;
+    private JPanel controlFileGeneratorContainer;
     private JPanel controlFileSelectorContainer;
-
-
-    private JButton generateEditControlFileButton;
+    private JButton generateControlFileButton;
+    private JFileChooser fileChooser;
+    private JButton editControlFileButton;
     private JTextArea controlFileContentTextArea;
     private JTextField runCommandTextField;
 
-    private boolean usingControlFile;
-    private boolean regenerateControlFile;
+    private ControlFile controlFile = null;
+    private Boolean controlFileFromPath = null;
+    private Boolean overwroteControlFileAtPath = false;
 
     private UserPreferences userPrefs = new UserPreferencesJava();
+    private ObjectMapper controlFileMapper =
+            new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     // build Container with all tab components populated with given job data
     public IntegrationJobTab(IntegrationJob job, JFrame containingFrame) {
@@ -136,17 +148,19 @@ public class IntegrationJobTab implements JobTab {
     }
 
     private void addControlFileFieldToJobPanel() {
-        controlFileLabelContainer = UIUtility.generateLabelWithHelpBubble(
+        controlFileGeneratorContainer = UIUtility.generateLabelWithHelpBubble(
                 "Control file", CONTROL_FILE_TIP_TEXT, HELP_ICON_TOP_PADDING);
-        jobPanel.add(controlFileLabelContainer);
+        jobPanel.add(controlFileGeneratorContainer);
 
+        // Generate the control file
         controlFileSelectorContainer = new JPanel(FLOW_RIGHT);
-        generateEditControlFileButton = new JButton(GENERATE_EDIT_CONTROL_FILE_BUTTON_TEXT);
-        generateEditControlFileButton.addActionListener(new EditGenerateControlFileListener());
-        controlFileSelectorContainer.add(generateEditControlFileButton);
+        generateControlFileButton = new JButton(GENERATE_CONTROL_FILE_BUTTON_TEXT);
+        generateControlFileButton.addActionListener(new GenerateControlFileListener());
+        controlFileSelectorContainer.add(generateControlFileButton);
         JLabel orLabel = new JLabel(" -or- ");
         controlFileSelectorContainer.add(orLabel);
 
+        // Or use a local control file
         controlFileTextField = new JTextField();
         controlFileTextField.setPreferredSize(new Dimension(
                 CONTROL_FILE_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
@@ -158,6 +172,16 @@ public class IntegrationJobTab implements JobTab {
         browseForControlFileButton.addActionListener(chooserListener);
         controlFileSelectorContainer.add(browseForControlFileButton);
         jobPanel.add(controlFileSelectorContainer);
+
+        // And add the ability to view and edit it
+        jobPanel.add(new JLabel(""));
+        editControlFileButton = new JButton(EDIT_CONTROL_FILE_BUTTON_TEXT);
+        editControlFileButton.addActionListener(new EditControlFileListener());
+        editControlFileButton.setEnabled(false);
+
+        JPanel viewEditControlFile = new JPanel(FLOW_LEFT);
+        viewEditControlFile.add(editControlFileButton);
+        jobPanel.add(viewEditControlFile);
     }
 
     private void addRunCommandFieldToJobPanel() {
@@ -221,7 +245,6 @@ public class IntegrationJobTab implements JobTab {
         datasetIDTextField = new JTextField();
         datasetIDTextField.setPreferredSize(new Dimension(
                 DATASET_ID_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
-        datasetIDTextField.addActionListener(new RegenerateControlFileListener());
         datasetIDTextFieldContainer.add(datasetIDTextField);
 
         JButton getColumnIdsButton = new JButton(GET_COLUMN_IDS_BUTTON_TEXT);
@@ -250,7 +273,6 @@ public class IntegrationJobTab implements JobTab {
 
         jobPanel.add(new JLabel(""));
         fileToPublishHasHeaderCheckBox = new JCheckBox(CONTAINS_A_HEADER_ROW_CHECKBOX_TEXT);
-        fileToPublishHasHeaderCheckBox.addActionListener(new RegenerateControlFileListener());
 
         JPanel hasHeaderRowLabelContainer = new JPanel(FLOW_LEFT);
         hasHeaderRowLabelContainer.add(fileToPublishHasHeaderCheckBox);
@@ -280,8 +302,6 @@ public class IntegrationJobTab implements JobTab {
         //Set the defaults on the button correctly.
         setReplaceRadioButtons(job);
 
-        updateControlFileInputs(job.getPathToControlFile(), job.getControlFileContent());
-
         jobFileLocation = job.getPathToSavedFile();
         // if this is an existing job (meaning the job was opened from a file)
         // then populate the scheduler command textfield
@@ -291,22 +311,23 @@ public class IntegrationJobTab implements JobTab {
         }
 
         jobTabTitleLabel = new JLabel(job.getJobFilename());
-    }
-
-    private void updateControlFileInputs(final String pathToControlFile, final String controlFileContent) {
-        controlFileContentTextArea.setText(controlFileContent);
-        controlFileTextField.setText(pathToControlFile);
-        if (pathToControlFile != null && !pathToControlFile.equals(""))
-            usingControlFile = true;
+        controlFileTextField.setText(job.getPathToControlFile());
+        if (!Utils.nullOrEmpty(job.getPathToControlFile())) {
+            controlFileFromPath = true;
+        } else if (!Utils.nullOrEmpty(job.getControlFileContent())) {
+            controlFileFromPath = false;
+        }
+        reprintControlEditButton();
+        controlFile = job.getControlFile();
     }
 
     private void updatePublishViaReplaceUIFields(boolean showFileInfo) {
         publishViaFTPLabelContainer.setVisible(true);
         if(showFileInfo) {
-            controlFileLabelContainer.setVisible(true);
+            controlFileGeneratorContainer.setVisible(true);
             controlFileSelectorContainer.setVisible(true);
         } else {
-            controlFileLabelContainer.setVisible(false);
+            controlFileGeneratorContainer.setVisible(false);
             controlFileSelectorContainer.setVisible(false);
         }
         jobPanel.updateUI();
@@ -325,11 +346,7 @@ public class IntegrationJobTab implements JobTab {
         jobToRun.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
         jobToRun.setPublishViaFTP(ftpButton.isSelected());
         jobToRun.setPublishViaDi2Http(httpButton.isSelected());
-        if (usingControlFile) {
-            jobToRun.setPathToControlFile(controlFileTextField.getText());
-        } else {
-            jobToRun.setControlFileContent(controlFileContentTextArea.getText());
-        }
+        jobToRun.setControlFile(controlFile);
         return jobToRun.run();
     }
 
@@ -349,6 +366,26 @@ public class IntegrationJobTab implements JobTab {
 
         // TODO If an existing file was selected WARN user of overwriting
 
+        if (overwroteControlFileAtPath) {
+            File file = new File(controlFileTextField.getText());
+            int clickedOkOrCancel = JOptionPane.showConfirmDialog(mainFrame,
+                    "You have edited the control file:\n " +
+                         file + "\n" +
+                        "Please click okay to overwrite this file with your changes; otherwise click cancel.\n" +
+                        "Clicking cancel will still save your job but will not overwrite the original control file.",
+                    "Control file overwritten",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE);
+            if (clickedOkOrCancel == JOptionPane.OK_OPTION) {
+                try {
+                    controlFileMapper.writerWithDefaultPrettyPrinter().writeValue(file, controlFile);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(mainFrame, "Unable to overwrite your control file: \n"
+                            + ex.getMessage() +
+                            "Saving your job without overwriting the control file");
+                }
+            }
+        }
         // if first time saving this job: Open dialog box to select "Save as..." location
         // otherwise save to existing file
         boolean updateJobCommandTextField = false;
@@ -424,16 +461,7 @@ public class IntegrationJobTab implements JobTab {
         }
     }
 
-    private class RegenerateControlFileListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            regenerateControlFile = true;
-        }
-    }
-
     private class ControlFileSelectorListener implements ActionListener {
-        JFileChooser fileChooser;
-        JTextField filePathTextField;
-
         public ControlFileSelectorListener(JFileChooser chooser, JTextField textField) {
             fileChooser = chooser;
             filePathTextField = textField;
@@ -446,7 +474,14 @@ public class IntegrationJobTab implements JobTab {
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 filePathTextField.setText(file.getAbsolutePath());
-                usingControlFile = true;
+                try {
+                    controlFile = controlFileMapper.readValue(file, ControlFile.class);
+                    controlFileContentTextArea.setText("");
+                    controlFileFromPath = true;
+                    reprintControlEditButton();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(mainFrame, "Failure decoding control file: " + ex.getMessage());
+                }
             } else {
                 // Open command cancelled by user: do nothing
             }
@@ -460,7 +495,6 @@ public class IntegrationJobTab implements JobTab {
             ftpButton.setVisible(PublishMethod.replace.equals(selectedPublishMethod));
             httpButton.setSelected(true);
             updatePublishViaReplaceUIFields(controlFileNeeded());
-            regenerateControlFile = true;
         }
     }
 
@@ -497,105 +531,138 @@ public class IntegrationJobTab implements JobTab {
         }
     }
 
-    private class EditGenerateControlFileListener implements ActionListener {
+    private class EditControlFileListener implements ActionListener {
+        public void actionPerformed(ActionEvent evnt) {
+            ControlFile previousControl = controlFile;
+            boolean done = false;
+            while (!done) {
+                try {
+                    String previousControlFileContent = controlFileContentTextArea.getText();
+                    String controlText = previousControlFileContent.equals("") ?
+                            controlFileMapper.writerWithDefaultPrettyPrinter().writeValueAsString(controlFile) :
+                            previousControlFileContent;
+                    int clickedOkOrCancel = showEditControlFileDialog(controlText);
+                    if (clickedOkOrCancel == JOptionPane.OK_OPTION) {
+                        try {
+                            controlFile = controlFileMapper.readValue(controlFileContentTextArea.getText(), ControlFile.class);
+                            overwroteControlFileAtPath = controlFileFromPath;
+                            done = true;
+                        } catch (Exception ex) {
+                            controlFile = previousControl;
+                            JOptionPane.showMessageDialog(mainFrame, "Failure reading control file: " + ex.getMessage() +
+                                    "\n Please correct the error or cancel this change");
+                        }
+                    } else if (clickedOkOrCancel == JOptionPane.CANCEL_OPTION) {
+                        done = true;
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(mainFrame, "Failure decoding current control file: " + ex.getMessage());
+                }
+            }
+        }
+    }
+
+    private class GenerateControlFileListener implements ActionListener {
         public void actionPerformed(ActionEvent evnt) {
             String generateControlFileErrorMessage = null;
-            String previousControlFileContent = controlFileContentTextArea.getText();
-            String controlFileContent = previousControlFileContent;
-
-            if(previousControlFileContent.equals(EMPTY_TEXTAREA_CONTENT) || regenerateControlFile) {
-                if(!datasetIdValid()) {
-                    generateControlFileErrorMessage = "Error generating control file: " +
-                            "you must enter valid Dataset ID";
-                } else {
-                    try {
-                        controlFileContent = generateControlFileContent(
-                                userPrefs.getDomain(),
-                                fileToPublishTextField.getText(),
-                                (PublishMethod) publishMethodComboBox.getSelectedItem(),
-                                datasetIDTextField.getText(),
-                                fileToPublishHasHeaderCheckBox.isSelected());
-                        regenerateControlFile = false;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        generateControlFileErrorMessage = "Error generating control file: " + e.getMessage();
-                    }
+            if (!datasetIdValid()) {
+                generateControlFileErrorMessage = "Error generating control file: " +
+                        "you must enter valid Dataset ID";
+            } else {
+                try {
+                    controlFile = generateControlFile(
+                            userPrefs.getDomain(),
+                            fileToPublishTextField.getText(),
+                            (PublishMethod) publishMethodComboBox.getSelectedItem(),
+                            datasetIDTextField.getText(),
+                            fileToPublishHasHeaderCheckBox.isSelected());
+                    String controlText = controlFileMapper.writerWithDefaultPrettyPrinter().writeValueAsString(controlFile);
+                    controlFileContentTextArea.setText(controlText);
+                    overwroteControlFileAtPath = false;
+                    filePathTextField.setText("");
+                    controlFileFromPath = false;
+                    reprintControlEditButton();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    generateControlFileErrorMessage = "Error generating control file: " + e.getMessage();
                 }
             }
 
-            if(generateControlFileErrorMessage == null) {
-                int clickedOkOrCancel = showEditControlFileDialog(controlFileContent);
-                if(clickedOkOrCancel == JOptionPane.OK_OPTION) {
-                    usingControlFile = false;
-                    controlFileTextField.setText("");
-                } else if (clickedOkOrCancel == JOptionPane.CANCEL_OPTION) {
-                    // Set control file content to its previous content
-                    controlFileContentTextArea.setText(previousControlFileContent);
-                }
-            } else {
+
+            if (generateControlFileErrorMessage != null) {
                 JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
             }
         }
+    }
 
-        private boolean fileToPublishIsSelected() {
-            String fileToPublish = fileToPublishTextField.getText();
-            return !fileToPublish.equals("");
-        }
-
-        /**
-         * Generates default content of control.json based on given job parameters
-         *
-         * @param domain The domain this job applies to
-         * @param publishMethod to use to publish (upsert, append, replace, or delete)
-         *               NOTE: this option will be overriden if userPrefs has pathToFTPControlFile or pathToControlFile set
-         * @param datasetId id of the Socrata dataset to publish to
-         * @param fileToPublish filename of file to publish (.tsv or .csv file)
-         * @param containsHeaderRow if true assume the first row in CSV/TSV file is a list of the dataset columns,
-         *                          otherwise upload all rows as new rows (column order must exactly match that of
-         *                          Socrata dataset)
-         * @return content of control.json based on given job parameters
-         * @throws com.socrata.exceptions.SodaError
-         * @throws InterruptedException
-         */
-        private String generateControlFileContent(String domain, String fileToPublish, PublishMethod publishMethod,
-                                                  String datasetId, boolean containsHeaderRow) throws IOException, URISyntaxException, HttpException {
-            Dataset datasetInfo = DatasetUtils.getDatasetInfo(domain, datasetId);
-            boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
-
-            String[] columns = null;
-            if (!containsHeaderRow) {
-                if (PublishMethod.delete.equals(publishMethod))
-                    columns = new String[]{DatasetUtils.getRowIdentifierName(datasetInfo)};
-                else
-                    columns = DatasetUtils.getFieldNamesArray(datasetInfo);
+    private void reprintControlEditButton() {
+        if (controlFileFromPath != null) {
+            editControlFileButton.setEnabled(true);
+            if (controlFileFromPath) {
+                String file = Utils.getFilename(controlFileTextField.getText());
+                editControlFileButton.setText(EDIT_CONTROL_FILE_BUTTON_TEXT + " " + file);
+            } else if (!controlFileFromPath) {
+                editControlFileButton.setText(EDIT_GENERATED_CONTROL_FILE_BUTTON_TEXT);
             }
-
-            ControlFile control = ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding);
-            ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
-            return mapper.writeValueAsString(control);
-        }
-
-        /**
-         * Display dialog with scrollable text area allowing editing
-         * of given control file content
-         *
-         * @param textAreaContent
-         * @return generated scrollable text area
-         */
-        private int showEditControlFileDialog(String textAreaContent) {
-            controlFileContentTextArea.setText(textAreaContent);
-            JScrollPane scrollPane = new JScrollPane(controlFileContentTextArea);
-            controlFileContentTextArea.setLineWrap(true);
-            controlFileContentTextArea.setWrapStyleWord(true);
-            controlFileContentTextArea.setCaretPosition(0);
-            scrollPane.setPreferredSize(CONTROL_FILE_EDITOR_DIMENSIONS);
-            return JOptionPane.showConfirmDialog(mainFrame,
-                    scrollPane,
-                    "Edit Control File Content",
-                    JOptionPane.OK_CANCEL_OPTION,
-                    JOptionPane.PLAIN_MESSAGE);
+        } else {
+            editControlFileButton.setText(EDIT_CONTROL_FILE_BUTTON_TEXT);
+            editControlFileButton.setEnabled(false);
         }
     }
+
+    /**
+     * Generates default content of control.json based on given job parameters
+     *
+     * @param domain The domain this job applies to
+     * @param publishMethod to use to publish (upsert, append, replace, or delete)
+     *               NOTE: this option will be overriden if userPrefs has pathToFTPControlFile or pathToControlFile set
+     * @param datasetId id of the Socrata dataset to publish to
+     * @param fileToPublish filename of file to publish (.tsv or .csv file)
+     * @param containsHeaderRow if true assume the first row in CSV/TSV file is a list of the dataset columns,
+     *                          otherwise upload all rows as new rows (column order must exactly match that of
+     *                          Socrata dataset)
+     * @return the ControlFile based on given job parameters
+     * @throws com.socrata.exceptions.SodaError
+     * @throws InterruptedException
+     */
+    private ControlFile generateControlFile(String domain, String fileToPublish, PublishMethod publishMethod,
+                                              String datasetId, boolean containsHeaderRow) throws IOException, URISyntaxException, HttpException {
+        Dataset datasetInfo = DatasetUtils.getDatasetInfo(domain, datasetId);
+        boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
+
+        String[] columns = null;
+        if (!containsHeaderRow) {
+            if (PublishMethod.delete.equals(publishMethod))
+                columns = new String[]{DatasetUtils.getRowIdentifierName(datasetInfo)};
+            else
+                columns = DatasetUtils.getFieldNamesArray(datasetInfo);
+        }
+
+        ControlFile control = ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding);
+        return control;
+    }
+
+    /**
+     * Display dialog with scrollable text area allowing editing
+     * of given control file content
+     *
+     * @param textAreaContent
+     * @return generated scrollable text area
+     */
+    private int showEditControlFileDialog(String textAreaContent) {
+        controlFileContentTextArea.setText(textAreaContent);
+        JScrollPane scrollPane = new JScrollPane(controlFileContentTextArea);
+        controlFileContentTextArea.setLineWrap(true);
+        controlFileContentTextArea.setWrapStyleWord(true);
+        controlFileContentTextArea.setCaretPosition(0);
+        scrollPane.setPreferredSize(CONTROL_FILE_EDITOR_DIMENSIONS);
+        return JOptionPane.showConfirmDialog(mainFrame,
+                scrollPane,
+                "Edit Control File Content",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+    }
+
 
     private class GetColumnIdsButtonListener implements ActionListener {
         public void actionPerformed(ActionEvent evnt) {

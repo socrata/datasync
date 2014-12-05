@@ -39,8 +39,8 @@ public class SimpleIntegrationRunner {
                     System.out.println("Job completed successfully");
                     System.out.println(status.getMessage());
                 }
-            } catch (IOException e) {
-                System.err.println("Error running " + jobFileToRun + ": " + e.toString());
+            } catch (IOException | IntegrationJob.ControlDisagreementException e) {
+                System.err.println("Error running " + jobFileToRun + ":\n " + e.toString());
                 System.exit(1);
             }
         } else {
