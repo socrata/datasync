@@ -67,7 +67,7 @@ public class Utils {
 
         String separator = fileControl.separator;
         if (separator == null)
-            separator = Utils.getFileExtension(fileToPublish.getName()) == "csv" ? "," : "\t";
+            separator = Utils.getFileExtension(fileToPublish.getName()).equals("csv") ? "," : "\t";
 
         String quote = fileControl.quote == null ? "\"" : fileControl.quote;
         String escape = fileControl.escape == null ? "\u0000" : fileControl.escape;
