@@ -4,6 +4,8 @@ import au.com.bytecode.opencsv.CSVReader;
 import com.socrata.datasync.config.controlfile.FileTypeControl;
 
 import java.awt.Desktop;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.File;
@@ -11,6 +13,8 @@ import java.io.FileReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -18,6 +22,7 @@ import java.util.regex.Pattern;
 
 public class Utils {
 
+    public static final String BOM = "\uFEFF";
 
     /**
      * Get file extension from the given path to a file
@@ -65,6 +70,81 @@ public class Utils {
     public static String[] pullHeadersFromFile(File fileToPublish, FileTypeControl fileControl, int skip)
             throws IOException {
 
+        CSVReader reader = getReader(fileToPublish, fileControl);
+
+        int linesRead = 0;
+        String[] nextRecord;
+        Charset charset = getCharset(fileControl);
+        while ((nextRecord = reader.readNext()) != null && linesRead++ < skip) {}
+        byte[] bom = BOM.getBytes(charset);
+        if (nextRecord != null && nextRecord.length > 0) {
+            byte[] firstStringBytes = nextRecord[0].getBytes(charset);
+            if (startsWith(bom, firstStringBytes))
+                nextRecord[0] = nextRecord[0].substring(1);
+        }
+        reader.close();
+        return nextRecord;
+    }
+
+    public static Charset getCharset(FileTypeControl fileControl) {
+        Charset charset;
+        try {
+            charset = Charset.forName(fileControl.encoding);
+        } catch (Exception e) {
+            charset = Charset.defaultCharset();
+        }
+        return charset;
+    }
+
+    /** returns whether the source array starts with the prefix array
+     * @param prefix the byte array containing the prefix
+     * @param source the byte array of the source
+     */
+    private static boolean startsWith(byte[] prefix, byte[] source) {
+        if (prefix.length > source.length) {
+            return false;
+        } else {
+            for (int i = 0; i < prefix.length; i++) {
+                if (prefix[i] != source[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    /**
+     * Reads first line of the given file and determines whether the UTF-8 bom marker is present.
+     */
+    public static boolean fileStartsWithBom(File fileToPublish, FileTypeControl fileControl) throws IOException {
+        Charset charset = getCharset(fileControl);
+        if (charset.newEncoder().canEncode('\uffef')) {
+            byte bom[] = BOM.getBytes(charset);
+            FileInputStream is = null;
+            try {
+                is = new FileInputStream(fileToPublish);
+                byte startingBytes[] = new byte[bom.length];
+                int result = is.read(startingBytes);
+                if (result != -1) {
+                    return startsWith(bom, startingBytes);
+                } else {
+                    return false;
+                }
+            } finally {
+                if (is != null)
+                    is.close();
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Sets up a csvReader.
+     */
+    private static CSVReader getReader(File fileToPublish, FileTypeControl fileControl)
+            throws IOException {
+
         String separator = fileControl.separator;
         if (separator == null)
             separator = Utils.getFileExtension(fileToPublish.getName()).equals("csv") ? "," : "\t";
@@ -72,14 +152,9 @@ public class Utils {
         String quote = fileControl.quote == null ? "\"" : fileControl.quote;
         String escape = fileControl.escape == null ? "\u0000" : fileControl.escape;
 
-        CSVReader reader = new CSVReader(new FileReader(fileToPublish), separator.charAt(0), quote.charAt(0),
-                escape.charAt(0), 0);
-
-        int linesRead = 0;
-        String[] nextRecord;
-        while ((nextRecord = reader.readNext()) != null && linesRead++ < skip) {}
-        return nextRecord;
+        return new CSVReader(new FileReader(fileToPublish), separator.charAt(0), quote.charAt(0), escape.charAt(0), 0);
     }
+
 
     /**
      * Open given uri in local web browser

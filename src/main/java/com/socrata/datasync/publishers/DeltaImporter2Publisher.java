@@ -4,6 +4,7 @@ import com.socrata.datasync.SizeCountingInputStream;
 import com.socrata.datasync.Utils;
 import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.config.controlfile.ControlFile;
+import com.socrata.datasync.config.controlfile.FileTypeControl;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.deltaimporter2.*;
 import com.socrata.datasync.job.JobStatus;
@@ -19,7 +20,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -94,6 +94,10 @@ public class DeltaImporter2Publisher implements AutoCloseable {
         int chunkSize = fetchDatasyncChunkSize();
         String uuid = controlFile.generateAndAddOpaqueUUID();
         int retryCount = 0;
+        String fileExtension = Utils.getFileExtension(csvOrTsvFile.getName());
+        FileTypeControl fileControl = fileExtension.equals("csv") ? controlFile.csv : controlFile.tsv;
+        boolean fileHasBom = Utils.fileStartsWithBom(csvOrTsvFile, fileControl);
+        int bomLength = fileHasBom ? Utils.BOM.getBytes(Utils.getCharset(fileControl)).length : 0;
 
         do {
             try {
@@ -101,8 +105,13 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                 pathToSignature = datasyncDir.getPathToSignature();
                 previousSignature = getPreviousSignature(pathToSignature);
 
-                final long fileSize = csvOrTsvFile.length();
-                InputStream progressingInputStream = new ProgressingInputStream(new FileInputStream(csvOrTsvFile)) {
+                final long fileSize = csvOrTsvFile.length() - bomLength;
+                final FileInputStream fileStream = new FileInputStream(csvOrTsvFile);
+                if (fileHasBom)
+                    for (int i=0; i<bomLength; i++)
+                        fileStream.read();
+
+                InputStream progressingInputStream = new ProgressingInputStream(fileStream) {
                     @Override
                     protected void progress(long count) {
                         System.out.println("\tRead " + count + " of " + fileSize + " bytes of " + csvOrTsvFile.getName());

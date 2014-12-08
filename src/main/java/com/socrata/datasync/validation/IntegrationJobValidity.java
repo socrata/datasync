@@ -103,6 +103,10 @@ public class IntegrationJobValidity {
                     return noFileTypeContent;
                 }
 
+                JobStatus controlSensibility = validateControlFile(fileControl, connectionInfo.getUrl());
+                if (controlSensibility.isError())
+                    return controlSensibility;
+
                 String[] headers = getHeaders(fileControl, publishFile);
                 if (headers == null) {
                     JobStatus noHeaders = JobStatus.PUBLISH_ERROR;
@@ -119,9 +123,6 @@ public class IntegrationJobValidity {
                 if (controlHeaderAgreement.isError())
                     return controlHeaderAgreement;
 
-                JobStatus controlSensibility = validateControlFile(fileControl, connectionInfo.getUrl());
-                if (controlSensibility.isError())
-                    return controlSensibility;
             }
         } catch (Exception e) {
             // Not going to fail jobs on the validation check
