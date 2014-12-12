@@ -540,7 +540,7 @@ public class IntegrationJob extends Job {
 
         if (!Utils.nullOrEmpty(controlFileContent)) {
             controlFileFromContents = controlFileMapper.readValue(controlFileContent, ControlFile.class);
-            controlFile = controlFileFromFile;
+            controlFile = controlFileFromContents;
         }
         if (!Utils.nullOrEmpty(controlFilePath)) {
             controlFileFromFile = controlFileMapper.readValue(new File(controlFilePath), ControlFile.class);
