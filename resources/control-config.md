@@ -236,10 +236,6 @@ The following are options available to both CSV files or TSV files within the `c
     <td>Same as floatingTimestampFormat but for Fixed Timestamps (“Date & Time (with timezone)”).  If the format does not specify a time zone, the zone named by the `timezone` field is used.</td>
   </tr>
 <tr>
-    <td>dropUninterpretableRows</td>
-    <td>If specified limits the amount of uninterpretable data allowable in each row. (Vaguely speaking these are the values grayed out in the UI). Options are "Never", in which case a job will fail if the CSV/TSV has any uninterpretable values, and "TenPercent", in which case 10% of values can be uninterpretable before the job fails.</td>
-  </tr>
-<tr>
     <td>timezone</td>
     <td>Specifies the timezones for FixedTimestamps (“Date & Time (with timezone)” columns).  This only has an effect if the timestamp format does not specify a time zone. Typical values are "UTC" or "US/Pacific".  A list of accepted names is at [http://joda-time.sourceforge.net/timezones.html](http://joda-time.sourceforge.net/timezones.html). *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time)*.</td>
   </tr>
