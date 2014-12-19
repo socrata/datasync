@@ -9,3 +9,4 @@ title: Socrata DataSync
 root: "/datasync"
 icon: fa fa-refresh
 github_repo: https://github.com/socrata/datasync
+contribute: /contributing.html
