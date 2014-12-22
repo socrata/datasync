@@ -82,7 +82,7 @@ The control file settings are used to help DataSync interpret the data within th
 
 For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/control-config.html)
 
-### Configuring without a saved control file
+### Configuring without saved control.json file
 
 You can use the 'setter' methods within the FileTypeControl class to configure the job. The setter methods reflect the configuration options details in [Control file configuration]({{ site.root }}/resources/control-config.html). For example, to ignore the header row and configure the list of columns use this code:
 
@@ -96,9 +96,10 @@ You can use the 'setter' methods within the FileTypeControl class to configure t
     job.setControlFile(controlFile);
 
 
+
 #### Location column and geocoding configuration
 
-The syntheticLocations option discussed in more detail in the [Control File documentation]({ site.root }}/resources/control-config.html#location-column-and-geocoding-configuration) allows configuring a Location datatype column to populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV. To configure this use the following code:
+The syntheticLocations option discussed in more detail in the [Control File documentation]({{ site.root }}/resources/control-config.html#location-column-and-geocoding-configuration) allows configuring a Location datatype column to populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV. To configure this use the following code:
 
     // set up any location columns that need to be populated
     LocationColumn mylocation = new LocationColumn()
@@ -117,7 +118,7 @@ The syntheticLocations option discussed in more detail in the [Control File docu
     ControlFile controlFile = new ControlFile(publishMethod, null, csvControl, null);
     job.setControlFile(controlFile);
 
-### Loading configuration from a saved control.json file
+### Loading configuration from saved control.json file
 
 As an alternative to You can create a `control.json` file, save it, and then import the configuration from the file using the code below, and changing `/path/to/control.json` to point the your saved `control.json` file:
 
