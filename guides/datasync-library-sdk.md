@@ -31,7 +31,7 @@ In this example, we've
 
  1. given DataSync the basic credentials it needs. 
  2. set up the basic job configuration that tells DataSync which dataset to update, with which file and using which method. 
- 3. specialized how DataSync reads the file to publish, by accepting some extra time formats. 
+ 3. specified how DataSync reads the file to publish, by accepting some extra time formats. 
 
 (We've excluded import statements for conciseness):  
 
@@ -56,7 +56,7 @@ In this example, we've
             // ControlFile parameters can be configured using the FileTypeControl object's setter methods
             // Acceptable values are documented in detail here:
             // http://socrata.github.io/datasync/resources/control-config.html
-            // In this example, we tell DataSync that our file to publish uses 4 time formats
+            // In this example, we tell DataSync that our file to publish can use these 4 time formats
             // and that we'd like to replace our dataset with the file to publish.
             String publishMethod = "replace"; // valid values: "replace", "upsert", "delete"
             String[] dateTimeFormatsAllowed = {"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy"};
@@ -76,7 +76,7 @@ In this example, we've
     }
 
 
-## Specializing how the File to Publish is Read
+## Specifying how the File to Publish is Read
 
 The control file settings are used to help DataSync interpret the data within the CSV. In many cases using the default configuration will be sufficient for the job to run successfully. The cases where you will need to modify the Control file content include, but are not limited to:
 
