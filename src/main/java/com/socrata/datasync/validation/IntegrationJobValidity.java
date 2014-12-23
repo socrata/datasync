@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -107,19 +108,24 @@ public class IntegrationJobValidity {
                 if (controlSensibility.isError())
                     return controlSensibility;
 
-                String[] headers = getHeaders(fileControl, publishFile);
-                if (headers == null) {
+                String[] rawHeaders = getRawHeaders(fileControl, publishFile);
+                String[] intermediateHeaders = removeIgnoredColumns(rawHeaders, fileControl);
+                String[] finalHeaders = addSyntheticColumns(intermediateHeaders, fileControl);
+
+                if (rawHeaders == null) {
                     JobStatus noHeaders = JobStatus.PUBLISH_ERROR;
                     noHeaders.setMessage("Headers must be specified in one of " + publishFile.getName() + " or the control file using 'columns'");
                     return noHeaders;
                 }
 
-                Set<String> synthetics = fileControl.syntheticLocations.keySet();
-                JobStatus csvDatasetAgreement = checkColumnAgreement(schema, headers, synthetics, publishFile.getName());
+                Set<String> synthetics = new HashSet<>();
+                if (fileControl.hasSyntheticLocations()) synthetics = fileControl.syntheticLocations.keySet();
+                JobStatus csvDatasetAgreement = checkColumnAgreement(schema, finalHeaders, synthetics, publishFile.getName());
                 if (csvDatasetAgreement.isError())
                     return csvDatasetAgreement;
 
-                JobStatus controlHeaderAgreement = checkControlAgreement(fileControl, schema, headers, publishFile.getName());
+                JobStatus controlHeaderAgreement = checkControlAgreement(fileControl, schema, rawHeaders,
+                        intermediateHeaders, publishFile.getName());
                 if (controlHeaderAgreement.isError())
                     return controlHeaderAgreement;
 
@@ -300,30 +306,53 @@ public class IntegrationJobValidity {
         return true;
     }
 
-    private static String[] getHeaders(FileTypeControl fileControl, File csvOrTsvFile) throws IOException {
+    /**
+     * Generates an array of headers from either the control file 'columns' or
+     * if those are null, reading from the file to publish
+     * @param fileControl the control file
+     * @param csvOrTsvFile the file to upload
+     * @return the array of headers
+     * @throws IOException
+     */
+    private static String[] getRawHeaders(FileTypeControl fileControl, File csvOrTsvFile) throws IOException {
         String[] columns = fileControl.columns;
         if (columns == null) {
             int skip = fileControl.skip == null ? 0 : fileControl.skip;
             columns = Utils.pullHeadersFromFile(csvOrTsvFile, fileControl, skip);
         }
+        return columns;
+    }
 
-        if (fileControl.hasIgnoredColumns()) {
-            ArrayList<String> ignoredColumns = new ArrayList<>(Arrays.asList(fileControl.ignoreColumns));
-            if (columns.length < ignoredColumns.size()) {
-                throw new ArrayIndexOutOfBoundsException("You cannot ignore more columns than are present in your file");
-            }
-            String[] headers = new String[columns.length - ignoredColumns.size()];
-            int i = 0;
-            for (String header: columns) {
-                if (!ignoredColumns.contains(header)) {
-                    headers[i] = header;
-                    i++;
-                }
-            }
-            return headers;
-        } else {
-            return columns;
-        }
+    /**
+     * Returns a modified list of headers with ignoredColumns removed
+     * @param headers an array of column headers, typically the raw set
+     * @param fileControl the control file
+     * @return the array of headers with ignored columns removed
+     * @throws IOException
+     */
+    private static String[] removeIgnoredColumns(String[] headers, FileTypeControl fileControl) throws IOException {
+        ArrayList<String> rawColumns = new ArrayList<>(Arrays.asList(headers));
+        ArrayList<String> ignoredColumns = new ArrayList<>();
+        if (fileControl.hasIgnoredColumns())
+            ignoredColumns = new ArrayList<>(Arrays.asList(fileControl.ignoreColumns));
+        rawColumns.removeAll(ignoredColumns);
+        return rawColumns.toArray(new String[rawColumns.size()]);
+    }
+
+    /**
+     * Returns a modified list of headers with synthetically generated columns added
+     * @param headers an array of column headers, typically the intermediate set (that with ignored columns dropped)
+     * @param fileControl the control file
+     * @return the array of headers with synthetic columns added
+     * @throws IOException
+     */
+    private static String[] addSyntheticColumns(String[] headers, FileTypeControl fileControl) throws IOException {
+        ArrayList<String> rawColumns = new ArrayList<>(Arrays.asList(headers));
+        Set<String> synthetics = new HashSet<>();
+        if (fileControl.hasSyntheticLocations())
+            synthetics = fileControl.syntheticLocations.keySet();
+        rawColumns.addAll(synthetics);
+        return rawColumns.toArray(new String[rawColumns.size()]);
     }
 
     private static JobStatus validateControlFile(FileTypeControl fileControl, String urlBase) {
@@ -438,16 +467,18 @@ public class IntegrationJobValidity {
     /**
      * This check compares the information found in the control file to the headers and dataset schema.
      * We check 3 things:
-     *   1) that the headers don't already contain any synthetic locations
-     *   2) that the components of each synthetic location are present in the headers
+     *   1) that the intermediate headers don't already contain any synthetic locations
+     *   2) that the components of each synthetic location are present in the raw set of headers
      *   3) that the datatypes used in a synthetic location column are supported types
      * @param schema the soda-java Dataset that provides dataset info
-     * @param headers the columns that will be uploaded; taken from either the file or the control
-     *                file and minus the ignoredColumns
+     * @param rawHeaders the raw column headers (including ignored columns)
+     * @param intermediateHeaders the columns that will be uploaded minus the synthetic columns to be built
      * @param csvFilename the file name, for printing purposes.
      * @return
      */
-    private static JobStatus checkControlAgreement(FileTypeControl fileControl, Dataset schema, String[] headers, String csvFilename) {
+    private static JobStatus checkControlAgreement(FileTypeControl fileControl, Dataset schema,
+                                                   String[] rawHeaders, String[] intermediateHeaders,
+                                                   String csvFilename) {
 
         if (schema == null || fileControl == null || !fileControl.hasSyntheticLocations()) return JobStatus.VALID;
 
@@ -456,25 +487,21 @@ public class IntegrationJobValidity {
             LocationColumn location = syntheticLocations.get(field);
             String[] locationComponents = new String[]{location.address, location.city,
                     location.state, location.zip, location.latitude, location.longitude};
-            boolean locationInFile = false;
-            boolean[] componentsInFile = new boolean[]{location.address == null, location.city == null,
-                    location.state == null, location.zip == null, location.latitude == null, location.longitude == null};
-            for (String header : headers) {     // O(M)  M = a couple dozen?
-                if (field.equalsIgnoreCase(header)) {
-                    locationInFile = true;
-                    break;
-                }
-                for (int j = 0; j < componentsInFile.length; j++) {   // O(1)  constant at 6
-                    if (!componentsInFile[j])
-                        componentsInFile[j] = header.equalsIgnoreCase(locationComponents[j]);
-                }
-            }
+            boolean locationInFile = Arrays.asList(intermediateHeaders).contains(field);
             if (locationInFile) {
                 JobStatus status = JobStatus.PUBLISH_ERROR;
                 status.setMessage("Ambiguous Column Name: Synthetic location '" + field + "' specified in the control file may conflict with '" +
                         field + "' provided in '" + csvFilename + "'." +
                         "\nPlease list '" + field + "' as one of the ignored columns in the control file.");
                 return status;
+            }
+            boolean[] componentsInFile = new boolean[]{location.address == null, location.city == null,
+                    location.state == null, location.zip == null, location.latitude == null, location.longitude == null};
+            for (String header : rawHeaders) {     // O(M)  M = a couple dozen?
+                for (int j = 0; j < componentsInFile.length; j++) {   // O(1)  constant at 6
+                    if (!componentsInFile[j])
+                        componentsInFile[j] = header.equalsIgnoreCase(locationComponents[j]);
+                }
             }
             for (int i = 0; i < componentsInFile.length; i++) {
                 if (!componentsInFile[i]) {
@@ -546,19 +573,18 @@ public class IntegrationJobValidity {
     }
 
     /**
-     * This check compares the information found in the headers to the columns found in the dataset.
+     * This check compares the final set of headers to the columns found in the dataset.
      * We check 3 things:
      *   1) that the headers have a row identifier column if the dataset does
      *   2) that the headers don't contain columns not in the dataset
      *   3) that the headers aren't missing columns in the dataset IF there is no row identifier
      * @param schema the soda-java Dataset that provides dataset info
-     * @param headers the columns that will be uploaded; taken from either the file or the control
-     *                file and minus the ignoredColumns
-     * @param synthetics the synthetic columns that will be generated from the csv
+     * @param finalHeaders the columns that will be uploaded; taken from either the file to publish or the control
+     *                file, minus the ignoredColumns and plus any synthetically generated columns
      * @param csvFilename the file name, for printing purposes.
      * @return
      */
-    private static JobStatus checkColumnAgreement(Dataset schema, String[] headers, Set<String> synthetics, String csvFilename) {
+    private static JobStatus checkColumnAgreement(Dataset schema, String[] finalHeaders, Set<String> synthetics, String csvFilename) {
 
         if (schema == null) return JobStatus.VALID;
 
@@ -566,25 +592,29 @@ public class IntegrationJobValidity {
         Set<String> columnNames = DatasetUtils.getFieldNamesSet(schema);
 
         boolean headerHasRowId = false;
-        for (String field : headers) {
+        for (String field : finalHeaders) {
             field = field.toLowerCase();
             if (field.equalsIgnoreCase(rowIdentifier)) headerHasRowId = true;
 
             if (!columnNames.contains(field)) {
-                JobStatus status = JobStatus.PUBLISH_ERROR;
-                status.setMessage("Extra Columns Specified: File '" + csvFilename + "' contains column '" + field +
-                        "', but dataset '" + schema.getId() + "' does not." +
-                        "\nPlease check that your headers are using the field name rather than the human readable name." +
-                        "\nConsider using 'ignoreColumns' in the control file if '" + field +
-                        "' should not be included in the dataset");
-                return status;
+                if (synthetics.contains(field)) {
+                    JobStatus status = JobStatus.PUBLISH_ERROR;
+                    status.setMessage("Extra Columns Specified: The control file is attempting to build column '" + field +
+                            "', but dataset '" + schema.getId() + "' does not contain a column by this name." +
+                            "\nPlease check that your synthetic locations are using the field name rather than the human readable name.");
+                    return status;
+                } else {
+                    JobStatus status = JobStatus.PUBLISH_ERROR;
+                    status.setMessage("Extra Columns Specified: File '" + csvFilename + "' contains column '" + field +
+                            "', but dataset '" + schema.getId() + "' does not." +
+                            "\nPlease check that your headers are using the field name rather than the human readable name." +
+                            "\nConsider using 'ignoreColumns' in the control file if '" + field +
+                            "' should not be included in the dataset");
+                    return status;
+                }
             } else {
                 columnNames.remove(field);
             }
-        }
-        for (String synth : synthetics) {
-            if (columnNames.contains(synth))
-                columnNames.remove(synth);
         }
         if (columnNames.size() > 0) {
             if (rowIdentifier == null) {
