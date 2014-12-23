@@ -16,9 +16,7 @@ DataSync 1.5.3 and higher can be used as a Java library/SDK. This guide document
 
 # Using the DataSync Library/SDK
 
-## Quickstart
-
-Once you have the [DataSync JAR (1.5.3 or higher)](https://github.com/socrata/datasync/releases) imported into your project's classpath you can use this code below to get the library working. 
+Once you have the [DataSync JAR (1.5.3 or higher)](https://github.com/socrata/datasync/releases) imported into your project's classpath you can use code like that below to get the library working. 
 
 Be sure to update the following in the code below:  
 
@@ -29,11 +27,17 @@ Be sure to update the following in the code below:
 * `/path/to/file.csv`
 * `DATASET_ID` (e.g. jhu8-6jm5)
 
-Here is the starter code (import statements excluded for conciseness):  
+In this example, we've 
+
+ 1. given DataSync the basic credentials it needs. 
+ 2. set up the basic job configuration that tells DataSync which dataset to update, with which file and using which method. 
+ 3. specified how DataSync reads the file to publish, by accepting some extra time formats. 
+
+(We've excluded import statements for conciseness):  
 
     public class Main {
         public static void main(String args[]) {
-            // Configure User Preferences
+            // Give DataSync the credentials it requires by configuring the User Preferences
             UserPreferencesLib userPrefs = new UserPreferencesLib()
                     .domain("DOMAIN")
                     .username("USERNAME")
@@ -41,21 +45,22 @@ Here is the starter code (import statements excluded for conciseness):
                     .appToken("APP_TOKEN")
                     .load();
 
-            // Configure job to use replace via HTTP
+            // Configure the job by specifying the dataset, the file to use and the method of replacement
             IntegrationJob job = new IntegrationJob(userPrefs);
 
-            job.setFileToPublish("/path/to/file.csv");
             job.setDatasetID("DATASET_ID");
+            job.setFileToPublish("/path/to/file.csv");
             job.setPublishViaDi2Http(true); // we strongly recommend using the 'HTTP' update method
 
             // Set up the ControlFile to control how the file to publish is interpreted
             // ControlFile parameters can be configured using the FileTypeControl object's setter methods
             // Acceptable values are documented in detail here:
             // http://socrata.github.io/datasync/resources/control-config.html
+            // In this example, we tell DataSync that our file to publish can use these 4 time formats
+            // and that we'd like to replace our dataset with the file to publish.
             String publishMethod = "replace"; // valid values: "replace", "upsert", "delete"
             String[] dateTimeFormatsAllowed = {"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy"};
             FileTypeControl csvControl = new FileTypeControl()
-                    .separator(",")
                     .fixedTimestampFormat(dateTimeFormatsAllowed)
                     .floatingTimestampFormat(dateTimeFormatsAllowed);
 
@@ -71,7 +76,7 @@ Here is the starter code (import statements excluded for conciseness):
     }
 
 
-## Configuring the job
+## Specifying how the File to Publish is Read
 
 The control file settings are used to help DataSync interpret the data within the CSV. In many cases using the default configuration will be sufficient for the job to run successfully. The cases where you will need to modify the Control file content include, but are not limited to:
 
@@ -82,7 +87,13 @@ The control file settings are used to help DataSync interpret the data within th
 
 For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/control-config.html)
 
-### Configuring without saved control.json file
+You can specify the control file settings in one of two ways when using DataSync as a library. 
+
+ 1. You can build up the control file object in the code.  More examples of this are in the following section.
+ 2. You can use an existing control.json file and read it in.
+ 
+
+### Building the control file object
 
 You can use the 'setter' methods within the FileTypeControl class to configure the job. The setter methods reflect the configuration options details in [Control file configuration]({{ site.root }}/resources/control-config.html). For example, to ignore the header row and configure the list of columns use this code:
 
@@ -97,9 +108,7 @@ You can use the 'setter' methods within the FileTypeControl class to configure t
 
 
 
-#### Location column and geocoding configuration
-
-The syntheticLocations option discussed in more detail in the [Control File documentation]({{ site.root }}/resources/control-config.html#location-column-and-geocoding-configuration) allows configuring a Location datatype column to populate from address, city, state, zipcode or latitude/longitude data within existing columns of the CSV/TSV. To configure this use the following code:
+Or to include a syntheticLocation, which allows a Location datatype column to populate from existing address, city, state, zipcode or latitude/longitude columns within the CSV/TSV. (The syntheticLocations option is discussed in more detail in the [Control File documentation]({{ site.root }}/resources/control-config.html#location-column-and-geocoding-configuration) ), use the following code:
 
     // set up any location columns that need to be populated
     LocationColumn mylocation = new LocationColumn()
@@ -118,9 +127,11 @@ The syntheticLocations option discussed in more detail in the [Control File docu
     ControlFile controlFile = new ControlFile(publishMethod, null, csvControl, null);
     job.setControlFile(controlFile);
 
-### Loading configuration from saved control.json file
 
-As an alternative to You can create a `control.json` file, save it, and then import the configuration from the file using the code below, and changing `/path/to/control.json` to point the your saved `control.json` file:
+
+### Reading the control file from a saved control.json file
+
+If you have a control file already saved, you can import the control file using the code below, and changing `/path/to/control.json` to point the your saved `control.json` file:
 
 
 File controlFile = new File("/path/to/control.json");
@@ -137,10 +148,6 @@ File controlFile = new File("/path/to/control.json");
         // Handle errors parsing JSON in control.json file
         e.printStackTrace();
     }
-
-
-
-
 
 
 
