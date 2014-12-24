@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown=false)
 @JsonPropertyOrder(alphabetic=true)
 public class FileTypeControl {
     public String encoding;
