@@ -68,10 +68,12 @@ public class FileTypeControl {
     public Set<String> lookupTimestampFormatting() {
         Set<String> formats = new HashSet<>();
 
-        for (String format : floatingTimestampFormat)
-            formats.add(format);
-        for (String format : fixedTimestampFormat)
-            formats.add(format);
+        if (floatingTimestampFormat != null)
+            for (String format : floatingTimestampFormat)
+                formats.add(format);
+        if (fixedTimestampFormat != null)
+            for (String format : fixedTimestampFormat)
+                formats.add(format);
         if (overrides != null) {
             for (ColumnOverride override : overrides.values()) {
                 if (override.timestampFormat != null) {

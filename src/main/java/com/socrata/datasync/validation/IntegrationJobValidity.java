@@ -119,16 +119,16 @@ public class IntegrationJobValidity {
                     return noHeaders;
                 }
 
+                JobStatus controlHeaderAgreement = checkControlAgreement(fileControl, schema, rawHeaders,
+                        intermediateHeaders, publishFile.getName());
+                if (controlHeaderAgreement.isError())
+                    return controlHeaderAgreement;
+
                 Set<String> synthetics = new HashSet<>();
                 if (fileControl.hasSyntheticLocations()) synthetics = fileControl.syntheticLocations.keySet();
                 JobStatus csvDatasetAgreement = checkColumnAgreement(schema, finalHeaders, synthetics, publishFile.getName());
                 if (csvDatasetAgreement.isError())
                     return csvDatasetAgreement;
-
-                JobStatus controlHeaderAgreement = checkControlAgreement(fileControl, schema, rawHeaders,
-                        intermediateHeaders, publishFile.getName());
-                if (controlHeaderAgreement.isError())
-                    return controlHeaderAgreement;
 
             }
         } catch (Exception e) {

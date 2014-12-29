@@ -48,6 +48,6 @@ public class VersionProviderTest {
 
     @Test
     public void testGetThisVersion() {
-        TestCase.assertEquals("1.5.3", VersionProvider.getThisVersion());
+        TestCase.assertEquals("1.5.4", VersionProvider.getThisVersion());
     }
 }

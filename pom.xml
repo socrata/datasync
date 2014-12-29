@@ -3,8 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>DataSync</groupId>
     <artifactId>DataSync</artifactId>
-    <version>1.5.3</version>
+    <version>1.5.4</version>
     <developers>
+        <developer>
+            <name>Ayn Leslie-Cook</name>
+            <email>ayn.leslie@socrata.com</email>
+            <organization>Socrata</organization>
+        </developer>
         <developer>
             <name>Adrian Laurenzi</name>
             <email>adrian.laurenzi@socrata.com</email>
