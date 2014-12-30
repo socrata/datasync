@@ -56,13 +56,7 @@
         "address": "1234 Lane",
         "city": "Seattle",
         "state": "WA",
-        "zip": "98125",
-        "componentColumns": {
-          "zip": "98125",
-          "address": "1234 Lane",
-          "state": "WA",
-          "city": "Seattle"
-        }
+        "zip": "98125"
       }
     },
     "skip": 0,

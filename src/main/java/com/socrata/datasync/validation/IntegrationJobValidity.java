@@ -9,6 +9,7 @@ import com.socrata.datasync.config.CommandLineOptions;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.controlfile.FileTypeControl;
 import com.socrata.datasync.config.controlfile.LocationColumn;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.model.importer.Dataset;
@@ -58,8 +59,8 @@ public class IntegrationJobValidity {
     /**
      * @return an error JobStatus if any input is invalid, otherwise JobStatus.VALID
      */
-    public static JobStatus validateJobParams(SocrataConnectionInfo connectionInfo, IntegrationJob job) {
-        if(connectionInfo.getUrl().equals("") || connectionInfo.getUrl().equals("https://"))
+    public static JobStatus validateJobParams(UserPreferences userPrefs, IntegrationJob job) {
+        if(userPrefs.getDomain().equals("") || userPrefs.getDomain().equals("https://"))
             return JobStatus.INVALID_DOMAIN;
 
         if(!Utils.uidIsValid(job.getDatasetID()))
@@ -82,7 +83,7 @@ public class IntegrationJobValidity {
 
         Dataset schema;
         try {
-            schema = DatasetUtils.getDatasetInfo(connectionInfo.getUrl(), job.getDatasetID());
+            schema = DatasetUtils.getDatasetInfo(userPrefs, job.getDatasetID());
 
             if(job.getPublishViaDi2Http() || job.getPublishViaFTP()) {
 
@@ -104,7 +105,7 @@ public class IntegrationJobValidity {
                     return noFileTypeContent;
                 }
 
-                JobStatus controlSensibility = validateControlFile(fileControl, connectionInfo.getUrl());
+                JobStatus controlSensibility = validateControlFile(fileControl, userPrefs.getDomain());
                 if (controlSensibility.isError())
                     return controlSensibility;
 

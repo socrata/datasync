@@ -627,7 +627,7 @@ public class IntegrationJobTab implements JobTab {
      */
     private ControlFile generateControlFile(String domain, String fileToPublish, PublishMethod publishMethod,
                                               String datasetId, boolean containsHeaderRow) throws IOException, URISyntaxException, HttpException {
-        Dataset datasetInfo = DatasetUtils.getDatasetInfo(domain, datasetId);
+        Dataset datasetInfo = DatasetUtils.getDatasetInfo(userPrefs, datasetId);
         boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
 
         String[] columns = null;
@@ -670,7 +670,7 @@ public class IntegrationJobTab implements JobTab {
             String datasetFieldNames = null;
             if(datasetIdValid()) {
                 try {
-                    datasetFieldNames = DatasetUtils.getFieldNamesString(userPrefs.getDomain(), datasetIDTextField.getText());
+                    datasetFieldNames = DatasetUtils.getFieldNamesString(userPrefs, datasetIDTextField.getText());
                 } catch (Exception e) {
                     e.printStackTrace();
                     errorMessage = "Error getting column IDs for dataset with ID" +

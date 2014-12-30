@@ -1,6 +1,6 @@
 package com.socrata.datasync;
 
-import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
 import org.apache.http.HttpException;
@@ -23,11 +23,12 @@ import java.util.Set;
 public class DatasetUtils {
 
     private static final String LOCATION_DATATYPE_NAME = "location";
-    private static HttpUtility http = new HttpUtility(new UserPreferencesJava(), true);
+
     private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
-    public static Dataset getDatasetInfo(String domain, String viewId) throws URISyntaxException, IOException, HttpException {
-        String[] schemaAndDomain = domain.trim().split("//");
+    public static Dataset getDatasetInfo(UserPreferences userPrefs, String viewId) throws URISyntaxException, IOException, HttpException {
+        HttpUtility http = new HttpUtility(userPrefs, true);
+        String[] schemaAndDomain = userPrefs.getDomain().trim().split("//");
         String justDomain = schemaAndDomain[schemaAndDomain.length -1];
         URI absolutePath = new URIBuilder()
                 .setScheme("https")
@@ -68,12 +69,11 @@ public class DatasetUtils {
     /**
      * Returns list of dataset field names in the form: "col1","col2",...
      *
-     * @param domain
      * @param datasetId
      * @return list of field names or null if there
      */
-    public static String getFieldNamesString(String domain, String datasetId) throws HttpException, IOException, URISyntaxException {
-        Dataset datasetInfo = getDatasetInfo(domain, datasetId);
+    public static String getFieldNamesString(UserPreferences userPrefs, String datasetId) throws HttpException, IOException, URISyntaxException {
+        Dataset datasetInfo = getDatasetInfo(userPrefs, datasetId);
         return getFieldNamesString(datasetInfo);
     }
 

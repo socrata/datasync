@@ -255,7 +255,7 @@ public class IntegrationJob extends Job {
         if (controlDeserialization.isError() && (publishViaDi2Http || publishViaFTP)) {
             runStatus = controlDeserialization;
         } else {
-            JobStatus validationStatus = IntegrationJobValidity.validateJobParams(connectionInfo, this);
+            JobStatus validationStatus = IntegrationJobValidity.validateJobParams(userPrefs, this);
             if (validationStatus.isError()) {
                 runStatus = validationStatus;
             } else {
