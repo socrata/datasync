@@ -71,6 +71,7 @@ public class LoadPreferencesJobTest {
         TestCase.assertEquals("5oMeTokEN", userPrefs.getAPIKey());
         TestCase.assertEquals("https://someDomain.com", userPrefs.getProxyHost());
         TestCase.assertEquals("8080", userPrefs.getProxyPort());
+        userPrefs.clear();
     }
 
     @Test
@@ -100,6 +101,7 @@ public class LoadPreferencesJobTest {
         TestCase.assertEquals("", userPrefs.getSmtpPassword());
         TestCase.assertEquals("10", userPrefs.getFilesizeChunkingCutoffMB());     // has default
         TestCase.assertEquals("10000", userPrefs.getNumRowsPerChunk());     // has default
+        userPrefs.clear();
     }
 
     @Test
