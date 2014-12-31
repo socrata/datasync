@@ -40,6 +40,9 @@ Your header row containing the column names in the dataset does not exactly matc
 ### What does this error mean? '...PRIX certificate validation failed'
 This error is caused by the version of Java being out-of-date and as a result failing to validate the SSL certificate. To correct the issue you must update Java JDK or JRE on the machine running DataSync or, alternatively, specifically add the necessary certificates into their trusted certificate stores. If you are still getting the error please contact Socrata support.
 
+### "syntheticLocations" is a field, why do I get this error? '...UnrecognizedPropertyException: Unrecognized field "syntheticLocations" ... reference chain: com.socrata.datasync.config.controlfile.ControlFile["syntheticLocations"]'
+This error is because the "syntheticLocations" field is in the wrong level of the control file. It needs to be within the "csv" or "tsv" object, since it contains details about how to interpret the CSV or TSV.
+
 ### My job is failing because of a "Corrupt SSync patch"
 This error is most likely caused by insufficient heap space.  Try starting up DataSync with additional heap space using one of the options below:
 
