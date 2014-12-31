@@ -115,7 +115,7 @@ public class IntegrationJobValidity {
 
                 if (rawHeaders == null) {
                     JobStatus noHeaders = JobStatus.PUBLISH_ERROR;
-                    noHeaders.setMessage("Headers must be specified in one of " + publishFile.getName() + " or the control file using 'columns'");
+                    noHeaders.setMessage("Headers must be specified in one of " + publishFile.getName() + " or the control file using 'columns'.");
                     return noHeaders;
                 }
 
@@ -148,7 +148,7 @@ public class IntegrationJobValidity {
                 System.err.println("Invalid argument: Neither -sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG +
                         " -cf,--" + options.PATH_TO_CONTROL_FILE_FLAG + " can be supplied " +
                         "unless -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is 'true' or " +
-                        "unless -ph,--" + options.PUBLISH_VIA_DI2_FLAG + " is 'true'");
+                        "unless -ph,--" + options.PUBLISH_VIA_DI2_FLAG + " is 'true'.");
                 return false;
             }
         }
@@ -157,7 +157,7 @@ public class IntegrationJobValidity {
             if(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG) != null) {
                 System.out.println("WARNING: -h,--" + options.HAS_HEADER_ROW_FLAG + " is being ignored because " +
                         "-sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG +  " or " +
-                        "-cf,--" + options.PATH_TO_CONTROL_FILE_FLAG +  " was supplied");
+                        "-cf,--" + options.PATH_TO_CONTROL_FILE_FLAG +  " was supplied.");
             }
         }
         return true;
@@ -169,21 +169,21 @@ public class IntegrationJobValidity {
             return true;
 
         if (!publishingWithFtp.equalsIgnoreCase("true") && !publishingWithFtp.equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " must be 'true' or 'false'");
+            System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " must be 'true' or 'false'.");
             return false;
         }
         if (publishingWithFtp.equalsIgnoreCase("true")) {
             String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
             if (publishingWithDi2 != null && publishingWithDi2.equalsIgnoreCase("true")) {
                 System.err.println("Only one of -pf,--" + options.PUBLISH_VIA_DI2_FLAG + " and " +
-                        "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " may be set to 'true'");
+                        "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " may be set to 'true'.");
                 return false;
             }
             String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
             if (controlFilePath == null) controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
             if (controlFilePath == null) {
                 System.err.println("A control file must be specified when " +
-                        "-pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is set to 'true'");
+                        "-pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is set to 'true'.");
                 return false;
             }
         }
@@ -196,21 +196,21 @@ public class IntegrationJobValidity {
             return true;
 
         if(!publishingWithDi2.equalsIgnoreCase("true") && !publishingWithDi2.equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_DI2_FLAG + " must be 'true' or 'false'");
+            System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_DI2_FLAG + " must be 'true' or 'false'.");
             return false;
         }
         if (publishingWithDi2.equalsIgnoreCase("true")) {
             String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
             if (publishingWithFtp != null && publishingWithFtp.equalsIgnoreCase("true")) {
                 System.err.println("Only one of -pf,--" + options.PUBLISH_VIA_DI2_FLAG + " and " +
-                        "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " may be set to 'true'");
+                        "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " may be set to 'true'.");
                 return false;
             }
             String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
             if (controlFilePath == null) controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
             if (controlFilePath == null) {
                 System.err.println("A control file must be specified when " +
-                        "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " is set to 'true'");
+                        "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " is set to 'true'.");
                 return false;
             }
         }
@@ -225,7 +225,7 @@ public class IntegrationJobValidity {
         if(haveHeader == null) {
             if (controlFilePath == null) {
                 if (isNullOrFalse(publishingWithFtp) && isNullOrFalse(publishingWithDi2)) {
-                    System.err.println("Missing required argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " is required");
+                    System.err.println("Missing required argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " is required.");
                     return false;
                 } else {
                     // if publishing via ftp or di2/http, we want to err about the control file, not the header arg
@@ -237,7 +237,7 @@ public class IntegrationJobValidity {
         } else {  // have non-null header arg
             if (!cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG).equalsIgnoreCase("true")
                     && !cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG).equalsIgnoreCase("false")) {
-                System.err.println("Invalid argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " must be 'true' or 'false'");
+                System.err.println("Invalid argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " must be 'true' or 'false'.");
                 return false;
             }
             return true;
@@ -246,7 +246,7 @@ public class IntegrationJobValidity {
 
     private static boolean validateFileToPublishArg(CommandLine cmd, CommandLineOptions options) {
         if(cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG) == null) {
-            System.err.println("Missing required argument: -f,--" + options.FILE_TO_PUBLISH_FLAG + " is required");
+            System.err.println("Missing required argument: -f,--" + options.FILE_TO_PUBLISH_FLAG + " is required.");
             return false;
         }
         return true;
@@ -254,7 +254,7 @@ public class IntegrationJobValidity {
 
     private static boolean validateDatasetIdArg(CommandLine cmd, CommandLineOptions options) {
         if(cmd.getOptionValue(options.DATASET_ID_FLAG) == null) {
-            System.err.println("Missing required argument: -i,--" + options.DATASET_ID_FLAG + " is required");
+            System.err.println("Missing required argument: -i,--" + options.DATASET_ID_FLAG + " is required.");
             return false;
         }
         return true;
@@ -268,7 +268,7 @@ public class IntegrationJobValidity {
         if(method == null) {
             if (controlFilePath == null) {
                 if (isNullOrFalse(publishingWithFtp) && isNullOrFalse(publishingWithDi2)) {
-                    System.err.println("Missing required argument: -m,--" + options.PUBLISH_METHOD_FLAG + " is required");
+                    System.err.println("Missing required argument: -m,--" + options.PUBLISH_METHOD_FLAG + " is required.");
                     return false;
                 } else {
                     // if publishing via ftp or di2/http, we want to err about the control file, not the method arg
@@ -284,8 +284,8 @@ public class IntegrationJobValidity {
                     publishMethodValid = true;
             }
             if (!publishMethodValid) {
-                System.err.println("Invalid argument: -m,--" + options.PUBLISH_METHOD_FLAG + " must be " +
-                        Arrays.toString(PublishMethod.values()));
+                System.err.println("Invalid argument: -m,--" + options.PUBLISH_METHOD_FLAG + " must be one of " +
+                        Arrays.toString(PublishMethod.values()) + ".");
                 return false;
             }
             return true;
@@ -297,11 +297,11 @@ public class IntegrationJobValidity {
         String password = cmd.getOptionValue(options.PROXY_PASSWORD_FLAG);
         if(username == null && password != null) {
             System.err.println("Missing required argument: -pun,--" + options.PROXY_USERNAME_FLAG + " is required if" +
-                    " supplying proxy credentials with -ppw, --" + options.PROXY_PASSWORD_FLAG);
+                    " supplying proxy credentials with -ppw, --" + options.PROXY_PASSWORD_FLAG + ".");
             return false;
         } else if(username != null && password == null) {
             System.err.println("Missing required argument: -ppw,--" + options.PROXY_PASSWORD_FLAG + " is required if" +
-                    " supplying proxy credentials with -pun, --" + options.PROXY_USERNAME_FLAG);
+                    " supplying proxy credentials with -pun, --" + options.PROXY_USERNAME_FLAG + ".");
             return false;
         }
         return true;
@@ -372,8 +372,16 @@ public class IntegrationJobValidity {
     }
 
     private static JobStatus checkAction(String action, IntegrationJob job, Dataset schema) {
+        if (action == null && job.getPublishMethod() == null) {
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage("Unknown Publish Method: " +
+                    "A publish method must either be specified in the control file via the 'action' field or " +
+                    "on the command line using the -m,--publishMethod option.");
+            return status;
+        }
         StringBuilder methods = new StringBuilder();
         boolean okAction = false;
+        if (action == null) action = job.getPublishMethod().name();
         for (PublishMethod m : PublishMethod.values()) {
             methods.append("\t" + m.name() + "\n");
             if (m.name().equalsIgnoreCase(action))
@@ -383,12 +391,12 @@ public class IntegrationJobValidity {
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage("Unknown Publish Method: " +
                     "The control file must specify the publishing method via the 'action' option as one of: \n" +
-                    methods.toString() + "\n The action provided was '" + action + "'");
+                    methods.toString() + "\n The action provided was '" + action + "'.");
             return status;
         }
         if (!PublishMethod.replace.name().equalsIgnoreCase(action) && job.getPublishViaFTP()) {
             JobStatus status = JobStatus.PUBLISH_ERROR;
-            status.setMessage("FTP does not currently support upsert, append or delete");
+            status.setMessage("FTP does not currently support upsert, append or delete.");
             return status;
         }
         PublishMethod publishMethod = job.getPublishMethod();
@@ -396,7 +404,7 @@ public class IntegrationJobValidity {
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage("Conflicting Publish Methods: " +
                     "The publish method selected was '" + publishMethod.name() +
-                    "', but the 'action' option in the control file specifies the publish method as '" + action + ".");
+                    "', but the 'action' option in the control file specifies the publish method as '" + action + "'.");
             return status;
         }
         String rowIdentifier = DatasetUtils.getRowIdentifierName(schema);
@@ -404,7 +412,7 @@ public class IntegrationJobValidity {
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage("Dataset Requirement Unfulfilled: " +
                     "To delete from a dataset, a row identifier must be set. Dataset '" + schema.getId() +
-                    "' does not have a row identifier set");
+                    "' does not have a row identifier set.");
             return status;
         }
         return JobStatus.VALID;
@@ -424,7 +432,7 @@ public class IntegrationJobValidity {
                 JobStatus status = JobStatus.PUBLISH_ERROR;
                 status.setMessage("Unsupported Date Time Format: The time format '" + format +
                         "' specified in the control file is not a valid pattern." +
-                        "\nPlease consult " + jodaLink + " for more information");
+                        "\nPlease consult " + jodaLink + " for more information.");
                 return status;
             }
         }
@@ -456,7 +464,7 @@ public class IntegrationJobValidity {
             if (!encodingFound) {
                 JobStatus status = JobStatus.PUBLISH_ERROR;
                 status.setMessage("Unsupported Encoding: The encoding '" + encoding + "' in the control file is not supported." +
-                        "\nPlease consult " + charsetUri + " for a listing of supported encodings");
+                        "\nPlease consult " + charsetUri + " for a listing of supported encodings.");
                 return status;
             }
         } catch (Exception e) {
@@ -510,8 +518,9 @@ public class IntegrationJobValidity {
                     status.setMessage("Synthetic Location Not Found: The synthetic location column '" + field +
                             "' references a component '" + locationComponents[i] + "' which is not present in '" +
                             csvFilename + "'." +
-                            "\nPlease check your control file to ensure that the column name is spelled correctly, " +
-                            "and that '" + locationComponents[i] + "' is not included in the 'ignoreColumns' array.");
+                            "\nPlease check your control file to ensure that the column name is spelled correctly " +
+                            "and that headers are provided in either the file to publish or " +
+                            "in the 'columns' field of the control file.");
                     return status;
                 }
             }
@@ -610,7 +619,7 @@ public class IntegrationJobValidity {
                             "', but dataset '" + schema.getId() + "' does not." +
                             "\nPlease check that your headers are using the field name rather than the human readable name." +
                             "\nConsider using 'ignoreColumns' in the control file if '" + field +
-                            "' should not be included in the dataset");
+                            "' should not be included in the dataset.");
                     return status;
                 }
             } else {

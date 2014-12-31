@@ -264,11 +264,11 @@ public class IntegrationJob extends Job {
                     File fileToPublishFile = new File(fileToPublish);
                     if (publishViaDi2Http) {
                         try (DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs)) {
+                            String action = controlFile.action == null ? publishMethod.name() : controlFile.action;
                             // "upsert" == "append" in di2
-                            if ("upsert".equalsIgnoreCase(controlFile.action))
-                                controlFile.action = "Append";
-                            // TODO: remove the next line when di2 is updated to accept lowercase variants
-                            controlFile.action = Utils.capitalizeFirstLetter(controlFile.action);
+                            if ("upsert".equalsIgnoreCase(action))
+                                action = "Append";
+                            controlFile.action = Utils.capitalizeFirstLetter(action);
                             runStatus = publisher.publishWithDi2OverHttp(datasetID, fileToPublishFile, controlFile);
                         }
                     } else if (publishViaFTP) {
