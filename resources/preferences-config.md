@@ -112,7 +112,7 @@ Chunking is handled automatically according to the defaults set in Datasync, tho
 ### Proxy Configuration
 You can configure DataSync to use an authenticated or unauthenticated proxy server. Please note, this option is only available if running jobs 'via HTTP using Delta-importer-2'.  At minimum, the following options will need to be set:
 
-  - **Proxy Host:** The fully qualified host name of the proxy server, e.g. https://myProxyServer.com.
+  - **Proxy Host:** The host name of the proxy server, e.g. myProxyServer.com.
   - **Proxy Port:**  The port that the proxy server listens on, e.g. 8080
 
 If the proxy server is authenticated, you may also set:
