@@ -43,20 +43,20 @@ If you receive a SunCertPathBuilderException, there are two typical causes:
   1. Java is out-of-date and as a result is failing to validate the SSL certificate. To correct this issue you must update Java JDK or JRE on the machine running DataSync.
   2. Java does not approve of one of the certificates in the chain between your machine and the domain you're trying to upload to.  The solution is to add the necessary certificates into Java's trusted certificate store. The steps to do this are:
 
-    1. Get the certificate chain.
-      * Find where Java's keytool is located.
-        * On Windows, this is likely at "C:\Program Files\Java\jre7\bin")
-        * On Mac OS X, this is likely at "/Library/Java/JavaVirtualMachines/jdk1.7.0_45.jdk/Contents/Home/bin/"
-      * Run the following, removing the proxy options if you are not behind a proxy server. You can remove the '-rfc' option to get additional information about each certificate in the chain.
+  * Get the certificate chain.
+    * Find where Java's keytool is located.
+      * On Windows, this is likely at "C:\Program Files\Java\jre7\bin")
+      * On Mac OS X, this is likely at "/Library/Java/JavaVirtualMachines/jdk1.7.0_45.jdk/Contents/Home/bin/"
+    * Run the following, removing the proxy options if you are not behind a proxy server. You can remove the '-rfc' option to get additional information about each certificate in the chain.
 
            keytool -J-Dhttps.proxyHost=<PROXY_HOST>
                    -J-Dhttps.proxyPort=<PROXY_PORT>
                    -printcert -rfc
                    -sslserver <DOMAIN>:443
 
-   2. *Validate any certificates you plan to add with your IT department*.  It is a security risk to add unknown certificates.
-   3. Copy the cert you need to add inclusively from -----BEGIN CERTIFICATE----- to -----END CERTIFICATE----- into a file `<FILENAME>`.cer
-   4. Run the following, using your keystore password if that has been set up or the default password 'changeit' otherwise.
+  * **Validate any certificates you plan to add with your IT department !!!!**.  It is a security risk to add unknown certificates.
+  * Copy the cert you need to add inclusively from -----BEGIN CERTIFICATE----- to -----END CERTIFICATE----- into a file `<FILENAME>`.cer
+  * Run the following, using your keystore password if that has been set up or the default password 'changeit' otherwise.
 
            keytool -import -keystore cacerts -file <FILENAME>.cer
 

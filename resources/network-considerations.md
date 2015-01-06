@@ -11,6 +11,7 @@ NOTE: Because network setups can vary wildly, this does not attempt to be a defi
 - [Behind a Firewall?](#behind-a-firewall)
 - [Behind a Proxy Server?](#behind-a-proxy-server)
 - [Using an Outdated Java?](#using-an-outdated-java)
+- [Certificate Validation Issues?](#certificate-validation-issues)
 - [Still Stuck?](#still-stuck)
 
 
@@ -31,13 +32,40 @@ Per traffic types, DataSync has different request characteristics depending on w
 
 
 ### Behind a Proxy Server?
-Proxy servers intercept network traffic and can be configured in numerous ways to allow/block, inspect and encrypt/decrypt traffic, among other things. As such, everything in the ["Behind a Firewall"](#behind-a-firewall) section may apply. Because DataSync sends ssl requests, the proxy server must be set up to correctly handle encrypted traffic, i.e. that it is a "transparent proxy" - ask your IT deparment to confirm this.  Additionally, DataSync must be configured to route its requests through the proxy.  At minimum, [this configuration]({{ site.root }}/resources/preferences-config.html) requires the hostname and port and if the proxy server is authenticated, your proxy username and password as well.
+Proxy servers intercept network traffic and can be configured in numerous ways to allow/block, inspect and encrypt/decrypt traffic, among other things. As such, everything in the ["Behind a Firewall"](#behind-a-firewall) section may apply. Because DataSync sends ssl requests, the proxy server must be set up to correctly handle encrypted traffic, i.e. that it is a "transparent proxy" - ask your IT deparment to confirm this.
+
+DataSync must be configured to route its requests through the proxy.  At minimum, [this configuration]({{ site.root }}/resources/preferences-config.html) requires the hostname and port and if the proxy server is authenticated, your proxy username and password as well.
 
 **NOTICE:** DataSync has proxy support only for the HTTP methods; FTP and Soda2 methods cannot currently work behind a proxy.
 
-
 ### Using an Outdated Java?
 Some networks will not allow Java programs to run if the version is outdated, particularly if the older version presents a security risk. You or your IT department will need to update to the most recent Java.
+
+
+### Certificate Validation Issues?
+If you receive a SunCertPathBuilderException, there are two typical causes:
+
+  1. Java is out-of-date and as a result is failing to validate the SSL certificate. To correct this issue you must update Java JDK or JRE on the machine running DataSync.
+  2. Java does not approve of one of the certificates in the chain between your machine and the domain you're trying to upload to.  The solution is to add the necessary certificates into Java's trusted certificate store. The steps to do this are:
+
+  * Get the certificate chain.
+    * Find where Java's keytool is located.
+      * On Windows, this is likely at "C:\Program Files\Java\jre7\bin")
+      * On Mac OS X, this is likely at "/Library/Java/JavaVirtualMachines/jdk1.7.0_45.jdk/Contents/Home/bin/"
+    * Run the following, removing the proxy options if you are not behind a proxy server. You can remove the '-rfc' option to get additional information about each certificate in the chain.
+
+           keytool -J-Dhttps.proxyHost=<PROXY_HOST>
+                   -J-Dhttps.proxyPort=<PROXY_PORT>
+                   -printcert -rfc
+                   -sslserver <DOMAIN>:443
+
+  * **Validate any certificates you plan to add with your IT department !!!!**.  It is a security risk to add unknown certificates.
+  * Copy the cert you need to add inclusively from -----BEGIN CERTIFICATE----- to -----END CERTIFICATE----- into a file `<FILENAME>`.cer
+  * Run the following, using your keystore password if that has been set up or the default password 'changeit' otherwise.
+
+           keytool -import -keystore cacerts -file <FILENAME>.cer
+
+
 
 
 ### Still Stuck?
