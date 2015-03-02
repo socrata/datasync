@@ -146,7 +146,7 @@ public class PortUtilityTest extends TestBase {
 
         try {
             // Perform the test operation.
-            PortUtility.portContents(sourceProducer, sinkProducer, UNITTEST_DATASET_ID, newDatasetID, PublishMethod.upsert);
+            PortUtility.portContents(sourceProducer, sinkProducer, UNITTEST_DATASET_ID, newDatasetID, PublishMethod.upsert,0);
 
             // Query for the rows of the sink again.
             sinkRows = sinkProducer.query(newDatasetID, SoqlQuery.SELECT_ALL, UnitTestDataset.LIST_TYPE);
@@ -159,6 +159,36 @@ public class PortUtilityTest extends TestBase {
                 TestCase.assertEquals(sourceRows.get(i).getDate(), sinkRows.get(i).getDate());
             }
 
+        } finally {
+            sinkDdl.deleteDataset(newDatasetID);
+        }
+    }
+
+    @Test
+    public void testPortContentsRowLimit() throws SodaError, InterruptedException, LongRunningQueryException, IOException {
+        // Query for the rows of the source dataset.
+        List<UnitTestDataset> sourceRows = sinkProducer.query(UNITTEST_DATASET_ID, SoqlQuery.SELECT_ALL, UnitTestDataset.LIST_TYPE);
+
+        int rowLimit = sourceRows.size() - 1;
+
+        // Port a dataset's schema to get an empty copy to test with.
+        String newDatasetID = PortUtility.portSchema(sourceDdl, sinkDdl, UNITTEST_DATASET_ID, "", false);
+
+        // Query for the rows (well, lack thereof) of the sink dataset.
+        List<UnitTestDataset> sinkRows = sinkProducer.query(newDatasetID, SoqlQuery.SELECT_ALL, UnitTestDataset.LIST_TYPE);
+        TestCase.assertEquals(0, sinkRows.size());
+
+        try {
+            // Perform the test operation.
+            PortUtility.portContents(sourceProducer, sinkProducer, UNITTEST_DATASET_ID, newDatasetID, PublishMethod.upsert, rowLimit);
+            // Query for the rows of the sink again.
+            sinkRows = sinkProducer.query(newDatasetID, SoqlQuery.SELECT_ALL, UnitTestDataset.LIST_TYPE);
+            TestCase.assertEquals(rowLimit, sinkRows.size());
+
+            PortUtility.portContents(sourceProducer, sinkProducer, UNITTEST_DATASET_ID, newDatasetID, PublishMethod.replace, rowLimit);
+            // Query for the rows of the sink again.
+            sinkRows = sinkProducer.query(newDatasetID, SoqlQuery.SELECT_ALL, UnitTestDataset.LIST_TYPE);
+            TestCase.assertEquals(rowLimit, sinkRows.size());
         } finally {
             sinkDdl.deleteDataset(newDatasetID);
         }
@@ -184,7 +214,7 @@ public class PortUtilityTest extends TestBase {
 
         // Perform the test operation...
         PortUtility.portContents(sourceProducer, sinkProducer,
-                UNITTEST_DATASET_ID, UNITTEST_PORT_RESULT_DATASET_ID, PublishMethod.replace);
+                UNITTEST_DATASET_ID, UNITTEST_PORT_RESULT_DATASET_ID, PublishMethod.replace,0);
         // Grab both datasets' contents
         List<UnitTestDataset> sourceRows = sinkProducer.query(UNITTEST_DATASET_ID, SoqlQuery.SELECT_ALL, UnitTestDataset.LIST_TYPE);
         List<UnitTestDataset> sinkRows = sinkProducer.query(UNITTEST_PORT_RESULT_DATASET_ID, SoqlQuery.SELECT_ALL, UnitTestDataset.LIST_TYPE);

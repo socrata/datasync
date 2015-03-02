@@ -38,6 +38,7 @@ public class PortJob extends Job {
     private PublishDataset publishDataset = PublishDataset.working_copy;
 	private String portResult = "";
 	private String destinationDatasetTitle = "";
+    private int copyRowLimit = 0;
 
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
@@ -153,6 +154,11 @@ public class PortJob extends Job {
         this.portResult = portResult;
     }
 
+    @JsonProperty("copyRowLimit")
+    public void setCopyRowLimit(int copyRowLimit) {
+        this.copyRowLimit = copyRowLimit;
+    }
+
     public String getDefaultJobName() { return defaultJobName; }
 
     public boolean validateArgs(CommandLine cmd) {
@@ -203,6 +209,8 @@ public class PortJob extends Job {
         }
         if (cmd.getOptionValue("pdt") != null)
             setDestinationDatasetTitle(cmd.getOptionValue("pdt"));
+        if (cmd.getOptionValue("l") != null)
+            setCopyRowLimit(Integer.parseInt(cmd.getOptionValue("l")));
     }
 
 
@@ -249,7 +257,7 @@ public class PortJob extends Job {
 					sinkSetID = PortUtility.portSchema(loader, creator,
 							sourceSetID, destinationDatasetTitle, userPrefs.getUseNewBackend());
 					PortUtility.portContents(streamExporter, streamUpserter,
-							sourceSetID, sinkSetID, PublishMethod.upsert);
+							sourceSetID, sinkSetID, PublishMethod.upsert, copyRowLimit);
 					noPortExceptions = true;
 				} else if (portMethod.equals(PortMethod.copy_data)) {
                     JobStatus schemaCheck = PortUtility.assertSchemasAreAlike(loader, creator, sourceSetID, sinkSetID);
@@ -257,7 +265,7 @@ public class PortJob extends Job {
                         errorMessage = schemaCheck.getMessage();
                     } else {
                         PortUtility.portContents(streamExporter, streamUpserter,
-							sourceSetID, sinkSetID, publishMethod);
+							sourceSetID, sinkSetID, publishMethod, copyRowLimit);
                         noPortExceptions = true;
                     }
 				} else {

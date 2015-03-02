@@ -72,4 +72,8 @@ public class TestBase
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(configFile, UserPreferencesFile.class);
     }
+
+    protected SocrataConnectionInfo getTestConnectionInfo() {
+        return new SocrataConnectionInfo(DOMAIN, USERNAME, PASSWORD, API_KEY);
+    }
 }

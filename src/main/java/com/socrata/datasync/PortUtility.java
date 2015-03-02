@@ -30,6 +30,8 @@ public class PortUtility {
     private static final String groupingKey = "grouping_aggregate";
     private static final String drillingKey = "drill_down";
 
+    private static final int ROW_LIMIT_PER_PAGE = 50000;
+
 	private PortUtility() {
 		throw new AssertionError("Never instantiate utility classes!");
 	}
@@ -61,19 +63,21 @@ public class PortUtility {
 	}
 
     public static void portContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter, String sourceSetID,
-                                    String sinkSetID, PublishMethod publishMethod)
+                                    String sinkSetID, PublishMethod publishMethod, int maxRows)
             throws InterruptedException, LongRunningQueryException, SodaError, IOException {
         switch (publishMethod) {
             case upsert:
-                upsertContents(streamExporter, streamUpserter, sourceSetID, sinkSetID);
+                upsertContents(streamExporter, streamUpserter, sourceSetID, sinkSetID, maxRows);
                 break;
             case replace:
-                replaceContents(streamExporter, streamUpserter, sourceSetID, sinkSetID);
+                replaceContents(streamExporter, streamUpserter, sourceSetID, sinkSetID, maxRows);
         }
     }
 
+    // Copies rows from source to sink via upsert
+    // If maxRows is 0, copy all rows
 	private static void upsertContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter,
-                    String sourceSetID, String sinkSetID) throws
+                    String sourceSetID, String sinkSetID, int maxRows) throws
             InterruptedException, LongRunningQueryException, SodaError, IOException {
 
 		System.out.println("Upserting contents of dataset " + sourceSetID + " into dataset " + sinkSetID);
@@ -85,8 +89,22 @@ public class PortUtility {
 		ObjectMapper mapper = new ObjectMapper();
         List<Map<String, Object>> rowSet;
 
+        int curRowLimit = ROW_LIMIT_PER_PAGE;
+        int totalRowsRemaining = maxRows;
+
 		do {
-			SoqlQuery myQuery =new SoqlQueryBuilder().setOffset(offset).build();
+            if(maxRows != 0) {
+                if(totalRowsRemaining < ROW_LIMIT_PER_PAGE) {
+                    curRowLimit = totalRowsRemaining;
+                } else if(totalRowsRemaining == 0) {
+                    break;
+                } else if(totalRowsRemaining < 0) {
+                    throw new IOException("Invalid state: negative rows remaining");
+                }
+                totalRowsRemaining -= curRowLimit;
+            }
+
+            SoqlQuery myQuery =new SoqlQueryBuilder().setOffset(offset).setLimit(curRowLimit).build();
 			response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
             rowSet = mapper.readValue(response.getEntityInputStream(), new TypeReference<List<Map<String,Object>>>() {});
 			if (rowSet.size() > 0) {
@@ -98,8 +116,10 @@ public class PortUtility {
 		} while (rowSet.size() > 0);
     }
 
+    // Copies rows from source to sink via upsert
+    // If maxRows is 0, copy all rows
     private static void replaceContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter,
-                String sourceSetID, String sinkSetID) throws
+                String sourceSetID, String sinkSetID, int maxRows) throws
             InterruptedException, LongRunningQueryException, SodaError, IOException {
 
         System.out.println("Replacing contents of dataset " + sourceSetID + " into dataset " + sinkSetID);
@@ -113,11 +133,25 @@ public class PortUtility {
         final File tempFile = File.createTempFile("replacement_dataset", ".json");
         tempFile.createNewFile();
         tempFile.deleteOnExit();
+
+        int curRowLimit = ROW_LIMIT_PER_PAGE;
+        int totalRowsRemaining = maxRows;
         try (FileWriter tempOut = new FileWriter(tempFile, true)) {
 
             tempOut.write("[\n");
             do {
-                myQuery = new SoqlQueryBuilder().setOffset(offset).build();
+                if(maxRows != 0) {
+                    if(totalRowsRemaining < ROW_LIMIT_PER_PAGE) {
+                        curRowLimit = totalRowsRemaining;
+                    } else if(totalRowsRemaining == 0) {
+                        break;
+                    } else if(totalRowsRemaining < 0) {
+                        throw new IOException("Invalid state: negative rows remaining");
+                    }
+                    totalRowsRemaining -= curRowLimit;
+                }
+
+                myQuery = new SoqlQueryBuilder().setOffset(offset).setLimit(curRowLimit).build();
                 response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
                 rowSet = mapper.readValue(response.getEntityInputStream(),
                         new TypeReference<List<Map<String, Object>>>() {

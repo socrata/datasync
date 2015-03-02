@@ -36,6 +36,7 @@ public class CommandLineOptions {
     public static final String PORT_PUBLISH_METHOD = "portPublishMethod";
     public static final String PUBLISH_DESTINATION_DATASET_FLAG = "publishDestinationDataset";
     public static final String DESTINATION_DATASET_TITLE_FLAG = "destinationDatasetTitle";
+    public static final String COPY_ROW_LIMIT_FLAG = "copyRowLimit";
 
     public static final String DEFAULT_JOBTYPE = Jobs.INTEGRATION_JOB.toString();
     public static final String DEFAULT_PUBLISH_VIA_FTP = "false";
@@ -72,6 +73,7 @@ public class CommandLineOptions {
         options.addOption("ppm", PORT_PUBLISH_METHOD, true, "Data Porting Publish Method (upsert or replace) (default: " + DEFAULT_PORT_PUBLISH_METHOD + ") [PortJob]");
         options.addOption("pp",  PUBLISH_DESTINATION_DATASET_FLAG, true, "Publish Destination Dataset (true or false) (default: " + DEFAULT_PUBLISH_DESTINATION_DATASET + ") [PortJob]");
         options.addOption("pdt", DESTINATION_DATASET_TITLE_FLAG, true, "Destination Dataset Title (optional) [PortJob]");
+        options.addOption("l", COPY_ROW_LIMIT_FLAG, true, "Max number of rows to copy with Port Job (default is no limit/copy all rows) [PortJob]");
 
         options.addOption("?", "help", false, "Help");
         options.addOption("v", "version", false, "DataSync version");
