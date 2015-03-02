@@ -1,8 +1,13 @@
 package com.socrata.datasync.job;
 
 import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.TestBase;
 import com.socrata.datasync.config.CommandLineOptions;
+import com.socrata.datasync.config.controlfile.ControlFile;
+import com.socrata.datasync.config.controlfile.FileTypeControl;
+import com.socrata.datasync.config.controlfile.LocationColumn;
+import com.socrata.datasync.config.userpreferences.UserPreferencesLib;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import org.apache.commons.cli.CommandLineParser;
@@ -13,6 +18,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class IntegrationJobTest extends TestBase {
 
@@ -208,5 +215,38 @@ public class IntegrationJobTest extends TestBase {
         TestCase.assertEquals(JobStatus.PUBLISH_ERROR, status);
         TestCase.assertTrue(status.isError());
         TestCase.assertEquals("FAILURE: Processing datasync_unit_test_invalid_date.csv failed: Value in column \"date\" uninterpretable as calendar_date in input at record 2: \"invalid\"\n", status.getMessage());
+    }
+
+    @Test
+    public void testLibrarySDKMode() throws LongRunningQueryException, SodaError {
+        SocrataConnectionInfo connectionInfo = getTestConnectionInfo();
+        UserPreferencesLib userPrefs = new UserPreferencesLib()
+                .domain(connectionInfo.getUrl())
+                .username(connectionInfo.getUser())
+                .password(connectionInfo.getPassword())
+                .appToken(connectionInfo.getToken())
+                .load();
+
+        IntegrationJob job = new IntegrationJob(userPrefs);
+
+        job.setFileToPublish("src/test/resources/datasync_unit_test_three_rows_id_header.csv");
+        job.setDatasetID(UNITTEST_DATASET_ID);
+        job.setPublishViaDi2Http(true);
+        job.setFileToPublishHasHeaderRow(true);
+
+        String publishMethod = "replace"; // valid values: "replace", "upsert", "delete"
+        String[] dateTimeFormatsAllowed = {"MM/dd/YY", "MM/dd/YYYY"};
+        FileTypeControl csvControl = new FileTypeControl()
+            .separator(",")
+            .fixedTimestampFormat(dateTimeFormatsAllowed)
+            .floatingTimestampFormat(dateTimeFormatsAllowed);
+
+        ControlFile controlFile = new ControlFile(publishMethod, null, csvControl, null);
+        job.setControlFile(controlFile);
+        JobStatus status = job.run();
+
+        TestCase.assertEquals(JobStatus.SUCCESS, status);
+        TestCase.assertFalse(status.isError());
+        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
     }
 }
