@@ -18,17 +18,19 @@ public class ControlFile {
     public String opaque;
     public FileTypeControl csv;
     public FileTypeControl tsv;
+    public Boolean replacePreviousQueued;
 
     // NB: when using a mapper to read this class, you must enable
     // DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, if either of the timestamp formats
     // in csvControl or tsvControl are strings, rather than arrays of strings.
     public ControlFile() {}
 
-    public ControlFile(String action, String opaque, FileTypeControl csvControl, FileTypeControl tsvControl) {
+    public ControlFile(String action, String opaque, FileTypeControl csvControl, FileTypeControl tsvControl, Boolean replacePreviousQueued) {
         this.action = action;
         this.opaque = opaque;
         this.csv = csvControl;
         this.tsv = tsvControl;
+        this.replacePreviousQueued = replacePreviousQueued;
     }
 
 
@@ -74,9 +76,9 @@ public class ControlFile {
         }
 
         if (isCsv) {
-            return new ControlFile(Utils.capitalizeFirstLetter(publishMethod.name()), null, ftc, null);
+            return new ControlFile(Utils.capitalizeFirstLetter(publishMethod.name()), null, ftc, null, null);
         } else {
-            return new ControlFile(Utils.capitalizeFirstLetter(publishMethod.name()), null, null, ftc);
+            return new ControlFile(Utils.capitalizeFirstLetter(publishMethod.name()), null, null, ftc, null);
         }
     }
 

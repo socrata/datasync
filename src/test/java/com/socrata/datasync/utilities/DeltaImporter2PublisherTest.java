@@ -47,7 +47,7 @@ public class DeltaImporter2PublisherTest extends TestBase {
     @Test
     public void testSerializationFullCommitMessage() throws IOException {
         FileTypeControl ftc = new FileTypeControl().floatingTimestampFormat(new String[]{"ISO8601"});
-        ControlFile cf = new ControlFile("Replace", null, ftc, null);
+        ControlFile cf = new ControlFile("Replace", null, ftc, null, true);
         CommitMessage commit = new CommitMessage()
                 .filename("hoo-ya.csv")
                 .relativeTo("datasync/id/some-4by4/completed/2014/6/2/hoo-ya.csv")
@@ -60,7 +60,8 @@ public class DeltaImporter2PublisherTest extends TestBase {
                     "\"action\":\"Replace\"," +
                     "\"csv\":{" +
                         "\"floatingTimestampFormat\":[\"ISO8601\"]" +
-                    "}" +
+                    "}," +
+                    "\"replacePreviousQueued\":true" +
                 "}," +
                 "\"expectedSize\":11001001," +
                 "\"filename\":\"hoo-ya.csv\"," +
