@@ -52,3 +52,8 @@ This puts the JAR file into the "target" directory inside the repo.  So to open 
 cd target
 java -jar DataSync-1.5.4-jar-with-dependencies.jar
 ```
+
+### Java SDK
+
+DataSync can be used as a Java SDK, for detailed documentation refer to:  
+[http://socrata.github.io/datasync/guides/datasync-library-sdk.html](http://socrata.github.io/datasync/guides/datasync-library-sdk.html)
