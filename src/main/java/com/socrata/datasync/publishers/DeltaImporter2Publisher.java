@@ -402,6 +402,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                 statusLine = response.getStatusLine();
                 int statusCode = statusLine.getStatusCode();
                 if (statusCode == HttpStatus.SC_OK) {
+                    retries = 0; // we got one, so reset the retry count.
                     status = IOUtils.toString(response.getEntity().getContent());
                     System.out.print("Polling the job status: " + status);
                     if (status.startsWith("SUCCESS")) {
@@ -411,6 +412,9 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                     } else {
                         Thread.sleep(1000);
                     }
+                } else if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_SERVICE_UNAVAILABLE) {
+                    // No-penalty retry; we're willing to keep doing this forever
+                    Thread.sleep(1000);
                 } else if (statusCode != HttpStatus.SC_NOT_MODIFIED) {
                     retries += 1;
                     Thread.sleep(1000);
