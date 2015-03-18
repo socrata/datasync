@@ -49,7 +49,7 @@ If so, keep "File to publish contains header row" checked. If not, uncheck "File
 
 **Enter the Dataset ID ...**
 
-You will need the identifier of the dataset (i.e. [the dataset ID](http://socrata.github.io/datasync/resources/fac-common-problems.html#what-is-the-id-of-my-dataset)) that you want to update. Enter your dataset's ID into the Dataset ID field.
+You will need the identifier of the dataset (i.e. [the dataset ID]({{ site.root }}/resources/faq-common-problems.html#what-is-the-id-of-my-dataset)) that you want to update. Enter your dataset's ID into the Dataset ID field.
 
 
 **Choose the Publish Method ...**
