@@ -44,9 +44,7 @@ public class PortUtility {
 
         adaptSchemaForAggregates(sourceSet);
 
-        // TODO uncomment (after soda-java is updated to support this)
-		//DatasetInfo sinkSet = creator.createDataset(sourceSet, useNewBackend);
-        DatasetInfo sinkSet = creator.createDataset(sourceSet);
+        DatasetInfo sinkSet = creator.createDataset(sourceSet, useNewBackend);
 
         String sinkSetID = sinkSet.getId();
         System.out.println(" to dataset " + sinkSetID);
