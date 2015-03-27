@@ -61,7 +61,13 @@ public class ControlFile {
         if (!PublishMethod.delete.equals(publishMethod)) {
             int skip = 0;
             String separator = isCsv ? "," : "\t";
-            String[] timeFormats = new String[]{"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy"};
+            String[] timeFormats = new String[] {
+                    "ISO8601",
+                    "MM/dd/yy",
+                    "MM/dd/yyyy",
+                    "dd-MMM-yyyy",
+                    "MM/dd/yyyy hh:mm:ss aa"
+            };
             ftc.emptyTextIsNull(true)
                .ignoreColumns(new String[]{})
                .fixedTimestampFormat(timeFormats)
