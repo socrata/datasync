@@ -68,8 +68,8 @@ public class IntegrationJobTab implements JobTab {
             "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; " +
             "NOTE: requires dataset to have Row Identifier." +
             "</body></html>";
-    private static final String PUBLISH_VIA_FTP_ROW_TIP_TEXT = "<html><body style='width: 400px'>'Replace via HTTP' is the preferred " +
-            "and most efficient publishing method. Sends CSV/TSV file over HTTP, automatically detects " +
+    private static final String PUBLISH_VIA_FTP_ROW_TIP_TEXT = "<html><body style='width: 400px'>'Replace using HTTPS' is the preferred " +
+            "and most efficient publishing method. This option sends the CSV/TSV file over HTTPS, automatically detects " +
             "changes since last update, and only updates new/changed rows.<br>" +
             "<strong>NOTE</strong>: If you choose FTP, your firewall may need to be configured to allow FTP traffic through ports " +
             "22222 (for the control connection) and all ports within the range of 3131 to 3141 (for data connection)</body></html>";
@@ -85,7 +85,7 @@ public class IntegrationJobTab implements JobTab {
     public static final String CONTAINS_A_HEADER_ROW_CHECKBOX_TEXT = "File to publish contains a header row";
     public static final String PUBLISH_VIA_SODA_RADIO_TEXT = "SODA2";
     public static final String PUBLISH_VIA_FTP_RADIO_TEXT = "FTP";
-    public static final String PUBLISH_VIA_HTTP_RADIO_TEXT = "HTTP";
+    public static final String PUBLISH_VIA_HTTPS_RADIO_TEXT = "HTTPS";
     public static final String COPY_TO_CLIPBOARD_BUTTON_TEXT = "Copy to clipboard";
     public static final String EDIT_CONTROL_FILE_BUTTON_TEXT = "Edit Control File";
     public static final String EDIT_GENERATED_CONTROL_FILE_BUTTON_TEXT = "Edit Generated Control File";
@@ -106,7 +106,7 @@ public class IntegrationJobTab implements JobTab {
     private ButtonGroup publishMethodRadioButtonGroup;
     private JRadioButton soda2Button;
     private JRadioButton ftpButton;
-    private JRadioButton httpButton;
+    private JRadioButton httpsButton;
     //private JCheckBox publishViaFTPCheckBox;
     private JPanel publishViaFTPLabelContainer;
     private JTextField filePathTextField;
@@ -212,25 +212,25 @@ public class IntegrationJobTab implements JobTab {
         //Create the radio buttons
         soda2Button = new JRadioButton(PUBLISH_VIA_SODA_RADIO_TEXT);
         ftpButton = new JRadioButton(PUBLISH_VIA_FTP_RADIO_TEXT);
-        httpButton = new JRadioButton(PUBLISH_VIA_HTTP_RADIO_TEXT);
-        httpButton.setSelected(true);
+        httpsButton = new JRadioButton(PUBLISH_VIA_HTTPS_RADIO_TEXT);
+        httpsButton.setSelected(true);
 
         //Should refactor the name to be radio button
         PublishViaReplaceListener listener = new PublishViaReplaceListener();
 
         soda2Button.addActionListener(listener);
         ftpButton.addActionListener(listener);
-        httpButton.addActionListener(listener);
+        httpsButton.addActionListener(listener);
 
         publishMethodRadioButtonGroup = new ButtonGroup();
         publishMethodRadioButtonGroup.add(soda2Button);
         publishMethodRadioButtonGroup.add(ftpButton);
-        publishMethodRadioButtonGroup.add(httpButton);
+        publishMethodRadioButtonGroup.add(httpsButton);
 
         publishViaFTPLabelContainer = new JPanel(FLOW_LEFT);
         publishViaFTPLabelContainer.add(soda2Button);
         publishViaFTPLabelContainer.add(ftpButton);
-        publishViaFTPLabelContainer.add(httpButton);
+        publishViaFTPLabelContainer.add(httpsButton);
         publishViaFTPLabelContainer.add(
                 UIUtility.generateHelpBubble(PUBLISH_VIA_FTP_ROW_TIP_TEXT));
         publishMethodTextFieldContainer.add(publishViaFTPLabelContainer);
@@ -286,7 +286,7 @@ public class IntegrationJobTab implements JobTab {
             soda2Button.setSelected(true);
         else{
             ftpButton.setSelected(job.getPublishViaFTP());
-            httpButton.setSelected(job.getPublishViaDi2Http());
+            httpsButton.setSelected(job.getPublishViaDi2Http());
         }
     }
 
@@ -345,7 +345,7 @@ public class IntegrationJobTab implements JobTab {
                 (PublishMethod) publishMethodComboBox.getSelectedItem());
         jobToRun.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
         jobToRun.setPublishViaFTP(ftpButton.isSelected());
-        jobToRun.setPublishViaDi2Http(httpButton.isSelected());
+        jobToRun.setPublishViaDi2Http(httpsButton.isSelected());
         jobToRun.setControlFile(controlFile);
         return jobToRun.run();
     }
@@ -359,7 +359,7 @@ public class IntegrationJobTab implements JobTab {
                 (PublishMethod) publishMethodComboBox.getSelectedItem());
         newIntegrationJob.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
         newIntegrationJob.setPublishViaFTP(ftpButton.isSelected());
-        newIntegrationJob.setPublishViaDi2Http(httpButton.isSelected());
+        newIntegrationJob.setPublishViaDi2Http(httpsButton.isSelected());
         newIntegrationJob.setPathToControlFile(controlFileTextField.getText());
         newIntegrationJob.setControlFileContent(controlFileContentTextArea.getText());
         newIntegrationJob.setPathToSavedFile(jobFileLocation);
@@ -493,13 +493,13 @@ public class IntegrationJobTab implements JobTab {
             PublishMethod selectedPublishMethod =
                 (PublishMethod) publishMethodComboBox.getSelectedItem();
             ftpButton.setVisible(PublishMethod.replace.equals(selectedPublishMethod));
-            httpButton.setSelected(true);
+            httpsButton.setSelected(true);
             updatePublishViaReplaceUIFields(controlFileNeeded());
         }
     }
 
     private boolean controlFileNeeded() {
-        return httpButton.isSelected() || ftpButton.isSelected();
+        return httpsButton.isSelected() || ftpButton.isSelected();
     }
 
     private class PublishViaReplaceListener implements ActionListener {
