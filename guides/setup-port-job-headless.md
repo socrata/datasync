@@ -107,6 +107,7 @@ Information about the status of the job will be output to STDOUT. If the job run
 
 
 config.json contents:
+
     {
         "domain": "https://opendata.socrata.com",
         "username": "publisher@socrata.com",
