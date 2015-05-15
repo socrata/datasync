@@ -8,6 +8,10 @@ This quick start guide provides an overview of how to use DataSync to sync a loc
 
 **NOTICE:** The steps in this guide will replace the entire contents of the dataset with the contents of the CSV.  For a more in depth guide of using DataSync, including information on how to use DataSync to update and append information to a dataset,  please see [setting up a standard job]({{ site.root }}/guides/setup-standard-job.html).
 
+<div class="well">
+We have a video tutorial for using DataSync available <a href="https://support.socrata.com/hc/en-us/articles/202878493-Automating-data-updates-Intro-to-DataSync">here</a>.
+</div>
+
 ### Step 1: Download DataSync
 Navigate to the DataSync [download page](https://github.com/socrata/datasync/releases), and download the latest version.
 
