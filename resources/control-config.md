@@ -240,7 +240,7 @@ The following are options available to both CSV files or TSV files within the `c
     <td>Specifies the timezones for FixedTimestamps (“Date & Time (with timezone)” columns).  This only has an effect if the timestamp format does not specify a time zone. Typical values are "UTC" or "US/Pacific".  A list of accepted names is at [http://joda-time.sourceforge.net/timezones.html](http://joda-time.sourceforge.net/timezones.html). *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time)*.</td>
   </tr>
 <tr>
-    <td>syntheticLocation</td>
+    <td>syntheticLocations</td>
     <td>Allows transformation of multiple columns into one or more Location columns during insert. See See the [Location column and geocoding configuration](#location-geocoding) section for an example.</td>
   </tr>
 <tr>
