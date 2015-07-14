@@ -90,44 +90,64 @@ public class IntegrationJobValidity {
                 ControlFile control = job.getControlFile();
                 FileTypeControl fileControl = null;
                 switch (fileExtension) {
-                    case "csv": fileControl = control.csv; break;
-                    case "tsv": fileControl = control.tsv; break;
+                    case "csv": fileControl = control.getCsvFtc(); break;
+                    case "tsv": fileControl = control.getTsvFtc(); break;
                 }
-
                 JobStatus actionOkay = checkAction(control.action, job, schema);
                 if (actionOkay.isError())
                     return actionOkay;
 
-                if (fileControl == null && !control.action.equalsIgnoreCase(PublishMethod.delete.name())) {
-                    JobStatus noFileTypeContent = JobStatus.PUBLISH_ERROR;
-                    noFileTypeContent.setMessage("The control file for '" + publishFile.getName() +
-                            "' requires that the '" + fileExtension + "' option be filled in");
-                    return noFileTypeContent;
-                }
+                JobStatus controlOkay = checkControl(control,fileControl,schema,publishFile,connectionInfo.getUrl());
+                if (controlOkay.isError())
+                    return controlOkay;
 
-                String[] headers = getHeaders(fileControl, publishFile);
-                if (headers == null) {
-                    JobStatus noHeaders = JobStatus.PUBLISH_ERROR;
-                    noHeaders.setMessage("Headers must be specified in one of " + publishFile.getName() + " or the control file using 'columns'");
-                    return noHeaders;
-                }
-
-                JobStatus csvDatasetAgreement = checkColumnAgreement(schema, headers, fileControl.ignoreColumns, publishFile.getName());
-                if (csvDatasetAgreement.isError())
-                    return csvDatasetAgreement;
-
-                JobStatus controlHeaderAgreement = checkControlAgreement(fileControl, schema, headers, publishFile.getName());
-                if (controlHeaderAgreement.isError())
-                    return controlHeaderAgreement;
-
-                JobStatus controlSensibility = validateControlFile(fileControl, connectionInfo.getUrl());
-                if (controlSensibility.isError())
-                    return controlSensibility;
             }
         } catch (Exception e) {
             // Not going to fail jobs on the validation check
         }
         return JobStatus.VALID;
+    }
+
+    public static JobStatus checkControl(ControlFile control,FileTypeControl fileControl, Dataset schema, File publishFile, String urlBase){
+
+        String fileExtension = Utils.getFileExtension(publishFile.getAbsolutePath());
+
+
+        if (fileControl == null && !control.action.equalsIgnoreCase(PublishMethod.delete.name())) {
+            JobStatus noFileTypeContent = JobStatus.PUBLISH_ERROR;
+            noFileTypeContent.setMessage("The control file for '" + publishFile.getName() +
+                    "' requires that the '" + fileExtension + "' option be filled in");
+            return noFileTypeContent;
+        }
+
+        try {
+            String[] headers = getHeaders(fileControl, publishFile);
+            if (headers == null) {
+                JobStatus noHeaders = JobStatus.PUBLISH_ERROR;
+                noHeaders.setMessage("Headers must be specified in one of " + publishFile.getName() + " or the control file using 'columns'");
+                return noHeaders;
+            }
+
+            PublishMethod method = PublishMethod.valueOf(control.action.toLowerCase());
+            JobStatus csvDatasetAgreement = checkColumnAgreement(fileControl, method, schema, headers ,publishFile.getName());
+            if (csvDatasetAgreement.isError())
+                return csvDatasetAgreement;
+
+            JobStatus controlHeaderAgreement = checkControlAgreement(fileControl, schema, headers, publishFile.getName());
+            if (controlHeaderAgreement.isError())
+                return controlHeaderAgreement;
+
+            JobStatus controlSensibility = validateControlFile(fileControl, urlBase);
+            if (controlSensibility.isError())
+                return controlSensibility;
+        }
+        catch (IOException e){
+            JobStatus cannotConnect = JobStatus.PUBLISH_ERROR;
+            cannotConnect.setMessage("Cannot determine the headers for dataset: " + schema.getId());
+            return cannotConnect;
+        }
+        return JobStatus.VALID;
+
     }
 
     private static boolean validatePathToControlFileArg(CommandLine cmd, CommandLineOptions options) {
@@ -473,20 +493,23 @@ public class IntegrationJobValidity {
                 JobStatus status = JobStatus.PUBLISH_ERROR;
                 status.setMessage("Ambiguous Column Name: Synthetic location '" + field + "' specified in the control file may conflict with '" +
                         field + "' provided in '" + csvFilename + "'." +
-                        "\nPlease list '" + field + "' as one of the ignored columns in the control file.");
+                        "\nPlease ensure '" + field + "' is not currently mapped to fields in the CSV.");
                 return status;
             }
-            for (int i = 0; i < componentsInFile.length; i++) {
-                if (!componentsInFile[i]) {
-                    JobStatus status = JobStatus.PUBLISH_ERROR;
-                    status.setMessage("Synthetic Location Not Found: The synthetic location column '" + field +
-                            "' references a component '" + locationComponents[i] + "' which is not present in '" +
-                            csvFilename + "'." +
-                            "\nPlease check your control file to ensure that the column name is spelled correctly, " +
-                            "and that '" + locationComponents[i] + "' is not included in the 'ignoreColumns' array.");
-                    return status;
-                }
-            }
+
+            //The documentation says that this should work, so I'm commenting it out
+
+//            for (int i = 0; i < componentsInFile.length; i++) {
+//                if (!componentsInFile[i]) {
+//                    JobStatus status = JobStatus.PUBLISH_ERROR;
+//                    status.setMessage("Synthetic Location Not Found: The synthetic location column '" + field +
+//                            "' references a component '" + locationComponents[i] + "' which is not present in '" +
+//                            csvFilename + "'." +
+//                            "\nPlease check your control file to ensure that the column name is spelled correctly, " +
+//                            "and that '" + locationComponents[i] + "' is not included in the 'ignoreColumns' array.");
+//                    return status;
+//                }
+//            }
             JobStatus typesSupported = locationTypesSupported(field, location, DatasetUtils.getDatasetTypeMapping(schema));
             if (typesSupported.isError())
                 return typesSupported;
@@ -557,7 +580,9 @@ public class IntegrationJobValidity {
      * @param csvFilename the file name, for printing purposes.
      * @return
      */
-    private static JobStatus checkColumnAgreement(Dataset schema, String[] headers, String[] ignoredColumns, String csvFilename) {
+    private static JobStatus checkColumnAgreement(FileTypeControl fileControl, PublishMethod method, Dataset schema, String[] headers, String csvFilename) {
+
+        String[] ignoredColumns = fileControl.ignoreColumns;
 
         if (schema == null) return JobStatus.VALID;
 
@@ -585,14 +610,31 @@ public class IntegrationJobValidity {
             if (columnNames.contains(ignored))
                 columnNames.remove(ignored);
         }
-        if (columnNames.size() > 0) {
+
+
+        Map<String,LocationColumn> syntheticColumnsMap =  fileControl.syntheticLocations;
+
+        if (syntheticColumnsMap != null) {
+            Set<String> syntheticColumns = syntheticColumnsMap.keySet();
+            for (String synthetic : syntheticColumns) {
+                if (columnNames.contains(synthetic))
+                    columnNames.remove(synthetic);
+            }
+        }
+        if (columnNames.size() > 0 && method.equals(PublishMethod.replace)) {
             if (rowIdentifier == null) {
-                JobStatus status = JobStatus.PUBLISH_ERROR;
-                StringBuilder message = new StringBuilder("Missing Columns: Dataset " + schema.getId() +
-                        " contains the following column(s) that are not available in '" + csvFilename + "':");
-                for (String colName : columnNames)
-                    message.append("\n\t").append(colName);
-                message.append("\nPlease validate that the CSV contains all columns and retry.");
+                JobStatus status = JobStatus.MISSING_COLUMNS;
+                StringBuilder message = new StringBuilder("Missing Fields: Dataset " + schema.getId() +
+                        " contains the following field(s) that are not mapped: ");//available in '" + csvFilename + "': ");
+                boolean writtenFirstValue = false;
+                for (String colName : columnNames) {
+                    if (writtenFirstValue)
+                        message.append(", ").append(colName);
+                    else{
+                        message.append(colName);
+                        writtenFirstValue = true;
+                    }
+                }
                 status.setMessage(message.toString());
                 return status;
             } else if (!headerHasRowId) {

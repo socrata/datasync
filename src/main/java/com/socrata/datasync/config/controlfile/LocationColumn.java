@@ -1,5 +1,6 @@
 package com.socrata.datasync.config.controlfile;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
@@ -16,10 +17,12 @@ public class LocationColumn {
     public String zip;
     public String latitude;
     public String longitude;
+    @JsonIgnore
+    public static final String[] locationFieldNames = new String[] {"address", "city", "state", "zip", "latitude", "longitude"};
 
     public Map<String, String> findComponentColumns() {
         Map<String,String> components = new HashMap<>();
-        for (String s : new String[] {"address", "city", "state", "zip", "latitude", "longitude"}) {
+        for (String s : locationFieldNames) {
             String fieldname = null;
             switch (s) {
                 case "address":   fieldname = address;   break;

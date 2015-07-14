@@ -2,6 +2,7 @@ package com.socrata.datasync.config.controlfile;
 
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.Utils;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -15,6 +16,7 @@ public class ControlFile {
 
     public String action;
     public String opaque;
+
     public FileTypeControl csv;
     public FileTypeControl tsv;
 
@@ -28,6 +30,29 @@ public class ControlFile {
         this.opaque = opaque;
         this.csv = csvControl;
         this.tsv = tsvControl;
+
+    }
+
+
+    // Hack city.  Apparently the ControlFile must have both a csv and a tsv control file, even though only one may be
+    // active at any given time.  The control file editor will be manipulating the active one, regardless of type.
+    // Thus, I need to return the active FTC here that can later be manipulated throughout the model.
+    @JsonIgnore
+    public FileTypeControl getFileTypeControl(){
+        if (csv != null)
+            return csv;
+        else
+            return tsv;
+    }
+
+    @JsonIgnore
+    public FileTypeControl getCsvFtc(){
+        return csv;
+    }
+
+    @JsonIgnore
+    public FileTypeControl getTsvFtc(){
+        return tsv;
     }
 
 
@@ -44,22 +69,30 @@ public class ControlFile {
     public static ControlFile generateControlFile(final String fileToPublish,
                                                   final PublishMethod publishMethod,
                                                   final String[] columns,
-                                                  final boolean useSocrataGeocoding) {
+                                                  final boolean useSocrataGeocoding,
+                                                    final boolean hasHeaderRow) {
+
 
         String fileToPublishExtension = Utils.getFileExtension(fileToPublish);
+
+
         boolean isCsv = fileToPublishExtension.equalsIgnoreCase("csv");
         String quote = isCsv ? "\"" : "\u0000";
 
         FileTypeControl ftc = new FileTypeControl()
                 .columns(columns)
                 .encoding("utf-8")
+                .hasHeaderRow(hasHeaderRow)
                 .quote(quote);
+
 
         if (!PublishMethod.delete.equals(publishMethod)) {
             int skip = 0;
             String separator = isCsv ? "," : "\t";
-            String[] timeFormats = new String[]{"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy"};
+            //Adding our standard export formats so that a customer can easily round-trip data into the system.
+            String[] timeFormats = new String[]{"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy","MM/dd/yyyy HH:mm:ss a Z","MM/dd/yyyy HH:mm:ss a"};
             ftc.emptyTextIsNull(true)
+               .filePath(fileToPublish)
                .ignoreColumns(new String[]{})
                .fixedTimestampFormat(timeFormats)
                .floatingTimestampFormat(timeFormats)

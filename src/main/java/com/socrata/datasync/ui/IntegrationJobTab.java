@@ -7,9 +7,13 @@ import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import com.socrata.datasync.job.JobStatus;
+import com.socrata.datasync.model.ControlFileModel;
+import com.socrata.datasync.model.DatasetModel;
 import com.socrata.datasync.validation.IntegrationJobValidity;
+import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.Dataset;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 
@@ -31,8 +35,6 @@ public class IntegrationJobTab implements JobTab {
     private static final int JOB_FILE_TEXTFIELD_WIDTH = 263;
     private static final int JOB_TEXTFIELD_HEIGHT = 26;
     private static final int JOB_FIELD_VGAP = 5;
-    private static final int CONTROL_FILE_TEXTFIELD_WIDTH = 102;
-    private static final Dimension CONTROL_FILE_EDITOR_DIMENSIONS = new Dimension(500, 350);
     private static final FlowLayout FLOW_LEFT = new FlowLayout(FlowLayout.LEFT, 0, 0);
     private static final FlowLayout FLOW_RIGHT = new FlowLayout(FlowLayout.LEFT, 0, JOB_FIELD_VGAP);
 
@@ -80,86 +82,71 @@ public class IntegrationJobTab implements JobTab {
     public static final String PUBLISH_VIA_FTP_RADIO_TEXT = "FTP";
     public static final String PUBLISH_VIA_HTTP_RADIO_TEXT = "HTTP";
     public static final String COPY_TO_CLIPBOARD_BUTTON_TEXT = "Copy to clipboard";
-    public static final String GENERATE_EDIT_CONTROL_FILE_BUTTON_TEXT = "Generate/Edit";
-    public static final String GET_COLUMN_IDS_BUTTON_TEXT = "Get Column ID List";
-    public static final int COPY_TO_CLIPBOARD_OPTION_INDEX = 1;
 
     private JFrame mainFrame;
     private JPanel jobPanel;
 
     private String jobFileLocation;
-    private JLabel jobTabTitleLabel;
+    //Rest of the code assumes that this is never null. Adding to avoid null pointer exception when job initialization fails.
+    private JLabel jobTabTitleLabel = new JLabel("Untitled");
 
     private JTextField datasetIDTextField;
     private JTextField fileToPublishTextField;
-    private JCheckBox fileToPublishHasHeaderCheckBox;
     private JComboBox publishMethodComboBox;
     private ButtonGroup publishMethodRadioButtonGroup;
     private JRadioButton soda2Button;
     private JRadioButton ftpButton;
     private JRadioButton httpButton;
-    //private JCheckBox publishViaFTPCheckBox;
     private JPanel publishViaFTPLabelContainer;
-    private JTextField controlFileTextField;
     private JButton browseForControlFileButton;
     private JPanel controlFileLabelContainer;
     private JPanel controlFileSelectorContainer;
 
 
     private JButton generateEditControlFileButton;
-    private JTextArea controlFileContentTextArea;
+    private ControlFileModel controlFileModel;
+    private DatasetModel datasetModel;
     private JTextField runCommandTextField;
 
     private boolean usingControlFile;
-    private boolean regenerateControlFile;
 
     // build Container with all tab components populated with given job data
     public IntegrationJobTab(IntegrationJob job, JFrame containingFrame) {
         mainFrame = containingFrame;
 
         // build tab panel form
-        jobPanel = new JPanel(new GridLayout(0,2));
-
+        jobPanel = new JPanel(new GridLayout(5,2));
         addFileToPublishFieldToJobPanel();
         addDatasetIdFieldToJobPanel();
         addPublishMethodFieldToJobPanel();
-        controlFileContentTextArea = new JTextArea(EMPTY_TEXTAREA_CONTENT);
+  //      controlFileContentTextArea = new JTextArea(EMPTY_TEXTAREA_CONTENT);
         addControlFileFieldToJobPanel();
         addRunCommandFieldToJobPanel();
 
+
         loadJobDataIntoUIFields(job);
+
         if(job.getPublishMethod() == null)
             publishMethodComboBox.setSelectedItem(PublishMethod.replace);
+
     }
+
 
     private void addControlFileFieldToJobPanel() {
         controlFileLabelContainer = UIUtility.generateLabelWithHelpBubble(
-                "Control file", CONTROL_FILE_TIP_TEXT, HELP_ICON_TOP_PADDING);
+                "Step 4 - Tell us how to import your CSV", CONTROL_FILE_TIP_TEXT, HELP_ICON_TOP_PADDING);
         jobPanel.add(controlFileLabelContainer);
 
         controlFileSelectorContainer = new JPanel(FLOW_RIGHT);
-        generateEditControlFileButton = new JButton(GENERATE_EDIT_CONTROL_FILE_BUTTON_TEXT);
-        generateEditControlFileButton.addActionListener(new EditGenerateControlFileListener());
+        generateEditControlFileButton = new JButton("Map fields");
+        generateEditControlFileButton.addActionListener(new EditControlFileListener());
         controlFileSelectorContainer.add(generateEditControlFileButton);
-        JLabel orLabel = new JLabel(" -or- ");
-        controlFileSelectorContainer.add(orLabel);
-
-        controlFileTextField = new JTextField();
-        controlFileTextField.setPreferredSize(new Dimension(
-                CONTROL_FILE_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
-        controlFileSelectorContainer.add(controlFileTextField);
-        JFileChooser controlFileChooser = new JFileChooser();
-        browseForControlFileButton = new JButton(BROWSE_BUTTON_TEXT);
-        ControlFileSelectorListener chooserListener = new ControlFileSelectorListener(
-                controlFileChooser, controlFileTextField);
-        browseForControlFileButton.addActionListener(chooserListener);
-        controlFileSelectorContainer.add(browseForControlFileButton);
         jobPanel.add(controlFileSelectorContainer);
     }
 
     private void addRunCommandFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                "Command to execute with scheduler", RUN_COMMAND_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                "Step 5 - Copy command for later (optional)", RUN_COMMAND_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel runCommandTextFieldContainer = new JPanel(FLOW_RIGHT);
         runCommandTextField = new JTextField(DEFAULT_RUN_JOB_COMMAND);
         runCommandTextField.setPreferredSize(new Dimension(
@@ -175,7 +162,7 @@ public class IntegrationJobTab implements JobTab {
 
     private void addPublishMethodFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                "Publish method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                "Step 3 - Select update method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel publishMethodTextFieldContainer = new JPanel(FLOW_RIGHT);
         publishMethodComboBox = new JComboBox(PublishMethod.values());
         publishMethodComboBox.addActionListener(new PublishMethodComboBoxListener());
@@ -183,55 +170,33 @@ public class IntegrationJobTab implements JobTab {
         publishMethodTextFieldContainer.add(publishMethodComboBox);
 
         //Create the radio buttons
+        //TODO: For test purposes only.  Remove these eventually
         soda2Button = new JRadioButton(PUBLISH_VIA_SODA_RADIO_TEXT);
         ftpButton = new JRadioButton(PUBLISH_VIA_FTP_RADIO_TEXT);
         httpButton = new JRadioButton(PUBLISH_VIA_HTTP_RADIO_TEXT);
         httpButton.setSelected(true);
 
-        //Should refactor the name to be radio button
-        PublishViaReplaceListener listener = new PublishViaReplaceListener();
-
-        soda2Button.addActionListener(listener);
-        ftpButton.addActionListener(listener);
-        httpButton.addActionListener(listener);
-
-        publishMethodRadioButtonGroup = new ButtonGroup();
-        publishMethodRadioButtonGroup.add(soda2Button);
-        publishMethodRadioButtonGroup.add(ftpButton);
-        publishMethodRadioButtonGroup.add(httpButton);
-
         publishViaFTPLabelContainer = new JPanel(FLOW_LEFT);
-        publishViaFTPLabelContainer.add(soda2Button);
-        publishViaFTPLabelContainer.add(ftpButton);
-        publishViaFTPLabelContainer.add(httpButton);
-        publishViaFTPLabelContainer.add(
-                UIUtility.generateHelpBubble(PUBLISH_VIA_FTP_ROW_TIP_TEXT));
-        publishMethodTextFieldContainer.add(publishViaFTPLabelContainer);
-
         jobPanel.add(publishMethodTextFieldContainer);
     }
 
     private void addDatasetIdFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                "Dataset ID", DATASET_ID_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                "Step 2 - Enter Dataset ID to update", DATASET_ID_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel datasetIDTextFieldContainer = new JPanel(FLOW_RIGHT);
         datasetIDTextField = new JTextField();
         datasetIDTextField.setPreferredSize(new Dimension(
                 DATASET_ID_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
-        datasetIDTextField.addActionListener(new RegenerateControlFileListener());
+        RegenerateControlFileListener regenerateListener = new RegenerateControlFileListener();
+        datasetIDTextField.addActionListener(regenerateListener);
+        datasetIDTextField.addFocusListener(regenerateListener);
         datasetIDTextFieldContainer.add(datasetIDTextField);
-
-        JButton getColumnIdsButton = new JButton(GET_COLUMN_IDS_BUTTON_TEXT);
-        getColumnIdsButton.addActionListener(new GetColumnIdsButtonListener());
-        datasetIDTextFieldContainer.add(getColumnIdsButton);
-        datasetIDTextFieldContainer.add(UIUtility.generateHelpBubble(GET_COLUMN_IDS_TIP_TEXT));
-
         jobPanel.add(datasetIDTextFieldContainer);
     }
 
     private void addFileToPublishFieldToJobPanel() {
         jobPanel.add(
-                UIUtility.generateLabelWithHelpBubble("File to publish", FILE_TO_PUBLISH_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                UIUtility.generateLabelWithHelpBubble("Step 1 - Select file to publish", FILE_TO_PUBLISH_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel fileSelectorContainer = new JPanel(FLOW_RIGHT);
         fileToPublishTextField = new JTextField();
         fileToPublishTextField.setPreferredSize(new Dimension(
@@ -243,17 +208,10 @@ public class IntegrationJobTab implements JobTab {
                 fileToPublishChooser, fileToPublishTextField);
         openButton.addActionListener(chooserListener);
         fileSelectorContainer.add(openButton);
+        RegenerateControlFileListener regenerateListener = new RegenerateControlFileListener();
+        fileToPublishTextField.addActionListener(regenerateListener);
+        fileToPublishTextField.addFocusListener(regenerateListener);
         jobPanel.add(fileSelectorContainer);
-
-        jobPanel.add(new JLabel(""));
-        fileToPublishHasHeaderCheckBox = new JCheckBox(CONTAINS_A_HEADER_ROW_CHECKBOX_TEXT);
-        fileToPublishHasHeaderCheckBox.addActionListener(new RegenerateControlFileListener());
-
-        JPanel hasHeaderRowLabelContainer = new JPanel(FLOW_LEFT);
-        hasHeaderRowLabelContainer.add(fileToPublishHasHeaderCheckBox);
-        hasHeaderRowLabelContainer.add(
-                UIUtility.generateHelpBubble(HAS_HEADER_ROW_TIP_TEXT));
-        jobPanel.add(hasHeaderRowLabelContainer);
     }
 
     private void setReplaceRadioButtons(IntegrationJob job) {
@@ -265,36 +223,62 @@ public class IntegrationJobTab implements JobTab {
         }
     }
 
-    private void loadJobDataIntoUIFields(IntegrationJob job) {
-        datasetIDTextField.setText(job.getDatasetID());
-        fileToPublishTextField.setText(job.getFileToPublish());
-        PublishMethod jobPublishMethod = job.getPublishMethod();
-        publishMethodComboBox.setSelectedItem(jobPublishMethod);
-        fileToPublishHasHeaderCheckBox.setSelected(job.getFileToPublishHasHeaderRow());
+    private void loadJobDataIntoUIFields(IntegrationJob job)  {
+        try {
+            if (job.getControlFileContent() != null) {
+                ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+                ControlFile controlFile = mapper.readValue(job.getControlFileContent(), ControlFile.class);
+                //Ideally this could be saved with the control file or factored out.  However, we're stuck with this redundant call
+                // because of DI2's strict enforcement of control files and the current factoring of what CSVTableModel knows about
+                controlFile.getFileTypeControl().filePath = job.getFileToPublish();
+                //TODO: This is not being saved due to the fact that this value is set on the control file and not the job.  Pick one or the other.
+                controlFile.getFileTypeControl().hasHeaderRow = job.getFileToPublishHasHeaderRow();
+                updateControlFileModel(controlFile,job.getDatasetID());
+            }
+            datasetIDTextField.setText(job.getDatasetID());
+            fileToPublishTextField.setText(job.getFileToPublish());
+            PublishMethod jobPublishMethod = job.getPublishMethod();
+            publishMethodComboBox.setSelectedItem(jobPublishMethod);
 
-        updatePublishViaReplaceUIFields(job.getPublishViaFTP() || job.getPublishViaDi2Http());
+            updatePublishViaReplaceUIFields(job.getPublishViaFTP() || job.getPublishViaDi2Http());
 
-        //Set the defaults on the button correctly.
-        setReplaceRadioButtons(job);
+            //Set the defaults on the button correctly.
+            setReplaceRadioButtons(job);
 
-        updateControlFileInputs(job.getPathToControlFile(), job.getControlFileContent());
+            //TODO: If there is a way to save the pointer to the file, but not the file then we'll need to add a way to load it here
+            if (job.getPathToControlFile() != null) {
+                System.out.println("SKipping");
+            }
 
-        jobFileLocation = job.getPathToSavedFile();
-        // if this is an existing job (meaning the job was opened from a file)
-        // then populate the scheduler command textfield
-        if(!jobFileLocation.equals("")) {
-            runCommandTextField.setText(
-                    Utils.getRunJobCommand(jobFileLocation));
+            jobFileLocation = job.getPathToSavedFile();
+            // if this is an existing job (meaning the job was opened from a file)
+            // then populate the scheduler command textfield
+            if (!jobFileLocation.equals("")) {
+                runCommandTextField.setText(
+                        Utils.getRunJobCommand(jobFileLocation));
+            }
+
+            jobTabTitleLabel = new JLabel(job.getJobFilename());
         }
-
-        jobTabTitleLabel = new JLabel(job.getJobFilename());
+        catch (Exception e){
+            JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage());
+        }
     }
 
-    private void updateControlFileInputs(final String pathToControlFile, final String controlFileContent) {
-        controlFileContentTextArea.setText(controlFileContent);
-        controlFileTextField.setText(pathToControlFile);
-        if (pathToControlFile != null && !pathToControlFile.equals(""))
-            usingControlFile = true;
+
+    private void updateControlFileModel(ControlFile controlFile, String fourbyfour) throws LongRunningQueryException, InterruptedException, SodaError, IOException{//final String pathToControlFile, final String controlFileContent) throws IOException{
+
+        UserPreferences userPrefs = new UserPreferencesJava();
+
+            datasetModel = new DatasetModel(userPrefs.getDomain(),
+                    userPrefs.getUsername(),
+                    userPrefs.getPassword(),
+                    userPrefs.getAPIKey(),
+                    fourbyfour);
+
+
+        controlFileModel = new ControlFileModel(controlFile,datasetModel);
+
     }
 
     private void updatePublishViaReplaceUIFields(boolean showFileInfo) {
@@ -302,7 +286,7 @@ public class IntegrationJobTab implements JobTab {
         if(showFileInfo) {
             controlFileLabelContainer.setVisible(true);
             controlFileSelectorContainer.setVisible(true);
-        } else {
+          } else {
             controlFileLabelContainer.setVisible(false);
             controlFileSelectorContainer.setVisible(false);
         }
@@ -314,18 +298,23 @@ public class IntegrationJobTab implements JobTab {
     }
 
     public JobStatus runJobNow() {
+        if (controlFileModel == null) {
+            JobStatus noControlFile = JobStatus.INVALID_PUBLISH_METHOD;
+            noControlFile.setMessage("Cannot determine mappings for columns.  Click \"Map Fields\" to set the mappings for your CSV");
+        }
         IntegrationJob jobToRun = new IntegrationJob();
         jobToRun.setDatasetID(datasetIDTextField.getText());
         jobToRun.setFileToPublish(fileToPublishTextField.getText());
         jobToRun.setPublishMethod(
                 (PublishMethod) publishMethodComboBox.getSelectedItem());
-        jobToRun.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
+        jobToRun.setFileToPublishHasHeaderRow(controlFileModel.getControlFile().getFileTypeControl().hasHeaderRow);
         jobToRun.setPublishViaFTP(ftpButton.isSelected());
         jobToRun.setPublishViaDi2Http(httpButton.isSelected());
         if (usingControlFile) {
-            jobToRun.setPathToControlFile(controlFileTextField.getText());
+            jobToRun.setPathToControlFile(controlFileModel.getPath());
         } else {
-            jobToRun.setControlFileContent(controlFileContentTextArea.getText());
+            jobToRun.setControlFileContent(controlFileModel.getControlFileContents());
+
         }
         return jobToRun.run();
     }
@@ -337,15 +326,14 @@ public class IntegrationJobTab implements JobTab {
         newIntegrationJob.setFileToPublish(fileToPublishTextField.getText());
         newIntegrationJob.setPublishMethod(
                 (PublishMethod) publishMethodComboBox.getSelectedItem());
-        newIntegrationJob.setFileToPublishHasHeaderRow(fileToPublishHasHeaderCheckBox.isSelected());
+        newIntegrationJob.setFileToPublishHasHeaderRow(controlFileModel.getControlFile().getFileTypeControl().hasHeaderRow);
         newIntegrationJob.setPublishViaFTP(ftpButton.isSelected());
         newIntegrationJob.setPublishViaDi2Http(httpButton.isSelected());
-        newIntegrationJob.setPathToControlFile(controlFileTextField.getText());
-        newIntegrationJob.setControlFileContent(controlFileContentTextArea.getText());
+        newIntegrationJob.setPathToControlFile(controlFileModel.getPath());
+        newIntegrationJob.setControlFileContent(controlFileModel.getControlFileContents());
         newIntegrationJob.setPathToSavedFile(jobFileLocation);
 
         // TODO If an existing file was selected WARN user of overwriting
-
         // if first time saving this job: Open dialog box to select "Save as..." location
         // otherwise save to existing file
         boolean updateJobCommandTextField = false;
@@ -421,35 +409,26 @@ public class IntegrationJobTab implements JobTab {
         }
     }
 
-    private class RegenerateControlFileListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            regenerateControlFile = true;
-        }
-    }
-
-    private class ControlFileSelectorListener implements ActionListener {
-        JFileChooser fileChooser;
-        JTextField filePathTextField;
-
-        public ControlFileSelectorListener(JFileChooser chooser, JTextField textField) {
-            fileChooser = chooser;
-            filePathTextField = textField;
-            fileChooser.setFileFilter(
-                    UIUtility.getFileChooserFilter(IntegrationJobValidity.allowedControlFileExtensions));
-            regenerateControlFile = true;
-        }
-
-        public void actionPerformed(ActionEvent e) {
-            int returnVal = fileChooser.showOpenDialog(mainFrame);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-                File file = fileChooser.getSelectedFile();
-                filePathTextField.setText(file.getAbsolutePath());
-                usingControlFile = true;
-            } else {
-                // Open command cancelled by user: do nothing
+    private class RegenerateControlFileListener extends FocusAdapter implements ActionListener {
+        @Override
+        public void focusLost(FocusEvent e){
+            if (!e.isTemporary()) {
+                setRegenerateControlFile();
             }
         }
+
+        public void actionPerformed(ActionEvent e) {
+            setRegenerateControlFile();
+        }
+
+        //Set the right variables so that the control file is regenerated when going to the mapping dialog
+        //TODO: Consider paying attention to these at run job time as well
+        private void setRegenerateControlFile(){
+            controlFileModel = null;
+            datasetModel = null;
+        }
     }
+
 
     private class PublishMethodComboBoxListener implements ActionListener {
         public void actionPerformed(ActionEvent e) {
@@ -457,19 +436,16 @@ public class IntegrationJobTab implements JobTab {
                 (PublishMethod) publishMethodComboBox.getSelectedItem();
             ftpButton.setVisible(PublishMethod.replace.equals(selectedPublishMethod));
             httpButton.setSelected(true);
+            //Should not be null
+            if (controlFileModel != null)
+                controlFileModel.setType(Utils.capitalizeFirstLetter(selectedPublishMethod.name()));
             updatePublishViaReplaceUIFields(controlFileNeeded());
-            regenerateControlFile = true;
+
         }
     }
 
     private boolean controlFileNeeded() {
         return httpButton.isSelected() || ftpButton.isSelected();
-    }
-
-    private class PublishViaReplaceListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            updatePublishViaReplaceUIFields(controlFileNeeded());
-        }
     }
 
     private class JobCommandTextFieldListener implements MouseListener {
@@ -495,44 +471,35 @@ public class IntegrationJobTab implements JobTab {
         }
     }
 
-    private class EditGenerateControlFileListener implements ActionListener {
+    private class EditControlFileListener implements ActionListener {
         public void actionPerformed(ActionEvent evnt) {
-            String generateControlFileErrorMessage = null;
-            String previousControlFileContent = controlFileContentTextArea.getText();
-            String controlFileContent = previousControlFileContent;
-
-            if(previousControlFileContent.equals(EMPTY_TEXTAREA_CONTENT) || regenerateControlFile) {
+            String generateControlFileErrorMessage;
                 if(!datasetIdValid()) {
                     generateControlFileErrorMessage = "Error generating control file: " +
                             "you must enter valid Dataset ID";
+                    JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
                 } else {
                     try {
-                        controlFileContent = generateControlFileContent(
-                                getSodaDdl(),
-                                fileToPublishTextField.getText(),
-                                (PublishMethod) publishMethodComboBox.getSelectedItem(),
-                                datasetIDTextField.getText(),
-                                fileToPublishHasHeaderCheckBox.isSelected());
-                        regenerateControlFile = false;
+                        if (controlFileModel == null) {
+                            ControlFile controlFile = generateControlFile(
+                                    getSodaDdl(),
+                                    fileToPublishTextField.getText(),
+                                    (PublishMethod) publishMethodComboBox.getSelectedItem(),
+                                    datasetIDTextField.getText(),
+                                    true);
+
+                            updateControlFileModel(controlFile,datasetIDTextField.getText());
+                        }
+
+                        ControlFileEditDialog editorFrame = new ControlFileEditDialog(controlFileModel,mainFrame);
+
                     } catch (Exception e) {
                         e.printStackTrace();
                         generateControlFileErrorMessage = "Error generating control file: " + e.getMessage();
+                        JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
                     }
                 }
-            }
 
-            if(generateControlFileErrorMessage == null) {
-                int clickedOkOrCancel = showEditControlFileDialog(controlFileContent);
-                if(clickedOkOrCancel == JOptionPane.OK_OPTION) {
-                    usingControlFile = false;
-                    controlFileTextField.setText("");
-                } else if (clickedOkOrCancel == JOptionPane.CANCEL_OPTION) {
-                    // Set control file content to its previous content
-                    controlFileContentTextArea.setText(previousControlFileContent);
-                }
-            } else {
-                JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
-            }
         }
 
         private boolean fileToPublishIsSelected() {
@@ -557,6 +524,14 @@ public class IntegrationJobTab implements JobTab {
          */
         private String generateControlFileContent(SodaDdl ddl, String fileToPublish, PublishMethod publishMethod,
                                                   String datasetId, boolean containsHeaderRow) throws SodaError, InterruptedException, IOException {
+            ControlFile control = generateControlFile(ddl,fileToPublish,publishMethod,datasetId,containsHeaderRow);
+            ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+            return mapper.writeValueAsString(control);
+        }
+
+        private ControlFile generateControlFile(SodaDdl ddl, String fileToPublish, PublishMethod publishMethod,
+                                                String datasetId, boolean containsHeaderRow) throws SodaError, InterruptedException, IOException {
+
             Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(datasetId);
             boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
 
@@ -568,78 +543,9 @@ public class IntegrationJobTab implements JobTab {
                     columns = DatasetUtils.getFieldNamesArray(datasetInfo);
             }
 
-            ControlFile control = ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding);
-            ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
-            return mapper.writeValueAsString(control);
+            return ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding, containsHeaderRow);
         }
 
-        /**
-         * Display dialog with scrollable text area allowing editing
-         * of given control file content
-         *
-         * @param textAreaContent
-         * @return generated scrollable text area
-         */
-        private int showEditControlFileDialog(String textAreaContent) {
-            controlFileContentTextArea.setText(textAreaContent);
-            JScrollPane scrollPane = new JScrollPane(controlFileContentTextArea);
-            controlFileContentTextArea.setLineWrap(true);
-            controlFileContentTextArea.setWrapStyleWord(true);
-            controlFileContentTextArea.setCaretPosition(0);
-            scrollPane.setPreferredSize(CONTROL_FILE_EDITOR_DIMENSIONS);
-            return JOptionPane.showConfirmDialog(mainFrame,
-                    scrollPane,
-                    "Edit Control File Content",
-                    JOptionPane.OK_CANCEL_OPTION,
-                    JOptionPane.PLAIN_MESSAGE);
-        }
-    }
-
-    private class GetColumnIdsButtonListener implements ActionListener {
-        public void actionPerformed(ActionEvent evnt) {
-            String errorMessage = null;
-            String datasetFieldNames = null;
-            if(datasetIdValid()) {
-                try {
-                    datasetFieldNames = DatasetUtils.getFieldNamesString(
-                            getSodaDdl(), datasetIDTextField.getText());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    errorMessage = "Error getting column IDs for dataset with ID" +
-                            " '" + datasetIDTextField.getText() + "': " + e.getMessage();
-                }
-            } else {
-                errorMessage = "You must enter a valid Dataset ID";
-            }
-
-            if(errorMessage == null) {
-                int selectedOption = showGetColumnIdsDialog(datasetFieldNames);
-                if(selectedOption == COPY_TO_CLIPBOARD_OPTION_INDEX) {
-                    UIUtility.copyToClipboard(datasetFieldNames);
-                }
-            } else {
-                JOptionPane.showMessageDialog(mainFrame, errorMessage);
-            }
-        }
-
-        private int showGetColumnIdsDialog(String textAreaContent) {
-            JTextArea columnIdTextArea = new JTextArea(textAreaContent);
-            JScrollPane scrollPane = new JScrollPane(columnIdTextArea);
-            columnIdTextArea.setLineWrap(true);
-            columnIdTextArea.setWrapStyleWord(true);
-            columnIdTextArea.setCaretPosition(0);
-            columnIdTextArea.setEditable(false);
-            scrollPane.setPreferredSize(CONTROL_FILE_EDITOR_DIMENSIONS);
-            String[] selectionValues = {"Close", COPY_TO_CLIPBOARD_BUTTON_TEXT};
-            return JOptionPane.showOptionDialog(mainFrame,
-                    scrollPane,
-                    "Column ID List",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.PLAIN_MESSAGE,
-                    null,
-                    selectionValues,
-                    selectionValues[COPY_TO_CLIPBOARD_OPTION_INDEX]);
-        }
     }
 
     private boolean datasetIdValid() {

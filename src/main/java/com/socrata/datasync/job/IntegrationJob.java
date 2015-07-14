@@ -89,6 +89,7 @@ public class IntegrationJob extends Job {
 	 */
 	public IntegrationJob(String pathToFile) throws IOException {
         userPrefs = new UserPreferencesJava();
+
         // first try reading the 'current' format
         ObjectMapper mapper = new ObjectMapper();
         try {

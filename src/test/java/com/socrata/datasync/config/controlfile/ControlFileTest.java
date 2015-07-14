@@ -27,8 +27,8 @@ public class ControlFileTest {
             "\"columns\":[\"boo\",\"bar\",\"baz\"]," +
             "\"emptyTextIsNull\":" + emptyTextIsNull + "," +
             "\"encoding\":\"" + encoding + "\"," +
-            "\"fixedTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\"]," +
-            "\"floatingTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\"]," +
+            "\"fixedTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy HH:mm:ss a Z\",\"MM/dd/yyyy HH:mm:ss a\"]," +
+            "\"floatingTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy HH:mm:ss a Z\",\"MM/dd/yyyy HH:mm:ss a\"]," +
             "\"ignoreColumns\":[]," +
             "\"overrides\":{},";
     String fileTypeInnardsEnd =
@@ -52,7 +52,7 @@ public class ControlFileTest {
                     fileTypeInnardsEnd +
                 "}";
 
-        ControlFile control = ControlFile.generateControlFile("some_file.csv", PublishMethod.replace, columns, true);
+        ControlFile control = ControlFile.generateControlFile("some_file.csv", PublishMethod.replace, columns, true, true);
         String actualJson = mapper.writeValueAsString(control);
         TestCase.assertEquals(expectedJson, actualJson);
     }
@@ -66,7 +66,7 @@ public class ControlFileTest {
                     "\"encoding\":\"utf-8\"," +
                     "\"quote\":\"\\\"\"" +
                 "}}";
-        ControlFile control = ControlFile.generateControlFile("some_file.csv", PublishMethod.delete, new String[]{"myid"}, true);
+        ControlFile control = ControlFile.generateControlFile("some_file.csv", PublishMethod.delete, new String[]{"myid"}, true,true);
         String actualJson = mapper.writeValueAsString(control);
         TestCase.assertEquals(expectedJson, actualJson);
     }
@@ -82,7 +82,7 @@ public class ControlFileTest {
                 fileTypeInnardsEnd +
                 "}";
 
-        ControlFile control = ControlFile.generateControlFile("some_file.tsv", PublishMethod.append, columns, true);
+        ControlFile control = ControlFile.generateControlFile("some_file.tsv", PublishMethod.append, columns, true, true);
         String actualJson = mapper.writeValueAsString(control);
         TestCase.assertEquals(expectedJson, actualJson);
     }
@@ -99,19 +99,19 @@ public class ControlFileTest {
                 "}";
         ControlFile cf = mapper.readValue(controlFileJson, ControlFile.class);
         TestCase.assertEquals("Replace", cf.action);
-        TestCase.assertNotNull(cf.csv);
-        TestCase.assertNull(cf.tsv);
-        TestCase.assertEquals(3, cf.csv.columns.length);
-        TestCase.assertEquals(skip, cf.csv.skip);
-        TestCase.assertEquals(4, cf.csv.fixedTimestampFormat.length);
-        TestCase.assertEquals(4, cf.csv.floatingTimestampFormat.length);
-        TestCase.assertEquals(encoding, cf.csv.encoding);
-        TestCase.assertEquals(emptyTextIsNull, cf.csv.emptyTextIsNull);
-        TestCase.assertEquals(trimSpace, cf.csv.trimServerWhitespace);
-        TestCase.assertEquals(trimSpace, cf.csv.trimWhitespace);
-        TestCase.assertNull(cf.csv.escape);
-        TestCase.assertTrue(cf.csv.useSocrataGeocoding);
-        TestCase.assertNull(cf.csv.syntheticLocations);
+        TestCase.assertNotNull(cf.getCsvFtc());
+        TestCase.assertNull(cf.getTsvFtc());
+        TestCase.assertEquals(3, cf.getCsvFtc().columns.length);
+        TestCase.assertEquals(skip, cf.getCsvFtc().skip);
+        TestCase.assertEquals(6, cf.getCsvFtc().fixedTimestampFormat.length);
+        TestCase.assertEquals(6, cf.getCsvFtc().floatingTimestampFormat.length);
+        TestCase.assertEquals(encoding, cf.getCsvFtc().encoding);
+        TestCase.assertEquals(emptyTextIsNull, cf.getCsvFtc().emptyTextIsNull);
+        TestCase.assertEquals(trimSpace, cf.getCsvFtc().trimServerWhitespace);
+        TestCase.assertEquals(trimSpace, cf.getCsvFtc().trimWhitespace);
+        TestCase.assertNull(cf.getCsvFtc().escape);
+        TestCase.assertTrue(cf.getCsvFtc().useSocrataGeocoding);
+        TestCase.assertNull(cf.getCsvFtc().syntheticLocations);
     }
 
     @Test
@@ -121,31 +121,31 @@ public class ControlFileTest {
 
         TestCase.assertEquals("someSillyUUIDforMyInternalUse", cf.opaque);
         TestCase.assertEquals("Delete", cf.action);
-        TestCase.assertNotNull(cf.csv);
-        TestCase.assertNull(cf.tsv);
-        TestCase.assertEquals(3, cf.csv.columns.length);
-        TestCase.assertEquals(1, cf.csv.ignoreColumns.length);
-        TestCase.assertEquals(skip, cf.csv.skip);
-        TestCase.assertEquals(4, cf.csv.fixedTimestampFormat.length);
-        TestCase.assertEquals(4, cf.csv.floatingTimestampFormat.length);
-        TestCase.assertEquals(encoding, cf.csv.encoding);
-        TestCase.assertEquals(emptyTextIsNull, cf.csv.emptyTextIsNull);
-        TestCase.assertEquals(trimSpace, cf.csv.trimServerWhitespace);
-        TestCase.assertEquals(trimSpace, cf.csv.trimWhitespace);
-        TestCase.assertEquals("TenPercent", cf.csv.dropUninterpretableRows);
-        TestCase.assertEquals("\\\\", cf.csv.escape);
-        TestCase.assertEquals(useGeocoding, cf.csv.useSocrataGeocoding);
-        TestCase.assertNotNull(cf.csv.overrides);
-        TestCase.assertNotNull(cf.csv.syntheticLocations);
-        TestCase.assertFalse(cf.csv.overrides.get("column1").useSocrataGeocoding);
+        TestCase.assertNotNull(cf.getCsvFtc());
+        TestCase.assertNull(cf.getTsvFtc());
+        TestCase.assertEquals(3, cf.getCsvFtc().columns.length);
+        TestCase.assertEquals(1, cf.getCsvFtc().ignoreColumns.length);
+        TestCase.assertEquals(skip, cf.getCsvFtc().skip);
+        TestCase.assertEquals(4, cf.getCsvFtc().fixedTimestampFormat.length);
+        TestCase.assertEquals(4, cf.getCsvFtc().floatingTimestampFormat.length);
+        TestCase.assertEquals(encoding, cf.getCsvFtc().encoding);
+        TestCase.assertEquals(emptyTextIsNull, cf.getCsvFtc().emptyTextIsNull);
+        TestCase.assertEquals(trimSpace, cf.getCsvFtc().trimServerWhitespace);
+        TestCase.assertEquals(trimSpace, cf.getCsvFtc().trimWhitespace);
+        TestCase.assertEquals("TenPercent", cf.getCsvFtc().dropUninterpretableRows);
+        TestCase.assertEquals("\\\\", cf.getCsvFtc().escape);
+        TestCase.assertEquals(useGeocoding, cf.getCsvFtc().useSocrataGeocoding);
+        TestCase.assertNotNull(cf.getCsvFtc().overrides);
+        TestCase.assertNotNull(cf.getCsvFtc().syntheticLocations);
+        TestCase.assertFalse(cf.getCsvFtc().overrides.get("column1").useSocrataGeocoding);
 
-        ColumnOverride co = cf.csv.overrides.get("column1");
+        ColumnOverride co = cf.getCsvFtc().overrides.get("column1");
         TestCase.assertTrue(co.emptyTextIsNull);
         TestCase.assertNull(co.trimServerWhitespace);
         TestCase.assertEquals(2, co.timestampFormat.length);
         TestCase.assertEquals("PDT", co.timezone);
 
-        LocationColumn lc = cf.csv.syntheticLocations.get("loc1");
+        LocationColumn lc = cf.getCsvFtc().syntheticLocations.get("loc1");
         TestCase.assertEquals("WA", lc.state);
         TestCase.assertNull(lc.latitude);
     }
@@ -160,7 +160,7 @@ public class ControlFileTest {
                     "}" +
                 "}";
         ControlFile cf = mapper.readValue(controlFileJson, ControlFile.class);
-        TestCase.assertEquals("ISO8601", cf.csv.fixedTimestampFormat[0]);
+        TestCase.assertEquals("ISO8601", cf.getCsvFtc().fixedTimestampFormat[0]);
     }
 
     @Test
@@ -169,7 +169,7 @@ public class ControlFileTest {
         ControlFile cf = mapper.readValue(controlFile, ControlFile.class);
         Set<String> expectedFormats = new HashSet<>(
                 Arrays.asList("ISO8601","MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy", "MM/YYYY", "YYYY/MM"));
-        Set<String> actualFormats = cf.csv.lookupTimestampFormatting();
+        Set<String> actualFormats = cf.getCsvFtc().lookupTimestampFormatting();
         for(String expected : expectedFormats)
             TestCase.assertTrue(actualFormats.remove(expected));
 

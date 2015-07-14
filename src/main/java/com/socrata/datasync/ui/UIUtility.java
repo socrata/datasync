@@ -46,6 +46,18 @@ public class UIUtility {
         return help;
     }
 
+    public static JButton getButtonAsLink(String text){
+        JButton button = new JButton();
+        //button.setText("<HTML><FONT color=\"#000099\"><U>"+text+"</U></FONT></HTML>");
+        button.setText(text);
+        button.setHorizontalAlignment(SwingConstants.RIGHT);
+        button.setBorderPainted(false);
+        button.setOpaque(true);
+        button.setForeground(Color.BLUE);
+        //button.setBackground(Color.WHITE);
+        return button;
+    }
+
     public static FileNameExtensionFilter getFileChooserFilter(java.util.List<String> allowedExtensions) {
         String extensionsMsg = "";
         int numExtensions = allowedExtensions.size();

@@ -1,9 +1,12 @@
 package com.socrata.datasync.config.controlfile;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import javax.xml.stream.Location;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -12,8 +15,13 @@ import java.util.Set;
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonPropertyOrder(alphabetic=true)
 public class FileTypeControl {
+
+    @JsonIgnore
+    public String filePath;
     public String encoding;
     public String separator;
+    @JsonIgnore
+    public Boolean hasHeaderRow;
     public String quote;
     public String escape;
     public String[] columns;
@@ -83,7 +91,6 @@ public class FileTypeControl {
         return formats;
     }
 
-
     // Builder methods:
 
     public FileTypeControl encoding(String e) { encoding = e; return this; }
@@ -102,6 +109,9 @@ public class FileTypeControl {
 
     public FileTypeControl trimWhitespace(boolean t) { trimWhitespace = t; return this; }
 
+
+    public FileTypeControl filePath(String path) { filePath = path; return this; }
+
     public FileTypeControl trimServerWhitespace(boolean t) { trimServerWhitespace = t; return this; }
 
     public FileTypeControl emptyTextIsNull(boolean e) { emptyTextIsNull = e; return this; }
@@ -119,6 +129,8 @@ public class FileTypeControl {
     public FileTypeControl syntheticLocations(Map<String, LocationColumn> s) { syntheticLocations = s; return this; }
 
     public FileTypeControl useSocrataGeocoding(boolean u) { useSocrataGeocoding = u; return this; }
+
+    public FileTypeControl hasHeaderRow(boolean h) { hasHeaderRow = h; return this;}
 }
 
 

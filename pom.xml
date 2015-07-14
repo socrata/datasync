@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>DataSync</groupId>
     <artifactId>DataSync</artifactId>
-    <version>1.5</version>
+    <version>1.6</version>
     <developers>
         <developer>
             <name>Adrian Laurenzi</name>
@@ -127,6 +127,16 @@
             <groupId>net.sf.opencsv</groupId>
             <artifactId>opencsv</artifactId>
             <version>2.0</version>
+        </dependency>
+ <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intellij</groupId>
+            <artifactId>javac2</artifactId>
+            <version>7.0.3</version>
         </dependency>
     </dependencies>
 </project>
