@@ -53,14 +53,12 @@ public class ControlFileModel extends Observable {
         // Check to see if the ControlFile already has initialized columns.
         // If it doesn't, then initialize the columns list with names from the CSV
         if (!file.getFileTypeControl().hasColumns()){
-            String[] columns = new String[csvModel.getColumnCount()];
-            for (int i = 0; i < columns.length; i++){
+            controlFile.getFileTypeControl().columns = new String[csvModel.getColumnCount()];
+            for (int i = 0; i < getColumnCount(); i++){
                 //The CSV model is guarenteed to give a name, dummy or otherwise.
-                columns[i] = csvModel.getColumnName(i);
+                controlFile.getFileTypeControl().columns[i] = csvModel.getColumnName(i);
                 ignoreColumnInCSVAtPosition(i);
             }
-            controlFile.getFileTypeControl().columns = columns;
-
         }
         // Now attempt to match those in the dataset to those in the CSV
         matchColumns();
@@ -295,8 +293,12 @@ public class ControlFileModel extends Observable {
         updateListeners();
     }
 
+    //Return the empty set if there are no synthetic locaitons
     public Map<String, LocationColumn> getSyntheticLocations(){
-        return controlFile.getFileTypeControl().syntheticLocations;
+        Map<String, LocationColumn> locations = controlFile.getFileTypeControl().syntheticLocations;
+        if (locations == null)
+            locations = new HashMap<>();
+        return locations;
     }
 
     public ArrayList<Column> getUnmappedDatasetColumns(){
