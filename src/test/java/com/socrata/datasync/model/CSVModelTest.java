@@ -34,7 +34,7 @@ public class CSVModelTest {
         TestCase.assertEquals(model.getColumnName(3), "Date");
 
         //Test that we generate dummy headers when there is no header row
-        cf.getFileTypeControl().hasHeaderRow = false;
+        cf.getFileTypeControl().hasHeaderRow(false);
         CSVModel anotherModel = new CSVModel(cf);
         TestCase.assertTrue(anotherModel.getColumnName(0).startsWith("column_"));
     }
@@ -44,10 +44,10 @@ public class CSVModelTest {
         ControlFile cf = getSimpleTestControlFile();
         CSVModel model = new CSVModel(cf);
         TestCase.assertEquals(model.getRowCount(), 3);
-        TestCase.assertEquals(model.getValueAt(0, 0), 1);
+        TestCase.assertEquals(model.getValueAt(0, 0), "1");
 
         //Test that we include the first row when has header row is false
-        cf.getFileTypeControl().hasHeaderRow = false;
+        cf.getFileTypeControl().hasHeaderRow(false);
         CSVModel anotherModel = new CSVModel(cf);
         TestCase.assertEquals(anotherModel.getRowCount(), 4);
         TestCase.assertEquals(anotherModel.getValueAt(0, 0), "ID");
@@ -62,18 +62,22 @@ public class CSVModelTest {
         TestCase.assertEquals(model.getRowCount(), 5);
     }
 
-    private ControlFile getTestControlFile(String path) throws IOException {
-        File controlFile = new File(path);
+    private ControlFile getTestControlFile(String cfPath, String csvPath) throws IOException {
+        File controlFile = new File(cfPath);
         ControlFile cf = mapper.readValue(controlFile, ControlFile.class);
-        cf.getFileTypeControl().filePath = "src/test/resources/datasync_unit_test_three_rows.csv";
+        cf.getFileTypeControl().filePath = csvPath;
+        //Setting these here rather than in the model to avoid introducing breaking changes to existing consumers
+        //of the ControlFile
+        cf.getFileTypeControl().hasHeaderRow(true);
+        cf.getFileTypeControl().skip(1);
         return cf;
     }
 
     private ControlFile getSimpleTestControlFile() throws IOException {
-        return getTestControlFile("src/test/resources/datasync_unit_test_three_rows_control.json");
+        return getTestControlFile("src/test/resources/datasync_unit_test_three_rows_control.json","src/test/resources/datasync_unit_test_three_rows.csv");
     }
 
     private ControlFile getTestControlFileWithBlankRows() throws IOException {
-        return getTestControlFile("src/test/resources/datasync_unit_test_blank_rows_control.json");
+        return getTestControlFile("src/test/resources/datasync_unit_test_three_rows_control.json","src/test/resources/datasync_unit_test_blank_rows.csv");
     }
 }

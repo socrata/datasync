@@ -10,7 +10,10 @@
       "quote" : "\"",
       "emptyTextIsNull" : true,
       "columns" : ["id","name", "another_name", "date"],
-      "skip" : 1,
+      "skip" : 0,
+      "ignoreColumns": [
+        "foo"
+      ],
       "floatingTimestampFormat" : "MM/dd/yyyy"
     },
   "tsv" :
@@ -24,6 +27,9 @@
       "quote" : "\u0000",
       "emptyTextIsNull" : true,
       "columns" : null,
+      "ignoreColumns": [
+        "foo"
+      ],
       "floatingTimestampFormat" : "ISO8601"
     }
 }

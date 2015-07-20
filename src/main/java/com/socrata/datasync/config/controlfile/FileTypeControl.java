@@ -21,7 +21,7 @@ public class FileTypeControl {
     public String encoding;
     public String separator;
     @JsonIgnore
-    public Boolean hasHeaderRow;
+    public boolean hasHeaderRow;
     public String quote;
     public String escape;
     public String[] columns;

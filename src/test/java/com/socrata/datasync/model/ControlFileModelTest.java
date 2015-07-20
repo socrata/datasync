@@ -56,8 +56,8 @@ public class ControlFileModelTest extends TestBase {
         TestCase.assertTrue(model.isIgnored("foo"));
         //Now add it back to the columns list
         model.updateColumnAtPosition("foo",0);
-        //Verify that it is no longer part of the ignored columns list.
-        TestCase.assertFalse(model.isIgnored("foo"));
+        //Verify that the column that was there is no longer part of the ignored columns list.
+        TestCase.assertFalse(model.isIgnored("id"));
         // Ignoring a column should not change how many columns there are.
         // Verify that we have the same number of columns in the control file as we did when we started
         TestCase.assertEquals(model.getColumnCount(), columnLengthBeforeUpdate);
@@ -89,7 +89,6 @@ public class ControlFileModelTest extends TestBase {
         //Test that we can add to the synthetic location when none exist
         model.setSyntheticLocation(fieldName,location);
         TestCase.assertEquals(model.getSyntheticLocations().get(fieldName),location);
-        TestCase.assertFalse(model.getControlFile().getFileTypeControl().useSocrataGeocoding);
 
         //Test that we can add another one when one already exists
         String anotherColumn = "anotherColumn";
@@ -110,7 +109,6 @@ public class ControlFileModelTest extends TestBase {
         File configFile = new File(PATH_TO_CONFIG_FILE);
         ObjectMapper mapper = new ObjectMapper();
         UserPreferences userPrefs = mapper.readValue(configFile, UserPreferencesFile.class);
-        System.out.println("Attempting to sign-in: " + userPrefs.getUsername() + " with password: " + userPrefs.getPassword());
         DatasetModel datasetModel = new DatasetModel(userPrefs.getDomain(),userPrefs.getUsername(),userPrefs.getPassword(),userPrefs.getAPIKey(),TestBase.UNITTEST_DATASET_ID);
         ControlFileModel model = new ControlFileModel(cf,datasetModel);
         return model;

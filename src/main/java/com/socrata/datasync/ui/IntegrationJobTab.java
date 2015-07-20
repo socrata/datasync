@@ -230,9 +230,9 @@ public class IntegrationJobTab implements JobTab {
                 ControlFile controlFile = mapper.readValue(job.getControlFileContent(), ControlFile.class);
                 //Ideally this could be saved with the control file or factored out.  However, we're stuck with this redundant call
                 // because of DI2's strict enforcement of control files and the current factoring of what CSVTableModel knows about
-                controlFile.getFileTypeControl().filePath = job.getFileToPublish();
+                controlFile.getFileTypeControl().filePath(job.getFileToPublish());
                 //TODO: This is not being saved due to the fact that this value is set on the control file and not the job.  Pick one or the other.
-                controlFile.getFileTypeControl().hasHeaderRow = job.getFileToPublishHasHeaderRow();
+                controlFile.getFileTypeControl().hasHeaderRow(job.getFileToPublishHasHeaderRow());
                 updateControlFileModel(controlFile,job.getDatasetID());
             }
             datasetIDTextField.setText(job.getDatasetID());

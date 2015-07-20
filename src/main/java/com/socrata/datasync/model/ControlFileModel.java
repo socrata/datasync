@@ -88,12 +88,14 @@ public class ControlFileModel extends Observable {
 
     private void removeIgnoredColumn(String columnName){
         String[] ignoredColumns = controlFile.getFileTypeControl().ignoreColumns;
-        ArrayList<String> newColumns = new ArrayList<String>();
-        for (String c : ignoredColumns){
-            if (!columnName.equals(c))
-                newColumns.add(c);
+        if (ignoredColumns != null) {
+            ArrayList<String> newColumns = new ArrayList<String>();
+            for (String c : ignoredColumns) {
+                if (!columnName.equals(c))
+                    newColumns.add(c);
+            }
+            controlFile.getFileTypeControl().ignoreColumns(newColumns.toArray(new String[newColumns.size()]));
         }
-        controlFile.getFileTypeControl().ignoreColumns(newColumns.toArray(new String[newColumns.size()]));
     }
 
     public int getColumnCount(){
@@ -121,9 +123,11 @@ public class ControlFileModel extends Observable {
 
     public boolean isIgnored(String fieldName){
         String[] ignoredColumns = controlFile.getFileTypeControl().ignoreColumns;
-        for (String column : ignoredColumns){
-            if (column.equals(fieldName))
-                return true;
+        if (ignoredColumns != null) {
+            for (String column : ignoredColumns) {
+                if (column.equals(fieldName))
+                    return true;
+            }
         }
         return false;
     }
@@ -228,11 +232,12 @@ public class ControlFileModel extends Observable {
     }
 
     public void setHasHeaderRow(boolean headerRow){
+        boolean existingValue = controlFile.getFileTypeControl().hasHeaderRow;
+        if (headerRow && !existingValue)
+            controlFile.getFileTypeControl().skip(controlFile.getFileTypeControl().skip + 1);
+        if (!headerRow && existingValue)
+            controlFile.getFileTypeControl().skip(controlFile.getFileTypeControl().skip - 1);
         controlFile.getFileTypeControl().hasHeaderRow(headerRow);
-        if (headerRow)
-            setRowsToSkip(controlFile.getFileTypeControl().skip + 1);
-        else
-            setRowsToSkip(controlFile.getFileTypeControl().skip - 1);
         updateListeners();
     }
 

@@ -95,11 +95,10 @@ public class CSVModel extends AbstractTableModel{
 
 
     private void updateColumnNames(ControlFile file) throws IOException {
-        Boolean hasHeaderRow = file.getFileTypeControl().hasHeaderRow;
+        boolean hasHeaderRow = file.getFileTypeControl().hasHeaderRow;
         CSVReader headerReader = getCSVReader(file, 0);
         String[] row = headerReader.readNext();
 
-        //The first line in the CSV is not necessarily
         if (hasHeaderRow) {
             columnNames = row;
         }
