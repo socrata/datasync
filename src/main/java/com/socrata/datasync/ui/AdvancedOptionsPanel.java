@@ -241,7 +241,8 @@ public class AdvancedOptionsPanel extends JPanel implements Observer {
 
 
 
-        container.setPreferredSize(new Dimension(-1, 350));
+        container.setPreferredSize(new Dimension(-1, 400));
+        container.setMinimumSize(new Dimension(-1, 400));
         JScrollPane scroll = new JScrollPane();
         scroll.setPreferredSize(new Dimension(-1, 400));
         scroll.setMaximumSize(new Dimension(800, 400));
@@ -296,6 +297,7 @@ public class AdvancedOptionsPanel extends JPanel implements Observer {
             controlFileContentTextArea.setWrapStyleWord(true);
             controlFileContentTextArea.setCaretPosition(0);
             scrollPane.setPreferredSize(CONTROL_FILE_VIEWER_DIMENSIONS);
+
             JOptionPane.showMessageDialog(this,scrollPane,"View Control File",JOptionPane.PLAIN_MESSAGE);
         }
         catch (IOException e){

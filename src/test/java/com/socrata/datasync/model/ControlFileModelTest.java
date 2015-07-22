@@ -70,11 +70,15 @@ public class ControlFileModelTest extends TestBase {
         ControlFileModel model = getTestModel(cf);
         model.setHasHeaderRow(true);
         TestCase.assertEquals((int) model.getControlFile().getFileTypeControl().skip,1);
+        //The headers should always be either the name of the field to which we're setting this column, or the dummy
+        //placeholder.  Verify that this actually the case.
+        TestCase.assertEquals(ModelUtils.generatePlaceholderName(0),model.getColumnAtPosition(0));
         //Assert that we decrement by 1 when the header row is turned off
         model.setRowsToSkip(5);
         model.setHasHeaderRow(false);
         TestCase.assertEquals((int) model.getControlFile().getFileTypeControl().skip,4);
     }
+
 
     @Test
     public void testSyntheticColumns() throws IOException, LongRunningQueryException, InterruptedException, SodaError {

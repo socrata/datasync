@@ -51,12 +51,13 @@ public class ControlFileModel extends Observable {
         this.datasetModel = dataset;
 
         // Check to see if the ControlFile already has initialized columns.
-        // If it doesn't, then initialize the columns list with names from the CSV
+        // If it doesn't, then initialize the columns list with dummy names. Note that we use dummy names here
+        // instead of names from the CSV since there is no guarentee that the names in the CSV will be valid.  They
+        // could be duplicates, as well as empty strings.
         if (!file.getFileTypeControl().hasColumns()){
             controlFile.getFileTypeControl().columns = new String[csvModel.getColumnCount()];
             for (int i = 0; i < getColumnCount(); i++){
-                //The CSV model is guarenteed to give a name, dummy or otherwise.
-                controlFile.getFileTypeControl().columns[i] = csvModel.getColumnName(i);
+                controlFile.getFileTypeControl().columns[i] = ModelUtils.generatePlaceholderName(i);
                 ignoreColumnInCSVAtPosition(i);
             }
         }

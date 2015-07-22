@@ -154,11 +154,13 @@ public class MappingPanel extends JPanel {
             JComboBox box = (JComboBox) e.getSource();
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 String selectedItem = (String) box.getSelectedItem();
-                if (selectedItem.equals(ignoreField)){
-                    model.ignoreColumnInCSVAtPosition(index);
-                }
-                else {
-                    model.updateColumnAtPosition(selectedItem, index);
+                //Apparently there is a way to select a null item in Java?
+                if (selectedItem != null) {
+                    if (selectedItem.equals(ignoreField)) {
+                        model.ignoreColumnInCSVAtPosition(index);
+                    } else {
+                        model.updateColumnAtPosition(selectedItem, index);
+                    }
                 }
             }
         }

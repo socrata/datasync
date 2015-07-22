@@ -11,7 +11,10 @@ import au.com.bytecode.opencsv.CSVReader;
 import com.socrata.datasync.config.controlfile.ControlFile;
 
 /**
- * Created by franklinwilliams on 8/2/14.
+ * The CSV Model is used primarily to drive the previews in the mapping panel, as well as for validation
+ * of key failure points (e.g. date formatting).  As discussed in the DatasetModel class, the actual column names
+ * are for display purposes only.  The DatasetModel maintains a separate list of invariant columns that it manages
+ * independent of the values in the CSV.
  */
 
 public class CSVModel extends AbstractTableModel{
@@ -92,8 +95,6 @@ public class CSVModel extends AbstractTableModel{
         return reader;
     }
 
-
-
     private void updateColumnNames(ControlFile file) throws IOException {
         boolean hasHeaderRow = file.getFileTypeControl().hasHeaderRow;
         CSVReader headerReader = getCSVReader(file, 0);
@@ -108,11 +109,10 @@ public class CSVModel extends AbstractTableModel{
         fireTableStructureChanged();
     }
 
-    private String[] generatePlaceholderNames (int columns){
-        String [] placeholders = new String[columns];
-        String prefix = "column_";
-        for (int i = 0; i < columns; i++){
-            placeholders[i]=prefix+i;
+    private String[] generatePlaceholderNames(int columnCount){
+        String[] placeholders = new String[columnCount];
+        for (int i = 0; i < columnCount; i++){
+            placeholders[i] = ModelUtils.generatePlaceholderName(i);
         }
         return placeholders;
     }
