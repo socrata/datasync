@@ -37,10 +37,15 @@ public class HttpUtility {
     private boolean authRequired = false;
     private static final String datasyncVersionHeader = "X-Socrata-DataSync-Version";
     private static final String appHeader = "X-App-Token";
-    private static final String userAgent = "datasync";
+    private static String userAgent = "datasync";
 
 
     public HttpUtility() { this(null, false); }
+
+    public HttpUtility(UserPreferences userPrefs, boolean useAuth, String usrAgent) {
+        this(userPrefs, useAuth);
+        userAgent = usrAgent;
+    }
 
     public HttpUtility(UserPreferences userPrefs, boolean useAuth) {
         HttpClientBuilder clientBuilder = HttpClients.custom();

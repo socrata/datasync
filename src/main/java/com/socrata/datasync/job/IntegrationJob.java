@@ -66,6 +66,7 @@ public class IntegrationJob extends Job {
     private boolean publishViaFTP = false;
     private boolean publishViaDi2Http = false;
     private ControlFile controlFile = null;
+    private String userAgent = "datasync";
 
     private ObjectMapper controlFileMapper =
             new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
@@ -206,6 +207,10 @@ public class IntegrationJob extends Job {
 
     public String getDefaultJobName() { return defaultJobName; }
 
+    public void setUserAgent(String usrAgent) {
+        userAgent = usrAgent;
+    }
+
     /**
      * Checks that the command line arguments are sensible
      * NB: it is expected that this is run before 'configure'.
@@ -237,6 +242,7 @@ public class IntegrationJob extends Job {
         if (controlFilePath == null)
             controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
         setPathToControlFile(controlFilePath);
+        setUserAgent(cmd.getOptionValue(options.USER_AGENT_FLAG));
     }
 
 
@@ -263,7 +269,7 @@ public class IntegrationJob extends Job {
                 try {
                     File fileToPublishFile = new File(fileToPublish);
                     if (publishViaDi2Http) {
-                        try (DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs)) {
+                        try (DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs, userAgent)) {
                             String action = controlFile.action == null ? publishMethod.name() : controlFile.action;
                             // "upsert" == "append" in di2
                             if ("upsert".equalsIgnoreCase(action))
