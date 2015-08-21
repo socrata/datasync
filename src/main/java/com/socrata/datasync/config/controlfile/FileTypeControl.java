@@ -1,9 +1,12 @@
 package com.socrata.datasync.config.controlfile;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import javax.xml.stream.Location;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -12,8 +15,13 @@ import java.util.Set;
 @JsonIgnoreProperties(ignoreUnknown=false)
 @JsonPropertyOrder(alphabetic=true)
 public class FileTypeControl {
+
+    @JsonIgnore
+    public String filePath;
     public String encoding;
     public String separator;
+    @JsonIgnore
+    public boolean hasHeaderRow;
     public String quote;
     public String escape;
     public String[] columns;
@@ -27,8 +35,11 @@ public class FileTypeControl {
     public String timezone;
     public String dropUninterpretableRows;
     public Map<String, ColumnOverride> overrides;
+    public Map<String, LocationColumn> analyticLocations;
     public Map<String, LocationColumn> syntheticLocations;
+    public Map<String, LocationColumn> syntheticPoints;
     public Boolean useSocrataGeocoding;
+    public String action;
 
     public FileTypeControl() {}
 
@@ -85,7 +96,6 @@ public class FileTypeControl {
         return formats;
     }
 
-
     // Builder methods:
 
     public FileTypeControl encoding(String e) { encoding = e; return this; }
@@ -104,6 +114,9 @@ public class FileTypeControl {
 
     public FileTypeControl trimWhitespace(boolean t) { trimWhitespace = t; return this; }
 
+
+    public FileTypeControl filePath(String path) { filePath = path; return this; }
+
     public FileTypeControl trimServerWhitespace(boolean t) { trimServerWhitespace = t; return this; }
 
     public FileTypeControl emptyTextIsNull(boolean e) { emptyTextIsNull = e; return this; }
@@ -120,7 +133,15 @@ public class FileTypeControl {
 
     public FileTypeControl syntheticLocations(Map<String, LocationColumn> s) { syntheticLocations = s; return this; }
 
+    public FileTypeControl analyticLocations(Map<String, LocationColumn> s) { analyticLocations = s; return this; }
+
+    public FileTypeControl syntheticPoints(Map<String, LocationColumn> s) { syntheticPoints = s; return this; }
+
     public FileTypeControl useSocrataGeocoding(boolean u) { useSocrataGeocoding = u; return this; }
+
+    public FileTypeControl hasHeaderRow(boolean h) { hasHeaderRow = h; return this;}
+
+    public FileTypeControl action(String a) { action = a; return this;}
 }
 
 

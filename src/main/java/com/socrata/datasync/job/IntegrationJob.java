@@ -99,6 +99,7 @@ public class IntegrationJob extends Job {
      */
     public IntegrationJob(String pathToFile, boolean ignoreControlInconsistencies) throws IOException, ControlDisagreementException {
         userPrefs = new UserPreferencesJava();
+
         // first try reading the 'current' format
         ObjectMapper mapper = new ObjectMapper();
         IntegrationJob loadedJob;
@@ -255,7 +256,7 @@ public class IntegrationJob extends Job {
         if (controlDeserialization.isError() && (publishViaDi2Http || publishViaFTP)) {
             runStatus = controlDeserialization;
         } else {
-            JobStatus validationStatus = IntegrationJobValidity.validateJobParams(userPrefs, this);
+            JobStatus validationStatus = IntegrationJobValidity.validateJobParams(connectionInfo, this);
             if (validationStatus.isError()) {
                 runStatus = validationStatus;
             } else {

@@ -73,8 +73,8 @@ public class SMTPMailer {
         if(useSSL) {
 
         	props.setProperty("mail.smtp.socketFactory.class", SSL_FACTORY);
-       		props.setProperty("mail.smtp.socketFactory.port", sslPort);
-            	props.setProperty("mail.smtps.auth", "true");
+        	props.setProperty("mail.smtp.socketFactory.port", sslPort);
+            props.setProperty("mail.smtps.auth", "true");
             /*
         If set to false, the QUIT command is sent and the connection is immediately closed. If set
         to true (the default), causes the transport to wait for the response to the QUIT command.
@@ -83,7 +83,7 @@ public class SMTPMailer {
                 http://forum.java.sun.com/thread.jspa?threadID=5205249
                 smtpsend.java - demo program from javamail
         */
-            	props.put("mail.smtps.quitwait", "false");
+            props.put("mail.smtps.quitwait", "false");
         }
 
         Session session = Session.getInstance(props, null);

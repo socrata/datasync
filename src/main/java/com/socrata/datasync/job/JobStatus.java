@@ -44,7 +44,13 @@ public enum JobStatus {
 
     VERSION_OUT_OF_DATE("Must download new version of DataSync before jobs can be run (critical update)", true),
 
-    MISSING_METADATA_TITLE("Title is Required", true);
+    MISSING_METADATA_TITLE("Title is Required", true),
+
+    MISSING_COLUMNS("All fields in the dataset must be mapped",true),
+
+    ROWS_DO_NOT_CONTAIN_SAME_NUMBER_OF_COLUMNS("CSV does not contain a consistent number of columns", true),
+
+    INVALID_DATETIME("Cannot parse the datetime values given the current formatting.  Please check your formatting values under advanced options and try again.", true);
 
     /**
      * The human-readable message to store.
@@ -69,10 +75,13 @@ public enum JobStatus {
      * @param newIsError
      *            whether this enum represents an error condition
      */
+
     private JobStatus(final String newMessage, final boolean newIsError) {
         message = newMessage;
         isError = newIsError;
     }
+
+
 
     public void setMessage(final String newMessage) {
     	message = newMessage;

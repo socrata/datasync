@@ -47,7 +47,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
     private static final String logPath = "/log";
     private static final String ssigContentType = "application/x-socrata-ssig";
     private static final String patchExtenstion = ".sdiff";
-    private static final String compressionExtenstion = ".xz";
+    private static final String compressionExtenstion = ".gz";
     private static final String finishedLogKey = "finished";
     private static final String committingLogKey = "committing-job";
     private static final String committedLogKey = "committed-job";
@@ -200,7 +200,8 @@ public class DeltaImporter2Publisher implements AutoCloseable {
             return new PatchComputer.PatchComputerInputStream(newStream, new SignatureTable(previousStream), "MD5", 102400);
         } else {
             InputStream patchStream = new PatchComputer.PatchComputerInputStream(newStream, new SignatureTable(previousStream), "MD5", 1024000);
-            return new XZCompressInputStream(patchStream, 2 * chunkSize);
+            return new GZipCompressInputStream(patchStream, 2 * chunkSize);
+            //return new XZCompressInputStream(patchStream, 2 * chunkSize);
         }
     }
 
@@ -481,6 +482,9 @@ public class DeltaImporter2Publisher implements AutoCloseable {
         try(CloseableHttpResponse response = http.get(logUri, ContentType.APPLICATION_JSON.getMimeType())) {
             int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == HttpStatus.SC_OK) {
+                // The payload that we get back from DI2 may change over time.  Since we are only looking at the delta
+                // section, disable the strict parsing.
+                mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                 LogItem[] deltaLog = mapper.readValue(response.getEntity().getContent(), LogItem[].class);
                 LogItem deltas = getLogItem(deltaLog, finishedLogKey);
                 if (deltas != null) {
