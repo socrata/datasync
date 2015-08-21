@@ -4,14 +4,7 @@ import com.socrata.datasync.Utils;
 import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
-import com.socrata.datasync.deltaimporter2.BlobId;
-import com.socrata.datasync.deltaimporter2.CommitMessage;
-import com.socrata.datasync.deltaimporter2.DatasyncDirectory;
-import com.socrata.datasync.deltaimporter2.JobId;
-import com.socrata.datasync.deltaimporter2.LogItem;
-import com.socrata.datasync.deltaimporter2.ProgressingInputStream;
-import com.socrata.datasync.deltaimporter2.Version;
-import com.socrata.datasync.deltaimporter2.XZCompressInputStream;
+import com.socrata.datasync.deltaimporter2.*;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.ssync.PatchComputer;
 import com.socrata.ssync.SignatureComputer;
@@ -54,7 +47,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
     private static final String logPath = "/log";
     private static final String ssigContentType = "application/x-socrata-ssig";
     private static final String patchExtenstion = ".sdiff";
-    private static final String compressionExtenstion = ".xz";
+    private static final String compressionExtenstion = ".gz";
     private static final String finishedLogKey = "finished";
     private static final String committingLogKey = "committing-job";
     private static final String committedLogKey = "committed-job";
@@ -190,7 +183,8 @@ public class DeltaImporter2Publisher implements AutoCloseable {
             return new PatchComputer.PatchComputerInputStream(newStream, new SignatureTable(previousStream), "MD5", 102400);
         } else {
             InputStream patchStream = new PatchComputer.PatchComputerInputStream(newStream, new SignatureTable(previousStream), "MD5", 1024000);
-            return new XZCompressInputStream(patchStream, 2 * chunkSize);
+            return new GZipCompressInputStream(patchStream, 2 * chunkSize);
+            //return new XZCompressInputStream(patchStream, 2 * chunkSize);
         }
     }
 

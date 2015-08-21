@@ -17,6 +17,7 @@ public class LocationColumn {
     public String zip;
     public String latitude;
     public String longitude;
+    public String type;
     @JsonIgnore
     public static final String[] locationFieldNames = new String[] {"address", "city", "state", "zip", "latitude", "longitude"};
 

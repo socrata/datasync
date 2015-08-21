@@ -36,6 +36,7 @@ public class FileTypeControl {
     public String dropUninterpretableRows;
     public Map<String, ColumnOverride> overrides;
     public Map<String, LocationColumn> syntheticLocations;
+    public Map<String, LocationColumn> syntheticPoints;
     public Boolean useSocrataGeocoding;
 
     public FileTypeControl() {}
@@ -127,6 +128,8 @@ public class FileTypeControl {
     public FileTypeControl overrides(Map<String, ColumnOverride> o) { overrides = o; return this; }
 
     public FileTypeControl syntheticLocations(Map<String, LocationColumn> s) { syntheticLocations = s; return this; }
+
+    public FileTypeControl syntheticPoints(Map<String, LocationColumn> s) { syntheticPoints = s; return this; }
 
     public FileTypeControl useSocrataGeocoding(boolean u) { useSocrataGeocoding = u; return this; }
 

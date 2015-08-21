@@ -621,29 +621,29 @@ public class IntegrationJobValidity {
                     columnNames.remove(synthetic);
             }
         }
-        if (columnNames.size() > 0 && method.equals(PublishMethod.replace)) {
-            if (rowIdentifier == null) {
-                JobStatus status = JobStatus.MISSING_COLUMNS;
-                StringBuilder message = new StringBuilder("Missing Fields: Dataset " + schema.getId() +
-                        " contains the following field(s) that are not mapped: ");//available in '" + csvFilename + "': ");
-                boolean writtenFirstValue = false;
-                for (String colName : columnNames) {
-                    if (writtenFirstValue)
-                        message.append(", ").append(colName);
-                    else{
-                        message.append(colName);
-                        writtenFirstValue = true;
-                    }
-                }
-                status.setMessage(message.toString());
-                return status;
-            } else if (!headerHasRowId) {
-                JobStatus status = JobStatus.PUBLISH_ERROR;
-                status.setMessage("Missing Row Identifier: Dataset '" + schema.getId() + "' contains a row identifier in column '" + rowIdentifier +
-                        "'. This column must be present in '" + csvFilename + "'.");
-                return status;
-            }
-        }
+//        if (columnNames.size() > 0 && method.equals(PublishMethod.replace)) {
+//            if (rowIdentifier == null) {
+//                JobStatus status = JobStatus.MISSING_COLUMNS;
+//                StringBuilder message = new StringBuilder("Missing Fields: Dataset " + schema.getId() +
+//                        " contains the following field(s) that are not mapped: ");//available in '" + csvFilename + "': ");
+//                boolean writtenFirstValue = false;
+//                for (String colName : columnNames) {
+//                    if (writtenFirstValue)
+//                        message.append(", ").append(colName);
+//                    else{
+//                        message.append(colName);
+//                        writtenFirstValue = true;
+//                    }
+//                }
+//                status.setMessage(message.toString());
+//                return status;
+//            } else if (!headerHasRowId) {
+//                JobStatus status = JobStatus.PUBLISH_ERROR;
+//                status.setMessage("Missing Row Identifier: Dataset '" + schema.getId() + "' contains a row identifier in column '" + rowIdentifier +
+//                        "'. This column must be present in '" + csvFilename + "'.");
+//                return status;
+//            }
+//        }
         return JobStatus.VALID;
     }
 
