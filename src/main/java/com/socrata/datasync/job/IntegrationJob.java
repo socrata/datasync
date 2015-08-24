@@ -12,7 +12,6 @@ import com.socrata.datasync.config.CommandLineOptions;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
-import com.socrata.datasync.config.userpreferences.UserPreferencesLib;
 import com.socrata.datasync.publishers.DeltaImporter2Publisher;
 import com.socrata.datasync.publishers.FTPDropbox2Publisher;
 import com.socrata.datasync.publishers.Soda2Publisher;
@@ -66,7 +65,12 @@ public class IntegrationJob extends Job {
     private boolean publishViaFTP = false;
     private boolean publishViaDi2Http = false;
     private ControlFile controlFile = null;
+
     private String userAgent = "datasync";
+
+    private String userAgentNameClient = "Client";
+    private String userAgentNameCli = "CLI";
+    private String userAgentNameSijFile = ".sij File";
 
     private ObjectMapper controlFileMapper =
             new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
@@ -91,6 +95,7 @@ public class IntegrationJob extends Job {
 	 */
 	public IntegrationJob(String pathToFile) throws IOException, ControlDisagreementException {
         this(pathToFile, false);
+        setUserAgentSijFile();
 	}
 
     /**
@@ -207,8 +212,14 @@ public class IntegrationJob extends Job {
 
     public String getDefaultJobName() { return defaultJobName; }
 
-    public void setUserAgent(String usrAgent) {
-        userAgent = usrAgent;
+    public void setUserAgent(String usrAgentName) {
+        userAgent = Utils.getUserAgentString(usrAgentName);
+    }
+    public void setUserAgentClient() {
+        userAgent = Utils.getUserAgentString(userAgentNameClient);
+    }
+    public void setUserAgentSijFile() {
+        userAgent = Utils.getUserAgentString(userAgentNameSijFile);
     }
 
     /**
@@ -242,7 +253,12 @@ public class IntegrationJob extends Job {
         if (controlFilePath == null)
             controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
         setPathToControlFile(controlFilePath);
-        setUserAgent(cmd.getOptionValue(options.USER_AGENT_FLAG));
+
+        String userAgentName = cmd.getOptionValue(options.USER_AGENT_FLAG);
+        if(Utils.nullOrEmpty(userAgentName)) {
+            userAgentName = userAgentNameCli;
+        }
+        setUserAgent(userAgentName);
     }
 
 

@@ -347,6 +347,7 @@ public class IntegrationJobTab implements JobTab {
         jobToRun.setPublishViaFTP(ftpButton.isSelected());
         jobToRun.setPublishViaDi2Http(httpButton.isSelected());
         jobToRun.setControlFile(controlFile);
+        jobToRun.setUserAgentClient();
         return jobToRun.run();
     }
 
