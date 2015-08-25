@@ -210,4 +210,18 @@ public class Utils {
     public static boolean nullOrEmpty(String s) {
         return (s == null || s.equals(""));
     }
+
+    public static String getUserAgentString(String agentName) {
+        try {
+            String osName = System.getProperty("os.name");
+            String osVersion = System.getProperty("os.version");
+            String javaVersion = System.getProperty("java.version");
+            String userLocale = System.getProperty("user.country") + "-" + System.getProperty("user.language");
+            return "DataSync/" + VersionProvider.getThisVersion() +
+                    " (" + agentName + "; " + osName + " " + osVersion + "; Java " + javaVersion + "; " + userLocale + ")";
+        } catch (Exception e) {
+            return "DataSync/" + VersionProvider.getThisVersion() +
+                    " (" + agentName + "; Error obtaining OS/Java/Locale info)";
+        }
+    }
 }

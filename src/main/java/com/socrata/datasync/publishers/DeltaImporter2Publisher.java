@@ -63,8 +63,8 @@ public class DeltaImporter2Publisher implements AutoCloseable {
     private String pathToSignature = null;
     CloseableHttpResponse signatureResponse = null;
 
-    public DeltaImporter2Publisher(UserPreferences userPrefs) {
-        http = new HttpUtility(userPrefs, true);
+    public DeltaImporter2Publisher(UserPreferences userPrefs, String userAgent) {
+        http = new HttpUtility(userPrefs, true, userAgent);
         domain = userPrefs.getHost();
         baseUri = new URIBuilder()
                 .setScheme("https")
