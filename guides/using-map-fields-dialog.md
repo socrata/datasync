@@ -4,8 +4,9 @@ title: Using the Map Fields Dialog
 bodyclass: homepage
 ---
 
-This guide covers the more advanced features of the Map Fields dialog
-![Map fields dialog](/images/map_fields.png)
+This guide covers the advanced features of the Map Fields dialog
+
+<img src ="/images/map_fields.png" alt="Map Fields Dialog" style="width: 50%;display: block;margin-left: auto;margin-right: auto">
 
 ### Overview
 
