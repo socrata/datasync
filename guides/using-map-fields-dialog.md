@@ -50,7 +50,7 @@ We recommend checking this prior to upload to ensure that all data is uploaded. 
 
 When creating a dataset, you can choose to create a location column from components in the original file.  To do the same in DataSync, simply click on the "Add synthetic columns" link in the bottom left to get the synthetic columns dialog:
 
-<img src="/images/synthetic_columns.png" alt="Synthetic columns" width=50% align="middle">
+<img src="/images/synthetic_columns.png" alt="Synthetic columns" width=33% align="middle">
 
 Select the location field in the top dropdown and then map the items in your CSV to the components of your location component.  
 
