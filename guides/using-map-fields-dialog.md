@@ -6,7 +6,7 @@ bodyclass: homepage
 
 This guide covers the advanced features of the Map Fields dialog
 
-<img src="/images/map_fields.png" alt="Map Fields Dialog" width=50% align=center>
+<img src="/images/map_fields.png" alt="Map Fields Dialog" width=50% align="middle">
 
 ### Overview
 
