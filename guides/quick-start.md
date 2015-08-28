@@ -32,13 +32,6 @@ Enter your authentication details (domain, username, password, and app token) at
 
 Select the CSV or TSV file on your local machine or networked folder that you wish to publish by clicking the “Browse...” button and browsing to find the CSV or TSV file.
 
-**Does the CSV/TSV Have a Header Row ?**
-
-If the CSV contains a header row, keep "File to publish contains header row" checked. The header row should contain the [API Field Names]({{ site.root }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html)) of the columns in your dataset.
-<br><br>
-If the CSV does not contain a header row, uncheck "File to publish contains header row".  In this case, the control file must contain the list of columns, in the order in which they appear in the CSV.
-
-
 **Obtain and Enter the Dataset ID ...**
 
 You will need the identifier of the dataset (dataset ID) that you want to update. To obtain the dataset ID navigate to the dataset in your web browser and inspect the address bar. The dataset ID can be found at end of the URL in the form (xxxx-xxxx). For example for the following URL to a dataset:
@@ -49,20 +42,26 @@ The dataset ID is: m985-ywaw
 
 Enter your dataset's ID into the Dataset ID field.
 
-
 **Choose the Publish Method ...**
 
-Leave the default option "replace via HTTP" selected  This option will:
+Select the 'Publish method' by selecting one of the following options:
 
-- gracefully handles network failures
-- minimizes the amount of data sent by only sending the changes since the last update, rather than the complete dataset
-- can reliably handle very large files (1 million+ rows)
-- allows configuration of the way the CSV/TSV file is read and processed through the use of a [control file]({{ site.root }}/resources/control-config.html)
+- `replace`: Replaces the dataset with the data in the CSV/TSV file.
+- `upsert`: Updates any rows that already exist and inserts rows which do not. Ideal if you have a dataset that requires very frequent updates or in cases where doing a complete replace is problematic.
 
-**Create a control file**
-A control file is needed to help DataSync interpret the data within the CSV. In most cases simply clicking the 'Generate/Edit' button to generate a control file with the default configuration will be sufficient for the job to run successfully.
+  *IMPORTANT NOTE: For updating to work properly you must set a Row Identifier for the dataset. If a Row Identifier is not set then DataSync will not be able to determine what rows to update and all rows in the CSV/TSV file will be appended to the dataset. [Learn more about Row Identifiers and how to establish them](http://dev.socrata.com/docs/row-identifiers.html).*
 
-For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/control-config.html).
+- `delete`: Delete all rows matching Row Identifiers given in CSV/TSV file. The CSV/TSV should only contain a single column listing the Row Identifiers to delete.
+
+**Tell us how to import your file ...**
+
+Click the "Map fields" button to launch the screen where you'll map the items in your CSV to the items in your dataset
+
+<img src="/images/map_fields.png" alt="Map Fields Dialog" width=50% align="middle">
+
+You can use this dialog to map the columns in your CSV (shown with previews in the left column) to the fields in your dataset (selected with the dropdowns) on the right hand side.  This dialog will automatically attempt to detect the names in your CSV and align them with the names of your dataset.  Because of this, most of the time you'll simply need to double check the values and hit "OK."  If that's not the case though, you can use the boxes on the right to select the dataset field names and then hit OK.  The dialog will check the values of the CSV to make sure that they are valid and if they are will generate a [control file]({{ site.root }}/resources/control-file-config.html) automatically for you under the covers.  If not, you'll quickly get an error message with instructions as to how to fix the error. 
+
+For more information on the advanced capabilities of this dialog, please see the [Using the Map Fields Dialog](/guides/using-map-fields-dialog.html)
 
 ### Step 5: Run the job
 
@@ -80,6 +79,3 @@ To automate updating a dataset you must schedule the DataSync job to run automat
 
 [Read the documentation for how to schedule a saved job]({{ site.root }}/resources/schedule-job.html).
 
-### Additional information
-
-To take advantage of DataSync's more advanced features, please see  [setting up a standard job]({{ site.root }}/guides/setup-standard-job.html).
