@@ -326,6 +326,7 @@ public class IntegrationJobTab implements JobTab {
             jobToRun.setControlFileContent(controlFileModel.getControlFileContents());
 
         }
+        jobToRun.setUserAgentClient();
         return jobToRun.run();
     }
 

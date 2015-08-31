@@ -12,7 +12,6 @@ import com.socrata.datasync.config.CommandLineOptions;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
-import com.socrata.datasync.config.userpreferences.UserPreferencesLib;
 import com.socrata.datasync.publishers.DeltaImporter2Publisher;
 import com.socrata.datasync.publishers.FTPDropbox2Publisher;
 import com.socrata.datasync.publishers.Soda2Publisher;
@@ -67,6 +66,12 @@ public class IntegrationJob extends Job {
     private boolean publishViaDi2Http = false;
     private ControlFile controlFile = null;
 
+    private String userAgent = "datasync";
+
+    private String userAgentNameClient = "Client";
+    private String userAgentNameCli = "CLI";
+    private String userAgentNameSijFile = ".sij File";
+
     private ObjectMapper controlFileMapper =
             new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
@@ -90,6 +95,7 @@ public class IntegrationJob extends Job {
 	 */
 	public IntegrationJob(String pathToFile) throws IOException, ControlDisagreementException {
         this(pathToFile, false);
+        setUserAgentSijFile();
 	}
 
     /**
@@ -207,6 +213,16 @@ public class IntegrationJob extends Job {
 
     public String getDefaultJobName() { return defaultJobName; }
 
+    public void setUserAgent(String usrAgentName) {
+        userAgent = Utils.getUserAgentString(usrAgentName);
+    }
+    public void setUserAgentClient() {
+        userAgent = Utils.getUserAgentString(userAgentNameClient);
+    }
+    public void setUserAgentSijFile() {
+        userAgent = Utils.getUserAgentString(userAgentNameSijFile);
+    }
+
     /**
      * Checks that the command line arguments are sensible
      * NB: it is expected that this is run before 'configure'.
@@ -238,6 +254,12 @@ public class IntegrationJob extends Job {
         if (controlFilePath == null)
             controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
         setPathToControlFile(controlFilePath);
+
+        String userAgentName = cmd.getOptionValue(options.USER_AGENT_FLAG);
+        if(Utils.nullOrEmpty(userAgentName)) {
+            userAgentName = userAgentNameCli;
+        }
+        setUserAgent(userAgentName);
     }
 
 
@@ -264,7 +286,7 @@ public class IntegrationJob extends Job {
                 try {
                     File fileToPublishFile = new File(fileToPublish);
                     if (publishViaDi2Http) {
-                        try (DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs)) {
+                        try (DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs, userAgent)) {
                             String action = controlFile.action == null ? publishMethod.name() : controlFile.action;
                             // "upsert" == "append" in di2
                             if ("upsert".equalsIgnoreCase(action))

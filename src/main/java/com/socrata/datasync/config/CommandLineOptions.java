@@ -16,6 +16,8 @@ public class CommandLineOptions {
 
     public static final String JOB_TYPE_FLAG = "jobType";
     public static final String CONFIG_FLAG = "config";
+    public static final String USER_AGENT_FLAG = "userAgent";
+
     public static final String DATASET_ID_FLAG = "datasetID";
     public static final String FILE_TO_PUBLISH_FLAG = "fileToPublish";
     public static final String PUBLISH_METHOD_FLAG = "publishMethod";
@@ -49,6 +51,7 @@ public class CommandLineOptions {
     static {
         options.addOption("t", JOB_TYPE_FLAG, true, "Type of job to run: " + Arrays.toString(Jobs.values()) + " (default: " + DEFAULT_JOBTYPE  + ")");
         options.addOption("c", CONFIG_FLAG, true, ".json file that stores global preferences (authentication details, etc) (optional)");
+        options.addOption("a", USER_AGENT_FLAG, true, "User-Agent string passed when making HTTPS calls (optional)");
 
         // IntegrationJob params
         options.addOption("i", DATASET_ID_FLAG, true, "Dataset ID to publish to [IntegrationJob]");
