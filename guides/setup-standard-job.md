@@ -50,7 +50,7 @@ Select the 'Publish method' by selecting one of the following options:
 
 Click the "Map fields" button to launch the screen where you'll map the items in your CSV to the items in your dataset
 
-<img src="/images/map_fields.png" alt="Map Fields Dialog" width=50% align="middle">
+![Map Fields](/datasync/images/map_fields.png)
 
 You can use this dialog to map the columns in your CSV (shown with previews in the left column) to the fields in your dataset (selected with the dropdowns) on the right hand side.  This dialog will automatically attempt to detect the names in your CSV and align them with the names of your dataset.  Because of this, most of the time you'll simply need to double check the values and hit "OK."  If that's not the case though, you can use the boxes on the right to select the dataset field names and then hit OK.  The dialog will check the values of the CSV to make sure that they are valid and if they are will generate a [control file]({{ site.root }}/resources/control-file-config.html) automatically for you under the covers.  If not, you'll quickly get an error message with instructions as to how to fix the error. 
 

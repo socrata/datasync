@@ -6,7 +6,8 @@ bodyclass: homepage
 
 This guide covers the advanced features of the Map Fields dialog
 
-<img src="/datasync/images/map_fields.png" alt="Map Fields Dialog" width=50% align="middle"/>
+![Map Fields Dialog](/datasync/images/map_fields.png)
+
 
 ### Overview
 
@@ -22,7 +23,7 @@ Similarly, changing the "separator" under advanced options will reflect the fact
 
 DataSync will also automatically validate that your configuration is correct *before* the upload takes place.  When you click on "OK" DataSync will validate all of the fields and ensure that their values are valid for the given fields.  If not, you'll be presented with an error message that should help you quickly identify and fix the issue:
 
-<img src="/datasync/images/sample_error.png" alt="Sample Error" width=50% align="middle">
+![Sample Error](/datasync/images/sample_error.png)
 
 Once validated, this dialog generates the same [control file]({{ site.root }}/resources/control-config.html) that you may have used to load data via the command line.  Because of this, any saved job can also be run as a scheduled job in headless mode. 
 
@@ -32,15 +33,15 @@ While the default settings will typically be sufficient, every once in a while y
 
 To map items in the CSV to fields in your dataset, simply click the dropdown and select the dataset field to which the column in the CSV should map.
 
-<img src="/datasync/images/select_field.png" alt="Select field" width=50% align="middle">
+![Select field](/datasync/images/select_field.png)
 
 If you don't want to include this column in the upload, simply select "Ignore this field"
 
-<img src="/datasync/images/ignore_field.png" alt="Ignore field" width=50% align="middle">
+![Ignore field](/datasync/images/ignore_field.png)
 
 As mentioned above, the UI will show you a preview of your data inline.  The top row is your header, while the bottom row is your data.  
 
-<img src="/datasync/images/inline.png" alt="Inline Preview" width=50% align="middle">
+![Inline Preview](/datasync/images/inline.png)
 
 We recommend checking this prior to upload to ensure that all data is uploaded.  Common mistakes include having the "has header row" set when there is no header row in the dataset. 
 
@@ -50,20 +51,20 @@ We recommend checking this prior to upload to ensure that all data is uploaded. 
 
 When creating a dataset, you can choose to create a location column from components in the original file.  For example, you may have a latitude and longitude stored in separate columns that you want to visualize as a single point on a map.  To do so, you’ll need to create a single “location” column whose components consist of the values of each of these columns.  To map these individual components in DataSync, simply click on the "Add synthetic columns" link in the bottom left to get the synthetic columns dialog:
 
-<img src="/datasync/images/synthetic_columns.png" alt="Synthetic columns" width=33% align="middle">
+![Synthetic Columns](/datasync/images/synthetic_columns.png)
 
 Select the location field in the top dropdown and then map the items in your CSV to the components of your location component.  
 
 Once set, you'll see the following when you click the "Manage Synthetic Columns" link
 
-<img src="/datasync/images/show_synthetic_columns.png" alt="Show synthetic columns pane" width=50% align="middle">
- 
+![Show Synthetic Columns Pane](/datasync/images/show_synthetic_columns.png)
+
 To manage or remove the column, simply click either the manage or remove link.  To add another synthetic location, simply click "add" and follow the above steps
 
 ### Advanced options
 
 All other options available in the Control File can be found under the Advanced Options panel.  
 
-<img src="/datasync/images/advanced_options.png" alt="Advanced Options" width=50% align="middle">
+![Advanced Options](/datasync/images/advanced_options.png)
 
 Authoritative documentation on the accepted values can be found in the [Control file configuration]({{ site.root }}/resources/control-config.html) page
