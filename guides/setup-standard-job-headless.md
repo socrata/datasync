@@ -21,7 +21,7 @@ For general help using DataSync in headless/command-line mode run:
 
 To run a job execute the following command, replacing <..> with the appropriate values (flags explained below):
 
-    java -jar <DATASYNC_JAR> -c <CONFIG.json FILE> -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -pf <PUBLISH VIA HTTP> -cf <FTP CONTROL.json FILE>
+    java -jar <DATASYNC_JAR> -c <CONFIG.json FILE> -f <FILE TO PUBLISH> -h <HAS HEADER ROW> -i <DATASET ID> -m <PUBLISH METHOD> -pf <PUBLISH VIA FTP> -ph <PUBLISH VIA HTTP> -cf <FTP CONTROL.json FILE>
 
 
 Explanation of flags:
