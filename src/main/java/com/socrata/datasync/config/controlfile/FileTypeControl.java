@@ -40,6 +40,7 @@ public class FileTypeControl {
     public Map<String, LocationColumn> syntheticPoints;
     public Boolean useSocrataGeocoding;
     public String action;
+    public Boolean columnStatistics;
 
     public FileTypeControl() {}
 
@@ -142,6 +143,7 @@ public class FileTypeControl {
     public FileTypeControl hasHeaderRow(boolean h) { hasHeaderRow = h; return this;}
 
     public FileTypeControl action(String a) { action = a; return this;}
-}
+
+    public FileTypeControl columnStatistics(boolean u) { columnStatistics = u; return this; }
 
 

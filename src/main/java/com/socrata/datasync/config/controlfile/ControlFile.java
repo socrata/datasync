@@ -104,7 +104,8 @@ public class ControlFile {
                .useSocrataGeocoding(useSocrataGeocoding)
                .trimWhitespace(true)
                .trimServerWhitespace(true)
-               .overrides(new HashMap<String, ColumnOverride>());
+               .overrides(new HashMap<String, ColumnOverride>())
+               .columnStatistics(true);
         }
 
         if (isCsv) {
