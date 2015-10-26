@@ -151,7 +151,15 @@ public class CSVModel extends AbstractTableModel{
     public String getColumnPreview(int columnIndex, int itemsToPreview){
         StringBuffer buf = new StringBuffer();
         for (int i = 0; i < Math.min(itemsToPreview,getRowCount()); i++){
-            buf.append(getValueAt(i,columnIndex));
+            Object value = "N/A";
+            try
+            {
+                value = getValueAt(i,columnIndex);
+            }
+            catch (ArrayIndexOutOfBoundsException e){
+                System.out.println("Row contains different number of columns than expected.  Rows with missing data will be displayed as \"N/A\" in the map fields dialog");
+            }
+            buf.append(value);
             if (i+1 <  Math.min(itemsToPreview,getRowCount()))
                 buf.append(", ");
         }
