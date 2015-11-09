@@ -83,7 +83,7 @@ Explanation of flags:
       <td style='text-align: left;'>-cf</td>
       <td style='text-align: left;'>--pathToControlFile</td>
       <td style='text-align: left;'>/Users/home/control.json</td>
-      <td style='text-align: left;'>Specifies a <a href='http://socrata.github.io/datasync/resources/ftp-control-config.html'>control file></a> that configures HTTP and &#8216;replace via FTP&#8217; jobs.  Only required when --publishViaHttp or --publishViaFTP is set to <code>true</code>. When this flag is set the --fileToPublishHasHeaderRow and --publishMethod flags are overridden by the settings in the supplied control file.</td>
+      <td style='text-align: left;'>Specifies a <a href='http://socrata.github.io/datasync/resources/control-config.html'>control file></a> that configures HTTP and &#8216;replace via FTP&#8217; jobs.  Only required when --publishViaHttp or --publishViaFTP is set to <code>true</code>. When this flag is set the --fileToPublishHasHeaderRow and --publishMethod flags are overridden by the settings in the supplied control file.</td>
     </tr>
     <tr>
       <td style='text-align: left;'>-t <code>*</code></td>
