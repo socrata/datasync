@@ -10,3 +10,8 @@ root: "/datasync"
 icon: fa fa-refresh
 github_repo: https://github.com/socrata/datasync
 contribute: /datasync/contributing.html
+gems:
+- jekyll-redirect-from
+- jekyll-sitemap
+- jekyll-mentions
+- jekyll-feed
