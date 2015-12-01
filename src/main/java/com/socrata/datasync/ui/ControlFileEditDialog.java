@@ -73,7 +73,7 @@ public class ControlFileEditDialog extends JDialog {
     public JPanel getIntroPanel(){
         JPanel panel = new JPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(10,10,5,0));
-        JLabel intro = new JLabel("Select how you would like to map the fields in your CSV.");
+        JLabel intro = new JLabel("Select how you would like to map the fields in your file.");
         panel.setLayout(new GridLayout(1,0));
         panel.add(intro);
         return panel;

@@ -262,7 +262,8 @@ public class UserPreferencesJava implements UserPreferences {
         if (value == null) {
             userPrefs.remove(key);
         } else {
-            userPrefs.put(key, value);
+            //ONCALL-3204 - Remove leading and trailing whitespace from user entered fields.
+            userPrefs.put(key, value.trim());
         }
     }
 }

@@ -143,7 +143,7 @@ public class IntegrationJobTab implements JobTab {
 
     private void addControlFileFieldToJobPanel() {
         controlFileLabelContainer = UIUtility.generateLabelWithHelpBubble(
-                "Step 4 - Tell us how to import your CSV", CONTROL_FILE_TIP_TEXT, HELP_ICON_TOP_PADDING);
+                "Step 4 - Tell us how to import your file", CONTROL_FILE_TIP_TEXT, HELP_ICON_TOP_PADDING);
         jobPanel.add(controlFileLabelContainer);
 
         controlFileSelectorContainer = new JPanel(FLOW_RIGHT);
