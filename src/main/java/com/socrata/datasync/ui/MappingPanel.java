@@ -55,11 +55,11 @@ public class MappingPanel extends JPanel {
     private void updateCombobox(){
         String selection = model.getColumnAtPosition(index);
 
-        //Don't do anything if the selection hasn't changed (otherwise, you end up with a lot of events unnecessarily firing).
+        //Don't do anything if the state for the column hasn't changed (otherwise, you end up with a lot of events unnecessarily firing).
         if (selection == lastSelection)
             return;
 
-        if (selection == null || model.isIgnored(selection))
+        if (model.isIgnored(selection))
             columnNamesComboBox.setSelectedIndex(IGNORE_INDEX);
         else
             columnNamesComboBox.setSelectedItem(selection);
