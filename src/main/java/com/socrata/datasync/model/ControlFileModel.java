@@ -157,9 +157,10 @@ public class ControlFileModel extends Observable {
         if (position >  getColumnCount())
             throw new IllegalStateException("Cannot update field outside of the CSV");
         int index = getIndexOfColumnName(datasetFieldName);
-        // The same column cannot be mapped twice.  If the column is already mapped, set it to null
+        // The same column cannot be mapped twice.  If the column is already mapped, set the mapped version to be ignored
         if (index != -1 && index != position){
-            controlFile.getFileTypeControl().columns[index] = null;
+            controlFile.getFileTypeControl().columns[index] = ModelUtils.generatePlaceholderName(index);
+            ignoreColumnInCSVAtPosition(index);
         }
 
         removeIgnoredColumn(getColumnAtPosition(position));

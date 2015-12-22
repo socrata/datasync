@@ -34,22 +34,8 @@ public class ControlFileEditFooterPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JobStatus status = model.validate();
-                // If all of the columns in the dataset aren't mapped, then provide the user with the option to
-                // ignore the unmapped ones
-                if (status == JobStatus.MISSING_COLUMNS){
-                    ArrayList<Column> unmappedColumns = model.getUnmappedDatasetColumns();
-                    int result = showIgnoreColumnsDialogBox(unmappedColumns);
-                    if (result == JOptionPane.YES_OPTION){
-                        //Ignore all of the unmapped columns
-                        for (Column unmapped : unmappedColumns) {
-                            model.ignoreColumnFromDataset(unmapped);
-                        }
-                        // Validate the model again in case there are other errors hiding behind this one
-                        status = model.validate();
-                    }
-                }
 
-                // If the job is still in an error state, then show the error to the user, and drop them back in the
+                // If the job is in an error state, then show the error to the user, and drop them back in the
                 // control file editor to fix it.  Otherwise, close the window.
                 if (status.isError()) {
                     validationPanel.displayStatus(status);
@@ -62,32 +48,6 @@ public class ControlFileEditFooterPanel extends JPanel {
             }
         });
         add(okButton);
-    }
-
-    private int showIgnoreColumnsDialogBox(ArrayList<Column> unmappedColumns){
-        Object[] options = {"Ignore columns", "Cancel"};
-        return JOptionPane.showOptionDialog(null,
-                getIgnoreColumnMessage(unmappedColumns),
-                "Unmapped columns",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE,
-                null, options, options[0]
-        );
-    }
-
-    private String getIgnoreColumnMessage(ArrayList<Column> unmappedColumns){
-
-        StringBuffer message = new StringBuffer("<HTML>The following columns exist in your dataset, but are not currently mapped:<br/>");
-        for (Column column : unmappedColumns){
-            message.append("<br/>   \u2022 " + getFriendlyColumnString(column));
-        }
-        message.append("<br/><br/>Would you like to ignore the columns (note that ignored columns will end up with \"null\" values)?");
-        message.append("</HTML>");
-        return message.toString();
-    }
-
-    private String getFriendlyColumnString(Column column){
-        return column.getName() + " (" + column.getFieldName() + ")";
     }
 
 }

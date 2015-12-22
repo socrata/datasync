@@ -146,4 +146,4 @@ public class FileTypeControl {
 
     public FileTypeControl columnStatistics(boolean u) { columnStatistics = u; return this; }
 
-
+}
