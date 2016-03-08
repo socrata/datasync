@@ -19,19 +19,30 @@ public class ControlFileTest {
     Boolean emptyTextIsNull = true;
     Boolean trimSpace = true;
     Boolean useGeocoding = true;
+    Boolean columnStatistics = true;
+    Boolean setAsideErrors = false;
     String encoding = "utf-8";
     String timezone = "UTC";
     String[] columns = {"boo", "bar", "baz"};
 
-    String fileTypeInnardsStart = "{" +
-            "\"columns\":[\"boo\",\"bar\",\"baz\"]," +
-            "\"emptyTextIsNull\":" + emptyTextIsNull + "," +
-            "\"encoding\":\"" + encoding + "\"," +
-            "\"fixedTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy HH:mm:ss a Z\",\"MM/dd/yyyy HH:mm:ss a\"]," +
-            "\"floatingTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy HH:mm:ss a Z\",\"MM/dd/yyyy HH:mm:ss a\"]," +
-            "\"ignoreColumns\":[]," +
-            "\"overrides\":{},";
+//    String fileTypeInnardsStart = "{" +
+//            "\"columns\":[\"boo\",\"bar\",\"baz\"]," +
+//            "\"emptyTextIsNull\":" + emptyTextIsNull + "," +
+//            "\"encoding\":\"" + encoding + "\"," +
+//            "\"fixedTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy HH:mm:ss a Z\",\"MM/dd/yyyy HH:mm:ss a\"]," +
+//            "\"floatingTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy HH:mm:ss a Z\",\"MM/dd/yyyy HH:mm:ss a\"]," +
+//            "\"ignoreColumns\":[]," +
+//            "\"overrides\":{},";
+//    String fileTypeInnardsStartReplace = "{" +
+//            "\"columnStatistics\":" + columnStatistics + "," +
+//            fileTypeInnardsStart;
+//
+//    String fileTypeInnardsStartAppend = "{" +
+//            fileTypeInnardsStart;
+
+
     String fileTypeInnardsEnd =
+            "\"setAsideErrors\":" + setAsideErrors + "," +
             "\"skip\":" + skip + "," +
             "\"timezone\":\"" + timezone + "\"," +
             "\"trimServerWhitespace\":" + trimSpace + "," +
@@ -41,12 +52,28 @@ public class ControlFileTest {
 
     ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
+    private String getFileTypeInnardsStart(PublishMethod method)
+    {
+        StringBuffer fileTypeInnards = new StringBuffer("{");
+        //Replace adds columns statistics to the FTC
+        if (method.equals(PublishMethod.replace))
+            fileTypeInnards.append("\"columnStatistics\":" + columnStatistics + ",");
+        fileTypeInnards.append("\"columns\":[\"boo\",\"bar\",\"baz\"]," +
+                "\"emptyTextIsNull\":" + emptyTextIsNull + "," +
+                "\"encoding\":\"" + encoding + "\"," +
+                "\"fixedTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy HH:mm:ss a Z\",\"MM/dd/yyyy HH:mm:ss a\"]," +
+                "\"floatingTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy HH:mm:ss a Z\",\"MM/dd/yyyy HH:mm:ss a\"]," +
+                "\"ignoreColumns\":[]," +
+                "\"overrides\":{},");
+        return fileTypeInnards.toString();
+    }
+
     @Test
     public void testDefaultControlFileGenerationReplaceCsv() throws SodaError, InterruptedException, IOException {
         String expectedJson = "{" +
                 "\"action\":\"Replace\"," +
                 "\"csv\":" +
-                    fileTypeInnardsStart +
+                    getFileTypeInnardsStart(PublishMethod.replace) +
                     "\"quote\":\"\\\"\"," +
                     "\"separator\":\",\"," +
                     fileTypeInnardsEnd +
@@ -76,7 +103,7 @@ public class ControlFileTest {
         String expectedJson = "{" +
                 "\"action\":\"Append\"," +
                 "\"tsv\":" +
-                fileTypeInnardsStart +
+                getFileTypeInnardsStart(PublishMethod.append) +
                 "\"quote\":\"\\u0000\"," +
                 "\"separator\":\"\\t\"," +
                 fileTypeInnardsEnd +
@@ -92,7 +119,7 @@ public class ControlFileTest {
         String controlFileJson = "{" +
                 "\"action\":\"Replace\"," +
                 "\"csv\":" +
-                fileTypeInnardsStart +
+                getFileTypeInnardsStart(PublishMethod.replace) +
                 "\"quote\":\"\\\"\"," +
                 "\"separator\":\",\"," +
                 fileTypeInnardsEnd +

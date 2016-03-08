@@ -41,6 +41,7 @@ public class FileTypeControl {
     public Boolean useSocrataGeocoding;
     public String action;
     public Boolean columnStatistics;
+    public Boolean setAsideErrors;
 
     public FileTypeControl() {}
 
@@ -145,5 +146,7 @@ public class FileTypeControl {
     public FileTypeControl action(String a) { action = a; return this;}
 
     public FileTypeControl columnStatistics(boolean u) { columnStatistics = u; return this; }
+
+    public FileTypeControl setAsideErrors(boolean u) { setAsideErrors = u; return this; }
 
 }

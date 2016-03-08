@@ -16,6 +16,7 @@ public class OptionsPanel extends JPanel {
     JCheckBox trimWhitespace;
     JCheckBox hasHeaderRow;
     JCheckBox useSocrataGeocoding;
+    JCheckBox setAsideErrors;
     JPanel container;
 
     int maximumHeight = 25;
@@ -38,6 +39,9 @@ public class OptionsPanel extends JPanel {
         HasHeaderRowListener headerRowListener = new HasHeaderRowListener();
         hasHeaderRow =generateGenericCheckbox("Has header row",model.getControlFile().getFileTypeControl().hasHeaderRow,headerRowListener);
 
+        SetAsideErrorsListener setAsideErrorsListener = new SetAsideErrorsListener();
+        setAsideErrors = generateGenericCheckbox("Set Aside Errors", model.getControlFile().getFileTypeControl().setAsideErrors,setAsideErrorsListener);
+
         useSocrataGeocoding = generateGenericCheckbox("Use Socrata Geocoding", model.getControlFile().getFileTypeControl().useSocrataGeocoding, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -48,19 +52,32 @@ public class OptionsPanel extends JPanel {
 
     public void layoutComponents(){
         this.setLayout(new GridLayout(1,0));
-        container.setLayout(new BoxLayout(container,BoxLayout.X_AXIS));
+        container.setLayout(new GridLayout(1,3));
         this.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5,0,1,0),BorderFactory.createTitledBorder("Options")));
         hasHeaderRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         hasHeaderRow.setMaximumSize(checkboxDim);
         container.add(hasHeaderRow);
 
         trimWhitespace.setAlignmentX(LEFT_ALIGNMENT);
-
         trimWhitespace.setMaximumSize(checkboxDim);
         container.add(trimWhitespace);
 
-        useSocrataGeocoding.setAlignmentX(LEFT_ALIGNMENT);
-        useSocrataGeocoding.setMaximumSize(checkboxDim);
+        JPanel errorsPanel = new JPanel();
+        errorsPanel.setLayout(new FlowLayout());
+
+        setAsideErrors.setAlignmentX(LEFT_ALIGNMENT);
+        setAsideErrors.setMaximumSize(checkboxDim);
+        errorsPanel.add(setAsideErrors);
+
+        String helpString = "<HTML>With “Set aside errors” selected, any rows that contain invalid data<br>" +
+                            "will be set aside for inspection, while all valid rows will be imported<br>" +
+                            "to the dataset. The invalid rows will be available for download on the<br>" +
+                            "Job Status page for this job.<HTML>";
+        JLabel helpBubble = UIUtility.generateHelpBubble(helpString);
+        helpBubble.setAlignmentX(LEFT_ALIGNMENT);
+        errorsPanel.add(helpBubble);
+
+        container.add(errorsPanel);
         this.add(container);
     }
 
@@ -91,6 +108,13 @@ public class OptionsPanel extends JPanel {
         }
     }
 
+    class SetAsideErrorsListener extends FocusAdapter implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JCheckBox box = (JCheckBox) e.getSource();
+            model.setSetAsideErrors(box.isSelected());
+        }
+    }
 
 
 }
