@@ -306,6 +306,11 @@ public class ControlFileModel extends Observable {
         updateListeners();
     }
 
+    public void setSetAsideErrors(Boolean setAsideErrors){
+        controlFile.getFileTypeControl().setAsideErrors(setAsideErrors);
+        updateListeners();
+    }
+
     public void setSyntheticLocation(String fieldName, LocationColumn locationField) {
         Map<String, LocationColumn> columnsMap = controlFile.getFileTypeControl().syntheticLocations;
         if (columnsMap != null)
