@@ -59,6 +59,7 @@ public class OptionsPanel extends JPanel {
         container.add(hasHeaderRow);
 
         trimWhitespace.setAlignmentX(LEFT_ALIGNMENT);
+
         trimWhitespace.setMaximumSize(checkboxDim);
         container.add(trimWhitespace);
 
