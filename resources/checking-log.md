@@ -4,7 +4,13 @@ title: Checking the logs and downloading CSV/TSV "snapshots"
 bodyclass: homepage
 ---
 
+
+
+
 ### Contents
+- [Via the Platform UI](#viewing-the-ui-logs)
+    - [navigating to <domain>/admin/jobs](#navigating-to-the-logs)
+    - [debuging the actual logs](#debuging-the-logs)
 - [Via FTP](#connecting-to-the-logs-via-ftp)
     - [Connecting to the FTP server](#connecting-to-the-ftp-server)
     - [Checking the logs and downloading CSV "snapshots"](#checking-the-logs-and-downloading-csv-snapshots-when-using-ftp)
@@ -12,7 +18,18 @@ bodyclass: homepage
     - [Checking the logs](#checking-the-logs)
     - [Downloading CSV "snapshots"](#downloading-csv-snapshots-when-using-http)
 
-Customers who are using DataSync via FTP or HTTP can get detailed debugging information by retrieving the logs for each job.  Details of how to access those logs can be found below.
+Customers who are using DataSync via FTP or HTTP can get detailed debugging information by retrieving the logs for each job.  Details of how to access those logs can be found below.   
+
+### Checking <domain>/admin/jobs 
+Customers can use the UI to get to a jobs status page that will tell them the status of the 250 most current jobs and get detailed information on their success or failure. They get there by navigating to it from the admin panel on thier open data portal instance. 
+
+![Logs Page](/datasync/images/sample_log_page.png)
+
+The feilds that are exposed through this are: success/failure, publish method, dataset owner, and a timestamp. 
+
+When a job fails you can click on it to get more details and see some error messaging on what may have been wrong on upload.  The below is a sample error message for a job that had a record that could not be identified as a date type in one of the columns. 
+
+![logs page 2](/datasync/images/sample_error.png)
 
 ### Connecting to the logs via FTP
 
