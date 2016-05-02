@@ -1,4 +1,4 @@
----
+	---
 layout: with-sidebar
 title: Using the Map Fields Dialog
 bodyclass: homepage
@@ -15,6 +15,7 @@ The Map Fields dialog controls how the items in your CSV map to fields in your d
 
 As you change options in the dialog, DataSync will provide immediate, real time feedback around how it views your CSV.  For example, toggling the "has header row" option in the UI will immediately reflect the fact that the first row in the CSV will be imported as data, rather than as a header.  
 
+
 ![Header row before and after](/datasync/images/header_row_before_after.png)
 
 Similarly, changing the "separator" under advanced options will reflect the fact that there are new columns which you can map.
@@ -28,6 +29,15 @@ DataSync will also automatically validate that your configuration is correct *be
 Once validated, this dialog generates the same [control file]({{ site.root }}/resources/control-config.html) that you may have used to load data via the command line.  Because of this, any saved job can also be run as a scheduled job in headless mode. 
 
 While the default settings will typically be sufficient, every once in a while you will need to take additional steps load your CSV.  The following sections detail how you can use the more advanced features of this UI to successfully upload your CSV. 
+
+###Selecting Set Aside Errors
+![Selecting Set Aside Errors](/datasync/images/set_aside_error.png)
+
+If you're using DataSync to update your data and you selected "Set Aside Errors" from the user interface (or indicated this in your control file), you'll see another status - "Completed with Problems".
+
+For jobs that have "Completed with Problems", navigating to (yourdomain)/admin/jobs brings you to a page with more information on when the job failed and more descriptive details about the failure. This page will also have a download link for a CSV of the specific rows that failed.
+
+![Job Detail](/datasync/images/job_detail.png)
 
 ### Mapping items in the CSV to fields in the dataset
 
