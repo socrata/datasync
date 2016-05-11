@@ -38,7 +38,7 @@ public class DatasetUtils {
                 .setPath("/api/views/" + viewId)
                 .build();
 
-        CloseableHttpResponse resp = get(userPrefs,absolutePath,"application/json");
+        CloseableHttpResponse resp = get(userPrefs, absolutePath, "application/json");
 
         return mapper.readValue(resp.getEntity().getContent(), Dataset.class);
     }
@@ -52,7 +52,7 @@ public class DatasetUtils {
                 .addParameter("$limit",""+rowsToSample)
                 .build();
 
-        CloseableHttpResponse resp = get(userPrefs,absolutePath,"application/csv");
+        CloseableHttpResponse resp = get(userPrefs, absolutePath, "application/csv");
 
         HttpEntity entity = resp.getEntity();
 
