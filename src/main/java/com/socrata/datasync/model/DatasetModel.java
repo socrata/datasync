@@ -3,23 +3,20 @@ package com.socrata.datasync.model;
 import au.com.bytecode.opencsv.CSVReader;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.datasync.DatasetUtils;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
-import com.socrata.model.soql.SoqlQuery;
-import com.socrata.api.HttpLowLevel;
-import com.socrata.api.Soda2Consumer;
-import com.socrata.api.Soda2Producer;
-import com.socrata.api.SodaDdl;
-import com.socrata.builders.SoqlQueryBuilder;
 import java.io.StringReader;
-import com.sun.jersey.api.client.ClientResponse;
 
+import javax.print.URIException;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URISyntaxException;
+import org.apache.http.HttpException;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -38,21 +35,12 @@ public class DatasetModel extends AbstractTableModel {
 
     private Vector data = new Vector();
 
-    public DatasetModel(
-            String domain,
-            String username,
-            String password,
-            String appToken,
-            String fourbyfour) throws LongRunningQueryException, InterruptedException, SodaError, IOException{
+    public DatasetModel(UserPreferences prefs,
+            String fourbyfour) throws LongRunningQueryException, InterruptedException, HttpException, IOException, URISyntaxException{
 
-        this.domain = domain;
-        SodaDdl ddl = SodaDdl.newDdl(domain,username,password,appToken);
-        Soda2Consumer consumer = Soda2Consumer.newConsumer(domain,
-                username,
-                password,
-                appToken);
+        this.domain = prefs.getDomain();
 
-        initializeDataset(ddl,consumer, fourbyfour);
+        initializeDataset(prefs, fourbyfour);
     }
 
     //Used to pull the charset for this domain
@@ -60,15 +48,13 @@ public class DatasetModel extends AbstractTableModel {
         return domain;
     }
 
-    private boolean initializeDataset(SodaDdl ddl, Soda2Consumer consumer, String fourbyfour) throws LongRunningQueryException, InterruptedException, SodaError, IOException{
-        datasetInfo = (Dataset) ddl.loadDatasetInfo(fourbyfour);
+    private boolean initializeDataset(UserPreferences prefs, String fourbyfour) throws LongRunningQueryException, InterruptedException, HttpException, IOException, URISyntaxException{
+        datasetInfo = DatasetUtils.getDatasetInfo(prefs,fourbyfour);
 
         columns = (ArrayList) datasetInfo.getColumns();
 
-        SoqlQueryBuilder builder = new SoqlQueryBuilder(SoqlQuery.SELECT_ALL).setLimit(rowsToSample);
-        ClientResponse response = consumer.query(fourbyfour, HttpLowLevel.CSV_TYPE,builder.build());
+        String csv = DatasetUtils.getDatasetSample(prefs,fourbyfour,rowsToSample);
 
-        String csv = response.getEntity(String.class);
         CSVReader reader = new CSVReader(new StringReader(csv));
 
         String[] lines = reader.readNext();

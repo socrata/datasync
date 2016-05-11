@@ -5,13 +5,17 @@ import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
 import org.apache.http.HttpException;
 import org.apache.http.HttpStatus;
+import org.apache.http.HttpEntity;
+import org.apache.http.util.EntityUtils;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -27,26 +31,55 @@ public class DatasetUtils {
     private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     public static Dataset getDatasetInfo(UserPreferences userPrefs, String viewId) throws URISyntaxException, IOException, HttpException {
-        HttpUtility http = new HttpUtility(userPrefs, true);
-        String[] schemaAndDomain = userPrefs.getDomain().trim().split("//");
-        String justDomain = schemaAndDomain[schemaAndDomain.length -1];
+        String justDomain = getDomainWithoutScheme(userPrefs);
         URI absolutePath = new URIBuilder()
                 .setScheme("https")
                 .setHost(justDomain)
                 .setPath("/api/views/" + viewId)
                 .build();
+
+        CloseableHttpResponse resp = get(userPrefs,absolutePath,"application/json");
+
+        return mapper.readValue(resp.getEntity().getContent(), Dataset.class);
+    }
+
+    public static String getDatasetSample(UserPreferences userPrefs, String viewId, int rowsToSample) throws URISyntaxException, IOException, HttpException {
+        String justDomain = getDomainWithoutScheme(userPrefs);
+        URI absolutePath = new URIBuilder()
+                .setScheme("https")
+                .setHost(justDomain)
+                .setPath("/resource/" + viewId + ".csv")
+                .addParameter("$limit",""+rowsToSample)
+                .build();
+
+        CloseableHttpResponse resp = get(userPrefs,absolutePath,"application/csv");
+
+        HttpEntity entity = resp.getEntity();
+
+        return EntityUtils.toString(entity,"UTF-8");
+    }
+
+    private static String getDomainWithoutScheme(UserPreferences userPrefs){
+        String[] schemaAndDomain = userPrefs.getDomain().trim().split("//");
+        String justDomain = schemaAndDomain[schemaAndDomain.length -1];
+        return justDomain;
+    }
+
+    private static CloseableHttpResponse get(UserPreferences userPrefs, URI absolutePath, String contentType) throws URISyntaxException, IOException, HttpException {
+        HttpUtility http = new HttpUtility(userPrefs, true);
+        System.out.println("Path: " + absolutePath.toString());
         StatusLine statusLine;
         int status;
         int retriesAvailable = 3;
         int retries = 0;
         do {
-            try (CloseableHttpResponse resp = http.get(absolutePath, "application/json")) {
+            try (CloseableHttpResponse resp = http.get(absolutePath, contentType)) {
                 statusLine = resp.getStatusLine();
                 status = statusLine.getStatusCode();
                 if (status != HttpStatus.SC_OK) {
                     retries += 1;
                 } else {
-                    return mapper.readValue(resp.getEntity().getContent(), Dataset.class);
+                    return resp;
                 }
             }
         } while (status != HttpStatus.SC_OK && retries < retriesAvailable);

@@ -6,7 +6,7 @@ import com.socrata.datasync.config.controlfile.LocationColumn;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
 import com.socrata.exceptions.LongRunningQueryException;
-import com.socrata.exceptions.SodaError;
+import org.apache.http.HttpException;
 import junit.framework.TestCase;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -15,6 +15,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 /**
  * Series of tests to validate that the control file model produces a correct control file.
@@ -26,7 +27,7 @@ public class ControlFileModelTest extends TestBase {
     ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     @Test
-    public void testColumnUpdates() throws IOException, LongRunningQueryException, InterruptedException, SodaError {
+    public void testColumnUpdates() throws IOException, LongRunningQueryException, InterruptedException, HttpException, URISyntaxException {
         ControlFile cf = getTestControlFile();
         ControlFileModel model = getTestModel(cf);
 
@@ -37,7 +38,7 @@ public class ControlFileModelTest extends TestBase {
 
     //Can I get out the same control file that I put in?
     @Test
-    public void testSerialization() throws IOException, LongRunningQueryException, InterruptedException, SodaError {
+    public void testSerialization() throws IOException, LongRunningQueryException, InterruptedException, HttpException, URISyntaxException {
 
         ControlFile cf = getTestControlFile();
         ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
@@ -48,7 +49,7 @@ public class ControlFileModelTest extends TestBase {
     }
 
     @Test
-    public void testIgnoredColumns() throws IOException, LongRunningQueryException, InterruptedException, SodaError {
+    public void testIgnoredColumns() throws IOException, LongRunningQueryException, InterruptedException, HttpException, URISyntaxException {
         ControlFile cf = getTestControlFile();
         ControlFileModel model = getTestModel(cf);
         int columnLengthBeforeUpdate = model.getColumnCount();
@@ -64,7 +65,7 @@ public class ControlFileModelTest extends TestBase {
     }
 
     @Test
-    public void testHasHeaderRow() throws IOException, LongRunningQueryException, InterruptedException, SodaError {
+    public void testHasHeaderRow() throws IOException, LongRunningQueryException, InterruptedException, HttpException, URISyntaxException {
         //Assert that we are skipping the first row when has header row == 1
         ControlFile cf = getTestControlFile();
         ControlFileModel model = getTestModel(cf);
@@ -81,7 +82,7 @@ public class ControlFileModelTest extends TestBase {
 
 
     @Test
-    public void testSyntheticColumns() throws IOException, LongRunningQueryException, InterruptedException, SodaError {
+    public void testSyntheticColumns() throws IOException, LongRunningQueryException, InterruptedException, HttpException, URISyntaxException {
         ControlFile cf = getTestControlFile();
         ControlFileModel model = getTestModel(cf);
 
@@ -109,11 +110,11 @@ public class ControlFileModelTest extends TestBase {
         return cf;
     }
 
-    private ControlFileModel getTestModel(ControlFile cf) throws IOException, LongRunningQueryException, InterruptedException, SodaError {
+    private ControlFileModel getTestModel(ControlFile cf) throws IOException, LongRunningQueryException, InterruptedException, HttpException, URISyntaxException {
         File configFile = new File(PATH_TO_CONFIG_FILE);
         ObjectMapper mapper = new ObjectMapper();
         UserPreferences userPrefs = mapper.readValue(configFile, UserPreferencesFile.class);
-        DatasetModel datasetModel = new DatasetModel(userPrefs.getDomain(),userPrefs.getUsername(),userPrefs.getPassword(),userPrefs.getAPIKey(),TestBase.UNITTEST_DATASET_ID);
+        DatasetModel datasetModel = new DatasetModel(userPrefs,TestBase.UNITTEST_DATASET_ID);
         ControlFileModel model = new ControlFileModel(cf,datasetModel);
         return model;
     }

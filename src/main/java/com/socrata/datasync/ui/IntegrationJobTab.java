@@ -1,6 +1,5 @@
 package com.socrata.datasync.ui;
 
-import com.socrata.api.SodaDdl;
 import com.socrata.datasync.*;
 import com.socrata.datasync.DatasetUtils;
 import com.socrata.datasync.PublishMethod;
@@ -275,16 +274,11 @@ public class IntegrationJobTab implements JobTab {
     }
 
 
-    private void updateControlFileModel(ControlFile controlFile, String fourbyfour) throws LongRunningQueryException, InterruptedException, SodaError, IOException{//final String pathToControlFile, final String controlFileContent) throws IOException{
+    private void updateControlFileModel(ControlFile controlFile, String fourbyfour) throws LongRunningQueryException, InterruptedException, HttpException, IOException, URISyntaxException{
 
         UserPreferences userPrefs = new UserPreferencesJava();
 
-            datasetModel = new DatasetModel(userPrefs.getDomain(),
-                    userPrefs.getUsername(),
-                    userPrefs.getPassword(),
-                    userPrefs.getAPIKey(),
-                    fourbyfour);
-
+        datasetModel = new DatasetModel(userPrefs, fourbyfour);
 
         controlFileModel = new ControlFileModel(controlFile,datasetModel);
 
@@ -493,7 +487,7 @@ public class IntegrationJobTab implements JobTab {
                     try {
                         if (controlFileModel == null) {
                             ControlFile controlFile = generateControlFile(
-                                    getSodaDdl(),
+                                    new UserPreferencesJava(),
                                     fileToPublishTextField.getText(),
                                     (PublishMethod) publishMethodComboBox.getSelectedItem(),
                                     datasetIDTextField.getText(),
@@ -533,17 +527,17 @@ public class IntegrationJobTab implements JobTab {
          * @throws com.socrata.exceptions.SodaError
          * @throws InterruptedException
          */
-        private String generateControlFileContent(SodaDdl ddl, String fileToPublish, PublishMethod publishMethod,
-                                                  String datasetId, boolean containsHeaderRow) throws SodaError, InterruptedException, IOException {
-            ControlFile control = generateControlFile(ddl,fileToPublish,publishMethod,datasetId,containsHeaderRow);
+        private String generateControlFileContent(UserPreferences prefs, String fileToPublish, PublishMethod publishMethod,
+                                                  String datasetId, boolean containsHeaderRow) throws HttpException, URISyntaxException, InterruptedException, IOException {
+            ControlFile control = generateControlFile(prefs,fileToPublish,publishMethod,datasetId,containsHeaderRow);
             ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
             return mapper.writeValueAsString(control);
         }
 
-        private ControlFile generateControlFile(SodaDdl ddl, String fileToPublish, PublishMethod publishMethod,
-                                                String datasetId, boolean containsHeaderRow) throws SodaError, InterruptedException, IOException {
+        private ControlFile generateControlFile(UserPreferences prefs, String fileToPublish, PublishMethod publishMethod,
+                                                String datasetId, boolean containsHeaderRow) throws HttpException, URISyntaxException, InterruptedException, IOException {
 
-            Dataset datasetInfo = (Dataset) ddl.loadDatasetInfo(datasetId);
+            Dataset datasetInfo = DatasetUtils.getDatasetInfo(prefs, datasetId);
             boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
 
             String[] columns = null;
@@ -562,14 +556,5 @@ public class IntegrationJobTab implements JobTab {
     private boolean datasetIdValid() {
         String datasetId = datasetIDTextField.getText();
         return Utils.uidIsValid(datasetId);
-    }
-
-    private SodaDdl getSodaDdl() {
-        UserPreferences userPrefs = new UserPreferencesJava();
-        return SodaDdl.newDdl(
-                userPrefs.getDomain(),
-                userPrefs.getUsername(),
-                userPrefs.getPassword(),
-                userPrefs.getAPIKey());
     }
 }
