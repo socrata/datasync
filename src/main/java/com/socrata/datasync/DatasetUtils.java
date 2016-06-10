@@ -40,7 +40,17 @@ public class DatasetUtils {
 
         CloseableHttpResponse resp = get(userPrefs, absolutePath, "application/json");
 
-        return mapper.readValue(resp.getEntity().getContent(), Dataset.class);
+        Dataset datasetInfo;
+        try {
+            HttpEntity entity = resp.getEntity();
+            EntityUtils.consume(entity);
+            datasetInfo = mapper.readValue(resp.getEntity().getContent(), Dataset.class);
+        }
+        finally {
+            resp.close();
+        }
+
+        return datasetInfo;
     }
 
     public static String getDatasetSample(UserPreferences userPrefs, String viewId, int rowsToSample) throws URISyntaxException, IOException, HttpException {
@@ -54,9 +64,17 @@ public class DatasetUtils {
 
         CloseableHttpResponse resp = get(userPrefs, absolutePath, "application/csv");
 
-        HttpEntity entity = resp.getEntity();
+        String sample;
+        try {
+            HttpEntity entity = resp.getEntity();
+            EntityUtils.consume(entity);
+            sample = EntityUtils.toString(entity,"UTF-8");
+        }
+        finally {
+            resp.close();
+        }
 
-        return EntityUtils.toString(entity,"UTF-8");
+        return sample;
     }
 
     private static String getDomainWithoutScheme(UserPreferences userPrefs){
