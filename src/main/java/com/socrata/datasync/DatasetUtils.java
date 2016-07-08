@@ -55,7 +55,7 @@ public class DatasetUtils {
         };
 
         HttpUtility util = new HttpUtility(userPrefs, true);
-        Dataset datasetInfo = util.get(absolutePath, "application/json",handler);
+        Dataset datasetInfo = util.get(absolutePath, "application/json", handler);
         util.close();
         return datasetInfo;
     }
@@ -85,7 +85,7 @@ public class DatasetUtils {
         };
 
         HttpUtility util = new HttpUtility(userPrefs, true);
-        String sample = util.get(absolutePath, "application/csv",handler);
+        String sample = util.get(absolutePath, "application/csv", handler);
         util.close();
         return sample;
     }
