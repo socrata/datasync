@@ -8,14 +8,15 @@ import org.apache.http.HttpStatus;
 import org.apache.http.HttpEntity;
 import org.apache.http.util.EntityUtils;
 import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.utils.URIBuilder;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -38,18 +39,24 @@ public class DatasetUtils {
                 .setPath("/api/views/" + viewId)
                 .build();
 
-        CloseableHttpResponse resp = get(userPrefs, absolutePath, "application/json");
+        ResponseHandler<Dataset> handler = new ResponseHandler<Dataset>() {
+            @Override
+            public Dataset handleResponse(
+                    final HttpResponse response) throws ClientProtocolException, IOException {
+                StatusLine statusLine = response.getStatusLine();
+                int status = statusLine.getStatusCode();
+                if (status >= 200 && status < 300) {
+                    HttpEntity entity = response.getEntity();
+                    return entity != null ? mapper.readValue(entity.getContent(), Dataset.class) : null;
+                } else {
+                    throw new ClientProtocolException(statusLine.toString());
+                }
+            }
+        };
 
-        Dataset datasetInfo;
-        try {
-            HttpEntity entity = resp.getEntity();
-            EntityUtils.consume(entity);
-            datasetInfo = mapper.readValue(resp.getEntity().getContent(), Dataset.class);
-        }
-        finally {
-            resp.close();
-        }
-
+        HttpUtility util = new HttpUtility(userPrefs, true);
+        Dataset datasetInfo = util.get(absolutePath, "application/json",handler);
+        util.close();
         return datasetInfo;
     }
 
@@ -62,18 +69,24 @@ public class DatasetUtils {
                 .addParameter("$limit",""+rowsToSample)
                 .build();
 
-        CloseableHttpResponse resp = get(userPrefs, absolutePath, "application/csv");
+        ResponseHandler<String> handler = new ResponseHandler<String>() {
+            @Override
+            public String handleResponse(
+                    final HttpResponse response) throws ClientProtocolException, IOException {
+                StatusLine statusLine = response.getStatusLine();
+                int status = statusLine.getStatusCode();
+                if (status >= 200 && status < 300) {
+                    HttpEntity entity = response.getEntity();
+                    return entity != null ? EntityUtils.toString(entity) : null;
+                } else {
+                    throw new ClientProtocolException(statusLine.toString());
+                }
+            }
+        };
 
-        String sample;
-        try {
-            HttpEntity entity = resp.getEntity();
-            EntityUtils.consume(entity);
-            sample = EntityUtils.toString(entity,"UTF-8");
-        }
-        finally {
-            resp.close();
-        }
-
+        HttpUtility util = new HttpUtility(userPrefs, true);
+        String sample = util.get(absolutePath, "application/csv",handler);
+        util.close();
         return sample;
     }
 
@@ -83,26 +96,7 @@ public class DatasetUtils {
         return justDomain;
     }
 
-    private static CloseableHttpResponse get(UserPreferences userPrefs, URI absolutePath, String contentType) throws URISyntaxException, IOException, HttpException {
-        HttpUtility http = new HttpUtility(userPrefs, true);
-        System.out.println("Path: " + absolutePath.toString());
-        StatusLine statusLine;
-        int status;
-        int retriesAvailable = 3;
-        int retries = 0;
-        do {
-            try (CloseableHttpResponse resp = http.get(absolutePath, contentType)) {
-                statusLine = resp.getStatusLine();
-                status = statusLine.getStatusCode();
-                if (status != HttpStatus.SC_OK) {
-                    retries += 1;
-                } else {
-                    return resp;
-                }
-            }
-        } while (status != HttpStatus.SC_OK && retries < retriesAvailable);
-        throw new HttpException(statusLine.toString());
-    }
+
 
     /**
      * Retruns the field name of the row identifier, if there is one, else null

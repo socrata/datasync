@@ -12,6 +12,7 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpRequestRetryHandler;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -88,6 +89,16 @@ public class HttpUtility {
      * @return the unproccessed query results
      */
     public CloseableHttpResponse get(URI uri, String contentType) throws IOException {
+        HttpGet httpGet = buildHttpGet(uri,contentType);
+        return httpClient.execute(httpGet);
+    }
+
+    public <T> T get(URI uri, String contentType, ResponseHandler<T> handler) throws IOException {
+        HttpGet httpGet = buildHttpGet(uri,contentType);
+        return httpClient.execute(httpGet,handler);
+    }
+
+    private HttpGet buildHttpGet(URI uri, String contentType){
         HttpGet httpGet = new HttpGet(uri);
         httpGet.setHeader(HttpHeaders.USER_AGENT, userAgent);
         httpGet.addHeader(HttpHeaders.ACCEPT, contentType);
@@ -98,7 +109,7 @@ public class HttpUtility {
             httpGet.setHeader(appHeader, appToken);
             httpGet.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
         }
-        return httpClient.execute(httpGet);
+        return httpGet;
     }
 
     /**
