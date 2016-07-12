@@ -1,0 +1,16 @@
+{
+    "domain": "https://sandbox.demo.socrata.com",
+    "username": "testuser@gmail.com",
+    "password": "OpenData",
+    "appToken": "D8Atrg62F2j017ZTdkMpuZ9vY",
+    "adminEmail": "admin@something.com",
+    "emailUponError": "false",
+    "logDatasetID": "",
+    "outgoingMailServer": "smtp.something.com",
+    "smtpPort": "21",
+    "sslPort": "47",
+    "smtpUsername": "test@something.com",
+    "smtpPassword": "smtppass",
+    "filesizeChunkingCutoffMB": "10",
+    "numRowsPerChunk": "10000"
+}

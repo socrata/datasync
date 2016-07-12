@@ -1,0 +1,16 @@
+{
+    "domain": "https://",
+    "username": "user.name@socrata.com",
+    "password": "",
+    "appToken": "",
+    "adminEmail": "",
+    "emailUponError": "false",
+    "logDatasetID": "",
+    "outgoingMailServer": "",
+    "smtpPort": "",
+    "sslPort": "",
+    "smtpUsername": "",
+    "smtpPassword": "",
+    "filesizeChunkingCutoffMB": "10",
+    "numRowsPerChunk": "10000"
+}

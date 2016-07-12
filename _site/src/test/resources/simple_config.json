@@ -1,0 +1,8 @@
+{
+    "domain": "https://someDomain.com",
+    "username": "some.user@gmail.com",
+    "password": "somePassword",
+    "appToken": "5oMeTokEN",
+    "proxyHost": "https://someDomain.com",
+    "proxyPort": "8080"
+}
