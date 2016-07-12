@@ -16,7 +16,7 @@ Columns within a dataset have both a display name and an API field name.  Datasy
 
 ### What datatypes does DataSync support?
 
-Datasync supports the Text, Formatted Text, Number, Money, Percent, Date & Time (with or without timezone), Location, Website URL, Email, Checkbox, Flag, Star and Phone datatypes.  Please refer to the [conditions/restrictions resource]({{ site.root }}/resources/conditions-restrictions.html) for formatting requirements of each.
+Datasync supports the Text, Formatted Text, Number, Money, Percent, Date & Time (with or without timezone), Location, Website URL, Email, Checkbox, Flag, Star and Phone datatypes.  Please refer to the [conditions/restrictions resource]({{ site.baseurl }}/resources/conditions-restrictions.html) for formatting requirements of each.
 
 ### DataSync keeps failing with "field-not-in-dataset."  What can I do to fix this?
 Typically, this is caused for one of three reasons:
@@ -26,7 +26,7 @@ Typically, this is caused for one of three reasons:
 
 To fix the first two bullets, verify that the column names in your control file match the field names in the dataset, and that the list is comprehensive.
 
-To fix the latter, either remove the column from your dataset, or use the ignoreColumns option found in the [control file]({{ site.root }}/resources/control-config.html) guide.
+To fix the latter, either remove the column from your dataset, or use the ignoreColumns option found in the [control file]({{ site.baseurl }}/resources/control-config.html) guide.
 
 ### My location column is causing my job to fail, or resulting in unexpected data in my address column
 When all fields are not explicitly specified for the location column, the system will attempt to guess at the components by parsing the address.  While this parsing normally works there are notable places where it will fail. To work around this, we recommend explicitly breaking out your address locations into consistuent columns (e.g. address, city, state, zip) and then passing those directly to the synthetic location.
@@ -81,7 +81,7 @@ This is only possible in DataSync version 1.0 and higher. Refer to [this documen
 
 ### I'm getting a ‘Connection refused’ error / I'm having network problems.
 
-Please reference our [Network Considerations resource]({{ site.root }}/resources/network-considerations.html).
+Please reference our [Network Considerations resource]({{ site.baseurl }}/resources/network-considerations.html).
 
 ### I'm still stuck.  What can I do?
-Verify that your CSV meets all of the restrictions detailed in the [conditions and restrictions]({{ site.root }}/resources/conditions-restrictions.html) guide.  If you are still having trouble, please contact your Socrata representive for support.
+Verify that your CSV meets all of the restrictions detailed in the [conditions and restrictions]({{ site.baseurl }}/resources/conditions-restrictions.html) guide.  If you are still having trouble, please contact your Socrata representive for support.

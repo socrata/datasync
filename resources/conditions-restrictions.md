@@ -11,7 +11,7 @@ DataSync enforces particular restrictions on both the format of the CSV, as well
   - If the dataset does not have a row id, then all fields in the dataset must be provided in the CSV.
   - All columns specified in the header must be present in the dataset.
   - All values can be interpreted as the appropriate type.
-  - If `syntheticLocation` is provided in the [control file]({{ site.root }}/resources/ftp-control-config.html), the name of the column that is constructed must not conflict with one already in the CSV.  You can use the `ignoreColumns` option to ignore the one in the CSV.
+  - If `syntheticLocation` is provided in the [control file]({{ site.baseurl }}/resources/ftp-control-config.html), the name of the column that is constructed must not conflict with one already in the CSV.  You can use the `ignoreColumns` option to ignore the one in the CSV.
 
 ### Datatype Restrictions
 

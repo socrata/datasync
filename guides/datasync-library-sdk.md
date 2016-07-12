@@ -4,7 +4,7 @@ title: DataSync Library/SDK (Java)
 bodyclass: homepage
 ---
 
-DataSync 1.5.3 and higher can be used as a Java library/SDK. This guide documents how to do this as well as provides example code. If you are new to DataSync you should first read about using DataSync in [GUI mode]({{ site.root }}/guides/setup-standard-job.html) or [command-line/headless mode]({{ site.root }}/guides/setup-standard-job-headless.html).
+DataSync 1.5.3 and higher can be used as a Java library/SDK. This guide documents how to do this as well as provides example code. If you are new to DataSync you should first read about using DataSync in [GUI mode]({{ site.baseurl }}/guides/setup-standard-job.html) or [command-line/headless mode]({{ site.baseurl }}/guides/setup-standard-job-headless.html).
 
 # Importing Into Your Java Project
 
@@ -85,7 +85,7 @@ The control file settings are used to help DataSync interpret the data within th
 * The Socrata dataset has a Location column and you are <strong>not</strong> using Socrata's geocoding (i.e. you are providing the latitude/longitude coordinates in the CSV/TSV file).
 * If you wish to set the timezone of the dates being imported.
 
-For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.root }}/resources/control-config.html)
+For more detailed information on establishing configuration in the Control file refer to [Control file configuration]({{ site.baseurl }}/resources/control-config.html)
 
 You can specify the control file settings in one of two ways when using DataSync as a library. 
 
@@ -95,7 +95,7 @@ You can specify the control file settings in one of two ways when using DataSync
 
 ### Building the control file object
 
-You can use the 'setter' methods within the FileTypeControl class to configure the job. The setter methods reflect the configuration options details in [Control file configuration]({{ site.root }}/resources/control-config.html). For example, to ignore the header row and configure the list of columns use this code:
+You can use the 'setter' methods within the FileTypeControl class to configure the job. The setter methods reflect the configuration options details in [Control file configuration]({{ site.baseurl }}/resources/control-config.html). For example, to ignore the header row and configure the list of columns use this code:
 
     String[] columnList = {"column1", "column2"};
 
@@ -108,7 +108,7 @@ You can use the 'setter' methods within the FileTypeControl class to configure t
 
 
 
-Or to include a syntheticLocation, which allows a Location datatype column to populate from existing address, city, state, zipcode or latitude/longitude columns within the CSV/TSV. (The syntheticLocations option is discussed in more detail in the [Control File documentation]({{ site.root }}/resources/control-config.html#location-column-and-geocoding-configuration) ), use the following code:
+Or to include a syntheticLocation, which allows a Location datatype column to populate from existing address, city, state, zipcode or latitude/longitude columns within the CSV/TSV. (The syntheticLocations option is discussed in more detail in the [Control File documentation]({{ site.baseurl }}/resources/control-config.html#location-column-and-geocoding-configuration) ), use the following code:
 
     // set up any location columns that need to be populated
     LocationColumn mylocation = new LocationColumn()

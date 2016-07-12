@@ -4,7 +4,7 @@ title: Setup a Standard Job (GUI)
 bodyclass: homepage
 ---
 
-This guide covers how to set up a job using Socrata DataSync's UI. Alternatively, [DataSync can also be run from the command line in headless mode]({{ site.root }}/guides/setup-standard-job-headless.html).
+This guide covers how to set up a job using Socrata DataSync's UI. Alternatively, [DataSync can also be run from the command line in headless mode]({{ site.baseurl }}/guides/setup-standard-job-headless.html).
 
 ### Step 1: Download DataSync
 Navigate to the DataSync [download page](https://github.com/socrata/datasync/releases), and download the latest version.
@@ -52,7 +52,7 @@ Click the "Map fields" button to launch the screen where you'll map the items in
 
 ![Map Fields](/datasync/images/map_fields.png)
 
-You can use this dialog to map the columns in your CSV (shown with previews in the left column) to the fields in your dataset (selected with the dropdowns) on the right hand side.  This dialog will automatically attempt to detect the names in your CSV and align them with the names of your dataset.  Because of this, most of the time you'll simply need to double check the values and hit "OK."  If that's not the case though, you can use the boxes on the right to select the dataset field names and then hit OK.  The dialog will check the values of the CSV to make sure that they are valid and if they are will generate a [control file]({{ site.root }}/resources/control-file-config.html) automatically for you under the covers.  If not, you'll quickly get an error message with instructions as to how to fix the error. 
+You can use this dialog to map the columns in your CSV (shown with previews in the left column) to the fields in your dataset (selected with the dropdowns) on the right hand side.  This dialog will automatically attempt to detect the names in your CSV and align them with the names of your dataset.  Because of this, most of the time you'll simply need to double check the values and hit "OK."  If that's not the case though, you can use the boxes on the right to select the dataset field names and then hit OK.  The dialog will check the values of the CSV to make sure that they are valid and if they are will generate a [control file]({{ site.baseurl }}/resources/control-file-config.html) automatically for you under the covers.  If not, you'll quickly get an error message with instructions as to how to fix the error. 
 
 For more information on the advanced capabilities of this dialog, please see the [Using the Map Fields Dialog](https://socrata.github.io/datasync/guides/using-map-fields-dialog.html)
 
@@ -70,8 +70,8 @@ When running jobs in the UI DataSync does not display detailed logging informati
 ### Step 6: Scheduling your jobs to run at a specified interval
 To automate updating a dataset you must schedule the DataSync job to run automatically at a specified interval (i.e once per day). This can be done with standard tools such as the Windows Task Scheduler or Cron.
 
-[Read the documentation for how to schedule a saved job]({{ site.root }}/resources/schedule-job.html).
+[Read the documentation for how to schedule a saved job]({{ site.baseurl }}/resources/schedule-job.html).
 
 ### Additional configuration
 
-To take advantage of job logging, automatic email error notification, proxy support or file chunking (for publishing large files) in DataSync refer to the [preferences configuration documentation]({{ site.root }}/resources/preferences-config.html).
+To take advantage of job logging, automatic email error notification, proxy support or file chunking (for publishing large files) in DataSync refer to the [preferences configuration documentation]({{ site.baseurl }}/resources/preferences-config.html).

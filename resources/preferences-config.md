@@ -21,7 +21,7 @@ The following options are available to configure DataSync
 | username | required | Your Socrata username. This user must have a Publisher role or Owner rights to at least one dataset. We recommend creating a dedicated Socrata account (with these permissions) to use with DataSync rather than tie DataSync to a particular person’s primary account. (e.g. publisher@opendata.socrata.com)
 | password | required | Your Socrata password. Note that this will be stored in clear-text as part of the file. We recommend taking additional precautions to protect this file, including potentially only adding it when your ETL process runs.
 | appToken | required | An app token.   If do not yet have an app token, please reference [how to obtain an App token](http://dev.socrata.com/docs/app-tokens.html).
-| logDatasetID | optional | The dataset indentifier of the log dataset. If you have not provisioned a log dataset and would like to do so, please refer to the [logging documentation]({{ site.root }}/resources/preferences-config.html).
+| logDatasetID | optional | The dataset indentifier of the log dataset. If you have not provisioned a log dataset and would like to do so, please refer to the [logging documentation]({{ site.baseurl }}/resources/preferences-config.html).
 | adminEmail | required only if `emailUponError` is "true" | The email address of the administrator or user that error notifications should be sent to.
 | emailUponError | optional | Whether to send email notifications of errors that occurred while running jobs. Defaults to "false".
 | outgoingMailServer | required only if `emailUponError` is "true" | The address of your SMTP server
@@ -56,7 +56,7 @@ To load these options into DataSync &#8216;memory&#8217; without use of the GUI,
 
 
 ### Setting up logging (using a dataset)
-You can set up a Socrata dataset to store log information each time a DataSync jobs runs. This is especially useful if you will be [scheduling your jobs]({{ site.root }}/resources/schedule-job.html) to run automatically at some specified interval. You first need to manually create a log dataset. You should probably keep this dataset private (rather than set it as public). The easiest way to set this up is to run a DataSync Port Job that copies the schema from [this example log dataset](https://adrian.demo.socrata.com/dataset/DataSync-Log/aywp-657c).
+You can set up a Socrata dataset to store log information each time a DataSync jobs runs. This is especially useful if you will be [scheduling your jobs]({{ site.baseurl }}/resources/schedule-job.html) to run automatically at some specified interval. You first need to manually create a log dataset. You should probably keep this dataset private (rather than set it as public). The easiest way to set this up is to run a DataSync Port Job that copies the schema from [this example log dataset](https://adrian.demo.socrata.com/dataset/DataSync-Log/aywp-657c).
 
 To run a Port Job in DataSync go to File -> New... -> Port Job and fill out the following fields as noted below:
 
@@ -120,5 +120,5 @@ If the proxy server is authenticated, you may also set:
   - `Proxy Username`: The username needed to log into the proxy server.
   - `Proxy Password`: The password needed to log into the proxy server.
 
-**NOTICE:** DataSync stores the authentication details unencrypted in the Registry on Windows platforms (in the following location: HKEY_CURRENT_USER\Software\JavaSoft\Prefs) and in analogous locations on Mac and Linux. If you are concerned about this as a potential security issue you may instead [run the job headlessly]({{ site.root }}/guides/setup-standard-job-headless.html), in order to pass the needed credentials in via the commandline.
+**NOTICE:** DataSync stores the authentication details unencrypted in the Registry on Windows platforms (in the following location: HKEY_CURRENT_USER\Software\JavaSoft\Prefs) and in analogous locations on Mac and Linux. If you are concerned about this as a potential security issue you may instead [run the job headlessly]({{ site.baseurl }}/guides/setup-standard-job-headless.html), in order to pass the needed credentials in via the commandline.
 

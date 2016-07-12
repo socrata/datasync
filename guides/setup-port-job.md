@@ -51,4 +51,4 @@ The configurable options to run a Port Job are:
 
 
 ### Step 6:  Run, save and schedule the Job.
-Once your job is setup, you can run it like any other job.  For more details, please see steps 4 and 5 of the [Setting up a Standard Job (GUI)]({{ site.root }}/guides/setup-standard-job.html) Guide.
+Once your job is setup, you can run it like any other job.  For more details, please see steps 4 and 5 of the [Setting up a Standard Job (GUI)]({{ site.baseurl }}/guides/setup-standard-job.html) Guide.

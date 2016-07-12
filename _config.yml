@@ -7,6 +7,7 @@ ga_tracking_code: "UA-9046230-3"
 subsite: dev
 title: Socrata DataSync
 root: "/datasync"
+baseurl: "/datasync"
 icon: fa fa-refresh
 github_repo: https://github.com/socrata/datasync
 contribute: /datasync/contributing.html

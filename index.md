@@ -28,4 +28,4 @@ DataSync source code is available [on GitHub](https://github.com/socrata/datasyn
 - An App Token. If you have not yet created one read [how to obtain an App token](http://beta.dev.socrata.com/docs/app-tokens.html)
 
 
-Continue to either the [quick-start guide]({{ site.root }}/guides/quick-start.html) or the [ fuller guide for setting up a standard job]({{ site.root }}/guides/setup-standard-job.html).
+Continue to either the [quick-start guide]({{ site.baseurl }}/guides/quick-start.html) or the [ fuller guide for setting up a standard job]({{ site.baseurl }}/guides/setup-standard-job.html).

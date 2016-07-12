@@ -26,7 +26,7 @@ DataSync will also automatically validate that your configuration is correct *be
 
 ![Sample Error](/datasync/images/sample_error.png)
 
-Once validated, this dialog generates the same [control file]({{ site.root }}/resources/control-config.html) that you may have used to load data via the command line.  Because of this, any saved job can also be run as a scheduled job in headless mode. 
+Once validated, this dialog generates the same [control file]({{ site.baseurl }}/resources/control-config.html) that you may have used to load data via the command line.  Because of this, any saved job can also be run as a scheduled job in headless mode. 
 
 While the default settings will typically be sufficient, every once in a while you will need to take additional steps load your CSV.  The following sections detail how you can use the more advanced features of this UI to successfully upload your CSV. 
 
@@ -77,4 +77,4 @@ All other options available in the Control File can be found under the Advanced 
 
 ![Advanced Options](/datasync/images/advanced_options.png)
 
-Authoritative documentation on the accepted values can be found in the [Control file configuration]({{ site.root }}/resources/control-config.html) page
+Authoritative documentation on the accepted values can be found in the [Control file configuration]({{ site.baseurl }}/resources/control-config.html) page

@@ -6,7 +6,7 @@ bodyclass: homepage
 
 This quick start guide provides an overview of how to use DataSync to sync a local CSV with a dataset.
 
-**NOTICE:** The steps in this guide will replace the entire contents of the dataset with the contents of the CSV.  For a more in depth guide of using DataSync, including information on how to use DataSync to update and append information to a dataset,  please see [setting up a standard job]({{ site.root }}/guides/setup-standard-job.html).
+**NOTICE:** The steps in this guide will replace the entire contents of the dataset with the contents of the CSV.  For a more in depth guide of using DataSync, including information on how to use DataSync to update and append information to a dataset,  please see [setting up a standard job]({{ site.baseurl }}/guides/setup-standard-job.html).
 
 <div class="well">
 We have a video tutorial for using DataSync available <a href="https://support.socrata.com/hc/en-us/articles/202878493-Automating-data-updates-Intro-to-DataSync">here</a>.
@@ -59,7 +59,7 @@ Click the "Map fields" button to launch the screen where you'll map the items in
 
 ![Map Fields](/datasync/images/map_fields.png)
 
-You can use this dialog to map the columns in your CSV (shown with previews in the left column) to the fields in your dataset (selected with the dropdowns) on the right hand side.  This dialog will automatically attempt to detect the names in your CSV and align them with the names of your dataset.  Because of this, most of the time you'll simply need to double check the values and hit "OK."  If that's not the case though, you can use the boxes on the right to select the dataset field names and then hit OK.  The dialog will check the values of the CSV to make sure that they are valid and if they are will generate a [control file]({{ site.root }}/resources/control-file-config.html) automatically for you under the covers.  If not, you'll quickly get an error message with instructions as to how to fix the error. 
+You can use this dialog to map the columns in your CSV (shown with previews in the left column) to the fields in your dataset (selected with the dropdowns) on the right hand side.  This dialog will automatically attempt to detect the names in your CSV and align them with the names of your dataset.  Because of this, most of the time you'll simply need to double check the values and hit "OK."  If that's not the case though, you can use the boxes on the right to select the dataset field names and then hit OK.  The dialog will check the values of the CSV to make sure that they are valid and if they are will generate a [control file]({{ site.baseurl }}/resources/control-file-config.html) automatically for you under the covers.  If not, you'll quickly get an error message with instructions as to how to fix the error. 
 
 For more information on the advanced capabilities of this dialog, please see the [Using the Map Fields Dialog](/guides/using-map-fields-dialog.html)
 
@@ -77,5 +77,5 @@ After saving the file the '*Command to execute with scheduler*' field is populat
 
 To automate updating a dataset you must schedule the DataSync job to run automatically at a specified interval (i.e once per day). This can be done with standard tools such as the Windows Task Scheduler or Cron.
 
-[Read the documentation for how to schedule a saved job]({{ site.root }}/resources/schedule-job.html).
+[Read the documentation for how to schedule a saved job]({{ site.baseurl }}/resources/schedule-job.html).
 

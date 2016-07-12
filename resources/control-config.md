@@ -49,7 +49,7 @@ The `columns` and `skip` options enable configuration of how the columns within 
 
 `columns`: List of column names in the following format `["col_id1","col_id2",..]`. If `null`, the first line of the CSV/TSV after any skipped records is assumed to contain the column names. If specified, `columns` must be an array of strings, and must not contain nulls.
 
-**IMPORTANT NOTE:** the column names, whether provided in “columns” or in the first row of the CSV/TSV, must be the [API field names]({{ site.root }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html), not the display name of the columns.
+**IMPORTANT NOTE:** the column names, whether provided in “columns” or in the first row of the CSV/TSV, must be the [API field names]({{ site.baseurl }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html), not the display name of the columns.
 
 `skip`: Specifies the number of rows to skip before reaching the header.
 
@@ -201,7 +201,7 @@ The following are options available to both CSV files or TSV files within the `c
   </tr>
 <tr>
     <td>columns</td>
-    <td>JSON list of column names. If null then the first line of the CSV after any skipped records is used. If specified, it must be an array of strings and must not contain nulls. Note that the column names, whether provided in “columns” or in the first row of the CSV, must match the [API field names]({{ site.root }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html), not the display name of the columns.</td>
+    <td>JSON list of column names. If null then the first line of the CSV after any skipped records is used. If specified, it must be an array of strings and must not contain nulls. Note that the column names, whether provided in “columns” or in the first row of the CSV, must match the [API field names]({{ site.baseurl }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html), not the display name of the columns.</td>
   </tr>
 <tr>
     <td>ignoreColumns</td>
