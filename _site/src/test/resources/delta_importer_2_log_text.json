@@ -1,0 +1,164 @@
+[
+  {
+    "type": "committing-job",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "email": "ayn.leslie+datasync@socrata.com",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv.sdiff.xz",
+      "timestamp": "2014-06-16T17:39:35.626Z"
+    }
+  },
+  {
+    "type": "committed-job",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "timestamp": "2014-06-16T17:39:35.850Z"
+    }
+  },
+  {
+    "type": "processing",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv.sdiff.xz",
+      "user": "ayn.leslie+datasync@socrata.com",
+      "timestamp": "2014-06-16T17:39:35.886Z"
+    }
+  },
+  {
+    "type": "applying-diff-time",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv.sdiff.xz",
+      "duration": 541,
+      "timestamp": "2014-06-16T17:39:36.435Z"
+    }
+  },
+  {
+    "type": "counting-records-time",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv",
+      "duration": 0,
+      "timestamp": "2014-06-16T17:39:36.439Z"
+    }
+  },
+  {
+    "type": "reading-metadata",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv",
+      "duration": 64,
+      "timestamp": "2014-06-16T17:39:36.719Z"
+    }
+  },
+  {
+    "type": "reading-new-data-time",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv",
+      "duration": 7,
+      "timestamp": "2014-06-16T17:39:36.731Z"
+    }
+  },
+  {
+    "type": "reading-and-sorting-time",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv",
+      "duration": 78,
+      "timestamp": "2014-06-16T17:39:36.733Z"
+    }
+  },
+  {
+    "type": "generating-upsert-time",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv",
+      "duration": 1,
+      "timestamp": "2014-06-16T17:39:36.735Z"
+    }
+  },
+  {
+    "type": "finished",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv",
+      "inserted": 1,
+      "updated": 0,
+      "deleted": 1,
+      "errors": 0,
+      "timestamp": "2014-06-16T17:39:37.558Z"
+    }
+  },
+  {
+    "type": "upserting-time",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv",
+      "duration": 761,
+      "timestamp": "2014-06-16T17:39:37.560Z"
+    }
+  },
+  {
+    "type": "storing-completed-time",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv.sdiff.xz",
+      "newFilename": "17:39:37.563-testSet.csv",
+      "duration": 103,
+      "timestamp": "2014-06-16T17:39:37.669Z"
+    }
+  },
+  {
+    "type": "success",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv.sdiff.xz",
+      "details": {
+        "totalErrors": 0,
+        "type": "data-file-success"
+      },
+      "timestamp": "2014-06-16T17:39:37.671Z"
+    }
+  },
+  {
+    "type": "failure",
+    "data": {
+      "jobId": "5e1899cd-9dbc-43ba-81bb-75d736859f7b",
+      "dataset": "2dr2-h8n4",
+      "filename": "F01_orig.csv.sdiff.xz",
+      "details": {
+        "value": "2002\/09\/16 09:53:28 PM Z",
+        "column": "mydatetimezone1",
+        "expectedType": [
+          "date"
+        ],
+        "record": 1,
+        "type": "uninterpretable-value"
+      },
+      "timestamp": "2014-06-29T02:09:42.357Z"
+    }
+  },
+  {
+    "type": "processing-time",
+    "data": {
+      "jobId": "aa89ebe5-614f-450b-afe2-53a5b5980d8c",
+      "dataset": "qrq4-erec",
+      "filename": "testSet.csv.sdiff.xz",
+      "duration": 1785,
+      "timestamp": "2014-06-16T17:39:37.674Z"
+    }
+  }
+]

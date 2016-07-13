@@ -1,0 +1,35 @@
+{
+  "action" : "Replace", 
+  "csv" :
+    {
+      "fixedTimestampFormat" : "ISO8601",
+      "separator" : ",",
+      "timezone" : "UTC",
+      "encoding" : "utf-8",
+      "overrides" : {},
+      "quote" : "\"",
+      "emptyTextIsNull" : true,
+      "columns" : ["id","name", "another_name", "date"],
+      "skip" : 0,
+      "ignoreColumns": [
+        "foo"
+      ],
+      "floatingTimestampFormat" : "MM/dd/yyyy"
+    },
+  "tsv" :
+    {
+      "fixedTimestampFormat" : "ISO8601",
+      "separator" : "\t",
+      "timezone" : "UTC",
+      "skip" : 0,
+      "encoding" : "utf-8",
+      "overrides" : {},
+      "quote" : "\u0000",
+      "emptyTextIsNull" : true,
+      "columns" : null,
+      "ignoreColumns": [
+        "foo"
+      ],
+      "floatingTimestampFormat" : "ISO8601"
+    }
+}

@@ -1,0 +1,67 @@
+{
+  "action": "Delete",
+  "opaque": "someSillyUUIDforMyInternalUse",
+  "csv": {
+    "columns": [
+      "boo",
+      "bar",
+      "baz"
+    ],
+    "emptyTextIsNull": true,
+    "encoding": "utf-8",
+    "fixedTimestampFormat": [
+      "ISO8601",
+      "MM\/dd\/yy",
+      "MM\/dd\/yyyy",
+      "dd-MMM-yyyy"
+    ],
+    "floatingTimestampFormat": [
+      "ISO8601",
+      "MM\/dd\/yy",
+      "MM\/dd\/yyyy",
+      "dd-MMM-yyyy"
+    ],
+    "ignoreColumns": [
+      "foo"
+    ],
+    "quote":"\"",
+    "escape":"\\\\",
+    "useSocrataGeocoding": true,
+    "separator": ",",
+    "dropUninterpretableRows": "TenPercent",
+    "overrides": {
+      "column1": {
+        "trimWhitespace": false,
+        "useSocrataGeocoding": false,
+        "emptyTextIsNull": true,
+        "timestampFormat": [
+          "MM\/YYYY",
+          "YYYY\/MM"
+        ],
+        "timezone": "PDT"
+      },
+      "column2": {
+        "trimWhitespace": false,
+        "useSocrataGeocoding": false,
+        "emptyTextIsNull": true,
+        "timestampFormat": [
+          "MM\/YYYY",
+          "YYYY\/MM"
+        ],
+        "timezone": "PDT"
+      }
+    },
+    "syntheticLocations": {
+      "loc1": {
+        "address": "1234 Lane",
+        "city": "Seattle",
+        "state": "WA",
+        "zip": "98125"
+      }
+    },
+    "skip": 0,
+    "timezone": "UTC",
+    "trimServerWhitespace": true,
+    "trimWhitespace": true
+  }
+}
