@@ -17,4 +17,4 @@ config_port_to_staging.json
 src/test/resources/basic_test_config_staging.json
 common/
 _layouts/
-public/
+public/.jekyll-metadata

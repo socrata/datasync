@@ -1,5 +1,6 @@
 destination: "public/datasync"
 exclude: [Gemfile, Gemfile.lock, .rvmrc, public]
+incremental: true
 
 # TODO: Get a unique tracking code for datasync
 ga_tracking_code: "UA-9046230-3"
