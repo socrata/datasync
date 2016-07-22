@@ -232,7 +232,7 @@ public class ControlFileModel extends Observable {
     }
 
     public void setTrimWhiteSpace(boolean trim){
-        controlFile.getFileTypeControl().trimServerWhitespace(trim);
+        controlFile.getFileTypeControl().trimWhitespace(trim);
         updateListeners();
     }
 

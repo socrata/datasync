@@ -132,7 +132,7 @@ public class IntegrationJobTest extends TestBase {
                 "      \"encoding\" : \"utf-8\",\n" +
                 "      \"emptyTextIsNull\" : true,\n" +
                 "      \"trimWhitespace\" : true,\n" +
-                "      \"trimServerWhitespace\" : true,\n" +
+                "      \"trimServerWhitespace\" : false,\n" +
                 "      \"overrides\" : {}\n" +
                 "    }\n" +
                 "}", job.getControlFileContent());

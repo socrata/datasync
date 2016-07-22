@@ -18,9 +18,10 @@ public class ControlFileTest {
     Integer skip = 0;
     Boolean emptyTextIsNull = true;
     Boolean trimSpace = true;
+    Boolean trimServerSpace = false;
     Boolean useGeocoding = true;
     Boolean columnStatistics = true;
-    Boolean setAsideErrors = false;
+    Boolean setAsideErrors = true;
     String encoding = "utf-8";
     String timezone = "UTC";
     String[] columns = {"boo", "bar", "baz"};
@@ -45,7 +46,7 @@ public class ControlFileTest {
             "\"setAsideErrors\":" + setAsideErrors + "," +
             "\"skip\":" + skip + "," +
             "\"timezone\":\"" + timezone + "\"," +
-            "\"trimServerWhitespace\":" + trimSpace + "," +
+            "\"trimServerWhitespace\":" + trimServerSpace + "," +
             "\"trimWhitespace\":" + trimSpace +"," +
             "\"useSocrataGeocoding\":" + useGeocoding +
         "}";
@@ -134,7 +135,7 @@ public class ControlFileTest {
         TestCase.assertEquals(6, cf.getCsvFtc().floatingTimestampFormat.length);
         TestCase.assertEquals(encoding, cf.getCsvFtc().encoding);
         TestCase.assertEquals(emptyTextIsNull, cf.getCsvFtc().emptyTextIsNull);
-        TestCase.assertEquals(trimSpace, cf.getCsvFtc().trimServerWhitespace);
+        TestCase.assertEquals(trimServerSpace, cf.getCsvFtc().trimServerWhitespace);
         TestCase.assertEquals(trimSpace, cf.getCsvFtc().trimWhitespace);
         TestCase.assertNull(cf.getCsvFtc().escape);
         TestCase.assertTrue(cf.getCsvFtc().useSocrataGeocoding);

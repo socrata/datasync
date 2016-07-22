@@ -40,7 +40,7 @@ public class OptionsPanel extends JPanel {
         hasHeaderRow =generateGenericCheckbox("Has header row",model.getControlFile().getFileTypeControl().hasHeaderRow,headerRowListener);
 
         SetAsideErrorsListener setAsideErrorsListener = new SetAsideErrorsListener();
-        setAsideErrors = generateGenericCheckbox("Set Aside Errors", model.getControlFile().getFileTypeControl().setAsideErrors,setAsideErrorsListener);
+        setAsideErrors = generateGenericCheckbox("Set Aside Errors", model.getControlFile().getFileTypeControl().setAsideErrors, setAsideErrorsListener);
 
         useSocrataGeocoding = generateGenericCheckbox("Use Socrata Geocoding", model.getControlFile().getFileTypeControl().useSocrataGeocoding, new ActionListener() {
             @Override
