@@ -11,6 +11,7 @@ import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileReader;
@@ -148,7 +149,10 @@ public class Soda2Publisher {
                 if(currLine != null) {
                     for (int i=0; i<currLine.length; i++) {
                         if (i < headers.length) {
-                            builder.put(headers[i], currLine[i]);
+                            // exclude empty csv cell value
+                            if (!StringUtils.isEmpty(currLine[i])) {
+                                builder.put(headers[i], currLine[i]);
+                            }
                         }
                     }
                     upsertObjectsChunk.add(builder.build());
