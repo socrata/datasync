@@ -72,7 +72,7 @@ public class ControlFile {
                                                   final PublishMethod publishMethod,
                                                   final String[] columns,
                                                   final boolean useSocrataGeocoding,
-                                                    final boolean hasHeaderRow) {
+                                                  final boolean hasHeaderRow) {
 
 
         String fileToPublishExtension = Utils.getFileExtension(fileToPublish);
@@ -103,9 +103,9 @@ public class ControlFile {
                .timezone("UTC")
                .useSocrataGeocoding(useSocrataGeocoding)
                .trimWhitespace(true)
-               .trimServerWhitespace(true)
+               .trimServerWhitespace(false)
                .overrides(new HashMap<String, ColumnOverride>())
-               .setAsideErrors(false);
+               .setAsideErrors(true);
 
 
             // for replace jobs, calculate column statistics
