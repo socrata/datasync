@@ -37,7 +37,7 @@ public class OptionsPanel extends JPanel {
         trimWhitespace = generateGenericCheckbox("Trim whitespace", model.getControlFile().getFileTypeControl().trimWhitespace, trimWhitespaceListener);
 
         HasHeaderRowListener headerRowListener = new HasHeaderRowListener();
-        hasHeaderRow =generateGenericCheckbox("Has header row",model.getControlFile().getFileTypeControl().hasHeaderRow,headerRowListener);
+        hasHeaderRow =generateGenericCheckbox("Has header row", model.getControlFile().getFileTypeControl().hasHeaderRow, headerRowListener);
 
         SetAsideErrorsListener setAsideErrorsListener = new SetAsideErrorsListener();
         setAsideErrors = generateGenericCheckbox("Set Aside Errors", model.getControlFile().getFileTypeControl().setAsideErrors, setAsideErrorsListener);
@@ -58,18 +58,27 @@ public class OptionsPanel extends JPanel {
         hasHeaderRow.setMaximumSize(checkboxDim);
         container.add(hasHeaderRow);
 
-        trimWhitespace.setAlignmentX(LEFT_ALIGNMENT);
 
+        JPanel trimPanel = new JPanel();
+        trimPanel.setLayout(new FlowLayout());
+
+        trimWhitespace.setAlignmentX(LEFT_ALIGNMENT);
         trimWhitespace.setMaximumSize(checkboxDim);
-        container.add(trimWhitespace);
+        trimPanel.add(trimWhitespace);
+
+        String trimHelpString = "<HTML>Select this option to remove extra spaces<br> " +
+                                "before or after fields in your incoming data.<HTML>";
+        JLabel trimHelpBubble = UIUtility.generateHelpBubble(trimHelpString);
+        trimHelpBubble.setAlignmentX(LEFT_ALIGNMENT);
+        trimPanel.add(trimHelpBubble);
+        container.add(trimPanel);
+
 
         JPanel errorsPanel = new JPanel();
         errorsPanel.setLayout(new FlowLayout());
-
         setAsideErrors.setAlignmentX(LEFT_ALIGNMENT);
         setAsideErrors.setMaximumSize(checkboxDim);
         errorsPanel.add(setAsideErrors);
-
         String helpString = "<HTML>With “Set aside errors” selected, any rows that contain invalid data<br>" +
                             "will be set aside for inspection, while all valid rows will be imported<br>" +
                             "to the dataset. The invalid rows will be available for download on the<br>" +

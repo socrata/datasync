@@ -53,7 +53,7 @@ public class ControlFileModel extends Observable {
 
         // Check to see if the ControlFile already has initialized columns.
         // If it doesn't, then initialize the columns list with dummy names. Note that we use dummy names here
-        // instead of names from the CSV since there is no guarentee that the names in the CSV will be valid.  They
+        // instead of names from the CSV since there is no guarantee that the names in the CSV will be valid.  They
         // could be duplicates, as well as empty strings.
         if (!file.getFileTypeControl().hasColumns()){
             initializeColumns();
