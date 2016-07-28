@@ -32,7 +32,7 @@ public class ControlFile {
         this.opaque = opaque;
         this.csv = csvControl;
         this.tsv = tsvControl;
-
+        this.replacePreviousQueued = replacePreviousQueued;
     }
 
 
@@ -64,7 +64,7 @@ public class ControlFile {
     * @param fileToPublish filename of file to publish (.tsv or .csv file)
     * @param publishMethod to use to publish (upsert, append, replace, or delete)
     *               NOTE: this option will be overriden if this control file is for an ftp job
-    * @param columns the column headers correcsponding to the filetoPublish, needed if it lacks headers
+    * @param columns the column headers corresponding to the filetoPublish, needed if it lacks headers
     * @param useSocrataGeocoding if true use Socrata's geocoding to geocode Location columns
     * @return content of control.json based on given job parameters
     */

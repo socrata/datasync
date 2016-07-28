@@ -247,7 +247,7 @@ public class IntegrationJob extends Job {
         setFileToPublish(cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG));
         if(method != null)
             setPublishMethod(PublishMethod.valueOf(method));
-        setFileToPublishHasHeaderRow(Boolean.parseBoolean(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG, "false")));
+        setFileToPublishHasHeaderRow(Boolean.parseBoolean(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG, "true")));
         setPublishViaFTP(Boolean.parseBoolean(cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG, options.DEFAULT_PUBLISH_VIA_FTP)));
         setPublishViaDi2Http(Boolean.parseBoolean(cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG, options.DEFAULT_PUBLISH_VIA_DI2)));
         String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);

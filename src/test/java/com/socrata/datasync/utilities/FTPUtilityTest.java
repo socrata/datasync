@@ -42,7 +42,7 @@ public class FTPUtilityTest extends TestBase {
                 FTPDropbox2Publisher.getFTPHost(userPrefs1));
         TestCase.assertEquals("production.ftp.socrata.net",
                 FTPDropbox2Publisher.getFTPHost(userPrefs2));
-        TestCase.assertEquals("azure-staging.ftp.socrata.net",
+        TestCase.assertEquals("aws-us-west-2-staging.ftp.socrata.net",
                 FTPDropbox2Publisher.getFTPHost(userPrefs3));
     }
 

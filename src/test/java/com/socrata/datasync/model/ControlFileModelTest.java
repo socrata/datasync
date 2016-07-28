@@ -69,15 +69,16 @@ public class ControlFileModelTest extends TestBase {
         //Assert that we are skipping the first row when has header row == 1
         ControlFile cf = getTestControlFile();
         ControlFileModel model = getTestModel(cf);
+        model.setRowsToSkip(0);
         model.setHasHeaderRow(true);
-        TestCase.assertEquals((int) model.getControlFile().getFileTypeControl().skip,1);
+        TestCase.assertEquals(1, (int) model.getControlFile().getFileTypeControl().skip);
         //The headers should always be either the name of the field to which we're setting this column, or the dummy
         //placeholder.  Verify that this actually the case.
-        TestCase.assertEquals(ModelUtils.generatePlaceholderName(0),model.getColumnAtPosition(0));
+        TestCase.assertEquals("id",model.getColumnAtPosition(0));
         //Assert that we decrement by 1 when the header row is turned off
         model.setRowsToSkip(5);
         model.setHasHeaderRow(false);
-        TestCase.assertEquals((int) model.getControlFile().getFileTypeControl().skip,4);
+        TestCase.assertEquals(4, (int) model.getControlFile().getFileTypeControl().skip);
     }
 
 
