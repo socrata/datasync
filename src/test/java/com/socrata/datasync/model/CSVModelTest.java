@@ -43,14 +43,15 @@ public class CSVModelTest {
     public void testRowParsing() throws IOException {
         ControlFile cf = getSimpleTestControlFile();
         CSVModel model = new CSVModel(cf);
-        TestCase.assertEquals(model.getRowCount(), 3);
-        TestCase.assertEquals(model.getValueAt(0, 0), "1");
+        TestCase.assertEquals(3, model.getRowCount());
+        TestCase.assertEquals("1", model.getValueAt(0, 0));
 
         //Test that we include the first row when has header row is false
+        cf.getFileTypeControl().skip(0);
         cf.getFileTypeControl().hasHeaderRow(false);
         CSVModel anotherModel = new CSVModel(cf);
-        TestCase.assertEquals(anotherModel.getRowCount(), 4);
-        TestCase.assertEquals(anotherModel.getValueAt(0, 0), "ID");
+        TestCase.assertEquals(4, anotherModel.getRowCount());
+        TestCase.assertEquals("ID", anotherModel.getValueAt(0, 0));
     }
 
     //Verify that we're able to initialize the model when there are blank rows

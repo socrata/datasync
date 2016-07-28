@@ -250,7 +250,9 @@ public class IntegrationUtilityTest extends TestBase {
         TestCase.assertEquals(2, result.getRowsUpdated());
         TestCase.assertEquals(0, result.getRowsCreated());
         TestCase.assertEquals(2, getTotalRows(UNITTEST_DATASET_ID));
-        TestCase.assertEquals("Unknown date format 'invalid_date'.", result.getErrors().get(0).getError());
+        String errorMessage = result.getErrors().get(0).getError();
+        TestCase.assertTrue(errorMessage.startsWith("There was an error converting the value in the column Date("));
+        TestCase.assertTrue(errorMessage.endsWith("to a calendar_date. Unknown date format 'invalid_date'."));
         TestCase.assertEquals(2, result.getErrors().get(0).getIndex());
     }
 
