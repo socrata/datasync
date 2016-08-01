@@ -64,7 +64,13 @@ public class ControlFileModel extends Observable {
 
     //This will be called anytime that we think the shape of the dataset has changed underneath us.
     private void initializeColumns(){
+        if (controlFile.getFileTypeControl().columns != null) {
+            // un-ignore all the columns we're about to wipe out
+            removeIgnoredColumns(controlFile.getFileTypeControl().columns);
+        }
+
         controlFile.getFileTypeControl().columns = new String[csvModel.getColumnCount()];
+
         for (int i = 0; i < getColumnCount(); i++){
             controlFile.getFileTypeControl().columns[i] = ModelUtils.generatePlaceholderName(i);
         }
@@ -98,6 +104,12 @@ public class ControlFileModel extends Observable {
         }
     }
 
+    private void removeIgnoredColumns(String[] columnsToRemove) {
+        for (String column : columnsToRemove) {
+            removeIgnoredColumn(column);
+        }
+    }
+
     private void removeIgnoredColumn(String columnName){
         String[] ignoredColumns = controlFile.getFileTypeControl().ignoreColumns;
         if (ignoredColumns != null) {
@@ -123,7 +135,7 @@ public class ControlFileModel extends Observable {
     }
 
     public void ignoreColumnInCSVAtPosition(int index){
-        if (index >  getColumnCount())
+        if (index >=  getColumnCount())
             throw new IllegalStateException("Cannot update field outside of the CSV");
         String columnName = getColumnAtPosition(index);
         ArrayList<String> newColumns = new ArrayList<String>(Arrays.asList(controlFile.getFileTypeControl().ignoreColumns));
@@ -173,11 +185,12 @@ public class ControlFileModel extends Observable {
     public void removeSyntheticColumn(String fieldName){
         if (controlFile.getFileTypeControl().syntheticLocations != null)
             controlFile.getFileTypeControl().syntheticLocations.remove(fieldName);
+
         updateListeners();
     }
 
     public String getColumnAtPosition(int i){
-        if (i > getColumnCount())
+        if (i >= getColumnCount())
             throw new IllegalStateException("Cannot update field outside of the CSV");
         return controlFile.getFileTypeControl().columns[i];
     }
@@ -206,8 +219,18 @@ public class ControlFileModel extends Observable {
 
     public void setSeparator(String sep){
         controlFile.getFileTypeControl().separator(sep);
-        //This is likely to change the number of columns in the dataset.  Reset the columns
+
+        try {
+            // update our understanding of the CSV, given the new separator
+            csvModel.updateTable(controlFile);
+        }
+        catch (IOException e){
+            System.out.println(e.getStackTrace());
+        }
+
+        // update the controlfile's idea of the columns, now that the CSVModel has changed
         initializeColumns();
+        matchColumns();
         updateListeners();
     }
 
@@ -367,7 +390,7 @@ public class ControlFileModel extends Observable {
         if (!rowsContainSameNumberOfColumns())
             return JobStatus.ROWS_DO_NOT_CONTAIN_SAME_NUMBER_OF_COLUMNS;
 
-            JobStatus status = IntegrationJobValidity.checkControl(controlFile,controlFile.getFileTypeControl(),datasetModel.getDatasetInfo(),new File(controlFile.getFileTypeControl().filePath),datasetModel.getDomain());
+        JobStatus status = IntegrationJobValidity.checkControl(controlFile,controlFile.getFileTypeControl(),datasetModel.getDatasetInfo(),new File(controlFile.getFileTypeControl().filePath),datasetModel.getDomain());
         if (status.isError()){
             return status;
         }

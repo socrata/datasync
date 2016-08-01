@@ -32,6 +32,7 @@ public class CSVModel extends AbstractTableModel{
     public void updateTable(ControlFile file) throws IOException {
         data.removeAllElements();
         updateColumnNames(file);
+
         addSamples(file);
     }
 
