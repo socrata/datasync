@@ -280,7 +280,7 @@ public class IntegrationJobTab implements JobTab {
 
         datasetModel = new DatasetModel(userPrefs, fourbyfour);
 
-        controlFileModel = new ControlFileModel(controlFile,datasetModel);
+        controlFileModel = new ControlFileModel(controlFile, datasetModel);
 
     }
 
