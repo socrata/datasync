@@ -50,7 +50,7 @@ mvn clean compile -Dmaven.test.skip=true assembly:single
 This puts the JAR file into the "target" directory inside the repo.  So to open DataSync, simply:
 ```
 cd target
-java -jar DataSync-1.7.1-jar-with-dependencies.jar
+java -jar DataSync-1.7.2-jar-with-dependencies.jar
 ```
 
 ### Java SDK

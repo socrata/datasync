@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>DataSync</groupId>
     <artifactId>DataSync</artifactId>
-    <version>1.7.1</version>
+    <version>1.7.2</version>
     <developers>
         <developer>
             <name>Ayn Leslie-Cook</name>
@@ -13,6 +13,11 @@
         <developer>
             <name>Adrian Laurenzi</name>
             <email>adrian.laurenzi@socrata.com</email>
+            <organization>Socrata</organization>
+        </developer>
+        <developer>
+            <name>Cate Uselton</name>
+            <email>catherine.uselton@socrata.com</email>
             <organization>Socrata</organization>
         </developer>
         <developer>
