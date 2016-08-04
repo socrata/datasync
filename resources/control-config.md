@@ -244,6 +244,10 @@ The following are options available to both CSV files or TSV files within the `c
     <td>Allows transformation of multiple columns into one or more Location columns during insert. See See the [Location column and geocoding configuration](#location-geocoding) section for an example.</td>
   </tr>
 <tr>
+    <td>setAsideErrors</td>
+    <td>When set to true, bad data will be ignored, allowing the job to complete while setting aside any rows that contain errors. As with other upload jobs, the status of the job can be monitored in the [job status page](https://support.socrata.com/hc/en-us/articles/216367918-Publishing-Jobs-Status-Page). If the upload job completed (with partial success), a link to the CSV with bad data will be available in the job details page to download and inspect.</td>
+  </tr>
+<tr>
     <td>overrides</td>
     <td>A map whose keys are field names, and whose values are objects containing per-column overrides for the `timestampFormat`, `timezone`, `emptyTextIsNull`, `trimWhitespace`, `trimServerWhitespace` and `useSocrataGeocoding` settings.  Note that “timestampFormat” applies to both fixed and floating timestamps. For an example, see below.</td>
   </tr>
