@@ -105,7 +105,7 @@ public class ControlFile {
                .trimWhitespace(true)
                .trimServerWhitespace(false)
                .overrides(new HashMap<String, ColumnOverride>())
-               .setAsideErrors(true);
+               .setAsideErrors(false);
 
 
             // for replace jobs, calculate column statistics

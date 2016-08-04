@@ -21,7 +21,7 @@ public class ControlFileTest {
     Boolean trimServerSpace = false;
     Boolean useGeocoding = true;
     Boolean columnStatistics = true;
-    Boolean setAsideErrors = true;
+    Boolean setAsideErrors = false;
     String encoding = "utf-8";
     String timezone = "UTC";
     String[] columns = {"boo", "bar", "baz"};
