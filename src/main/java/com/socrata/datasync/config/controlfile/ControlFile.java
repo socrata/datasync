@@ -92,7 +92,7 @@ public class ControlFile {
             int skip = 0;
             String separator = isCsv ? "," : "\t";
             //Adding our standard export formats so that a customer can easily round-trip data into the system.
-            String[] timeFormats = new String[]{"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy","MM/dd/yyyy HH:mm:ss a Z","MM/dd/yyyy HH:mm:ss a"};
+            String[] timeFormats = new String[]{"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy","MM/dd/yyyy hh:mm:ss a Z","MM/dd/yyyy hh:mm:ss a"};
             ftc.emptyTextIsNull(true)
                .filePath(fileToPublish)
                .ignoreColumns(new String[]{})
