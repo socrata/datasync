@@ -1,4 +1,4 @@
-	---
+---
 layout: with-sidebar
 title: Using the Map Fields Dialog
 bodyclass: homepage
@@ -26,9 +26,9 @@ DataSync will also automatically validate that your configuration is correct *be
 
 ![Sample Error](/datasync/images/sample_error.png)
 
-Once validated, this dialog generates the same [control file]({{ site.baseurl }}/resources/control-config.html) that you may have used to load data via the command line.  Because of this, any saved job can also be run as a scheduled job in headless mode. 
+Once validated, this dialog generates the same [control file]({{ site.baseurl }}/resources/control-config.html) that you may have used to load data via the command line.  Because of this, any saved job can also be run as a scheduled job in headless mode.
 
-While the default settings will typically be sufficient, every once in a while you will need to take additional steps load your CSV.  The following sections detail how you can use the more advanced features of this UI to successfully upload your CSV. 
+While the default settings will typically be sufficient, every once in a while you will need to take additional steps load your CSV.  The following sections detail how you can use the more advanced features of this UI to successfully upload your CSV.
 
 ###Selecting Set Aside Errors
 ![Selecting Set Aside Errors](/datasync/images/set_aside_error.png)
@@ -53,7 +53,7 @@ As mentioned above, the UI will show you a preview of your data inline.  The top
 
 ![Inline Preview](/datasync/images/inline.png)
 
-We recommend checking this prior to upload to ensure that all data is uploaded.  Common mistakes include having the "has header row" set when there is no header row in the dataset. 
+We recommend checking this prior to upload to ensure that all data is uploaded.  Common mistakes include having the "has header row" set when there is no header row in the dataset.
 
 ![Header row before and after](/datasync/images/header_row_before_after.png)
 

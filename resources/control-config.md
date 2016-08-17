@@ -201,7 +201,7 @@ The following are options available to both CSV files or TSV files within the `c
   </tr>
 <tr>
     <td>columns</td>
-    <td>JSON list of column names. If null then the first line of the CSV after any skipped records is used. If specified, it must be an array of strings and must not contain nulls. Note that the column names, whether provided in “columns” or in the first row of the CSV, must match the [API field names]({{ site.baseurl }}/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html), not the display name of the columns.</td>
+    <td>JSON list of column names. If null then the first line of the CSV after any skipped records is used. If specified, it must be an array of strings and must not contain nulls. Note that the column names, whether provided in “columns” or in the first row of the CSV, must match the <a href="datasync/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html">API field names</a>, not the display name of the columns.</td>
   </tr>
 <tr>
     <td>ignoreColumns</td>
@@ -229,7 +229,7 @@ The following are options available to both CSV files or TSV files within the `c
   </tr>
 <tr>
     <td>floatingTimestampFormat</td>
-    <td>Specifies how Floating Timestamps (“Date & Time” columns) are interpreted. Typical values are "ISO8601" or "yyyy-MM-dd".  Any [joda-formated string](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html) is acceptable. If you want to allow multiple formats to be accepted, then you can specify a list of values rather than a single value (e.g. ["ISO8601", "MM.dd.yyyy"]).</td>
+    <td>Specifies how Floating Timestamps (“Date & Time” columns) are interpreted. Typical values are "ISO8601" or "yyyy-MM-dd".  Any <a href="http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html">joda-formated string</a> is acceptable. If you want to allow multiple formats to be accepted, then you can specify a list of values rather than a single value (e.g. ["ISO8601", "MM.dd.yyyy"]).</td>
   </tr>
 <tr>
     <td>fixedTimestampFormat</td>
@@ -237,15 +237,15 @@ The following are options available to both CSV files or TSV files within the `c
   </tr>
 <tr>
     <td>timezone</td>
-    <td>Specifies the timezones for FixedTimestamps (“Date & Time (with timezone)” columns).  This only has an effect if the timestamp format does not specify a time zone. Typical values are "UTC" or "US/Pacific".  A list of accepted names is at [http://joda-time.sourceforge.net/timezones.html](http://joda-time.sourceforge.net/timezones.html). *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time)*.</td>
+    <td>Specifies the timezones for FixedTimestamps (“Date & Time (with timezone)” columns).  This only has an effect if the timestamp format does not specify a time zone. Typical values are "UTC" or "US/Pacific".  A list of accepted names is available at <a href="http://joda-time.sourceforge.net/timezones.html">this Joda documentation page</a>. *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time)*.</td>
   </tr>
 <tr>
     <td>syntheticLocations</td>
-    <td>Allows transformation of multiple columns into one or more Location columns during insert. See See the [Location column and geocoding configuration](#location-geocoding) section for an example.</td>
+    <td>Allows transformation of multiple columns into one or more Location columns during insert. See See the <a href="#location-geocoding">Location column and geocoding configuration</a> section for an example.</td>
   </tr>
 <tr>
     <td>setAsideErrors</td>
-    <td>When set to true, bad data will be ignored, allowing the job to complete while setting aside any rows that contain errors. As with other upload jobs, the status of the job can be monitored in the [job status page](https://support.socrata.com/hc/en-us/articles/216367918-Publishing-Jobs-Status-Page). If the upload job completed (with partial success), a link to the CSV with bad data will be available in the job details page to download and inspect.</td>
+    <td>When set to true, bad data will be ignored, allowing the job to complete while setting aside any rows that contain errors. As with other upload jobs, the status of the job can be monitored in the <a href="https://support.socrata.com/hc/en-us/articles/216367918-Publishing-Jobs-Status-Page">job status page</a>. If the upload job completed (with partial success), a link to the CSV with bad data will be available in the job details page to download and inspect.</td>
   </tr>
 <tr>
     <td>overrides</td>
@@ -278,8 +278,3 @@ Example of using column-level overrides:
         }
       }
     }
-
-
-
-
-

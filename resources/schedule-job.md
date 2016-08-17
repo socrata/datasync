@@ -12,7 +12,7 @@ This guide covers how to schedule a Socrata DataSync job to run automatically at
 
 ![Save Job](/datasync/images/save_job.png)
 
-After you save or open a job with DataSync the text field called "Command to execute with scheduler" is automatically populated with the command to run the given job. Simply click the "Copy to clipboard" button to copy the command to the clipboard. You can alYou can also click on the text field (which will automatically highlight the entire command) and then press Ctrl+C to copy the command to the clipboard. Additionally, you can save the Socrata Integration Job (.sij) file to a directory of your choice and call that from within Task Scheduler. 
+After you save or open a job with DataSync the text field called "Command to execute with scheduler" is automatically populated with the command to run the given job. Simply click the "Copy to clipboard" button to copy the command to the clipboard. You can also click on the text field (which will automatically highlight the entire command) and then press Ctrl+C to copy the command to the clipboard. Additionally, you can save the Socrata Integration Job (.sij) file to a directory of your choice and call that from within Task Scheduler. 
 
 
 #### Step 2: Create a new task using the Windows Task Scheduler
@@ -24,7 +24,7 @@ The Windows Task Scheduler typically comes installed on any Windows platform. On
 
 The task you want to perform is “Start a program”. Instead of clicking the “Browse” button to find a program, paste (Ctrl+V) the command you copied from DataSync directly into the field beside the “Browse” button. You will probably get a message asking you if you want to run the program “java” with the following arguments. Simply click “Yes”.
 
-You may want to test run the task by finding the task you just created in the task library and right-clicking it and selecting "Run". Make sure the dataset was updated as you expect. **Remember** each job runs at its own frequency, meaning that there needs to be a business conversation with the data owners about how frequent each dataset should be updated. 
+You may want to test run the task by finding the task you just created in the task library and right-clicking it and selecting "Run". Make sure the dataset was updated as you expect. **Remember** each job runs at its own frequency, meaning that there needs to be a business conversation with the data owners about how frequent each dataset should be updated.
 
 ![Task Scheduler](/datasync/images/task_scheduler.png)
 
