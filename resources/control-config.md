@@ -237,7 +237,7 @@ The following are options available to both CSV files or TSV files within the `c
   </tr>
 <tr>
     <td>timezone</td>
-    <td>Specifies the timezones for FixedTimestamps (“Date & Time (with timezone)” columns).  This only has an effect if the timestamp format does not specify a time zone. Typical values are "UTC" or "US/Pacific".  A list of accepted names is at [http://joda-time.sourceforge.net/timezones.html](http://joda-time.sourceforge.net/timezones.html). *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time)*.</td>
+    <td>Specifies the timezones for FixedTimestamps (“Date & Time (with timezone)” columns).  This only has an effect if the timestamp format does not specify a time zone. Typical values are "UTC" or "US/Pacific".  A list of accepted names is available at [this joda documentation page](http://joda-time.sourceforge.net/timezones.html). *Please avoid the 3-letter variants as these are ambiguous (e.g. MST is both Mountain Standard Time and Malaysia Standard Time)*.</td>
   </tr>
 <tr>
     <td>syntheticLocations</td>
@@ -278,8 +278,3 @@ Example of using column-level overrides:
         }
       }
     }
-
-
-
-
-
