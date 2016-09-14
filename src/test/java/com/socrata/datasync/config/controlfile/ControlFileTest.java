@@ -62,8 +62,8 @@ public class ControlFileTest {
         fileTypeInnards.append("\"columns\":[\"boo\",\"bar\",\"baz\"]," +
                 "\"emptyTextIsNull\":" + emptyTextIsNull + "," +
                 "\"encoding\":\"" + encoding + "\"," +
-                "\"fixedTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy HH:mm:ss a Z\",\"MM/dd/yyyy HH:mm:ss a\"]," +
-                "\"floatingTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy HH:mm:ss a Z\",\"MM/dd/yyyy HH:mm:ss a\"]," +
+                "\"fixedTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy hh:mm:ss a Z\",\"MM/dd/yyyy hh:mm:ss a\"]," +
+                "\"floatingTimestampFormat\":[\"ISO8601\",\"MM/dd/yy\",\"MM/dd/yyyy\",\"dd-MMM-yyyy\",\"MM/dd/yyyy hh:mm:ss a Z\",\"MM/dd/yyyy hh:mm:ss a\"]," +
                 "\"ignoreColumns\":[]," +
                 "\"overrides\":{},");
         return fileTypeInnards.toString();
