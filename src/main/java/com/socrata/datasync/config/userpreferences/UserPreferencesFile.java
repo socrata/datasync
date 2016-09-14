@@ -40,7 +40,8 @@ public class UserPreferencesFile implements UserPreferences {
 
     @JsonProperty("domain")
     public String getDomain() {
-        return domain;
+        if(domain == null) return null;
+        return domain.trim();
     }
 
     @JsonProperty("username")

@@ -51,7 +51,8 @@ public class UserPreferencesLib implements UserPreferences {
     }
 
     public String getDomain() {
-        return domain;
+        if(domain == null) return null;
+        return domain.trim();
     }
 
     public void setDomain(String domain) {
