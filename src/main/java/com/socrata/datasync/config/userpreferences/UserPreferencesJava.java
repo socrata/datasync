@@ -133,7 +133,9 @@ public class UserPreferencesJava implements UserPreferences {
     // ------------- Get methods ---------------
 
     public String getDomain() {
-		return userPrefs.get(DOMAIN, DEFAULT_DOMAIN);
+		String domain = userPrefs.get(DOMAIN, DEFAULT_DOMAIN);
+		if(domain == null) return null;
+		return domain.trim();
 	}
 
 	public String getUsername() {
