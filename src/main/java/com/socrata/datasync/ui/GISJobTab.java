@@ -177,23 +177,8 @@ public class GISJobTab implements JobTab {
 
     private void loadJobDataIntoUIFields(GISJob job)  {
         try {
-            if (job.getControlFileContent() != null) {
-                ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
-                ControlFile controlFile = mapper.readValue(job.getControlFileContent(), ControlFile.class);
-                //Ideally this could be saved with the control file or factored out.  However, we're stuck with this redundant call
-                // because of DI2's strict enforcement of control files and the current factoring of what CSVTableModel knows about
-                controlFile.getFileTypeControl().filePath(job.getFileToPublish());
-                //TODO: This is not being saved due to the fact that this value is set on the control file and not the job.  Pick one or the other.
-                controlFile.getFileTypeControl().hasHeaderRow(job.getFileToPublishHasHeaderRow());
-                updateControlFileModel(controlFile,job.getDatasetID());
-            }
             datasetIDTextField.setText(job.getDatasetID());
             fileToPublishTextField.setText(job.getFileToPublish());
-
-            //TODO: If there is a way to save the pointer to the file, but not the file then we'll need to add a way to load it here
-            if (job.getPathToControlFile() != null) {
-                System.out.println("Skipping");
-            }
 
             jobFileLocation = job.getPathToSavedFile();
             // if this is an existing job (meaning the job was opened from a file)
@@ -244,12 +229,6 @@ public class GISJobTab implements JobTab {
         jobToRun.setFileToPublish(fileToPublishTextField.getText());
         jobToRun.setPublishMethod(PublishMethod.replace);
 
-        if (usingControlFile) {
-            jobToRun.setPathToControlFile(controlFileModel.getPath());
-        } else {
-            jobToRun.setControlFileContent(controlFileModel.getControlFileContents());
-
-        }
         jobToRun.setUserAgentClient();
         //MAGIC
         return jobToRun.run();

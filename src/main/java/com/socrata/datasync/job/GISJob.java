@@ -191,7 +191,7 @@ public class GISJob extends Job {
 
 
     /**
-     * Runs an integration job. It is expected that 'configure' was run beforehand.
+     * Runs an GIS job. It is expected that 'configure' was run beforehand.
      * @return
      * @throws IOException
      */
