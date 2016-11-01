@@ -4,6 +4,9 @@ import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.Job;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.job.PortJob;
+import com.socrata.datasync.job.GISJob;
+import com.socrata.datasync.job.GISJob.ControlDisagreementException;
+import com.socrata.datasync.ui.GISJobTab;
 import com.socrata.datasync.job.MetadataJob;
 import com.socrata.datasync.ui.MetadataJobTab;
 
@@ -15,9 +18,10 @@ public class SimpleIntegrationRunner {
 	 * @author Adrian Laurenzi
 	 *
 	 * A command-line interface to DataSync
+	 * @throws ControlDisagreementException 
 	 */
 
-    public SimpleIntegrationRunner(String jobFileToRun) {
+    public SimpleIntegrationRunner(String jobFileToRun) throws ControlDisagreementException {
         File jobFile = new File(jobFileToRun);
         if(jobFile.exists()) {
             try {
@@ -25,8 +29,9 @@ public class SimpleIntegrationRunner {
             	//TODO BW: Follow how port jobs are run from command line?
             	if (jobFileToRun.endsWith(MetadataJobTab.JOB_FILE_EXTENSION)) {
             		job = new MetadataJob(jobFileToRun);
-            	}
-            	else {
+            	} else if(jobFileToRun.endsWith(GISJobTab.JOB_FILE_EXTENSION)) {
+            		job = new GISJob(jobFileToRun);
+            	} else {
             		job = new IntegrationJob(jobFileToRun);
             	}
                 JobStatus status = job.run();
