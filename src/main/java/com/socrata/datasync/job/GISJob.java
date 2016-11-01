@@ -105,21 +105,10 @@ public class GISJob extends Job {
             loadOldSijFile(pathToFile);
             return;
         }
-        String controlPath = loadedJob.getPathToControlFile();
-        String controlContent = loadedJob.getControlFileContent();
-        try {
-            setControlFile(controlPath, controlContent);
-        } catch (ControlDisagreementException e) {
-            if (!ignoreControlInconsistencies)
-                throw e;
-        }
         setDatasetID(loadedJob.getDatasetID());
         setFileToPublish(loadedJob.getFileToPublish());
         setPublishMethod(loadedJob.getPublishMethod());
-        setFileToPublishHasHeaderRow(loadedJob.getFileToPublishHasHeaderRow());
         setPathToSavedFile(pathToFile);
-        setPathToControlFile(loadedJob.getPathToControlFile());
-        setControlFileContent(loadedJob.getControlFileContent());
     }
 
 
@@ -155,36 +144,6 @@ public class GISJob extends Job {
     public PublishMethod getPublishMethod() {
         return publishMethod;
     }
-
-    @JsonProperty("fileToPublishHasHeaderRow")
-    public boolean getFileToPublishHasHeaderRow() { return fileToPublishHasHeaderRow; }
-
-    @JsonProperty("fileToPublishHasHeaderRow")
-    public void setFileToPublishHasHeaderRow(boolean has) { fileToPublishHasHeaderRow = has; }
-
-    @JsonProperty("pathToControlFile")
-    public String getPathToControlFile() { return pathToControlFile; }
-
-    @JsonProperty("pathToControlFile")
-    public void setPathToControlFile(String path) { pathToControlFile = path; }
-
-    @JsonProperty("pathToFTPControlFile")
-    public String getFTPPathToControlFile() { return pathToControlFile; }
-
-    @JsonProperty("pathToFTPControlFile")
-    public void setPathToFTPControlFile(String path) { pathToControlFile = path; }
-
-    @JsonProperty("controlFileContent")
-    public String getControlFileContent() { return controlFileContent; }
-
-    @JsonProperty("controlFileContent")
-    public void setControlFileContent(String content) { controlFileContent = content; }
-
-    @JsonProperty("ftpControlFileContent")
-    public String getFTPControlFileContent() { return controlFileContent; }
-
-    @JsonProperty("ftpControlFileContent")
-    public void setFTPControlFileContent(String content) { controlFileContent = content; }
 
     public String getDefaultJobName() { return defaultJobName; }
 
@@ -222,11 +181,6 @@ public class GISJob extends Job {
         setFileToPublish(cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG));
         if(method != null)
             setPublishMethod(PublishMethod.valueOf(method));
-        setFileToPublishHasHeaderRow(Boolean.parseBoolean(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG, "true")));
-        String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
-        if (controlFilePath == null)
-            controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
-        setPathToControlFile(controlFilePath);
 
         String userAgentName = cmd.getOptionValue(options.USER_AGENT_FLAG);
         if(Utils.nullOrEmpty(userAgentName)) {
@@ -443,9 +397,6 @@ public class GISJob extends Job {
                 setFileToPublish(loadedJobOld.getFileToPublish());
                 setPublishMethod(loadedJobOld.getPublishMethod());
                 setPathToSavedFile(pathToFile);
-                setFileToPublishHasHeaderRow(true);
-                setPathToControlFile(null);
-                setControlFileContent(null);
             }
             finally{
                 input.close();
