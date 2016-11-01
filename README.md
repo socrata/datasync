@@ -26,6 +26,9 @@ The Socrata University Class: [Socrata Introduction to Integration](http://socra
 Standard jobs can be set up to take a CSV data file from a local machine or networked folder and publish it to a specific dataset. A job can be automated easily using the Windows Task Scheduler or similar tool to run the job at specified intervals (i.e. once per day).
 ![standard job tab](http://i.imgur.com/byN0ibq.png?1)
 
+### GIS Jobs
+GIS jobs can be set up to handle geospatial datasets, such as zipped shapefiles, geojson, kml, or kmz files and replace specific datasets on Socrata. The job can then be automated in a similar fashion to standard jobs. 
+
 ### Port Jobs
 Port jobs are used for moving data around that is already on the Socrata platform. Users that have publisher rights can make copies of datasets through this tool. Port jobs allow the copying of both dataset schemas (metadata and columns) and data (rows).
 ![port job tab](http://i.imgur.com/tMz2sQP.png?1)
