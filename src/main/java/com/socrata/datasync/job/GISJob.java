@@ -16,25 +16,36 @@ import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.GeoDataset;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
+import java.io.*;
+import java.net.URLEncoder;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 public class GISJob extends Job {
 
+    private final Logger logging = Logger.getLogger(GISJob.class.getName());
     static AtomicInteger jobCounter = new AtomicInteger(0);
     int jobNum = jobCounter.getAndIncrement();
     private String defaultJobName = "Unsaved GIS Job" + " (" + jobNum + ")";
@@ -54,6 +65,7 @@ public class GISJob extends Job {
 	private String pathToControlFile = null;
     private String controlFileContent = null;
     private ControlFile controlFile = null;
+    private String ticket = "";
 
     private String userAgent = "datasync";
 
@@ -402,6 +414,111 @@ public class GISJob extends Job {
         } catch(Exception e) {
             // TODO add log entry?
             throw new IOException(e.toString());
+        }
+    }
+
+    public String replaceGeo(String id, File file, SocrataConnectionInfo connectionInfo) {
+        String scan_url = makeUri(connectionInfo.getUrl(), "scan");
+        String blueprint = "";
+
+        try {
+            blueprint = postRawFile(scan_url, file, connectionInfo);
+            ticket = replaceGeoFile(blueprint, file, connectionInfo);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return ticket;
+    }
+
+    public String replaceGeoFile(String blueprint, File file, SocrataConnectionInfo connectionInfo) {
+        JSONParser parser = new JSONParser();
+        try {
+            Object obj = parser.parse(blueprint);
+            JSONObject array = (JSONObject)obj;
+            String fileId = array.get("fileId").toString();
+            String name = file.getName();
+            String bluepr = array.get("summary").toString();
+
+            String url = makeUri(connectionInfo.getUrl(),"replace");
+            url = url + "&fileId="+URLEncoder.encode(fileId,"UTF-8");
+            url = url + "&name="+name;
+            url = url + "&blueprint" + URLEncoder.encode(bluepr,"UTF-8");
+            url = url + "&viewUid=" + datasetID;
+            logging.log(Level.INFO,url);
+
+            ticket = postReplaceGeoFile(url, connectionInfo);
+            return ticket;
+        }catch(ParseException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+    public String postReplaceGeoFile(String url, SocrataConnectionInfo connectionInfo) {
+        try {
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            HttpPost httpPost = new HttpPost(url);
+            String to_encode = connectionInfo.getUser() + ":" + connectionInfo.getPassword();
+            byte[] bytes = Base64.encodeBase64(to_encode.getBytes());
+            String auth = new String(bytes);
+
+            httpPost.setHeader("Authorization","Basic "+auth);
+            httpPost.setHeader("X-App-Token", connectionInfo.getToken());
+
+            HttpResponse response = httpClient.execute(httpPost);
+
+
+            HttpEntity resEntity = response.getEntity();
+            String result = EntityUtils.toString(resEntity);
+            logging.log(Level.INFO,result);
+            ticket = parseResponse(result);
+            return ticket;
+
+        } catch (ClientProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+    public String parseResponse(String response) {
+        logging.log(Level.INFO,response);
+        return response;
+    }
+    public String postRawFile(String uri, File file, SocrataConnectionInfo connectionInfo) throws IOException {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpPost httpPost = new HttpPost(uri);
+        String to_encode = connectionInfo.getUser() + ":" + connectionInfo.getPassword();
+        byte[] bytes = Base64.encodeBase64(to_encode.getBytes());
+        String auth = new String(bytes);
+
+        httpPost.setHeader("Authorization","Basic "+auth);
+        httpPost.setHeader("X-App-Token", connectionInfo.getToken());
+        logging.log(Level.INFO, httpPost.getAllHeaders().toString());
+        HttpEntity httpEntity = MultipartEntityBuilder.create()
+                .addBinaryBody(file.getName(), file, ContentType.APPLICATION_OCTET_STREAM,file.getName())
+                .build();
+
+        httpPost.setEntity(httpEntity);
+
+        HttpResponse response = httpClient.execute(httpPost);
+        HttpEntity resEntity = response.getEntity();
+        String result = EntityUtils.toString(resEntity);
+        logging.log(Level.INFO,result);
+        return result;
+    }
+    public String makeUri(String domain,String method) {
+        switch(method) {
+            case "scan":
+                logging.log(Level.INFO,"Scanning file");
+                String scan_url = domain + "/api/imports2?method=scanShape";
+                return scan_url;
+            case "replace":
+                String replace_url = domain + "/api/imports2?method=replaceShapefile";
+                return replace_url;
+            default:
+                return "Method Required";
         }
     }
 
