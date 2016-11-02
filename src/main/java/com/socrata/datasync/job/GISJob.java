@@ -228,14 +228,14 @@ public class GISJob extends Job {
                             Integer.parseInt(userPrefs.getNumRowsPerChunk());
                     switch (publishMethod) {
                         case replace:
-                            result = (GeoDataset) importer.replaceViewFromShapefile(datasetID, fileToPublishFile);
+                            String jobId = replaceGeo(fileToPublishFile, connectionInfo);
                             break;
                         default:
                             runStatus = JobStatus.INVALID_PUBLISH_METHOD;
                     
                     }
 
-            } catch (IOException | SodaError | InterruptedException e) {
+            } catch (Exception e) {
                 publishExceptions = e.getMessage();
                 e.printStackTrace();
             }
@@ -417,7 +417,7 @@ public class GISJob extends Job {
         }
     }
 
-    public String replaceGeo(String id, File file, SocrataConnectionInfo connectionInfo) {
+    public String replaceGeo(File file, SocrataConnectionInfo connectionInfo) {
         String scan_url = makeUri(connectionInfo.getUrl(), "scan");
         String blueprint = "";
 
@@ -442,7 +442,7 @@ public class GISJob extends Job {
             String url = makeUri(connectionInfo.getUrl(),"replace");
             url = url + "&fileId="+URLEncoder.encode(fileId,"UTF-8");
             url = url + "&name="+name;
-            url = url + "&blueprint" + URLEncoder.encode(bluepr,"UTF-8");
+            url = url + "&blueprint=" + URLEncoder.encode(bluepr,"UTF-8");
             url = url + "&viewUid=" + datasetID;
             logging.log(Level.INFO,url);
 
