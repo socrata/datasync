@@ -176,12 +176,10 @@ public class GISJob extends Job {
     public void configure(CommandLine cmd) {
         CommandLineOptions options = new CommandLineOptions();
         String method = cmd.getOptionValue(options.PUBLISH_METHOD_FLAG);
-
         setDatasetID(cmd.getOptionValue(options.DATASET_ID_FLAG));
         setFileToPublish(cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG));
         if(method != null)
             setPublishMethod(PublishMethod.valueOf(method));
-
         String userAgentName = cmd.getOptionValue(options.USER_AGENT_FLAG);
         if(Utils.nullOrEmpty(userAgentName)) {
             userAgentName = userAgentNameCli;

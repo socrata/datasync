@@ -50,10 +50,6 @@ public class GISJobValidity {
         return  validateDatasetIdArg(cmd, options) &&
                 validateFileToPublishArg(cmd, options) &&
                 validatePublishMethodArg(cmd, options) &&
-                validateHeaderRowArg(cmd, options) &&
-                validatePublishViaFtpArg(cmd, options) &&
-                validatePublishViaDi2HttpArg(cmd, options) &&
-                validatePathToControlFileArg(cmd, options) &&
                 validateProxyArgs(cmd, options);
     }
 
