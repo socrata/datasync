@@ -209,8 +209,11 @@ public class GISJob extends Job {
         JobStatus runStatus = JobStatus.SUCCESS;
 
         JobStatus validationStatus = GISJobValidity.validateJobParams(connectionInfo, this);
+        JobStatus datasetStatus = GISJobValidity.validateDatasetDomain(userPrefs, getDatasetID());
         if (validationStatus.isError()) {
             runStatus = validationStatus;
+        } else if (datasetStatus.isError()) {
+            runStatus = datasetStatus;
         } else {
 
             try {

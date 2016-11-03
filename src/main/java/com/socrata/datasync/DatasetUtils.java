@@ -3,6 +3,7 @@ package com.socrata.datasync;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
+import com.socrata.model.importer.DatasetInfo;
 import org.apache.http.HttpException;
 import org.apache.http.HttpStatus;
 import org.apache.http.HttpEntity;
@@ -194,5 +195,34 @@ public class DatasetUtils {
                 return true;
         }
         return false;
+    }
+
+    public static DatasetInfo getGeoDatasetInfo(UserPreferences userPrefs, String viewId) throws URISyntaxException, IOException, HttpException {
+        String justDomain = getDomainWithoutScheme(userPrefs);
+        URI absolutePath = new URIBuilder()
+                .setScheme("https")
+                .setHost(justDomain)
+                .setPath("/api/views/" + viewId)
+                .build();
+
+        ResponseHandler<DatasetInfo> handler = new ResponseHandler<DatasetInfo>() {
+            @Override
+            public DatasetInfo handleResponse(
+                    final HttpResponse response) throws ClientProtocolException, IOException {
+                StatusLine statusLine = response.getStatusLine();
+                int status = statusLine.getStatusCode();
+                if (status >= 200 && status < 300) {
+                    HttpEntity entity = response.getEntity();
+                    return entity != null ? mapper.readValue(entity.getContent(), DatasetInfo.class) : null;
+                } else {
+                    throw new ClientProtocolException(statusLine.toString());
+                }
+            }
+        };
+
+        HttpUtility util = new HttpUtility(userPrefs, true);
+        DatasetInfo datasetInfo = util.get(absolutePath, "application/json", handler);
+        util.close();
+        return datasetInfo;
     }
 }

@@ -14,6 +14,7 @@ import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.model.importer.Dataset;
+import com.socrata.model.importer.DatasetInfo;
 import org.apache.commons.cli.CommandLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.ContentType;
@@ -78,6 +79,15 @@ public class GISJobValidity {
         if(!allowedGeoFileToPublishExtensions.contains(fileExtension))
             return JobStatus.FILE_TO_PUBLISH_INVALID_FORMAT;
 
+        return JobStatus.VALID;
+    }
+
+    public static JobStatus validateDatasetDomain(UserPreferences userPrefs, String datasetID) {
+        try {
+            DatasetInfo datasetInfo = DatasetUtils.getGeoDatasetInfo(userPrefs, datasetID);
+        } catch (Exception e) {
+            return JobStatus.INVALID_DATASET_ID;
+        }
         return JobStatus.VALID;
     }
 
