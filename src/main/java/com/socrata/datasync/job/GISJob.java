@@ -395,7 +395,7 @@ public class GISJob extends Job {
             
             try {
             	logging.log(Level.INFO,"Polling for Status...");
-				status = pollForStatus(ticket, connectionInfo,false,false);
+				status = pollForStatus(ticket, connectionInfo,false);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -407,7 +407,7 @@ public class GISJob extends Job {
         return status;
     }
     
-    private boolean pollForStatus(String ticket, SocrataConnectionInfo connectionInfo, boolean complete, boolean success) throws InterruptedException {
+    private boolean pollForStatus(String ticket, SocrataConnectionInfo connectionInfo, boolean complete) throws InterruptedException {
     	
     	String status_url = makeUri(connectionInfo.getUrl(),"status") + ticket;
     	String[] status = new String[2];
@@ -424,9 +424,9 @@ public class GISJob extends Job {
 			if (status[0] == "Error"){
 				return false;
 			}
-			pollForStatus(ticket,connectionInfo,false,false);
+			pollForStatus(ticket,connectionInfo,false);
     	}		
-    	return false;
+    	return true;
     }
     
     private String[] getStatus(String url, SocrataConnectionInfo connectionInfo) {
