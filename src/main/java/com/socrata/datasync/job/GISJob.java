@@ -50,10 +50,6 @@ public class GISJob extends Job {
     int jobNum = jobCounter.getAndIncrement();
     private String defaultJobName = "Unsaved GIS Job" + " (" + jobNum + ")";
 
-    // to upload entire file as a single chunk (numRowsPerChunk == 0)
-    private static final int UPLOAD_SINGLE_CHUNK = 0;
-    public static final int NUM_BYTES_PER_MB = 1048576;
-
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
     private static final long fileVersionUID = 4L;
 
@@ -62,8 +58,6 @@ public class GISJob extends Job {
 	private String fileToPublish = "";
 	private PublishMethod publishMethod = PublishMethod.replace;
     private boolean fileToPublishHasHeaderRow = true;
-	private String pathToControlFile = null;
-    private String controlFileContent = null;
     private ControlFile controlFile = null;
     private String ticket = "";
 
@@ -215,20 +209,20 @@ public class GISJob extends Job {
         if (validationStatus.isError()) {
             runStatus = validationStatus;
         } else {
-            SodaImporter producer = null;
+
             try {
                 File fileToPublishFile = new File(fileToPublish);
-                	System.out.println("Uploading "+fileToPublish.toString());
+                	System.out.println("Uploading " + fileToPublish);
                     // attach a requestId to all Producer API calls (for error tracking purposes)
                     String jobRequestId = Utils.generateRequestId();
                     final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
-                    int filesizeChunkingCutoffBytes = userPrefs.getFilesizeChunkingCutoffMB() == null ? 10 * NUM_BYTES_PER_MB :
-                            Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()) * NUM_BYTES_PER_MB;
-                    int numRowsPerChunk = userPrefs.getNumRowsPerChunk() == null ? 10000 :
-                            Integer.parseInt(userPrefs.getNumRowsPerChunk());
+
                     switch (publishMethod) {
                         case replace:
-                            String jobId = replaceGeo(fileToPublishFile, connectionInfo);
+                            replaceGeo(fileToPublishFile, connectionInfo);
+                            if (!ticket.isEmpty()) {
+
+                            }
                             break;
                         default:
                             runStatus = JobStatus.INVALID_PUBLISH_METHOD;
@@ -242,7 +236,7 @@ public class GISJob extends Job {
         }
     
 
-    if (publishExceptions.length() > 0) {
+        if (publishExceptions.length() > 0) {
             runStatus = JobStatus.PUBLISH_ERROR;
             runStatus.setMessage(publishExceptions);
         }
@@ -272,26 +266,6 @@ public class GISJob extends Job {
         }
     }
 
-    private int numRowsPerChunk(File fileToPublishFile, int filesizeChunkingCutoffBytes, int numRowsPerChunk) {
-        int numberOfRows;
-        if(fileToPublishFile.length() > filesizeChunkingCutoffBytes) {
-            numberOfRows = numRowsPerChunk;
-        } else {
-            numberOfRows = UPLOAD_SINGLE_CHUNK;
-        }
-        return numberOfRows;
-    }
-
-    private JobStatus craftSoda2PublishError(GeoDataset result) {
-        JobStatus error = JobStatus.PUBLISH_ERROR;
-        if(result != null) {
-            int lineIndexOffset = (fileToPublishHasHeaderRow) ? 2 : 1;
-            String errMsg = "";	
-            error.setMessage(errMsg);
-        }
-        return error;
-    }
-
     private String logRunResults(JobStatus runStatus, GeoDataset result) {
         String logDatasetID = userPrefs.getLogDatasetID();
         String logPublishingErrorMessage = null;
@@ -310,84 +284,10 @@ public class GISJob extends Job {
         }
     }
 
-    private JobStatus deserializeControlFile() {
-        if (controlFile != null)
-            return JobStatus.VALID;
-
-        JobStatus controlDeserialization = null;
-        if (controlFileContent != null && !controlFileContent.equals(""))
-            controlDeserialization = deserializeControlFile(controlFileContent);
-
-        if (pathToControlFile != null && !pathToControlFile.equals(""))
-            controlDeserialization = deserializeControlFile(new File(pathToControlFile));
-
-        if (controlDeserialization == null) {
-            JobStatus noControl = JobStatus.PUBLISH_ERROR;
-            noControl.setMessage("You must generate or select a Control file if publishing via FTP SmartUpdate or delta-importer-2 over HTTP");
-            return noControl;
-        } else if (controlDeserialization.isError()) {
-            return controlDeserialization;
-        }
-        return JobStatus.VALID;
-    }
-
-
-    private JobStatus deserializeControlFile(String contents) {
-        try {
-            controlFile = controlFileMapper.readValue(contents, ControlFile.class);
-            return JobStatus.SUCCESS;
-        } catch (Exception e) {
-            JobStatus status = JobStatus.PUBLISH_ERROR;
-            status.setMessage("Unable to interpret control file contents: " + e);
-            return status;
-        }
-    }
-
-    private JobStatus deserializeControlFile(File controlFilePath) {
-        try {
-            controlFile = controlFileMapper.readValue(controlFilePath, ControlFile.class);
-            return JobStatus.SUCCESS;
-        } catch (Exception e) {
-            JobStatus status = JobStatus.PUBLISH_ERROR;
-            status.setMessage("Unable to read in and interpret control file contents: " + e);
-            return status;
-        }
-    }
-
     public class ControlDisagreementException extends Exception {
         public ControlDisagreementException(String msg) {
             super(msg);
         }
-    }
-
-    /**
-     * Sets up the control file from the two possible sources in an sij file.
-     * @param controlFilePath the path to the control file
-     * @param controlFileContent the content of the control file
-     * @throw ControlDisagreementException the content of the two sources disagrees
-     */
-    private void setControlFile(String controlFilePath, String controlFileContent) throws IOException, ControlDisagreementException {
-        ControlFile controlFileFromFile = null;
-        ControlFile controlFileFromContents = null;
-
-        if (!Utils.nullOrEmpty(controlFileContent)) {
-            controlFileFromContents = controlFileMapper.readValue(controlFileContent, ControlFile.class);
-            controlFile = controlFileFromContents;
-        }
-        if (!Utils.nullOrEmpty(controlFilePath)) {
-            controlFileFromFile = controlFileMapper.readValue(new File(controlFilePath), ControlFile.class);
-            controlFile = controlFileFromFile;
-        }
-
-        if (controlFileFromFile != null && controlFileFromContents != null) {
-            String controlTextFromFile = controlFileMapper.writeValueAsString(controlFileFromFile);
-            String controlTextFromContents = controlFileMapper.writeValueAsString(controlFileFromContents);
-            if(!controlTextFromFile.equals(controlTextFromContents)) {
-                throw new ControlDisagreementException("The contents of control file \n'" + controlFilePath +
-                        "' differ from the contents in the .sij file");
-            }
-        }
-
     }
 
     /**
@@ -417,20 +317,19 @@ public class GISJob extends Job {
         }
     }
 
-    public String replaceGeo(File file, SocrataConnectionInfo connectionInfo) {
+    private void replaceGeo(File file, SocrataConnectionInfo connectionInfo) {
         String scan_url = makeUri(connectionInfo.getUrl(), "scan");
         String blueprint = "";
 
         try {
             blueprint = postRawFile(scan_url, file, connectionInfo);
-            ticket = replaceGeoFile(blueprint, file, connectionInfo);
+            replaceGeoFile(blueprint, file, connectionInfo);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return ticket;
     }
 
-    public String replaceGeoFile(String blueprint, File file, SocrataConnectionInfo connectionInfo) {
+    private void replaceGeoFile(String blueprint, File file, SocrataConnectionInfo connectionInfo) {
         JSONParser parser = new JSONParser();
         try {
             Object obj = parser.parse(blueprint);
@@ -446,16 +345,13 @@ public class GISJob extends Job {
             url = url + "&viewUid=" + datasetID;
             logging.log(Level.INFO,url);
 
-            ticket = postReplaceGeoFile(url, connectionInfo);
-            return ticket;
-        }catch(ParseException e) {
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
+            postReplaceGeoFile(url, connectionInfo);
+        } catch(ParseException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        return "";
     }
-    public String postReplaceGeoFile(String url, SocrataConnectionInfo connectionInfo) {
+
+    private void postReplaceGeoFile(String url, SocrataConnectionInfo connectionInfo) {
         try {
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpPost httpPost = new HttpPost(url);
@@ -471,22 +367,17 @@ public class GISJob extends Job {
 
             HttpEntity resEntity = response.getEntity();
             String result = EntityUtils.toString(resEntity);
-            logging.log(Level.INFO,result);
-            ticket = parseResponse(result);
-            return ticket;
+            JSONParser parser = new JSONParser();
+            JSONObject resJson = (JSONObject) parser.parse(result);
+            logging.log(Level.INFO, result);
 
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+            ticket = resJson.get("ticket").toString();
+        } catch (IOException | ParseException e) {
             e.printStackTrace();
         }
-        return "";
     }
-    public String parseResponse(String response) {
-        logging.log(Level.INFO,response);
-        return response;
-    }
-    public String postRawFile(String uri, File file, SocrataConnectionInfo connectionInfo) throws IOException {
+
+    private String postRawFile(String uri, File file, SocrataConnectionInfo connectionInfo) throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost httpPost = new HttpPost(uri);
         String to_encode = connectionInfo.getUser() + ":" + connectionInfo.getPassword();
@@ -508,15 +399,14 @@ public class GISJob extends Job {
         logging.log(Level.INFO,result);
         return result;
     }
-    public String makeUri(String domain,String method) {
+
+    private String makeUri(String domain,String method) {
         switch(method) {
             case "scan":
                 logging.log(Level.INFO,"Scanning file");
-                String scan_url = domain + "/api/imports2?method=scanShape";
-                return scan_url;
+                return domain + "/api/imports2?method=scanShape";
             case "replace":
-                String replace_url = domain + "/api/imports2?method=replaceShapefile";
-                return replace_url;
+                return domain + "/api/imports2?method=replaceShapefile";
             default:
                 return "Method Required";
         }
