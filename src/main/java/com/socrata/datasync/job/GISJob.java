@@ -218,21 +218,13 @@ public class GISJob extends Job {
 
             try {
                 File fileToPublishFile = new File(fileToPublish);
-                	System.out.println("Uploading " + fileToPublish);
                     // attach a requestId to all Producer API calls (for error tracking purposes)
                     String jobRequestId = Utils.generateRequestId();
                     final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
 
                     switch (publishMethod) {
                         case replace:
-                            boolean status = replaceGeo(fileToPublishFile, connectionInfo);
-                            logging.log(Level.INFO,String.valueOf(status));
-                            if(status){
-                            	runStatus = JobStatus.SUCCESS;
-                            }
-                            else {
-                            	runStatus = JobStatus.PUBLISH_ERROR;
-                            }
+                            runStatus = replaceGeo(fileToPublishFile, connectionInfo);
                             break;
                         default:
                             runStatus = JobStatus.INVALID_PUBLISH_METHOD;
@@ -327,26 +319,36 @@ public class GISJob extends Job {
         }
     }
 
-    private boolean replaceGeo(File file, SocrataConnectionInfo connectionInfo) {
+    private JobStatus replaceGeo(File file, SocrataConnectionInfo connectionInfo) {
         String scan_url = makeUri(connectionInfo.getUrl(), "scan");
         String blueprint = "";
-        boolean status = true;
+        JobStatus status = JobStatus.SUCCESS;
         try {
             blueprint = postRawFile(scan_url, file, connectionInfo);
             status = replaceGeoFile(blueprint, file, connectionInfo);
         } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+            String message = e.getMessage();
+            JobStatus s = JobStatus.PUBLISH_ERROR;
+            s.setMessage(message);
+            return s;
         }
         return status;
     }
 
-    private boolean replaceGeoFile(String blueprint, File file, SocrataConnectionInfo connectionInfo) {
-        boolean status = true;
+    private JobStatus replaceGeoFile(String blueprint, File file, SocrataConnectionInfo connectionInfo) {
+        JobStatus status = JobStatus.SUCCESS;
     	JSONParser parser = new JSONParser();
         try {
             Object obj = parser.parse(blueprint);
             JSONObject array = (JSONObject)obj;
+            boolean error = (boolean) array.get("error");
+            if(error) {
+            	String message = array.get("message").toString();
+            	logging.log(Level.INFO,message);
+            	JobStatus s = JobStatus.PUBLISH_ERROR;
+            	s.setMessage(message);
+            	return s;
+            }
             String fileId = array.get("fileId").toString();
             String name = file.getName();
             String bluepr = array.get("summary").toString();
@@ -362,14 +364,16 @@ public class GISJob extends Job {
           //logging.log(Level.INFO,url);
             status = postReplaceGeoFile(url, connectionInfo);
         } catch(ParseException | UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return false;
+            String message = e.getMessage();
+            JobStatus s = JobStatus.PUBLISH_ERROR;
+            s.setMessage(message);
+            return s;
         }
         return status;
     }
 
-    private boolean postReplaceGeoFile(String url, SocrataConnectionInfo connectionInfo) {
-    	boolean status = true;
+    private JobStatus postReplaceGeoFile(String url, SocrataConnectionInfo connectionInfo) {
+    	JobStatus status = JobStatus.SUCCESS;
         try {
             CloseableHttpClient httpClient = HttpClients.createDefault();
             logging.log(Level.INFO, url);
@@ -392,7 +396,10 @@ public class GISJob extends Job {
             
             boolean error = (boolean) resJson.get("error");
             if(error) {
-            	return false;
+            	JobStatus s = JobStatus.PUBLISH_ERROR;
+            	String error_message = (String) resJson.get("message");
+            	s.setMessage(error_message);
+            	return s;
             }
             ticket = resJson.get("ticket").toString();
             
@@ -404,13 +411,15 @@ public class GISJob extends Job {
 				e.printStackTrace();
 			}
         } catch (IOException | ParseException e) {
-            e.printStackTrace();
-            return false;
+            String message = e.getMessage();
+            JobStatus s = JobStatus.PUBLISH_ERROR;
+            s.setMessage(message);
+            return s;
         }
         return status;
     }
     
-    private boolean pollForStatus(String ticket, SocrataConnectionInfo connectionInfo, boolean complete) throws InterruptedException {
+    private JobStatus pollForStatus(String ticket, SocrataConnectionInfo connectionInfo, boolean complete) throws InterruptedException {
     	
     	String status_url = makeUri(connectionInfo.getUrl(),"status") + ticket;
     	String[] status = new String[2];
@@ -421,15 +430,17 @@ public class GISJob extends Job {
 			Thread.sleep(1000);
 			
 			if (status[0] == "Complete") {
-				return true;
+				return JobStatus.SUCCESS;
 			}
 			
 			if (status[0] == "Error"){
-				return false;
+				JobStatus s = JobStatus.PUBLISH_ERROR;
+				s.setMessage(status[1]);
+				return s;
 			}
 			pollForStatus(ticket,connectionInfo,false);
     	}		
-    	return true;
+    	return JobStatus.SUCCESS;
     }
     
     private String[] getStatus(String url, SocrataConnectionInfo connectionInfo) {
