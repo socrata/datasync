@@ -347,14 +347,16 @@ public class GISJob extends Job {
             String fileId = array.get("fileId").toString();
             String name = file.getName();
             String bluepr = array.get("summary").toString();
-
+            String query = "";
+            
             String url = makeUri(connectionInfo.getUrl(),"replace");
-            url = url + "&fileId="+URLEncoder.encode(fileId,"UTF-8");
-            url = url + "&name="+name;
-            url = url + "&blueprint=" + URLEncoder.encode(bluepr,"UTF-8");
-            url = url + "&viewUid=" + datasetID;
-            //logging.log(Level.INFO,url);
-
+            query = query + "&fileId="+URLEncoder.encode(fileId,"UTF-8");
+            query = query + "&name="+URLEncoder.encode(name,"UTF-8");
+            query = query + "&blueprint=" + URLEncoder.encode(bluepr,"UTF-8");
+            query = query + "&viewUid=" + URLEncoder.encode(datasetID,"UTF-8");
+            
+            url = url + query;
+          //logging.log(Level.INFO,url);
             status = postReplaceGeoFile(url, connectionInfo);
         } catch(ParseException | UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -367,6 +369,7 @@ public class GISJob extends Job {
     	boolean status = true;
         try {
             CloseableHttpClient httpClient = HttpClients.createDefault();
+            logging.log(Level.INFO, url);
             HttpPost httpPost = new HttpPost(url);
             String to_encode = connectionInfo.getUser() + ":" + connectionInfo.getPassword();
             byte[] bytes = Base64.encodeBase64(to_encode.getBytes());
@@ -383,7 +386,11 @@ public class GISJob extends Job {
             JSONParser parser = new JSONParser();
             JSONObject resJson = (JSONObject) parser.parse(result);
             logging.log(Level.INFO, result);
-
+            
+            boolean error = (boolean) resJson.get("error");
+            if(error) {
+            	return false;
+            }
             ticket = resJson.get("ticket").toString();
             
             try {
