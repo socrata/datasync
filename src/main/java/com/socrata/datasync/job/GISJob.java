@@ -223,6 +223,7 @@ public class GISJob extends Job {
                     switch (publishMethod) {
                         case replace:
                             boolean status = replaceGeo(fileToPublishFile, connectionInfo);
+                            logging.log(Level.INFO,String.valueOf(status));
                             if(status){
                             	runStatus = JobStatus.SUCCESS;
                             }
@@ -352,7 +353,7 @@ public class GISJob extends Job {
             url = url + "&name="+name;
             url = url + "&blueprint=" + URLEncoder.encode(bluepr,"UTF-8");
             url = url + "&viewUid=" + datasetID;
-            logging.log(Level.INFO,url);
+            //logging.log(Level.INFO,url);
 
             status = postReplaceGeoFile(url, connectionInfo);
         } catch(ParseException | UnsupportedEncodingException e) {
@@ -408,21 +409,19 @@ public class GISJob extends Job {
     		status = getStatus(status_url,connectionInfo);
 			logging.log(Level.INFO,status[1]);
 			Thread.sleep(1000);
-			pollForStatus(ticket,connectionInfo,false,false);
-		
+			
+			if (status[0] == "Complete") {
+				return true;
+			}
+			
 			if (status[0] == "Error"){
-				logging.log(Level.INFO,status[1]);
 				return false;
 			}
-    	}
-		else {
-				logging.log(Level.INFO, status[1]);
-				return true;
-		}
-    	return success;
-    		
-    	
+			pollForStatus(ticket,connectionInfo,false,false);
+    	}		
+    	return false;
     }
+    
     private String[] getStatus(String url, SocrataConnectionInfo connectionInfo) {
     	String[] status = new String[2];
 	    try {
@@ -443,7 +442,6 @@ public class GISJob extends Job {
 	        String result = EntityUtils.toString(resEntity);
 	        JSONParser parser = new JSONParser();
 	        JSONObject resJson = (JSONObject) parser.parse(result);
-	        logging.log(Level.INFO,String.valueOf(resJson));
 	        try {
 	        boolean error = (boolean) resJson.get("error");
 	        JSONObject details = (JSONObject) resJson.get("details");
@@ -458,7 +456,7 @@ public class GISJob extends Job {
 	        	status[1] = details.get("status").toString() + ": " + details.get("progress").toString() + " features completed";
 	        	} catch (NullPointerException e) {
 	        		status[0] = "Progress";
-	        		status[1] = "Progressing...";
+	        		status[1] = details.get("stage").toString();
 	        		return status;
 	        	}
 	        }
