@@ -20,6 +20,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -37,6 +38,7 @@ import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.net.URLEncoder;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -66,6 +68,7 @@ public class GISJob extends Job {
     private String userAgentNameClient = "Client";
     private String userAgentNameCli = "CLI";
     private String userAgentNameSijFile = ".gij File";
+    
 
     private ObjectMapper controlFileMapper =
             new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
@@ -219,9 +222,12 @@ public class GISJob extends Job {
 
                     switch (publishMethod) {
                         case replace:
-                            replaceGeo(fileToPublishFile, connectionInfo);
-                            if (!ticket.isEmpty()) {
-
+                            boolean status = replaceGeo(fileToPublishFile, connectionInfo);
+                            if(status){
+                            	runStatus = JobStatus.SUCCESS;
+                            }
+                            else {
+                            	runStatus = JobStatus.PUBLISH_ERROR;
                             }
                             break;
                         default:
@@ -317,20 +323,23 @@ public class GISJob extends Job {
         }
     }
 
-    private void replaceGeo(File file, SocrataConnectionInfo connectionInfo) {
+    private boolean replaceGeo(File file, SocrataConnectionInfo connectionInfo) {
         String scan_url = makeUri(connectionInfo.getUrl(), "scan");
         String blueprint = "";
-
+        boolean status = true;
         try {
             blueprint = postRawFile(scan_url, file, connectionInfo);
-            replaceGeoFile(blueprint, file, connectionInfo);
+            status = replaceGeoFile(blueprint, file, connectionInfo);
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
+        return status;
     }
 
-    private void replaceGeoFile(String blueprint, File file, SocrataConnectionInfo connectionInfo) {
-        JSONParser parser = new JSONParser();
+    private boolean replaceGeoFile(String blueprint, File file, SocrataConnectionInfo connectionInfo) {
+        boolean status = true;
+    	JSONParser parser = new JSONParser();
         try {
             Object obj = parser.parse(blueprint);
             JSONObject array = (JSONObject)obj;
@@ -345,13 +354,16 @@ public class GISJob extends Job {
             url = url + "&viewUid=" + datasetID;
             logging.log(Level.INFO,url);
 
-            postReplaceGeoFile(url, connectionInfo);
+            status = postReplaceGeoFile(url, connectionInfo);
         } catch(ParseException | UnsupportedEncodingException e) {
             e.printStackTrace();
+            return false;
         }
+        return status;
     }
 
-    private void postReplaceGeoFile(String url, SocrataConnectionInfo connectionInfo) {
+    private boolean postReplaceGeoFile(String url, SocrataConnectionInfo connectionInfo) {
+    	boolean status = true;
         try {
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpPost httpPost = new HttpPost(url);
@@ -372,9 +384,100 @@ public class GISJob extends Job {
             logging.log(Level.INFO, result);
 
             ticket = resJson.get("ticket").toString();
+            
+            try {
+            	logging.log(Level.INFO,"Polling for Status...");
+				status = pollForStatus(ticket, connectionInfo,false,false);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         } catch (IOException | ParseException e) {
             e.printStackTrace();
+            return false;
         }
+        return status;
+    }
+    
+    private boolean pollForStatus(String ticket, SocrataConnectionInfo connectionInfo, boolean complete, boolean success) throws InterruptedException {
+    	
+    	String status_url = makeUri(connectionInfo.getUrl(),"status") + ticket;
+    	String[] status = new String[2];
+    	if(!complete)
+    	{
+    		status = getStatus(status_url,connectionInfo);
+			logging.log(Level.INFO,status[1]);
+			Thread.sleep(1000);
+			pollForStatus(ticket,connectionInfo,false,false);
+		
+			if (status[0] == "Error"){
+				logging.log(Level.INFO,status[1]);
+				return false;
+			}
+    	}
+		else {
+				logging.log(Level.INFO, status[1]);
+				return true;
+		}
+    	return success;
+    		
+    	
+    }
+    private String[] getStatus(String url, SocrataConnectionInfo connectionInfo) {
+    	String[] status = new String[2];
+	    try {
+	        CloseableHttpClient httpClient = HttpClients.createDefault();
+	        HttpGet httpGet = new HttpGet(url);
+	        String to_encode = connectionInfo.getUser() + ":" + connectionInfo.getPassword();
+	        byte[] bytes = Base64.encodeBase64(to_encode.getBytes());
+	        String auth = new String(bytes);
+	
+	        httpGet.setHeader("Authorization","Basic "+auth);
+	        httpGet.setHeader("X-App-Token", connectionInfo.getToken());
+	
+	        HttpResponse response = httpClient.execute(httpGet);
+	
+	
+	        HttpEntity resEntity = response.getEntity();
+	     
+	        String result = EntityUtils.toString(resEntity);
+	        JSONParser parser = new JSONParser();
+	        JSONObject resJson = (JSONObject) parser.parse(result);
+	        logging.log(Level.INFO,String.valueOf(resJson));
+	        try {
+	        boolean error = (boolean) resJson.get("error");
+	        JSONObject details = (JSONObject) resJson.get("details");
+	        if(error){
+	        	status[0] = "Error";
+	        	status[1] = resJson.get("message").toString()+" with code: "+resJson.get("code").toString();
+	        	return status;
+	        }
+	        else {
+	        	try {
+	        	status[0] = "Progress";
+	        	status[1] = details.get("status").toString() + ": " + details.get("progress").toString() + " features completed";
+	        	} catch (NullPointerException e) {
+	        		status[0] = "Progress";
+	        		status[1] = "Progressing...";
+	        		return status;
+	        	}
+	        }
+	        } catch (NullPointerException e) {
+	        	// For once the ticket is complete
+		    	status[0] = "Complete";
+		    	status[1] = "Complete";
+		    	return status;
+	        }
+	        return status;
+	    } catch (IOException  e) {
+	        e.printStackTrace();
+	    } catch (ParseException e) {
+	    	status[0] = "Complete";
+	    	status[1] = "Complete";
+	    	return status;
+	    }
+	    return status;
+        
     }
 
     private String postRawFile(String uri, File file, SocrataConnectionInfo connectionInfo) throws IOException {
@@ -386,7 +489,7 @@ public class GISJob extends Job {
 
         httpPost.setHeader("Authorization","Basic "+auth);
         httpPost.setHeader("X-App-Token", connectionInfo.getToken());
-        logging.log(Level.INFO, httpPost.getAllHeaders().toString());
+        logging.log(Level.INFO, "Posting file...");
         HttpEntity httpEntity = MultipartEntityBuilder.create()
                 .addBinaryBody(file.getName(), file, ContentType.APPLICATION_OCTET_STREAM,file.getName())
                 .build();
@@ -403,10 +506,11 @@ public class GISJob extends Job {
     private String makeUri(String domain,String method) {
         switch(method) {
             case "scan":
-                logging.log(Level.INFO,"Scanning file");
                 return domain + "/api/imports2?method=scanShape";
             case "replace":
                 return domain + "/api/imports2?method=replaceShapefile";
+            case "status":
+            	return domain + "/api/imports2?ticket=";
             default:
                 return "Method Required";
         }
