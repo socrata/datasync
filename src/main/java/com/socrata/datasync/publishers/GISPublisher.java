@@ -24,9 +24,6 @@ import java.net.URLEncoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Created by malinda.curtis on 11/3/16.
- */
 public class GISPublisher {
 
     private static final Logger logging = Logger.getLogger(GISJob.class.getName());
