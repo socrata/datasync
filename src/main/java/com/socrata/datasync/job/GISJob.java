@@ -13,6 +13,7 @@ import com.socrata.datasync.publishers.GISPublisher;
 import com.socrata.datasync.validation.GISJobValidity;
 import com.socrata.model.importer.GeoDataset;
 
+
 import org.apache.commons.cli.CommandLine;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -202,7 +203,7 @@ public class GISJob extends Job {
 
                     switch (publishMethod) {
                         case replace:
-                            runStatus = GISPublisher.replaceGeo(fileToPublishFile, connectionInfo, datasetID);
+                            runStatus = GISPublisher.replaceGeo(fileToPublishFile, connectionInfo, datasetID, userPrefs);
                             break;
                         default:
                             runStatus = JobStatus.INVALID_PUBLISH_METHOD;

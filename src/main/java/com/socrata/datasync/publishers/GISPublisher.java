@@ -1,8 +1,11 @@
 package com.socrata.datasync.publishers;
 
 import com.socrata.datasync.SocrataConnectionInfo;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.job.JobStatus;
+import com.socrata.datasync.HttpUtility;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -20,6 +23,7 @@ import org.json.simple.parser.ParseException;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,13 +33,16 @@ public class GISPublisher {
     private static final Logger logging = Logger.getLogger(GISJob.class.getName());
     private static String ticket = "";
 
-    public static JobStatus replaceGeo(File file, SocrataConnectionInfo connectionInfo, String datasetID) {
-        String scan_url = makeUri(connectionInfo.getUrl(), "scan");
+    public static JobStatus replaceGeo(File file, SocrataConnectionInfo connectionInfo, String datasetID,UserPreferences userPrefs) {
+    	
+    	
+    	
+        URI scan_url = makeUri(connectionInfo.getUrl(), "scan","");
         String blueprint = "";
         JobStatus status = JobStatus.SUCCESS;
         try {
-            blueprint = postRawFile(scan_url, file, connectionInfo);
-            status = replaceGeoFile(blueprint, file, connectionInfo, datasetID);
+            blueprint = postRawFile(scan_url, file, userPrefs, connectionInfo);
+            status = replaceGeoFile(blueprint, file, userPrefs, connectionInfo, datasetID);
         } catch (IOException e) {
             String message = e.getMessage();
             JobStatus s = JobStatus.PUBLISH_ERROR;
@@ -45,7 +52,7 @@ public class GISPublisher {
         return status;
     }
 
-    public static JobStatus replaceGeoFile(String blueprint, File file, SocrataConnectionInfo connectionInfo, String datasetID) {
+    public static JobStatus replaceGeoFile(String blueprint, File file, UserPreferences userPrefs, SocrataConnectionInfo connectionInfo, String datasetID) {
         JobStatus status = JobStatus.SUCCESS;
         JSONParser parser = new JSONParser();
         try {
@@ -65,16 +72,15 @@ public class GISPublisher {
             String name = file.getName();
             String bluepr = array.get("summary").toString();
             String query = "";
-
-            String url = makeUri(connectionInfo.getUrl(),"replace");
+            //;
             query = query + "&fileId="+ URLEncoder.encode(fileId,"UTF-8");
             query = query + "&name="+URLEncoder.encode(name,"UTF-8");
             query = query + "&blueprint=" + URLEncoder.encode(bluepr,"UTF-8");
             query = query + "&viewUid=" + URLEncoder.encode(datasetID,"UTF-8");
 
-            url = url + query;
-            //logging.log(Level.INFO,url);
-            status = postReplaceGeoFile(url, connectionInfo);
+            URI uri = makeUri(connectionInfo.getUrl(),"replace",query);
+            logging.log(Level.INFO,uri.toString());
+            status = postReplaceGeoFile(uri, connectionInfo, userPrefs);
         } catch(ParseException | UnsupportedEncodingException e) {
             String message = e.getMessage();
             JobStatus s = JobStatus.PUBLISH_ERROR;
@@ -84,20 +90,13 @@ public class GISPublisher {
         return status;
     }
 
-    public static JobStatus postReplaceGeoFile(String url, SocrataConnectionInfo connectionInfo) {
-        JobStatus status = JobStatus.SUCCESS;
+    public static JobStatus postReplaceGeoFile(URI uri, SocrataConnectionInfo connectionInfo,UserPreferences userPrefs) {
+    	HttpUtility httpUtility = new HttpUtility(userPrefs,true);
+    	JobStatus status = JobStatus.SUCCESS;
         try {
             CloseableHttpClient httpClient = HttpClients.createDefault();
-            logging.log(Level.INFO, url);
-            HttpPost httpPost = new HttpPost(url);
-            String to_encode = connectionInfo.getUser() + ":" + connectionInfo.getPassword();
-            byte[] bytes = Base64.encodeBase64(to_encode.getBytes());
-            String auth = new String(bytes);
-
-            httpPost.setHeader("Authorization","Basic "+auth);
-            httpPost.setHeader("X-App-Token", connectionInfo.getToken());
-
-            HttpResponse response = httpClient.execute(httpPost);
+            HttpEntity empty = MultipartEntityBuilder.create().build();
+            HttpResponse response = httpUtility.post(uri,empty);
 
 
             HttpEntity resEntity = response.getEntity();
@@ -117,7 +116,7 @@ public class GISPublisher {
 
             try {
                 logging.log(Level.INFO,"Polling for Status...");
-                status = pollForStatus(ticket, connectionInfo,false);
+                status = pollForStatus(ticket, userPrefs,connectionInfo,false);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -131,13 +130,13 @@ public class GISPublisher {
         return status;
     }
 
-    public static JobStatus pollForStatus(String ticket, SocrataConnectionInfo connectionInfo, boolean complete) throws InterruptedException {
-
-        String status_url = makeUri(connectionInfo.getUrl(),"status") + ticket;
+    public static JobStatus pollForStatus(String ticket, UserPreferences userPrefs, SocrataConnectionInfo connectionInfo, boolean complete) throws InterruptedException {
+    	
+        URI status_url = makeUri(connectionInfo.getUrl(),"status",ticket);
         String[] status = new String[2];
         if(!complete)
         {
-            status = getStatus(status_url,connectionInfo);
+            status = getStatus(status_url,userPrefs,connectionInfo);
             logging.log(Level.INFO,status[1]);
             Thread.sleep(1000);
 
@@ -150,28 +149,18 @@ public class GISPublisher {
                 s.setMessage(status[1]);
                 return s;
             }
-            pollForStatus(ticket,connectionInfo,false);
+            pollForStatus(ticket,userPrefs,connectionInfo,false);
         }
         return JobStatus.SUCCESS;
     }
 
-    public static String[] getStatus(String url, SocrataConnectionInfo connectionInfo) {
+    public static String[] getStatus(URI uri,UserPreferences userPrefs, SocrataConnectionInfo connectionInfo) {
+    	HttpUtility httpUtility = new HttpUtility(userPrefs,true);
         String[] status = new String[2];
         try {
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            HttpGet httpGet = new HttpGet(url);
-            String to_encode = connectionInfo.getUser() + ":" + connectionInfo.getPassword();
-            byte[] bytes = Base64.encodeBase64(to_encode.getBytes());
-            String auth = new String(bytes);
 
-            httpGet.setHeader("Authorization","Basic "+auth);
-            httpGet.setHeader("X-App-Token", connectionInfo.getToken());
-
-            HttpResponse response = httpClient.execute(httpGet);
-
-
+            HttpResponse response = httpUtility.get(uri,"application/json");
             HttpEntity resEntity = response.getEntity();
-
             String result = EntityUtils.toString(resEntity);
             JSONParser parser = new JSONParser();
             JSONObject resJson = (JSONObject) parser.parse(result);
@@ -211,39 +200,31 @@ public class GISPublisher {
 
     }
 
-    public static String postRawFile(String uri, File file, SocrataConnectionInfo connectionInfo) throws IOException {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpPost httpPost = new HttpPost(uri);
-        String to_encode = connectionInfo.getUser() + ":" + connectionInfo.getPassword();
-        byte[] bytes = Base64.encodeBase64(to_encode.getBytes());
-        String auth = new String(bytes);
-
-        httpPost.setHeader("Authorization","Basic "+auth);
-        httpPost.setHeader("X-App-Token", connectionInfo.getToken());
+    public static String postRawFile(URI uri, File file, UserPreferences userPrefs, SocrataConnectionInfo connectionInfo) throws IOException {
+    	HttpUtility httpUtility = new HttpUtility(userPrefs,true);
+    	
         logging.log(Level.INFO, "Posting file...");
         HttpEntity httpEntity = MultipartEntityBuilder.create()
                 .addBinaryBody(file.getName(), file, ContentType.APPLICATION_OCTET_STREAM,file.getName())
                 .build();
 
-        httpPost.setEntity(httpEntity);
-
-        HttpResponse response = httpClient.execute(httpPost);
+        HttpResponse response = httpUtility.post(uri, httpEntity);
         HttpEntity resEntity = response.getEntity();
         String result = EntityUtils.toString(resEntity);
         logging.log(Level.INFO,result);
         return result;
     }
 
-    public static String makeUri(String domain,String method) {
+    public static URI makeUri(String domain,String method,String query) {
         switch(method) {
             case "scan":
-                return domain + "/api/imports2?method=scanShape";
+                return URI.create(domain + "/api/imports2?method=scanShape");
             case "replace":
-                return domain + "/api/imports2?method=replaceShapefile";
+                return URI.create(domain + "/api/imports2?method=replaceShapefile"+query);
             case "status":
-                return domain + "/api/imports2?ticket=";
+                return URI.create(domain + "/api/imports2?ticket="+query);
             default:
-                return "Method Required";
+                return URI.create("");
         }
     }
 }
