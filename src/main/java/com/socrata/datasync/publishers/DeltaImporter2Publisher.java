@@ -381,6 +381,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
         do {
             psm.go();
         } while (psm.jobId == null);
+        System.out.println("Diff was successfully committed: job ID is " + psm.jobId);
         return psm.jobId;
     }
 
