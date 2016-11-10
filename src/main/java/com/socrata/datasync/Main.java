@@ -4,6 +4,8 @@ import com.socrata.datasync.job.Job;
 import com.socrata.datasync.job.Jobs;
 import com.socrata.datasync.job.LoadPreferencesJob;
 import com.socrata.datasync.job.PortJob;
+import com.socrata.datasync.job.GISJob;
+import com.socrata.datasync.job.GISJob.ControlDisagreementException;
 import com.socrata.datasync.config.CommandLineOptions;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
@@ -36,7 +38,12 @@ public class Main {
             } else {
                 // Run a job file (.sij) in command-line mode
                 String jobFileToRun = args[0];
-			    new SimpleIntegrationRunner(jobFileToRun);
+			    try {
+					new SimpleIntegrationRunner(jobFileToRun);
+				} catch (ControlDisagreementException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
             }
 		} else {
 		    // generate & run job from command line args
@@ -58,6 +65,8 @@ public class Main {
             Job jobToRun = new com.socrata.datasync.job.IntegrationJob(userPrefs);
             if(jobType.equals(Jobs.PORT_JOB.toString())) {
                 jobToRun = new PortJob(userPrefs);
+            } else if(jobType.equals(Jobs.GIS_JOB.toString())){
+            	jobToRun = new GISJob(userPrefs);
             } else if(jobType.equals(Jobs.LOAD_PREFERENCES_JOB.toString())) {
                 jobToRun = new LoadPreferencesJob(userPrefs);
             } else if (!jobType.equals(Jobs.INTEGRATION_JOB.toString())){

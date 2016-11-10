@@ -151,7 +151,7 @@ public class HttpUtility {
 
         public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
             // Do not retry if over max retry count
-            if (executionCount >= 5)
+            if (executionCount >= 3)
                 return false;
 
             // Do not retry calls to the github api
@@ -169,7 +169,7 @@ public class HttpUtility {
             //     in DeltaImporter2Publisher.commitBlobPostings
             boolean idempotent = !(request.getRequestLine().getUri().contains("commit"));
             if (idempotent) { // Retry if the request is considered idempotent
-                double wait = Math.pow(3.5, executionCount);
+                double wait = Math.pow(2, executionCount);
                 System.err.println("Request failed. Retrying request in " + Math.round(wait) + " seconds");
                 try {
                     Thread.sleep((long) wait*1000);
