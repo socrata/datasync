@@ -11,10 +11,12 @@ import au.com.bytecode.opencsv.CSVReader;
 import com.socrata.datasync.config.controlfile.ControlFile;
 
 /**
- * The CSV Model is used primarily to drive the previews in the mapping panel, as well as for validation
- * of key failure points (e.g. date formatting).  As discussed in the DatasetModel class, the actual column names
- * are for display purposes only.  The DatasetModel maintains a separate list of invariant columns that it manages
- * independent of the values in the CSV.
+ * The CSV Model is used primarily to drive the previews in the
+ * mapping panel, as well as for validation of key failure points
+ * (e.g. date formatting).  As discussed in the DatasetModel class,
+ * the actual column names are for display purposes only.  The
+ * DatasetModel maintains a separate list of invariant columns that it
+ * manages independent of the values in the CSV.
  */
 
 public class CSVModel extends AbstractTableModel{
@@ -22,10 +24,9 @@ public class CSVModel extends AbstractTableModel{
     private String[] columnNames;
     final int rowsToSample = 100;
 
-    private Vector data = new Vector();
+    private Vector<Vector<Object>> data = new Vector<>();
 
-    public CSVModel(ControlFile file) throws IOException
-    {
+    public CSVModel(ControlFile file) throws IOException {
         updateTable(file);
     }
 
@@ -36,8 +37,7 @@ public class CSVModel extends AbstractTableModel{
         addSamples(file);
     }
 
-
-    //Return rows added
+    // Return rows added
     private int addSamples(ControlFile controlFile) throws IOException{
         CSVReader reader = getCSVReader(controlFile, controlFile.getFileTypeControl().skip);
         String [] row =  reader.readNext();
@@ -129,12 +129,12 @@ public class CSVModel extends AbstractTableModel{
     }
 
     public int getRowSize(int row){
-        return ((Vector) data.get(row)).size();
+        return data.get(row).size();
     }
 
     @Override
     public Object getValueAt(int row, int col) {
-        return ((Vector) data.get(row)).get(col);
+        return data.get(row).get(col);
     }
 
     public String getColumnName(int col){
@@ -145,7 +145,7 @@ public class CSVModel extends AbstractTableModel{
     }
 
     public void setValueAt(Object value, int row, int col){
-        ((Vector) data.get(row)).setElementAt(value, col);
+        data.get(row).setElementAt(value, col);
         fireTableCellUpdated(row,col);
     }
 
@@ -172,12 +172,13 @@ public class CSVModel extends AbstractTableModel{
     }
 
     private void insertData(Object[] values){
-        data.add(new Vector());
-        for(int i =0; i<values.length; i++){
-            ((Vector) data.get(data.size()-1)).add(values[i]);
+        data.add(new Vector<Object>());
+
+        for (int i =0; i < values.length; i++){
+            data.get(data.size() - 1).add(values[i]);
         }
+
         fireTableDataChanged();
     }
 
 }
-

@@ -64,17 +64,17 @@ public class HttpUtility {
                 if (canUse(userPrefs.getProxyUsername()) && canUse(userPrefs.getProxyPassword())) {
                     CredentialsProvider credsProvider = new BasicCredentialsProvider();
                     credsProvider.setCredentials(
-                            new AuthScope(proxyHost, Integer.valueOf(proxyPort)),
-                            new UsernamePasswordCredentials(userPrefs.getProxyUsername(), userPrefs.getProxyPassword()));
+                        new AuthScope(proxyHost, Integer.valueOf(proxyPort)),
+                        new UsernamePasswordCredentials(userPrefs.getProxyUsername(), userPrefs.getProxyPassword()));
                     clientBuilder.setDefaultCredentialsProvider(credsProvider);
                 }
             }
         }
 
         RequestConfig requestConfig = RequestConfig.custom().
-                setConnectTimeout(15000). // 15s
-                setSocketTimeout(60000). // 1m
-                build();
+            setConnectTimeout(15000). // 15s
+            setSocketTimeout(60000). // 1m
+            build();
 
         clientBuilder.setRetryHandler(datasyncDefaultHandler);
         clientBuilder.setKeepAliveStrategy(datasyncDefaultKeepAliveStrategy);
@@ -151,7 +151,7 @@ public class HttpUtility {
 
         public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
             // Do not retry if over max retry count
-            if (executionCount >= 3)
+            if (executionCount >= 5)
                 return false;
 
             // Do not retry calls to the github api
@@ -169,7 +169,7 @@ public class HttpUtility {
             //     in DeltaImporter2Publisher.commitBlobPostings
             boolean idempotent = !(request.getRequestLine().getUri().contains("commit"));
             if (idempotent) { // Retry if the request is considered idempotent
-                double wait = Math.pow(2, executionCount);
+                double wait = Math.pow(3.5, executionCount);
                 System.err.println("Request failed. Retrying request in " + Math.round(wait) + " seconds");
                 try {
                     Thread.sleep((long) wait*1000);

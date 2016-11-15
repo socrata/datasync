@@ -37,8 +37,8 @@ public class DatasyncDirectory {
         this.http = http;
         this.baseFolder = datasync + datasetId + "/";
         this.baseUri = new URIBuilder()
-                .setScheme("https")
-                .setHost(domain);
+            .setScheme("https")
+            .setHost(domain);
     }
 
     /**
@@ -74,7 +74,10 @@ public class DatasyncDirectory {
         try(CloseableHttpResponse response = http.get(uri, ContentType.APPLICATION_JSON.getMimeType())) {
             int status = response.getStatusLine().getStatusCode();
             if (status == HttpStatus.SC_OK || status == HttpStatus.SC_NOT_MODIFIED) {
-                return mapper.readValue(response.getEntity().getContent(), ArrayList.class);
+                @SuppressWarnings("unchecked")
+                ArrayList<String> ret =
+                    mapper.readValue(response.getEntity().getContent(), ArrayList.class);
+                return ret;
             } else {
                 // it isn't a show-stopper to be unable to read directories
                 return new ArrayList<>();

@@ -65,7 +65,7 @@ public class GISJobTab implements JobTab {
     private static final String RUN_COMMAND_TIP_TEXT = "<html><body style='width: 300px'>After saving the job this field will be populated with a command-line command that can be used to run the job." +
             " This command can be input into tools such as the Windows Task Scheduler or ETL tools to run the job automatically.</body></html>";
     public static final String COPY_TO_CLIPBOARD_BUTTON_TEXT = "Copy to clipboard";
-  
+
     private JFrame mainFrame;
     private JPanel jobPanel;
 
@@ -75,7 +75,7 @@ public class GISJobTab implements JobTab {
 
     private JTextField datasetIDTextField;
     private JTextField fileToPublishTextField;
-    private JComboBox publishMethodComboBox;
+    private JComboBox<String> publishMethodComboBox;
     private ButtonGroup publishMethodRadioButtonGroup;
     private JRadioButton soda2Button;
     private JRadioButton ftpButton;
@@ -107,7 +107,7 @@ public class GISJobTab implements JobTab {
 
         loadJobDataIntoUIFields(job);
     }
-    
+
     private void addRunCommandFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
                 "Step 4 - Copy command for later (optional)", RUN_COMMAND_TIP_TEXT, HELP_ICON_TOP_PADDING));
@@ -123,14 +123,14 @@ public class GISJobTab implements JobTab {
         runCommandTextFieldContainer.add(copyJobCommandButton);
         jobPanel.add(runCommandTextFieldContainer);
     }
-    
+
     /* GIS Only has a replace method */
     private void addPublishMethodFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
                 "Step 3 - Select update method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel publishMethodTextFieldContainer = new JPanel(FLOW_RIGHT);
         String[] onlyOption = {"replace"};
-        JComboBox publishMethodComboBox = new JComboBox(onlyOption);
+        JComboBox<String> publishMethodComboBox = new JComboBox<>(onlyOption);
         publishMethodComboBox.addActionListener(new PublishMethodComboBoxListener());
 
         publishMethodTextFieldContainer.add(publishMethodComboBox);
@@ -191,7 +191,7 @@ public class GISJobTab implements JobTab {
             jobTabTitleLabel = new JLabel(job.getJobFilename());
         }
         catch (Exception e){
-        	e.printStackTrace();
+            e.printStackTrace();
             //JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getStackTrace());
         }
     }
@@ -271,7 +271,7 @@ public class GISJobTab implements JobTab {
 
     private void saveJobAsFile(GISJob newGISJob, boolean updateJobCommandTextField, String selectedJobFileLocation) {
         try {
-        	newGISJob.writeToFile(selectedJobFileLocation);
+            newGISJob.writeToFile(selectedJobFileLocation);
 
             // Update job tab title label
             jobTabTitleLabel.setText(Utils.getFilename(selectedJobFileLocation));
@@ -279,7 +279,7 @@ public class GISJobTab implements JobTab {
             // Update the textfield with new command
             if(updateJobCommandTextField) {
                 String runJobCommand = Utils.getRunJobCommand(
-                		newGISJob.getPathToSavedFile());
+                        newGISJob.getPathToSavedFile());
                 runCommandTextField.setText(runJobCommand);
             }
         } catch (IOException e) {

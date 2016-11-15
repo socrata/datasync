@@ -28,6 +28,23 @@ import java.util.Set;
 
 public class DatasetUtils {
 
+    private static class DatasetInfoResponseHandler implements ResponseHandler<DatasetInfo> {
+        @Override
+        public DatasetInfo handleResponse(final HttpResponse response)
+            throws ClientProtocolException, IOException {
+
+            StatusLine statusLine = response.getStatusLine();
+            int status = statusLine.getStatusCode();
+            if (status >= 200 && status < 300) {
+                HttpEntity entity = response.getEntity();
+                return entity != null ? mapper.readValue(entity.getContent(), DatasetInfo.class) : null;
+            } else {
+                throw new ClientProtocolException(statusLine.toString());
+            }
+        }
+    }
+
+
     private static final String LOCATION_DATATYPE_NAME = "location";
 
     private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
@@ -35,15 +52,15 @@ public class DatasetUtils {
     public static Dataset getDatasetInfo(UserPreferences userPrefs, String viewId) throws URISyntaxException, IOException, HttpException {
         String justDomain = getDomainWithoutScheme(userPrefs);
         URI absolutePath = new URIBuilder()
-                .setScheme("https")
-                .setHost(justDomain)
-                .setPath("/api/views/" + viewId)
-                .build();
+            .setScheme("https")
+            .setHost(justDomain)
+            .setPath("/api/views/" + viewId)
+            .build();
 
         ResponseHandler<Dataset> handler = new ResponseHandler<Dataset>() {
             @Override
             public Dataset handleResponse(
-                    final HttpResponse response) throws ClientProtocolException, IOException {
+                final HttpResponse response) throws ClientProtocolException, IOException {
                 StatusLine statusLine = response.getStatusLine();
                 int status = statusLine.getStatusCode();
                 if (status >= 200 && status < 300) {
@@ -64,16 +81,16 @@ public class DatasetUtils {
     public static String getDatasetSample(UserPreferences userPrefs, String viewId, int rowsToSample) throws URISyntaxException, IOException, HttpException {
         String justDomain = getDomainWithoutScheme(userPrefs);
         URI absolutePath = new URIBuilder()
-                .setScheme("https")
-                .setHost(justDomain)
-                .setPath("/resource/" + viewId + ".csv")
-                .addParameter("$limit",""+rowsToSample)
-                .build();
+            .setScheme("https")
+            .setHost(justDomain)
+            .setPath("/resource/" + viewId + ".csv")
+            .addParameter("$limit",""+rowsToSample)
+            .build();
 
         ResponseHandler<String> handler = new ResponseHandler<String>() {
             @Override
             public String handleResponse(
-                    final HttpResponse response) throws ClientProtocolException, IOException {
+                final HttpResponse response) throws ClientProtocolException, IOException {
                 StatusLine statusLine = response.getStatusLine();
                 int status = statusLine.getStatusCode();
                 if (status >= 200 && status < 300) {
@@ -197,32 +214,25 @@ public class DatasetUtils {
         return false;
     }
 
-    public static DatasetInfo getGeoDatasetInfo(UserPreferences userPrefs, String viewId) throws URISyntaxException, IOException, HttpException {
+    public static DatasetInfo getGeoDatasetInfo(UserPreferences userPrefs, String viewId)
+        throws URISyntaxException, IOException, HttpException {
+
         String justDomain = getDomainWithoutScheme(userPrefs);
         URI absolutePath = new URIBuilder()
-                .setScheme("https")
-                .setHost(justDomain)
-                .setPath("/api/views/" + viewId)
-                .build();
+            .setScheme("https")
+            .setHost(justDomain)
+            .setPath("/api/views/" + viewId)
+            .build();
 
-        ResponseHandler<DatasetInfo> handler = new ResponseHandler<DatasetInfo>() {
-            @Override
-            public DatasetInfo handleResponse(
-                    final HttpResponse response) throws ClientProtocolException, IOException {
-                StatusLine statusLine = response.getStatusLine();
-                int status = statusLine.getStatusCode();
-                if (status >= 200 && status < 300) {
-                    HttpEntity entity = response.getEntity();
-                    return entity != null ? mapper.readValue(entity.getContent(), DatasetInfo.class) : null;
-                } else {
-                    throw new ClientProtocolException(statusLine.toString());
-                }
-            }
-        };
+        ResponseHandler<DatasetInfo> handler = new DatasetInfoResponseHandler();
 
         HttpUtility util = new HttpUtility(userPrefs, true);
-        DatasetInfo datasetInfo = util.get(absolutePath, "application/json", handler);
-        util.close();
-        return datasetInfo;
+        try {
+            DatasetInfo datasetInfo = util.get(absolutePath, "application/json", handler);
+
+            return datasetInfo;
+        } finally {
+            util.close();
+        }
     }
 }

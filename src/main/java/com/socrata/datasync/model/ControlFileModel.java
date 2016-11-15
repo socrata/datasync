@@ -336,17 +336,20 @@ public class ControlFileModel extends Observable {
 
     public void setSyntheticLocation(String fieldName, LocationColumn locationField) {
         Map<String, LocationColumn> columnsMap = controlFile.getFileTypeControl().syntheticLocations;
-        if (columnsMap != null)
+        if (columnsMap != null) {
             controlFile.getFileTypeControl().syntheticLocations.put(fieldName, locationField);
-        else {
-            HashMap<String, LocationColumn> map = new HashMap();
+        } else {
+            HashMap<String, LocationColumn> map = new HashMap<>();
             map.put(fieldName, locationField);
             controlFile.getFileTypeControl().syntheticLocations = map;
         }
+
         //Reset the location column
         int locationIndex = getIndexOfColumnName(fieldName);
-        if (locationIndex != -1)
+        if (locationIndex != -1) {
             ignoreColumnInCSVAtPosition(locationIndex);
+        }
+
         updateListeners();
     }
 
