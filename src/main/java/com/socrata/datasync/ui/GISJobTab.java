@@ -56,20 +56,19 @@ public class GISJobTab implements JobTab {
     private static final int HELP_ICON_TOP_PADDING = 12;
     private static final String FILE_TO_PUBLISH_TIP_TEXT = "GeoJSON, kml/kmz, or zipped shape file containing the data to be published";
     private static final String DATASET_ID_TIP_TEXT = "<html><body style='width: 300px'>The identifier in the form of xxxx-xxxx (e.g. n38h-y5wp) " +
-            "of the Socrata dataset where the data will be published</body></html>";
+        "of the Socrata dataset where the data will be published</body></html>";
     private static final String PUBLISH_METHOD_TIP_TEXT = "<html><body style='width: 400px'>Method used to publish data:<br>" +
-            "<strong>replace</strong>: the only allowable method for geospatial files.<br>";
+        "<strong>replace</strong>: the only allowable method for geospatial files.<br>";
     private static final String CONTROL_FILE_TIP_TEXT = "<html><body style='width: 300px'>" +
-            "Establishes import configuration such as date formatting and Location column being populated" +
-            " from existing columns (for more information refer to Help -> control file configuration)</body></html>";
+        "Establishes import configuration such as date formatting and Location column being populated" +
+        " from existing columns (for more information refer to Help -> control file configuration)</body></html>";
     private static final String RUN_COMMAND_TIP_TEXT = "<html><body style='width: 300px'>After saving the job this field will be populated with a command-line command that can be used to run the job." +
-            " This command can be input into tools such as the Windows Task Scheduler or ETL tools to run the job automatically.</body></html>";
+        " This command can be input into tools such as the Windows Task Scheduler or ETL tools to run the job automatically.</body></html>";
     public static final String COPY_TO_CLIPBOARD_BUTTON_TEXT = "Copy to clipboard";
 
-    private JFrame mainFrame;
-    private JPanel jobPanel;
-
     private String jobFileLocation;
+    private boolean usingControlFile;
+
     //Rest of the code assumes that this is never null. Adding to avoid null pointer exception when job initialization fails.
     private JLabel jobTabTitleLabel = new JLabel("Untitled GIS Job");
 
@@ -84,14 +83,12 @@ public class GISJobTab implements JobTab {
     private JButton browseForControlFileButton;
     private JPanel controlFileLabelContainer;
     private JPanel controlFileSelectorContainer;
-
-
     private JButton generateEditControlFileButton;
     private ControlFileModel controlFileModel;
     private DatasetModel datasetModel;
     private JTextField runCommandTextField;
-
-    private boolean usingControlFile;
+    private JFrame mainFrame;
+    private JPanel jobPanel;
 
     // build Container with all tab components populated with given job data
     public GISJobTab(GISJob job, JFrame containingFrame) {
@@ -104,17 +101,16 @@ public class GISJobTab implements JobTab {
         addPublishMethodFieldToJobPanel();
         addRunCommandFieldToJobPanel();
 
-
         loadJobDataIntoUIFields(job);
     }
 
     private void addRunCommandFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                "Step 4 - Copy command for later (optional)", RUN_COMMAND_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                         "Step 4 - Copy command for later (optional)", RUN_COMMAND_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel runCommandTextFieldContainer = new JPanel(FLOW_RIGHT);
         runCommandTextField = new JTextField(DEFAULT_RUN_JOB_COMMAND);
         runCommandTextField.setPreferredSize(new Dimension(
-                JOB_COMMAND_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
+                                                 JOB_COMMAND_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
         runCommandTextField.setEditable(false);
         runCommandTextField.addMouseListener(new JobCommandTextFieldListener());
         runCommandTextFieldContainer.add(runCommandTextField);
@@ -127,7 +123,7 @@ public class GISJobTab implements JobTab {
     /* GIS Only has a replace method */
     private void addPublishMethodFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                "Step 3 - Select update method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                         "Step 3 - Select update method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel publishMethodTextFieldContainer = new JPanel(FLOW_RIGHT);
         String[] onlyOption = {"replace"};
         JComboBox<String> publishMethodComboBox = new JComboBox<>(onlyOption);
@@ -143,11 +139,11 @@ public class GISJobTab implements JobTab {
 
     private void addDatasetIdFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                "Step 2 - Enter Dataset ID to update", DATASET_ID_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                         "Step 2 - Enter Dataset ID to update", DATASET_ID_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel datasetIDTextFieldContainer = new JPanel(FLOW_RIGHT);
         datasetIDTextField = new JTextField();
         datasetIDTextField.setPreferredSize(new Dimension(
-                DATASET_ID_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
+                                                DATASET_ID_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
         RegenerateControlFileListener regenerateListener = new RegenerateControlFileListener();
         datasetIDTextField.addActionListener(regenerateListener);
         datasetIDTextField.addFocusListener(regenerateListener);
@@ -157,16 +153,16 @@ public class GISJobTab implements JobTab {
 
     private void addFileToPublishFieldToJobPanel() {
         jobPanel.add(
-                UIUtility.generateLabelWithHelpBubble("Step 1 - Select file to publish", FILE_TO_PUBLISH_TIP_TEXT, HELP_ICON_TOP_PADDING));
+            UIUtility.generateLabelWithHelpBubble("Step 1 - Select file to publish", FILE_TO_PUBLISH_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel fileSelectorContainer = new JPanel(FLOW_RIGHT);
         fileToPublishTextField = new JTextField();
         fileToPublishTextField.setPreferredSize(new Dimension(
-                JOB_FILE_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
+                                                    JOB_FILE_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
         fileSelectorContainer.add(fileToPublishTextField);
         JFileChooser fileToPublishChooser = new JFileChooser();
         JButton openButton = new JButton(BROWSE_BUTTON_TEXT);
         FileToPublishSelectorListener chooserListener = new FileToPublishSelectorListener(
-                fileToPublishChooser, fileToPublishTextField);
+            fileToPublishChooser, fileToPublishTextField);
         openButton.addActionListener(chooserListener);
         fileSelectorContainer.add(openButton);
         RegenerateControlFileListener regenerateListener = new RegenerateControlFileListener();
@@ -184,35 +180,32 @@ public class GISJobTab implements JobTab {
             // if this is an existing job (meaning the job was opened from a file)
             // then populate the scheduler command textfield
             if (!jobFileLocation.equals("")) {
-                runCommandTextField.setText(
-                        Utils.getRunJobCommand(jobFileLocation));
+                runCommandTextField.setText(Utils.getRunJobCommand(jobFileLocation));
             }
 
             jobTabTitleLabel = new JLabel(job.getJobFilename());
-        }
-        catch (Exception e){
-            e.printStackTrace();
-            //JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getStackTrace());
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage());
         }
     }
 
-
-    private void updateControlFileModel(ControlFile controlFile, String fourbyfour) throws LongRunningQueryException, InterruptedException, HttpException, IOException, URISyntaxException{
+    private void updateControlFileModel(ControlFile controlFile, String fourbyfour)
+        throws LongRunningQueryException, InterruptedException, HttpException, IOException, URISyntaxException {
 
         UserPreferences userPrefs = new UserPreferencesJava();
 
         datasetModel = new DatasetModel(userPrefs, fourbyfour);
 
         controlFileModel = new ControlFileModel(controlFile, datasetModel);
-
     }
 
     private void updatePublishViaReplaceUIFields(boolean showFileInfo) {
         publishViaFTPLabelContainer.setVisible(true);
-        if(showFileInfo) {
+
+        if (showFileInfo) {
             controlFileLabelContainer.setVisible(true);
             controlFileSelectorContainer.setVisible(true);
-          } else {
+        } else {
             controlFileSelectorContainer.setVisible(false);
         }
         jobPanel.updateUI();
@@ -247,29 +240,31 @@ public class GISJobTab implements JobTab {
         // otherwise save to existing file
         boolean updateJobCommandTextField = false;
         String selectedJobFileLocation = jobFileLocation;
-        if(selectedJobFileLocation.equals("")) {
+        if (selectedJobFileLocation.equals("")) {
             JFileChooser savedJobFileChooser = new JFileChooser();
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
-                    JOB_FILE_NAME + " (*." + JOB_FILE_EXTENSION + ")", JOB_FILE_EXTENSION);
+                JOB_FILE_NAME + " (*." + JOB_FILE_EXTENSION + ")", JOB_FILE_EXTENSION);
             savedJobFileChooser.setFileFilter(filter);
-            int returnVal = savedJobFileChooser.showSaveDialog(mainFrame);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
+            if (savedJobFileChooser.showSaveDialog(mainFrame) == JFileChooser.APPROVE_OPTION) {
                 File file = savedJobFileChooser.getSelectedFile();
                 selectedJobFileLocation = file.getAbsolutePath();
-                if(!selectedJobFileLocation.endsWith("." + JOB_FILE_EXTENSION)) {
+
+                if (!selectedJobFileLocation.endsWith("." + JOB_FILE_EXTENSION)) {
                     selectedJobFileLocation += "." + JOB_FILE_EXTENSION;
                 }
+
                 jobFileLocation = selectedJobFileLocation;
                 newGISJob.setPathToSavedFile(selectedJobFileLocation);
                 jobTabTitleLabel.setText(newGISJob.getJobFilename());
                 updateJobCommandTextField = true;
             }
         }
-
         saveJobAsFile(newGISJob, updateJobCommandTextField, selectedJobFileLocation);
     }
 
-    private void saveJobAsFile(GISJob newGISJob, boolean updateJobCommandTextField, String selectedJobFileLocation) {
+    private void saveJobAsFile(GISJob newGISJob,
+                               boolean updateJobCommandTextField,
+                               String selectedJobFileLocation) {
         try {
             newGISJob.writeToFile(selectedJobFileLocation);
 
@@ -279,12 +274,12 @@ public class GISJobTab implements JobTab {
             // Update the textfield with new command
             if(updateJobCommandTextField) {
                 String runJobCommand = Utils.getRunJobCommand(
-                        newGISJob.getPathToSavedFile());
+                    newGISJob.getPathToSavedFile());
                 runCommandTextField.setText(runJobCommand);
             }
         } catch (IOException e) {
             JOptionPane.showMessageDialog(mainFrame,
-                    "Error saving " + selectedJobFileLocation + ": " + e.getMessage());
+                                          "Error saving " + selectedJobFileLocation + ": " + e.getMessage());
         }
     }
 
@@ -304,17 +299,16 @@ public class GISJobTab implements JobTab {
             fileChooser = chooser;
             filePathTextField = textField;
             fileChooser.setFileFilter(
-                    UIUtility.getFileChooserFilter(GISJobValidity.allowedGeoFileToPublishExtensions));
+                UIUtility.getFileChooserFilter(GISJobValidity.allowedGeoFileToPublishExtensions));
         }
 
         public void actionPerformed(ActionEvent e) {
-            int returnVal = fileChooser.showOpenDialog(mainFrame);
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
+            if (fileChooser.showOpenDialog(mainFrame) == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
                 filePathTextField.setText(file.getAbsolutePath());
-            } else {
-                // Open command cancelled by user: do nothing
             }
+
+            // If open command was cancelled by user: do nothing
         }
     }
 
@@ -345,8 +339,10 @@ public class GISJobTab implements JobTab {
             ftpButton.setVisible(PublishMethod.replace.equals(selectedPublishMethod));
             httpButton.setSelected(true);
             //Should not be null
-            if (controlFileModel != null)
+            if (controlFileModel != null) {
                 controlFileModel.setType(Utils.capitalizeFirstLetter(selectedPublishMethod.name()));
+            }
+
             updatePublishViaReplaceUIFields(controlFileNeeded());
 
         }
@@ -381,38 +377,38 @@ public class GISJobTab implements JobTab {
 
     private class EditControlFileListener implements ActionListener {
         public void actionPerformed(ActionEvent evnt) {
-            String generateControlFileErrorMessage;
-                if(!datasetIdValid()) {
-                    generateControlFileErrorMessage = "Error generating control file: " +
-                            "you must enter valid Dataset ID";
-                    JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
-                } else {
-                    try {
-                        if (controlFileModel == null) {
-                            ControlFile controlFile = generateControlFile(
-                                    new UserPreferencesJava(),
-                                    fileToPublishTextField.getText(),
-                                    PublishMethod.replace,
-                                    datasetIDTextField.getText(),
-                                    true);
+            final String generateControlFileErrorMessage;
+            if (!datasetIdValid()) {
+                generateControlFileErrorMessage = "Error generating control file: " +
+                    "you must enter valid Dataset ID";
+                JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
+            } else {
+                try {
+                    if (controlFileModel == null) {
+                        ControlFile controlFile = generateControlFile(
+                            new UserPreferencesJava(),
+                            fileToPublishTextField.getText(),
+                            PublishMethod.replace,
+                            datasetIDTextField.getText(),
+                            true);
 
-                            updateControlFileModel(controlFile,datasetIDTextField.getText());
-                        }
-
-                        ControlFileEditDialog editorFrame = new ControlFileEditDialog(controlFileModel,mainFrame);
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        generateControlFileErrorMessage = "Error generating control file: " + e.getMessage();
-                        JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
+                        updateControlFileModel(controlFile,datasetIDTextField.getText());
                     }
+
+                    ControlFileEditDialog editorFrame = new ControlFileEditDialog(controlFileModel,mainFrame);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    generateControlFileErrorMessage = "Error generating control file: " + e.getMessage();
+                    JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
                 }
+            }
 
         }
 
         private boolean fileToPublishIsSelected() {
             String fileToPublish = fileToPublishTextField.getText();
-            return !fileToPublish.equals("");
+            return !"".equals(fileToPublish);
         }
 
         /**
@@ -437,18 +433,23 @@ public class GISJobTab implements JobTab {
             return mapper.writeValueAsString(control);
         }
 
-        private ControlFile generateControlFile(UserPreferences prefs, String fileToPublish, PublishMethod publishMethod,
-                                                String datasetId, boolean containsHeaderRow) throws HttpException, URISyntaxException, InterruptedException, IOException {
+        private ControlFile generateControlFile(UserPreferences prefs,
+                                                String fileToPublish,
+                                                PublishMethod publishMethod,
+                                                String datasetId,
+                                                boolean containsHeaderRow)
+            throws HttpException, URISyntaxException, InterruptedException, IOException {
 
             Dataset datasetInfo = DatasetUtils.getDatasetInfo(prefs, datasetId);
             boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
 
             String[] columns = null;
             if (!containsHeaderRow) {
-                if (PublishMethod.delete.equals(publishMethod))
+                if (PublishMethod.delete.equals(publishMethod)) {
                     columns = new String[]{DatasetUtils.getRowIdentifierName(datasetInfo)};
-                else
+                } else {
                     columns = DatasetUtils.getFieldNamesArray(datasetInfo);
+                }
             }
 
             return ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding, containsHeaderRow);

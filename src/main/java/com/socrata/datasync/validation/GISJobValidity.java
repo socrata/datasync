@@ -89,6 +89,7 @@ public class GISJobValidity {
     public static JobStatus validateDatasetDomain(UserPreferences userPrefs, String datasetID) {
         try {
             DatasetInfo datasetInfo = DatasetUtils.getGeoDatasetInfo(userPrefs, datasetID);
+
             return JobStatus.VALID;
         } catch (Exception e) {
             return JobStatus.INVALID_DATASET_ID;
@@ -102,7 +103,6 @@ public class GISJobValidity {
                                          String urlBase) {
 
         String fileExtension = Utils.getFileExtension(publishFile.getAbsolutePath());
-
 
         if (fileControl == null && !control.action.equalsIgnoreCase(PublishMethod.delete.name())) {
             JobStatus noFileTypeContent = JobStatus.PUBLISH_ERROR;
@@ -121,33 +121,38 @@ public class GISJobValidity {
 
             PublishMethod method = PublishMethod.valueOf(control.action.toLowerCase());
             JobStatus csvDatasetAgreement = checkColumnAgreement(fileControl, method, schema, headers ,publishFile.getName());
-            if (csvDatasetAgreement.isError())
+            if (csvDatasetAgreement.isError()) {
                 return csvDatasetAgreement;
+            }
 
             JobStatus controlHeaderAgreement = checkControlAgreement(fileControl, schema, headers, publishFile.getName());
-            if (controlHeaderAgreement.isError())
+            if (controlHeaderAgreement.isError()) {
                 return controlHeaderAgreement;
+            }
 
             JobStatus controlSensibility = validateControlFile(fileControl, urlBase);
-            if (controlSensibility.isError())
+            if (controlSensibility.isError()) {
                 return controlSensibility;
-        }
-        catch (IOException e){
+            }
+
+            return JobStatus.VALID;
+        } catch (IOException e){
             JobStatus cannotConnect = JobStatus.PUBLISH_ERROR;
             cannotConnect.setMessage("Cannot determine the headers for dataset: " + schema.getId());
             return cannotConnect;
         }
-        return JobStatus.VALID;
-
     }
 
     private static boolean validatePathToControlFileArg(CommandLine cmd, CommandLineOptions options) {
         String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
-        if (controlFilePath == null) controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
+        if (controlFilePath == null) {
+            controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
+        }
 
-        if(controlFilePath != null) {
+        if (controlFilePath != null) {
             String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
             String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
+
             if (isNullOrFalse(publishingWithFtp) && isNullOrFalse(publishingWithDi2)) {
                 System.err.println("Invalid argument: Neither -sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG +
                                    " -cf,--" + options.PATH_TO_CONTROL_FILE_FLAG + " can be supplied " +
@@ -157,25 +162,28 @@ public class GISJobValidity {
             }
         }
 
-        if(controlFilePath != null) {
-            if(cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG) != null) {
-                System.out.println("WARNING: -h,--" + options.HAS_HEADER_ROW_FLAG + " is being ignored because " +
-                                   "-sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG +  " or " +
-                                   "-cf,--" + options.PATH_TO_CONTROL_FILE_FLAG +  " was supplied");
-            }
+        if (controlFilePath != null && cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG) != null) {
+            System.out.println("WARNING: -h,--" + options.HAS_HEADER_ROW_FLAG +
+                               " is being ignored because " +
+                               "-sc,--" + options.PATH_TO_FTP_CONTROL_FILE_FLAG +  " or " +
+                               "-cf,--" + options.PATH_TO_CONTROL_FILE_FLAG +  " was supplied");
         }
+
         return true;
     }
 
     private static boolean validatePublishViaFtpArg(CommandLine cmd, CommandLineOptions options) {
         String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
-        if (publishingWithFtp == null)
+        if (publishingWithFtp == null) {
             return true;
+        }
 
         if (!publishingWithFtp.equalsIgnoreCase("true") && !publishingWithFtp.equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_FTP_FLAG + " must be 'true' or 'false'");
+            System.err.println("Invalid argument: -pf,--" +
+                               options.PUBLISH_VIA_FTP_FLAG + " must be 'true' or 'false'");
             return false;
         }
+
         if (publishingWithFtp.equalsIgnoreCase("true")) {
             String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
             if (publishingWithDi2 != null && publishingWithDi2.equalsIgnoreCase("true")) {
@@ -183,26 +191,34 @@ public class GISJobValidity {
                                    "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " may be set to 'true'");
                 return false;
             }
+
             String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
-            if (controlFilePath == null) controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
             if (controlFilePath == null) {
-                System.err.println("A control file must be specified when " +
-                                   "-pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is set to 'true'");
-                return false;
+                controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
+
+                if (controlFilePath == null) {
+                    System.err.println("A control file must be specified when " +
+                                       "-pf,--" + options.PUBLISH_VIA_FTP_FLAG + " is set to 'true'");
+                    return false;
+                }
             }
         }
+
         return true;
     }
 
     private static boolean validatePublishViaDi2HttpArg(CommandLine cmd, CommandLineOptions options) {
         String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
-        if (publishingWithDi2 == null)
+        if (publishingWithDi2 == null) {
             return true;
+        }
 
-        if(!publishingWithDi2.equalsIgnoreCase("true") && !publishingWithDi2.equalsIgnoreCase("false")) {
-            System.err.println("Invalid argument: -pf,--" + options.PUBLISH_VIA_DI2_FLAG + " must be 'true' or 'false'");
+        if (!publishingWithDi2.equalsIgnoreCase("true") && !publishingWithDi2.equalsIgnoreCase("false")) {
+            System.err.println("Invalid argument: -pf,--" +
+                               options.PUBLISH_VIA_DI2_FLAG + " must be 'true' or 'false'");
             return false;
         }
+
         if (publishingWithDi2.equalsIgnoreCase("true")) {
             String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
             if (publishingWithFtp != null && publishingWithFtp.equalsIgnoreCase("true")) {
@@ -211,13 +227,17 @@ public class GISJobValidity {
                 return false;
             }
             String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
-            if (controlFilePath == null) controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
             if (controlFilePath == null) {
-                System.err.println("A control file must be specified when " +
-                                   "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " is set to 'true'");
-                return false;
+                controlFilePath = cmd.getOptionValue(options.PATH_TO_FTP_CONTROL_FILE_FLAG);
+
+                if (controlFilePath == null) {
+                    System.err.println("A control file must be specified when " +
+                                       "-ph,--" + options.PUBLISH_VIA_DI2_FLAG + " is set to 'true'");
+                    return false;
+                }
             }
         }
+
         return true;
     }
 
@@ -226,42 +246,50 @@ public class GISJobValidity {
         String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
         String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
         String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
-        if(haveHeader == null) {
-            if (controlFilePath == null) {
-                if (isNullOrFalse(publishingWithFtp) && isNullOrFalse(publishingWithDi2)) {
-                    System.err.println("Missing required argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " is required");
-                    return false;
-                } else {
-                    // if publishing via ftp or di2/http, we want to err about the control file, not the header arg
-                    return true;
-                }
-            } else { // have a control file, don't need the header arg (and would ignore it anyway)
-                return true;
-            }
-        } else {  // have non-null header arg
+
+        if (haveHeader == null && controlFilePath == null
+            && isNullOrFalse(publishingWithFtp) && isNullOrFalse(publishingWithDi2)) {
+
+            System.err.println("Missing required argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " is required");
+            return false;
+        } else if (haveHeader == null && controlFilePath == null
+                   && (!isNullOrFalse(publishingWithFtp) || !isNullOrFalse(publishingWithDi2))) {
+            // if publishing via ftp or di2/http, we want to err about the control file, not the header arg
+
+            return true;
+        } else if (haveHeader == null && controlFilePath != null) {
+            // have a control file, don't need the header arg (and would ignore it anyway)
+
+            return true;
+        } else { // haveHeader != null
             if (!cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG).equalsIgnoreCase("true")
                 && !cmd.getOptionValue(options.HAS_HEADER_ROW_FLAG).equalsIgnoreCase("false")) {
-                System.err.println("Invalid argument: -h,--" + options.HAS_HEADER_ROW_FLAG + " must be 'true' or 'false'");
+                System.err.println("Invalid argument: -h,--" + options.HAS_HEADER_ROW_FLAG +
+                                   " must be 'true' or 'false'");
                 return false;
+            } else {
+                return true;
             }
-            return true;
         }
     }
 
     private static boolean validateFileToPublishArg(CommandLine cmd, CommandLineOptions options) {
-        if(cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG) == null) {
+        if (cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG) != null) {
+            return true;
+        } else {
             System.err.println("Missing required argument: -f,--" + options.FILE_TO_PUBLISH_FLAG + " is required");
             return false;
         }
-        return true;
     }
 
     private static boolean validateDatasetIdArg(CommandLine cmd, CommandLineOptions options) {
-        if(cmd.getOptionValue(options.DATASET_ID_FLAG) == null) {
+        if (cmd.getOptionValue(options.DATASET_ID_FLAG) != null) {
+            return true;
+        } else {
             System.err.println("Missing required argument: -i,--" + options.DATASET_ID_FLAG + " is required");
+
             return false;
         }
-        return true;
     }
 
     private static boolean validatePublishMethodArg(CommandLine cmd, CommandLineOptions options) {
@@ -269,29 +297,37 @@ public class GISJobValidity {
         String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
         String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
         String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
-        if(method == null) {
-            if (controlFilePath == null) {
-                if (isNullOrFalse(publishingWithFtp) && isNullOrFalse(publishingWithDi2)) {
-                    System.err.println("Missing required argument: -m,--" + options.PUBLISH_METHOD_FLAG + " is required");
-                    return false;
-                } else {
-                    // if publishing via ftp or di2/http, we want to err about the control file, not the method arg
-                    return true;
-                }
-            } else { // have a control file, don't need the method arg (and would ignore it anyway)
-                return true;
-            }
-        } else {  // non-null method given
+
+        if (method == null && controlFilePath == null
+            && isNullOrFalse(publishingWithFtp) && isNullOrFalse(publishingWithDi2)) {
+
+            System.err.println("Missing required argument: -m,--" +
+                               options.PUBLISH_METHOD_FLAG + " is required");
+
+            return false;
+        } else if (method == null && controlFilePath == null
+                   && (!isNullOrFalse(publishingWithFtp) || !isNullOrFalse(publishingWithDi2))) {
+            // if publishing via ftp or di2/http, we want to err about the control file, not the method arg
+
+            return true;
+        } else if (method == null && controlFilePath != null) {
+            // have a control file, don't need the method arg (and would ignore it anyway)
+
+            return true;
+        } else { // method != null
             boolean publishMethodValid = false;
+
             for (PublishMethod m : PublishMethod.values()) {
                 if (m.name().equalsIgnoreCase(method))
                     publishMethodValid = true;
             }
+
             if (!publishMethodValid) {
                 System.err.println("Invalid argument: -m,--" + options.PUBLISH_METHOD_FLAG + " must be " +
                                    Arrays.toString(PublishMethod.values()));
                 return false;
             }
+
             return true;
         }
     }
@@ -338,75 +374,95 @@ public class GISJobValidity {
     }
 
     private static JobStatus validateControlFile(FileTypeControl fileControl, String urlBase) {
-
-        if (fileControl == null) return JobStatus.VALID;
+        if (fileControl == null) {
+            return JobStatus.VALID;
+        }
 
         JobStatus goodTimestampFormats = checkTimeFormattingValidity(fileControl);
-        if (goodTimestampFormats.isError())
+        if (goodTimestampFormats.isError()) {
             return goodTimestampFormats;
+        }
 
         JobStatus goodEncoding = checkEncodingValidity(fileControl, urlBase);
-        if (goodEncoding.isError())
-            return goodEncoding;
 
-        return JobStatus.VALID;
+        if (goodEncoding.isError()) {
+            return goodEncoding;
+        } else {
+            return JobStatus.VALID;
+        }
     }
 
     private static JobStatus checkAction(String action, GISJob job, Dataset schema) {
         StringBuilder methods = new StringBuilder();
         boolean okAction = false;
+
         for (PublishMethod m : PublishMethod.values()) {
             methods.append("\t" + m.name() + "\n");
-            if (m.name().equalsIgnoreCase(action))
+            if (m.name().equalsIgnoreCase(action)) {
                 okAction = true;
+            }
         }
+
         if (!okAction) {
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage("Unknown Publish Method: " +
-                              "The control file must specify the publishing method via the 'action' option as one of: \n" +
+                              "The control file must specify the publishing method via the " +
+                              " 'action' option as one of: \n" +
                               methods.toString());
             return status;
         }
+
         if (!PublishMethod.replace.name().equalsIgnoreCase(action)) {
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage("FTP does not currently support upsert, append or delete");
+
             return status;
         }
+
         PublishMethod publishMethod = job.getPublishMethod();
         if (publishMethod != null && !action.equalsIgnoreCase(publishMethod.name())) {
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage("Conflicting Publish Methods: " +
                               "The publish method selected was '" + publishMethod.name() +
-                              "', but the 'action' option in the control file specifies the publish method as '" + action + ".");
+                              "', but the 'action' option in the control file " +
+                              "specifies the publish method as '" + action + ".");
             return status;
         }
+
         String rowIdentifier = DatasetUtils.getRowIdentifierName(schema);
         if (rowIdentifier == null && PublishMethod.delete.name().equalsIgnoreCase(action)) {
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage("Dataset Requirement Unfulfilled: " +
-                              "To delete from a dataset, a row identifier must be set. Dataset '" + schema.getId() +
+                              "To delete from a dataset, a row identifier must be set. Dataset '" +
+                              schema.getId() +
                               "' does not have a row identifier set");
+
             return status;
         }
+
         return JobStatus.VALID;
     }
 
     private static JobStatus checkTimeFormattingValidity(FileTypeControl fileControl) {
-        if (!fileControl.hasTimestampFormatting())
+        if (!fileControl.hasTimestampFormatting()) {
             return JobStatus.VALID;
+        }
 
         Set<String> timeFormats = fileControl.lookupTimestampFormatting();
         DateTimeFormatter formatter;
+
         for (String format : timeFormats) {
-            if (format.equalsIgnoreCase(supportedTimeFormat))
-                continue;
-            try { formatter = DateTimeFormat.forPattern(format); }
-            catch (IllegalArgumentException e) {
-                JobStatus status = JobStatus.PUBLISH_ERROR;
-                status.setMessage("Unsupported Date Time Format: The time format '" + format +
-                                  "' specified in the control file is not a valid pattern." +
-                                  "\nPlease consult " + jodaLink + " for more information");
-                return status;
+            if (!format.equalsIgnoreCase(supportedTimeFormat)) {
+                try {
+                    formatter = DateTimeFormat.forPattern(format);
+                } catch (IllegalArgumentException e) {
+                    JobStatus status = JobStatus.PUBLISH_ERROR;
+                    status.setMessage("Unsupported Date Time Format: The time format '" + format +
+                                      "' specified in the control file is not a valid pattern." +
+                                      "\nPlease consult " + jodaLink + " for more information");
+
+                    return status;
+                }
             }
         }
 
@@ -414,35 +470,43 @@ public class GISJobValidity {
     }
 
     private static JobStatus checkEncodingValidity(FileTypeControl fileControl, String urlBase) {
-        if (!fileControl.hasEncoding())
+        if (!fileControl.hasEncoding()) {
             return JobStatus.VALID;
+        }
 
         String encoding = fileControl.encoding;
-        if (encoding.equalsIgnoreCase("ISO-8859-1") ||
-            encoding.equalsIgnoreCase("UTF-8"))
+        if (encoding.equalsIgnoreCase("ISO-8859-1") || encoding.equalsIgnoreCase("UTF-8")) {
             return JobStatus.VALID;
+        }
 
         HttpUtility http = new HttpUtility();
         String charsetUri = urlBase + charsetsPath;
         ObjectMapper mapper = new ObjectMapper();
-        try(CloseableHttpResponse response = http.get(new URI(charsetUri), ContentType.APPLICATION_JSON.getMimeType())) {
+
+        try(CloseableHttpResponse response = http.get(new URI(charsetUri),
+                                                      ContentType.APPLICATION_JSON.getMimeType())) {
             String[] charsets = mapper.readValue(response.getEntity().getContent(), String[].class);
             boolean encodingFound = false;
+
             for (String charset : charsets) {
                 if (encoding.equalsIgnoreCase(charset)) {
                     encodingFound = true;
                     break;
                 }
             }
+
             if (!encodingFound) {
                 JobStatus status = JobStatus.PUBLISH_ERROR;
-                status.setMessage("Unsupported Encoding: The encoding '" + encoding + "' in the control file is not supported." +
+                status.setMessage("Unsupported Encoding: The encoding '" + encoding
+                                  + "' in the control file is not supported." +
                                   "\nPlease consult " + charsetUri + " for a listing of supported encodings");
+
                 return status;
             }
         } catch (Exception e) {
             // no reason to fail jobs because of encoding check
         }
+
         return JobStatus.VALID;
     }
 
@@ -458,52 +522,60 @@ public class GISJobValidity {
      * @param csvFilename the file name, for printing purposes.
      * @return
      */
-    private static JobStatus checkControlAgreement(FileTypeControl fileControl, Dataset schema, String[] headers, String csvFilename) {
-
-        if (schema == null || fileControl == null || !fileControl.hasSyntheticLocations()) return JobStatus.VALID;
+    private static JobStatus checkControlAgreement(FileTypeControl fileControl,
+                                                   Dataset schema,
+                                                   String[] headers,
+                                                   String csvFilename) {
+        if (schema == null || fileControl == null || !fileControl.hasSyntheticLocations()) {
+            return JobStatus.VALID;
+        }
 
         Map<String, LocationColumn> syntheticLocations = fileControl.syntheticLocations;
         for (String field : syntheticLocations.keySet()) {     // O(N) N = 1,2 (small, probably)
             LocationColumn location = syntheticLocations.get(field);
-            String[] locationComponents = new String[]{location.address, location.city,
-                                                       location.state, location.zip, location.latitude, location.longitude};
+            String[] locationComponents = new String[]{location.address,
+                                                       location.city,
+                                                       location.state,
+                                                       location.zip,
+                                                       location.latitude,
+                                                       location.longitude};
             boolean locationInFile = false;
-            boolean[] componentsInFile = new boolean[]{location.address == null, location.city == null,
-                                                       location.state == null, location.zip == null, location.latitude == null, location.longitude == null};
+            boolean[] componentsInFile = new boolean[]{location.address == null,
+                                                       location.city == null,
+                                                       location.state == null,
+                                                       location.zip == null,
+                                                       location.latitude == null,
+                                                       location.longitude == null};
+
             for (String header : headers) {     // O(M)  M = a couple dozen?
                 if (field.equalsIgnoreCase(header)) {
                     locationInFile = true;
                     break;
                 }
+
                 for (int j = 0; j < componentsInFile.length; j++) {   // O(1)  constant at 6
                     if (!componentsInFile[j])
                         componentsInFile[j] = header.equalsIgnoreCase(locationComponents[j]);
                 }
             }
+
             if (locationInFile) {
                 JobStatus status = JobStatus.PUBLISH_ERROR;
-                status.setMessage("Ambiguous Column Name: Synthetic location '" + field + "' specified in the control file may conflict with '" +
+                status.setMessage("Ambiguous Column Name: Synthetic location '" +
+                                  field + "' specified in the control file may conflict with '" +
                                   field + "' provided in '" + csvFilename + "'." +
-                                  "\nPlease ensure '" + field + "' is not currently mapped to fields in the CSV.");
+                                  "\nPlease ensure '" +
+                                  field + "' is not currently mapped to fields in the CSV.");
+
                 return status;
             }
 
-            //The documentation says that this should work, so I'm commenting it out
+            JobStatus typesSupported =
+                locationTypesSupported(field, location, DatasetUtils.getDatasetTypeMapping(schema));
 
-//            for (int i = 0; i < componentsInFile.length; i++) {
-//                if (!componentsInFile[i]) {
-//                    JobStatus status = JobStatus.PUBLISH_ERROR;
-//                    status.setMessage("Synthetic Location Not Found: The synthetic location column '" + field +
-//                            "' references a component '" + locationComponents[i] + "' which is not present in '" +
-//                            csvFilename + "'." +
-//                            "\nPlease check your control file to ensure that the column name is spelled correctly, " +
-//                            "and that '" + locationComponents[i] + "' is not included in the 'ignoreColumns' array.");
-//                    return status;
-//                }
-//            }
-            JobStatus typesSupported = locationTypesSupported(field, location, DatasetUtils.getDatasetTypeMapping(schema));
-            if (typesSupported.isError())
+            if (typesSupported.isError()) {
                 return typesSupported;
+            }
         }
 
         return JobStatus.VALID;
@@ -515,8 +587,11 @@ public class GISJobValidity {
      * @param typeMapping a map from dataset column field names to their type
      * @return true if each component column has a supported type; false if any have an unsupported type
      */
-    private static JobStatus locationTypesSupported(String locationName, LocationColumn location, Map<String,String> typeMapping) {
+    private static JobStatus locationTypesSupported(String locationName,
+                                                    LocationColumn location,
+                                                    Map<String,String> typeMapping) {
         Map<String,String> componentColumns = location.findComponentColumns();
+
         for (String component : componentColumns.keySet()){
             String fieldname = componentColumns.get(component);
             String[] supportedTypes;
@@ -525,37 +600,57 @@ public class GISJobValidity {
             } else {
                 supportedTypes = new String[]{"text"};
             }
+
             String unsupportedType = getUnsupportedType(fieldname, supportedTypes, typeMapping);
             if (unsupportedType != null) {
                 JobStatus status = JobStatus.PUBLISH_ERROR;
-                StringBuilder message = new StringBuilder("Unsupported Datatype: " + Utils.capitalizeFirstLetter(component) + " component  '" +
-                                                          locationName + "' is of type '" + unsupportedType + "'; " + component + " components require ");
-                if (supportedTypes.length == 1) message.append(" a ");
+                StringBuilder message = new StringBuilder("Unsupported Datatype: " +
+                                                          Utils.capitalizeFirstLetter(component) +
+                                                          " component  '" +
+                                                          locationName + "' is of type '" +
+                                                          unsupportedType + "'; " +
+                                                          component + " components require ");
+
+                if (supportedTypes.length == 1) {
+                    message.append(" a ");
+                }
+
                 message.append("'" + supportedTypes[0] + "'");
-                for (int i=1; i<supportedTypes.length; i++)
+                for (int i=1; i<supportedTypes.length; i++) {
                     message.append(" or '" + supportedTypes[i] + "'");
+                }
+
                 message.append(" column");
-                if (supportedTypes.length > 1) message.append('s');
+                if (supportedTypes.length > 1) {
+                    message.append('s');
+                }
+
                 message.append(".\nPlease specify a column that matches a supported type.");
                 status.setMessage(message.toString());
                 return status;
             }
         }
+
         return  JobStatus.VALID;
     }
 
     /**
      * returns null if the component type is okay, otherwise the bad type.
      */
-    private static String getUnsupportedType(String component, String[] supportedTypes, Map<String, String> typeMapping) {
+    private static String getUnsupportedType(String component,
+                                             String[] supportedTypes,
+                                             Map<String, String> typeMapping) {
         String componentType = typeMapping.get(component);
-        if (component == null || componentType == null)
+        if (component == null || componentType == null) {
             return null;
+        }
 
         for (String okayType: supportedTypes) {
-            if (okayType.equalsIgnoreCase(componentType))
+            if (okayType.equalsIgnoreCase(componentType)) {
                 return null;
+            }
         }
+
         return componentType;
     }
 
@@ -571,11 +666,16 @@ public class GISJobValidity {
      * @param csvFilename the file name, for printing purposes.
      * @return
      */
-    private static JobStatus checkColumnAgreement(FileTypeControl fileControl, PublishMethod method, Dataset schema, String[] headers, String csvFilename) {
-
+    private static JobStatus checkColumnAgreement(FileTypeControl fileControl,
+                                                  PublishMethod method,
+                                                  Dataset schema,
+                                                  String[] headers,
+                                                  String csvFilename) {
         String[] ignoredColumns = fileControl.ignoreColumns;
 
-        if (schema == null) return JobStatus.VALID;
+        if (schema == null) {
+            return JobStatus.VALID;
+        }
 
         String rowIdentifier = DatasetUtils.getRowIdentifierName(schema);
         Set<String> columnNames = DatasetUtils.getFieldNamesSet(schema);
@@ -583,20 +683,27 @@ public class GISJobValidity {
         boolean headerHasRowId = false;
         for (String field : headers) {
             field = field.toLowerCase();
-            if (field.equalsIgnoreCase(rowIdentifier)) headerHasRowId = true;
+
+            if (field.equalsIgnoreCase(rowIdentifier)) {
+                headerHasRowId = true;
+            }
 
             if (!columnNames.contains(field)) {
                 JobStatus status = JobStatus.PUBLISH_ERROR;
-                status.setMessage("Extra Columns Specified: File '" + csvFilename + "' contains column '" + field +
-                                  "', but dataset '" + schema.getId() + "' does not." +
-                                  "\nPlease check that your headers are using the field name rather than the human readable name." +
-                                  "\nConsider using 'ignoreColumns' in the control file if '" + field +
-                                  "' should not be included in the dataset");
+                status.setMessage("Extra Columns Specified: File '" +
+                                  csvFilename + "' contains column '" +
+                                  field + "', but dataset '" +
+                                  schema.getId() + "' does not." +
+                                  "\nPlease check that your headers are using the field name " +
+                                  "rather than the human readable name." +
+                                  "\nConsider using 'ignoreColumns' in the control file if '" +
+                                  field + "' should not be included in the dataset");
                 return status;
             } else {
                 columnNames.remove(field);
             }
         }
+
         for (String ignored : ignoredColumns) {
             if (columnNames.contains(ignored))
                 columnNames.remove(ignored);
@@ -612,34 +719,40 @@ public class GISJobValidity {
                     columnNames.remove(synthetic);
             }
         }
+
         if (columnNames.size() > 0 && method.equals(PublishMethod.replace)) {
             if (rowIdentifier == null) {
                 JobStatus status = JobStatus.MISSING_COLUMNS;
                 StringBuilder message = new StringBuilder("Missing Fields: Dataset " + schema.getId() +
-                                                          " contains the following field(s) that are not mapped: ");//available in '" + csvFilename + "': ");
+                                                          " contains the following field(s) that " +
+                                                          "are not mapped: ");
                 boolean writtenFirstValue = false;
                 for (String colName : columnNames) {
-                    if (writtenFirstValue)
+                    if (writtenFirstValue) {
                         message.append(", ").append(colName);
-                    else{
+                    } else {
                         message.append(colName);
                         writtenFirstValue = true;
                     }
                 }
+
                 status.setMessage(message.toString());
+
                 return status;
             } else if (!headerHasRowId) {
                 JobStatus status = JobStatus.PUBLISH_ERROR;
-                status.setMessage("Missing Row Identifier: Dataset '" + schema.getId() + "' contains a row identifier in column '" + rowIdentifier +
+                status.setMessage("Missing Row Identifier: Dataset '" + schema.getId() +
+                                  "' contains a row identifier in column '" + rowIdentifier +
                                   "'. This column must be present in '" + csvFilename + "'.");
+
                 return status;
             }
         }
+
         return JobStatus.VALID;
     }
 
     private static boolean isNullOrFalse(String s) {
         return s == null || s.equalsIgnoreCase("false");
     }
-
 }

@@ -25,7 +25,7 @@ import java.io.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
-@JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 public class GISJob extends Job {
 
     static AtomicInteger jobCounter = new AtomicInteger(0);
@@ -37,8 +37,8 @@ public class GISJob extends Job {
 
     private UserPreferences userPrefs;
     private String datasetID = "";
-	private String fileToPublish = "";
-	private PublishMethod publishMethod = PublishMethod.replace;
+    private String fileToPublish = "";
+    private PublishMethod publishMethod = PublishMethod.replace;
     private boolean fileToPublishHasHeaderRow = true;
     private ControlFile controlFile = null;
 
@@ -47,14 +47,14 @@ public class GISJob extends Job {
     private String userAgentNameClient = "Client";
     private String userAgentNameCli = "CLI";
     private String userAgentNameSijFile = ".gij File";
-    
+
 
     private ObjectMapper controlFileMapper =
-            new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     public GISJob() {
         userPrefs = new UserPreferencesJava();
-	}
+    }
 
     /*
      * This is a method that enables DataSync preferences to be established
@@ -66,49 +66,53 @@ public class GISJob extends Job {
     }
 
     /**
-	 * Loads GIS job data from a file and
-	 * uses the saved data to populate the fields
-	 * of this object
-	 */
-	public GISJob(String pathToFile) throws IOException, ControlDisagreementException {
+     * Loads GIS job data from a file and
+     * uses the saved data to populate the fields
+     * of this object
+     */
+    public GISJob(String pathToFile) throws IOException, ControlDisagreementException {
         this(pathToFile, false);
         setUserAgentSijFile();
-	}
+    }
 
     /**
      * Loads GIS job data from a file and
      * uses the saved data to populate the fields
      * of this object
      */
-    public GISJob(String pathToFile, boolean ignoreControlInconsistencies) throws IOException, ControlDisagreementException {
+    public GISJob(String pathToFile,
+                  boolean ignoreControlInconsistencies) throws IOException, ControlDisagreementException {
         userPrefs = new UserPreferencesJava();
 
         // first try reading the 'current' format
         ObjectMapper mapper = new ObjectMapper();
         GISJob loadedJob;
-        try {
-            loadedJob = mapper.readValue(new File(pathToFile), GISJob.class);
-        } catch (IOException e) {
-            // if reading new format fails...try reading old format into this object
-            loadOldSijFile(pathToFile);
-            return;
-        }
+
+        loadedJob = mapper.readValue(new File(pathToFile), GISJob.class);
+
         setDatasetID(loadedJob.getDatasetID());
         setFileToPublish(loadedJob.getFileToPublish());
         setPublishMethod(loadedJob.getPublishMethod());
         setPathToSavedFile(pathToFile);
     }
 
-
     @JsonProperty("fileVersionUID")
-    public long getFileVersionUID() { return fileVersionUID; }
+    public long getFileVersionUID() {
+        return fileVersionUID;
+    }
 
-    public ControlFile getControlFile() { return controlFile; }
+    public ControlFile getControlFile() {
+        return controlFile;
+    }
 
-    public void setControlFile(ControlFile cf) { controlFile = cf; }
+    public void setControlFile(ControlFile cf) {
+        controlFile = cf;
+    }
 
     @JsonProperty("datasetID")
-    public void setDatasetID(String newDatasetID) { datasetID = newDatasetID; }
+    public void setDatasetID(String newDatasetID) {
+        datasetID = newDatasetID;
+    }
 
     @JsonProperty("datasetID")
     public String getDatasetID() {
@@ -116,7 +120,9 @@ public class GISJob extends Job {
     }
 
     @JsonProperty("fileToPublish")
-    public void setFileToPublish(String newFileToPublish) { fileToPublish = newFileToPublish; }
+    public void setFileToPublish(String newFileToPublish) {
+        fileToPublish = newFileToPublish;
+    }
 
     @JsonProperty("fileToPublish")
     public String getFileToPublish() {
@@ -156,7 +162,7 @@ public class GISJob extends Job {
     }
 
     /**
-     * Configures an integration job prior to running it; in particular, the fields we need are
+     * Configures a GIS job prior to running it; in particular, the fields we need are
      * set from the cmd line and the controlFile contents are deserialized
      * NB: This should be run after 'validateArgs' and before 'run'
      * @param cmd the commandLine object constructed from the user's options
@@ -166,12 +172,15 @@ public class GISJob extends Job {
         String method = cmd.getOptionValue(options.PUBLISH_METHOD_FLAG);
         setDatasetID(cmd.getOptionValue(options.DATASET_ID_FLAG));
         setFileToPublish(cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG));
-        if(method != null)
+        if (method != null) {
             setPublishMethod(PublishMethod.valueOf(method));
+        }
+
         String userAgentName = cmd.getOptionValue(options.USER_AGENT_FLAG);
-        if(Utils.nullOrEmpty(userAgentName)) {
+        if (Utils.nullOrEmpty(userAgentName)) {
             userAgentName = userAgentNameCli;
         }
+
         setUserAgent(userAgentName);
     }
 
@@ -182,8 +191,8 @@ public class GISJob extends Job {
      * @throws IOException
      */
     public JobStatus run() {
-		SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
-		GeoDataset result = null;
+        SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
+        GeoDataset result = null;
         String publishExceptions = "";
         JobStatus runStatus = JobStatus.SUCCESS;
 
@@ -194,51 +203,50 @@ public class GISJob extends Job {
         } else if (datasetStatus.isError()) {
             runStatus = datasetStatus;
         } else {
-
             try {
                 File fileToPublishFile = new File(fileToPublish);
-                    // attach a requestId to all Producer API calls (for error tracking purposes)
-                    String jobRequestId = Utils.generateRequestId();
-                    final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
+                // attach a requestId to all Producer API calls (for error tracking purposes)
+                String jobRequestId = Utils.generateRequestId();
+                final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
 
-                    switch (publishMethod) {
-                        case replace:
-                            runStatus = GISPublisher.replaceGeo(fileToPublishFile, connectionInfo, datasetID, userPrefs);
-                            break;
-                        default:
-                            runStatus = JobStatus.INVALID_PUBLISH_METHOD;
-                    
-                    }
-
+                if (publishMethod == PublishMethod.replace) {
+                    runStatus = GISPublisher.replaceGeo(fileToPublishFile, connectionInfo, datasetID, userPrefs);
+                } else {
+                    runStatus = JobStatus.INVALID_PUBLISH_METHOD;
+                }
             } catch (Exception e) {
                 publishExceptions = e.getMessage();
                 e.printStackTrace();
             }
         }
-    
+
 
         if (publishExceptions.length() > 0) {
             runStatus = JobStatus.PUBLISH_ERROR;
             runStatus.setMessage(publishExceptions);
         }
+
         emailAdmin(runStatus);
         return runStatus;
-	}
+    }
 
-    private void sendErrorNotificationEmail(final String adminEmail, final SocrataConnectionInfo connectionInfo, final JobStatus runStatus, final String runErrorMessage, final String logDatasetID) {
+    private void sendErrorNotificationEmail(final String adminEmail,
+                                            final SocrataConnectionInfo connectionInfo,
+                                            final JobStatus runStatus,
+                                            final String runErrorMessage,
+                                            final String logDatasetID) {
         String errorEmailMessage = "";
         String urlToLogDataset = connectionInfo.getUrl() + "/d/" + logDatasetID;
-        if(runStatus.isError()) {
+        if (runStatus.isError()) {
             errorEmailMessage += "There was an error updating a dataset.\n"
-                    + "\nDataset: " + connectionInfo.getUrl() + "/d/" + getDatasetID()
-                    + "\nFile to publish: " + fileToPublish
-                    + "\nFile to publish has header row: " + fileToPublishHasHeaderRow
-                    + "\nPublish method: " + publishMethod
-                    + "\nJob File: " + pathToSavedJobFile
-                    + "\nError message: " + runErrorMessage
-                    + "\nLog dataset: " + urlToLogDataset + "\n\n";
-        }
-        if(runStatus.isError()) {
+                + "\nDataset: " + connectionInfo.getUrl() + "/d/" + getDatasetID()
+                + "\nFile to publish: " + fileToPublish
+                + "\nFile to publish has header row: " + fileToPublishHasHeaderRow
+                + "\nPublish method: " + publishMethod
+                + "\nJob File: " + pathToSavedJobFile
+                + "\nError message: " + runErrorMessage
+                + "\nLog dataset: " + urlToLogDataset + "\n\n";
+
             try {
                 SMTPMailer.send(adminEmail, "Socrata DataSync Error", errorEmailMessage);
             } catch (Exception e) {
@@ -251,6 +259,7 @@ public class GISJob extends Job {
         String logDatasetID = userPrefs.getLogDatasetID();
         String logPublishingErrorMessage = null;
         SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
+
         return logPublishingErrorMessage;
     }
 
@@ -259,9 +268,9 @@ public class GISJob extends Job {
         String logDatasetID = userPrefs.getLogDatasetID();
         SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
 
-        if(userPrefs.emailUponError() && adminEmail != null && !adminEmail.equals("")) {
+        if (userPrefs.emailUponError() && adminEmail != null && !adminEmail.equals("")) {
             sendErrorNotificationEmail(
-                    adminEmail, connectionInfo, status, status.getMessage(), logDatasetID);
+                adminEmail, connectionInfo, status, status.getMessage(), logDatasetID);
         }
     }
 
@@ -283,7 +292,9 @@ public class GISJob extends Job {
             InputStream buffer = new BufferedInputStream(file);
             ObjectInput input = new ObjectInputStream (buffer);
             try{
-                com.socrata.datasync.IntegrationJob loadedJobOld = (com.socrata.datasync.IntegrationJob) input.readObject();
+                com.socrata.datasync.IntegrationJob loadedJobOld =
+                    (com.socrata.datasync.IntegrationJob) input.readObject();
+
                 setDatasetID(loadedJobOld.getDatasetID());
                 setFileToPublish(loadedJobOld.getFileToPublish());
                 setPublishMethod(loadedJobOld.getPublishMethod());
@@ -293,8 +304,9 @@ public class GISJob extends Job {
                 input.close();
             }
         } catch(Exception e) {
-            // TODO add log entry?
-            throw new IOException(e.toString());
+            e.printStackTrace();
+
+            throw new IOException(e);
         }
     }
 
