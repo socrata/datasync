@@ -101,7 +101,7 @@ public class GISPublisher {
     public static JobStatus postReplaceGeoFile(URI uri,
                                                SocrataConnectionInfo connectionInfo,
                                                UserPreferences userPrefs) {
-        HttpUtility httpUtility = new HttpUtility(userPrefs, true);
+        HttpUtility httpUtility = new HttpUtility(userPrefs, true, 3, 2);
         JobStatus status = JobStatus.SUCCESS;
         try {
             CloseableHttpClient httpClient = HttpClients.createDefault();
@@ -166,7 +166,7 @@ public class GISPublisher {
     }
 
     public static String[] getStatus(URI uri,UserPreferences userPrefs, SocrataConnectionInfo connectionInfo) {
-        HttpUtility httpUtility = new HttpUtility(userPrefs, true);
+        HttpUtility httpUtility = new HttpUtility(userPrefs, true, 3, 2);
         String[] status = new String[2];
 
         try {
@@ -218,7 +218,7 @@ public class GISPublisher {
                                      File file,
                                      UserPreferences userPrefs,
                                      SocrataConnectionInfo connectionInfo) throws IOException {
-        HttpUtility httpUtility = new HttpUtility(userPrefs, true);
+        HttpUtility httpUtility = new HttpUtility(userPrefs, true, 3, 2);
 
         logging.log(Level.INFO, "Posting file...");
         HttpEntity httpEntity = MultipartEntityBuilder.create()

@@ -36,6 +36,9 @@ public class HttpUtility {
     private String authHeader;
     private String appToken;
     private boolean authRequired = false;
+    private final int maxRetries;
+    private final double retryDelayFactor;
+
     private static final String datasyncVersionHeader = "X-Socrata-DataSync-Version";
     private static final String appHeader = "X-App-Token";
     private static String userAgent = "datasync";
@@ -43,12 +46,20 @@ public class HttpUtility {
 
     public HttpUtility() { this(null, false); }
 
+
+    public HttpUtility(UserPreferences userPrefs, boolean useAuth) {
+        this(userPrefs, useAuth, 5, 3.5);
+    }
+
     public HttpUtility(UserPreferences userPrefs, boolean useAuth, String usrAgent) {
         this(userPrefs, useAuth);
         userAgent = usrAgent;
     }
 
-    public HttpUtility(UserPreferences userPrefs, boolean useAuth) {
+    public HttpUtility(UserPreferences userPrefs, boolean useAuth, int maxRetries, double retryDelayFactor) {
+        this.maxRetries = maxRetries;
+        this.retryDelayFactor = retryDelayFactor;
+
         HttpClientBuilder clientBuilder = HttpClients.custom();
         if (useAuth) {
             authHeader = getAuthHeader(userPrefs.getUsername(), userPrefs.getPassword());

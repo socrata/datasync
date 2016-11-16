@@ -22,31 +22,27 @@ import org.apache.commons.cli.ParseException;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class Main {
-	/**
-	 * Loads an instance of the SimpleIntegrationWizard in command line
-	 * mode (if arguments are given) or as a GUI (if no arguments are given).
-	 */
-    public static void main(String[] args) throws ParseException {
+    /**
+     * Loads an instance of the SimpleIntegrationWizard in command line
+     * mode (if arguments are given) or as a GUI (if no arguments are given).
+     */
+    public static void main(String[] args) throws ParseException, ControlDisagreementException {
         if(args.length == 0) {
             // Open GUI (default)
             new SimpleIntegrationWizard();
         } else if(args.length == 1) {
-    		if(args[0].equals("-?") || args[0].equals("--help")) {
+            if (args[0].equals("-?") || args[0].equals("--help")) {
                 printHelp();
             } else if (args[0].equals("-v") || args[0].equals("--version")) {
                 System.out.println("DataSync version " + VersionProvider.getThisVersion());
             } else {
                 // Run a job file (.sij) in command-line mode
                 String jobFileToRun = args[0];
-			    try {
-					new SimpleIntegrationRunner(jobFileToRun);
-				} catch (ControlDisagreementException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+
+                new SimpleIntegrationRunner(jobFileToRun);
             }
-		} else {
-		    // generate & run job from command line args
+        } else {
+            // generate & run job from command line args
             checkVersion();
 
             CommandLineOptions options = new CommandLineOptions();
@@ -66,7 +62,7 @@ public class Main {
             if(jobType.equals(Jobs.PORT_JOB.toString())) {
                 jobToRun = new PortJob(userPrefs);
             } else if(jobType.equals(Jobs.GIS_JOB.toString())){
-            	jobToRun = new GISJob(userPrefs);
+                jobToRun = new GISJob(userPrefs);
             } else if(jobType.equals(Jobs.LOAD_PREFERENCES_JOB.toString())) {
                 jobToRun = new LoadPreferencesJob(userPrefs);
             } else if (!jobType.equals(Jobs.INTEGRATION_JOB.toString())){
