@@ -20,7 +20,7 @@ import java.io.IOException;
 public class MainTest extends TestBase {
 
     @Test
-    public void testHeadlessReplaceViaHTTP() throws ParseException, SodaError, InterruptedException, IOException, LongRunningQueryException {
+    public void testHeadlessReplaceViaHTTP() throws Exception {
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
         Soda2Publisher.replaceNew(createProducer(), createSodaDdl(), UNITTEST_DATASET_ID, twoRowsFile, true);
@@ -36,7 +36,7 @@ public class MainTest extends TestBase {
     }
 
     @Test
-    public void testHeadlessReplaceViaFTP() throws ParseException, SodaError, InterruptedException, IOException, LongRunningQueryException {
+    public void testHeadlessReplaceViaFTP() throws Exception {
         // Ensures dataset is in known state (2 rows)
         File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
         Soda2Publisher.replaceNew(createProducer(), createSodaDdl(), UNITTEST_DATASET_ID, twoRowsFile, true);

@@ -128,8 +128,8 @@ public class GISPublisher {
                 logging.log(Level.INFO,"Polling for Status...");
                 status = pollForStatus(ticket, userPrefs,connectionInfo,false);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                // This should be very rare, but we should throw if it happens.
+                throw new RuntimeException(e);
             }
         } catch (IOException | ParseException e) {
             String message = e.getMessage();
@@ -202,16 +202,14 @@ public class GISPublisher {
             }
 
             return status;
-        } catch (IOException  e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         } catch (ParseException e) {
             status[0] = "Complete";
             status[1] = "Complete";
 
             return status;
         }
-
-        return status;
     }
 
     public static String postRawFile(URI uri,
@@ -222,8 +220,8 @@ public class GISPublisher {
 
         logging.log(Level.INFO, "Posting file...");
         HttpEntity httpEntity = MultipartEntityBuilder.create()
-                .addBinaryBody(file.getName(), file, ContentType.APPLICATION_OCTET_STREAM,file.getName())
-                .build();
+            .addBinaryBody(file.getName(), file, ContentType.APPLICATION_OCTET_STREAM,file.getName())
+            .build();
 
         HttpResponse response = httpUtility.post(uri, httpEntity);
         HttpEntity resEntity = response.getEntity();
@@ -235,14 +233,14 @@ public class GISPublisher {
 
     public static URI makeUri(String domain,String method,String query) {
         switch(method) {
-            case "scan":
-                return URI.create(domain + "/api/imports2?method=scanShape");
-            case "replace":
-                return URI.create(domain + "/api/imports2?method=replaceShapefile" + query);
-            case "status":
-                return URI.create(domain + "/api/imports2?ticket=" + query);
-            default:
-                return URI.create("");
+        case "scan":
+            return URI.create(domain + "/api/imports2?method=scanShape");
+        case "replace":
+            return URI.create(domain + "/api/imports2?method=replaceShapefile" + query);
+        case "status":
+            return URI.create(domain + "/api/imports2?ticket=" + query);
+        default:
+            return URI.create("");
         }
     }
 }

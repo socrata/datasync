@@ -98,7 +98,6 @@ public class GISJobTab implements JobTab {
         jobPanel = new JPanel(new GridLayout(5,2));
         addFileToPublishFieldToJobPanel();
         addDatasetIdFieldToJobPanel();
-        addPublishMethodFieldToJobPanel();
         addRunCommandFieldToJobPanel();
 
         loadJobDataIntoUIFields(job);
@@ -118,23 +117,6 @@ public class GISJobTab implements JobTab {
         copyJobCommandButton.addActionListener(new CopyJobCommandListener());
         runCommandTextFieldContainer.add(copyJobCommandButton);
         jobPanel.add(runCommandTextFieldContainer);
-    }
-
-    /* GIS Only has a replace method */
-    private void addPublishMethodFieldToJobPanel() {
-        jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                         "Step 3 - Select update method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
-        JPanel publishMethodTextFieldContainer = new JPanel(FLOW_RIGHT);
-        String[] onlyOption = {"replace"};
-        JComboBox<String> publishMethodComboBox = new JComboBox<>(onlyOption);
-        publishMethodComboBox.addActionListener(new PublishMethodComboBoxListener());
-
-        publishMethodTextFieldContainer.add(publishMethodComboBox);
-
-        //Create the radio buttons
-        //TODO: For test purposes only.  Remove these eventually
-        publishViaFTPLabelContainer = new JPanel(FLOW_LEFT);
-        jobPanel.add(publishMethodTextFieldContainer);
     }
 
     private void addDatasetIdFieldToJobPanel() {
