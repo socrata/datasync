@@ -36,23 +36,6 @@ public class MainTest extends TestBase {
     }
 
     @Test
-    public void testHeadlessReplaceViaFTP() throws Exception {
-        // Ensures dataset is in known state (2 rows)
-        File twoRowsFile = new File("src/test/resources/datasync_unit_test_two_rows.csv");
-        Soda2Publisher.replaceNew(createProducer(), createSodaDdl(), UNITTEST_DATASET_ID, twoRowsFile, true);
-
-        String[] args = {"-c", PATH_TO_CONFIG_FILE,
-                         "-i", UNITTEST_DATASET_ID,
-                         "-f", "src/test/resources/datasync_unit_test_three_rows.csv",
-                         "-m", PublishMethod.replace.toString(),
-                         "-h", "true",
-                         "-pf", "true",
-                         "-sc", "src/test/resources/datasync_unit_test_three_rows_control.json"};
-        Main.main(args);
-        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
-    }
-
-    @Test
     public void testRunCommandOutput() {
          String pathToSaveJobFile = "/Users/someone/somedirectory/some.sij";
          String expected = "java -jar \".*\" \"" + pathToSaveJobFile + "\"";
