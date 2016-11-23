@@ -66,6 +66,7 @@ public class GISPublisher {
 
             if (array.containsKey("error")) {
                 boolean error = (boolean) array.get("error");
+
                 if (error) {
                     String message = array.get("message").toString();
                     logging.log(Level.INFO,message);
@@ -88,14 +89,14 @@ public class GISPublisher {
             URI uri = makeUri(connectionInfo.getUrl(),"replace",query);
             logging.log(Level.INFO,uri.toString());
             status = postReplaceGeoFile(uri, connectionInfo, userPrefs);
+
+            return status;
         } catch (ParseException | UnsupportedEncodingException e) {
             String message = e.getMessage();
             JobStatus s = JobStatus.PUBLISH_ERROR;
             s.setMessage(message);
             return s;
         }
-
-        return status;
     }
 
     public static JobStatus postReplaceGeoFile(URI uri,
@@ -103,6 +104,7 @@ public class GISPublisher {
                                                UserPreferences userPrefs) {
         HttpUtility httpUtility = new HttpUtility(userPrefs, true, 3, 2);
         JobStatus status = JobStatus.SUCCESS;
+
         try {
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpEntity empty = MultipartEntityBuilder.create().build();
@@ -116,17 +118,21 @@ public class GISPublisher {
             logging.log(Level.INFO, result);
 
             boolean error = (boolean) resJson.get("error");
-            if(error) {
+
+            if (error) {
                 JobStatus s = JobStatus.PUBLISH_ERROR;
                 String error_message = (String) resJson.get("message");
                 s.setMessage(error_message);
                 return s;
             }
+
             ticket = resJson.get("ticket").toString();
 
             try {
                 logging.log(Level.INFO,"Polling for Status...");
                 status = pollForStatus(ticket, userPrefs,connectionInfo,false);
+
+                return status;
             } catch (InterruptedException e) {
                 // This should be very rare, but we should throw if it happens.
                 throw new RuntimeException(e);
@@ -137,7 +143,6 @@ public class GISPublisher {
             s.setMessage(message);
             return s;
         }
-        return status;
     }
 
     public static JobStatus pollForStatus(String ticket, UserPreferences userPrefs, SocrataConnectionInfo connectionInfo, boolean complete) throws InterruptedException {

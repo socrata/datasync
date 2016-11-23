@@ -640,8 +640,13 @@ public class GISJobValidity {
     private static String getUnsupportedType(String component,
                                              String[] supportedTypes,
                                              Map<String, String> typeMapping) {
+        if (component == null) {
+            return null;
+        }
+
         String componentType = typeMapping.get(component);
-        if (component == null || componentType == null) {
+
+        if (componentType == null) {
             return null;
         }
 
