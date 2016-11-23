@@ -247,7 +247,7 @@ public class SyntheticLocationDialog extends JDialog {
 
     // Get a combobox whose values are all of the possible fields in the control file that could be mapped to this column
     private JComboBox getComboBox() {
-        JComboBox columnNamesComboBox = new JComboBox();
+        JComboBox<SyntheticComboBoxItem> columnNamesComboBox = new JComboBox<>();
         for (int i = 0; i < model.getColumnCount();i++){
             String friendlyName = model.getDisplayName(i);
             columnNamesComboBox.addItem(new SyntheticComboBoxItem(friendlyName,i));
@@ -258,11 +258,11 @@ public class SyntheticLocationDialog extends JDialog {
 
     private JComboBox getLocationsCombobox(){
         ArrayList<Column> columns = model.getDatasetModel().getColumns();
-        JComboBox locationComboBox = new JComboBox();
+        JComboBox<String> locationComboBox = new JComboBox<String>();
 
         for (Column column : columns) {
             if (column.getDataTypeName().equals("location")) {
-                locationComboBox.addItem(column.getFieldName()); //new ColumnItem(column,null)); //column.getName());// = new JComboBox(datasetModel.getColumns());
+                locationComboBox.addItem(column.getFieldName());
             }
         }
         locationComboBox.setSelectedIndex(0);
