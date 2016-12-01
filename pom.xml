@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>DataSync</groupId>
     <artifactId>DataSync</artifactId>
-    <version>1.7.2</version>
+    <version>1.8</version>
     <developers>
         <developer>
             <name>Ayn Leslie-Cook</name>
@@ -28,6 +28,11 @@
             <name>Louis Fettet</name>
             <email>louis.fettet@socrata.com</email>
             <organization>Socrata</organization>
+        </developer>
+        <developer>
+          <name>Peter Austin Moore</name>
+          <email>peter.moore@socrata.com</email>
+          <organization>Socrata</organization>
         </developer>
     </developers>
     <build>
