@@ -23,7 +23,7 @@ public class MappingPanel extends JPanel {
     JLabel CSVTitle = new JLabel();
     JLabel CSVPreview = new JLabel();
     int index;
-    JComboBox columnNamesComboBox;
+    JComboBox<String> columnNamesComboBox;
     JLabel arrow = new JLabel("" + '\u2192');
     String lastSelection;
     ControlFileModel model;
@@ -70,9 +70,10 @@ public class MappingPanel extends JPanel {
         this.index = index;
         this.model = model;
 
-        columnNamesComboBox = new JComboBox();
-        //The ignore field must be the first item in the list.
+        columnNamesComboBox = new JComboBox<>();
+        // The ignore field must be the first item in the list.
         columnNamesComboBox.addItem(ignoreField);
+
         ArrayList<Column> columns = datasetModel.getColumns();
         for (Column column : columns) {
             columnNamesComboBox.addItem(column.getFieldName());

@@ -36,6 +36,9 @@ public class HttpUtility {
     private String authHeader;
     private String appToken;
     private boolean authRequired = false;
+    private final int maxRetries;
+    private final double retryDelayFactor;
+
     private static final String datasyncVersionHeader = "X-Socrata-DataSync-Version";
     private static final String appHeader = "X-App-Token";
     private static String userAgent = "datasync";
@@ -43,12 +46,20 @@ public class HttpUtility {
 
     public HttpUtility() { this(null, false); }
 
+
+    public HttpUtility(UserPreferences userPrefs, boolean useAuth) {
+        this(userPrefs, useAuth, 5, 3.5);
+    }
+
     public HttpUtility(UserPreferences userPrefs, boolean useAuth, String usrAgent) {
         this(userPrefs, useAuth);
         userAgent = usrAgent;
     }
 
-    public HttpUtility(UserPreferences userPrefs, boolean useAuth) {
+    public HttpUtility(UserPreferences userPrefs, boolean useAuth, int maxRetries, double retryDelayFactor) {
+        this.maxRetries = maxRetries;
+        this.retryDelayFactor = retryDelayFactor;
+
         HttpClientBuilder clientBuilder = HttpClients.custom();
         if (useAuth) {
             authHeader = getAuthHeader(userPrefs.getUsername(), userPrefs.getPassword());
@@ -64,17 +75,17 @@ public class HttpUtility {
                 if (canUse(userPrefs.getProxyUsername()) && canUse(userPrefs.getProxyPassword())) {
                     CredentialsProvider credsProvider = new BasicCredentialsProvider();
                     credsProvider.setCredentials(
-                            new AuthScope(proxyHost, Integer.valueOf(proxyPort)),
-                            new UsernamePasswordCredentials(userPrefs.getProxyUsername(), userPrefs.getProxyPassword()));
+                        new AuthScope(proxyHost, Integer.valueOf(proxyPort)),
+                        new UsernamePasswordCredentials(userPrefs.getProxyUsername(), userPrefs.getProxyPassword()));
                     clientBuilder.setDefaultCredentialsProvider(credsProvider);
                 }
             }
         }
 
         RequestConfig requestConfig = RequestConfig.custom().
-                setConnectTimeout(15000). // 15s
-                setSocketTimeout(60000). // 1m
-                build();
+            setConnectTimeout(15000). // 15s
+            setSocketTimeout(60000). // 1m
+            build();
 
         clientBuilder.setRetryHandler(datasyncDefaultHandler);
         clientBuilder.setKeepAliveStrategy(datasyncDefaultKeepAliveStrategy);
@@ -151,8 +162,9 @@ public class HttpUtility {
 
         public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
             // Do not retry if over max retry count
-            if (executionCount >= 5)
+            if (executionCount >= maxRetries) {
                 return false;
+            }
 
             // Do not retry calls to the github api
             HttpClientContext clientContext = HttpClientContext.adapt(context);
@@ -169,7 +181,7 @@ public class HttpUtility {
             //     in DeltaImporter2Publisher.commitBlobPostings
             boolean idempotent = !(request.getRequestLine().getUri().contains("commit"));
             if (idempotent) { // Retry if the request is considered idempotent
-                double wait = Math.pow(3.5, executionCount);
+                double wait = Math.pow(retryDelayFactor, executionCount);
                 System.err.println("Request failed. Retrying request in " + Math.round(wait) + " seconds");
                 try {
                     Thread.sleep((long) wait*1000);

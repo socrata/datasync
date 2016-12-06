@@ -36,7 +36,7 @@ public class LoadPreferencesJobTest {
     }
 
     @Test
-    public void testLoadCompletePreferencesWithClearStart() throws ParseException, BackingStoreException {
+    public void testLoadCompletePreferencesWithClearStart() throws Exception {
         UserPreferencesJava userPrefs = new UserPreferencesJava();
         userPrefs.clear();
 
@@ -59,7 +59,7 @@ public class LoadPreferencesJobTest {
     }
 
     @Test
-    public void testLoadIncompletePreferencesWithClearStart() throws ParseException, BackingStoreException {
+    public void testLoadIncompletePreferencesWithClearStart() throws Exception {
         UserPreferencesJava userPrefs = new UserPreferencesJava();
         userPrefs.clear();
 
@@ -75,7 +75,7 @@ public class LoadPreferencesJobTest {
     }
 
     @Test
-    public void testLoadIncompletePreferencesWithMessyStart() throws ParseException, BackingStoreException {
+    public void testLoadIncompletePreferencesWithMessyStart() throws Exception {
         // fill up java preference node with old junk
         UserPreferencesJava userPrefs = new UserPreferencesJava();
         String[] argsOld = {"-t", "LoadPreferences", "-c", "src/test/resources/basic_test_config.json"};
@@ -105,7 +105,7 @@ public class LoadPreferencesJobTest {
     }
 
     @Test
-    public void testConfiguration() throws ParseException {
+    public void testConfiguration() throws Exception {
         String[] args = {"-c", "src/test/resources/basic_test_config.json"};
         job.configure(parser.parse(cmd.options, args));
 

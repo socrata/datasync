@@ -155,21 +155,6 @@ public class IntegrationJobTest extends TestBase {
     }
 
     @Test
-    public void testIntegrationJobReplaceViaFTP() throws IOException, LongRunningQueryException, SodaError {
-        IntegrationJob jobToRun = getIntegrationJobWithUserPrefs();
-        jobToRun.setDatasetID(UNITTEST_DATASET_ID);
-        jobToRun.setFileToPublish("src/test/resources/datasync_unit_test_three_rows.csv");
-        jobToRun.setPathToControlFile("src/test/resources/datasync_unit_test_three_rows_control.json");
-        jobToRun.setPublishMethod(PublishMethod.replace);
-        jobToRun.setPublishViaFTP(true);
-        jobToRun.setFileToPublishHasHeaderRow(false);
-        JobStatus status = jobToRun.run();
-        TestCase.assertEquals(JobStatus.SUCCESS, status);
-        TestCase.assertFalse(status.isError());
-        TestCase.assertEquals(3, getTotalRows(UNITTEST_DATASET_ID));
-    }
-
-    @Test
     public void testIntegrationJobInvalidDatasetId() throws IOException, LongRunningQueryException, SodaError {
         IntegrationJob jobToRun = getIntegrationJobWithUserPrefs();
         jobToRun.setDatasetID("invalidid");
@@ -194,20 +179,5 @@ public class IntegrationJobTest extends TestBase {
         TestCase.assertTrue(status.isError());
         TestCase.assertTrue(status.getMessage().endsWith(") to a calendar_date. Unknown date format 'invalid'. (line 3 of file) \n"));
 //        TestCase.assertEquals("FAILURE: Processing datasync_unit_test_invalid_date.csv failed: Value in column \"date\" uninterpretable as calendar_date in input at record 2: \"invalid\"\n", status.getMessage());
-    }
-
-    @Test
-    public void testIntegrationJobFTPPublishError() throws IOException, LongRunningQueryException, SodaError {
-        IntegrationJob jobToRun = getIntegrationJobWithUserPrefs();
-        jobToRun.setDatasetID(UNITTEST_DATASET_ID);
-        jobToRun.setFileToPublish("src/test/resources/datasync_unit_test_invalid_date.csv");
-        jobToRun.setPathToControlFile("src/test/resources/datasync_unit_test_three_rows_control.json");
-        jobToRun.setFileToPublishHasHeaderRow(true);
-        jobToRun.setPublishMethod(PublishMethod.replace);
-        jobToRun.setPublishViaFTP(true);
-        JobStatus status = jobToRun.run();
-        TestCase.assertEquals(JobStatus.PUBLISH_ERROR, status);
-        TestCase.assertTrue(status.isError());
-        TestCase.assertEquals("FAILURE: Processing datasync_unit_test_invalid_date.csv failed: Value in column \"date\" uninterpretable as calendar_date in input at record 2: \"invalid\"\n", status.getMessage());
     }
 }

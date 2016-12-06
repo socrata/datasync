@@ -50,8 +50,10 @@ public enum JobStatus {
 
     ROWS_DO_NOT_CONTAIN_SAME_NUMBER_OF_COLUMNS("CSV does not contain a consistent number of columns", true),
 
-    INVALID_DATETIME("Cannot parse the datetime values given the current formatting.  Please check your formatting values under advanced options and try again.", true);
-
+    INVALID_DATETIME("Cannot parse the datetime values given the current formatting.  Please check your formatting values under advanced options and try again.", true),
+	
+	INVALID_FILE("Invalid file or file type",true);
+	
     /**
      * The human-readable message to store.
      */

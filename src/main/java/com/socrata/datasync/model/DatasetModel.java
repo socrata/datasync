@@ -25,18 +25,15 @@ import java.util.Vector;
  * Created by franklinwilliams on 8/4/14.
  */
 public class DatasetModel extends AbstractTableModel {
-
-    //private String[] columnNames;
-
     private ArrayList<Column> columns;
     int rowsToSample = 100;
     Dataset datasetInfo;
     String domain;
 
-    private Vector data = new Vector();
+    private Vector<Vector<Object>> data = new Vector<>();
 
-    public DatasetModel(UserPreferences prefs,
-            String fourbyfour) throws LongRunningQueryException, InterruptedException, HttpException, IOException, URISyntaxException{
+    public DatasetModel(UserPreferences prefs, String fourbyfour)
+        throws LongRunningQueryException, InterruptedException, HttpException, IOException, URISyntaxException {
 
         this.domain = prefs.getDomain();
 
@@ -44,31 +41,35 @@ public class DatasetModel extends AbstractTableModel {
     }
 
     //Used to pull the charset for this domain
-    public String getDomain(){
+    public String getDomain() {
         return domain;
     }
 
-    private boolean initializeDataset(UserPreferences prefs, String fourbyfour) throws LongRunningQueryException, InterruptedException, HttpException, IOException, URISyntaxException{
-        datasetInfo = DatasetUtils.getDatasetInfo(prefs,fourbyfour);
+    private boolean initializeDataset(UserPreferences prefs, String fourbyfour)
+        throws LongRunningQueryException, InterruptedException, HttpException, IOException, URISyntaxException {
 
-        columns = (ArrayList) datasetInfo.getColumns();
+        datasetInfo = DatasetUtils.getDatasetInfo(prefs, fourbyfour);
 
-        String csv = DatasetUtils.getDatasetSample(prefs,fourbyfour,rowsToSample);
+        columns = (ArrayList<Column>) datasetInfo.getColumns();
+
+        String csv = DatasetUtils.getDatasetSample(prefs, fourbyfour, rowsToSample);
 
         CSVReader reader = new CSVReader(new StringReader(csv));
 
         String[] lines = reader.readNext();
 
-        while (lines != null){
+        while (lines != null) {
             insertData(lines);
             lines = reader.readNext();
         }
+
         return true;
     }
 
-    // Returns the number of columns of type location.  Used in the view to determine whether or not we should suggest
-    // creating synthetic columns
-    public int getLocationCount(){
+    // Returns the number of columns of type location.  Used in the
+    // view to determine whether or not we should suggest creating
+    // synthetic columns
+    public int getLocationCount() {
         int locationCount = 0;
         for (Column c : columns){
             if (c.getDataTypeName().equals("location"))
@@ -81,7 +82,7 @@ public class DatasetModel extends AbstractTableModel {
         return datasetInfo;
     }
 
-    public Column getColumnByFieldName(String name){
+    public Column getColumnByFieldName(String name) {
         for (Column c : columns){
             if (c.getFieldName().equalsIgnoreCase(name))
                 return c;
@@ -89,7 +90,7 @@ public class DatasetModel extends AbstractTableModel {
         return null;
     }
 
-    public Column getColumnByFriendlyName(String name){
+    public Column getColumnByFriendlyName(String name) {
         for (Column c : columns){
             if (c.getName().equalsIgnoreCase(name))
                 return c;
@@ -109,34 +110,36 @@ public class DatasetModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int row, int col) {
-        return ((Vector) data.get(row)).get(col);
+        return data.get(row).get(col);
     }
 
-    public ArrayList<Column> getColumns(){
+    public ArrayList<Column> getColumns() {
         return columns;
     }
 
-    public String getColumnName(int col){
+    public String getColumnName(int col) {
         return columns.get(col).getFieldName();
     }
-    public Class getColumnClass(int c){
+    public Class getColumnClass(int c) {
         return getValueAt(0,c).getClass();
     }
 
-    public void setValueAt(Object value, int row, int col){
-        ((Vector) data.get(row)).setElementAt(value, col);
+    public void setValueAt(Object value, int row, int col) {
+        data.get(row).setElementAt(value, col);
         fireTableCellUpdated(row,col);
     }
 
-    public boolean isCellEditable(int row, int col){
+    public boolean isCellEditable(int row, int col) {
         return false;
     }
 
-    public void insertData(Object[] values){
-        data.add(new Vector());
-        for(int i =0; i<values.length; i++){
-            ((Vector) data.get(data.size()-1)).add(values[i]);
+    public void insertData(Object[] values) {
+        data.add(new Vector<Object>());
+
+        for (int i =0; i < values.length; i++) {
+            data.get(data.size() - 1).add(values[i]);
         }
+
         fireTableDataChanged();
     }
 }

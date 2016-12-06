@@ -1,5 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <modelVersion>4.0.0</modelVersion>
     <groupId>DataSync</groupId>
     <artifactId>DataSync</artifactId>
@@ -26,6 +30,7 @@
             <organization>Socrata</organization>
         </developer>
         <developer>
+<<<<<<< HEAD
             <name>Urmila Nadkarni</name>
             <email>urmila.nadkarni@socrata.com</email>
             <organization>Socrata</organization>
@@ -34,6 +39,11 @@
             <name>Robert Macbomber</name>
             <email>robert.macomber@socrata.com</email>
             <organization>Socrata</organization>
+=======
+          <name>Peter Austin Moore</name>
+          <email>peter.moore@socrata.com</email>
+          <organization>Socrata</organization>
+>>>>>>> master
         </developer>
     </developers>
     <build>
@@ -59,6 +69,9 @@
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
+                    <compilerArgs>
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
@@ -128,6 +141,11 @@
             <version>4.3.3</version>
         </dependency>
         <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>4.3.3</version>
+        </dependency>
+        <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>2.3</version>
@@ -148,7 +166,7 @@
             <artifactId>opencsv</artifactId>
             <version>2.0</version>
         </dependency>
- <dependency>
+        <dependency>
             <groupId>com.googlecode.json-simple</groupId>
             <artifactId>json-simple</artifactId>
             <version>1.1.1</version>

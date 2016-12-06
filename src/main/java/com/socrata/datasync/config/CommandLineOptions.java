@@ -55,8 +55,8 @@ public class CommandLineOptions {
 
         // IntegrationJob params
         options.addOption("i", DATASET_ID_FLAG, true, "Dataset ID to publish to [IntegrationJob]");
-        options.addOption("f", FILE_TO_PUBLISH_FLAG, true, "CSV or TSV file to publish [IntegrationJob]");
-        options.addOption("m", PUBLISH_METHOD_FLAG, true, "Publish method (" + Arrays.toString(PublishMethod.values()) + ") [IntegrationJob]");
+        options.addOption("f", FILE_TO_PUBLISH_FLAG, true, "CSV or TSV file to publish [IntegrationJob]; geojson, kml/kmz, or zipped shapefile [GISJob]");
+        options.addOption("m", PUBLISH_METHOD_FLAG, true, "Publish method (" + Arrays.toString(PublishMethod.values()) + ") [IntegrationJob]; \"replace\" is the only valid value for geospatial data [GISJob]");
         options.addOption("h", HAS_HEADER_ROW_FLAG, true, "File to publish has header row (true or false) [IntegrationJob]");
         options.addOption("pf", PUBLISH_VIA_FTP_FLAG, true, "Use FTP (instead of HTTP) for publishing (true or false) (default: " + DEFAULT_PUBLISH_VIA_FTP + ") [IntegrationJob]");
         options.addOption("ph", PUBLISH_VIA_DI2_FLAG, true, "Use HTTP for publishing (true or false) (default: false) [IntegrationJob]");

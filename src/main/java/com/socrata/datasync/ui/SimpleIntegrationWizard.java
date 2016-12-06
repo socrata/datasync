@@ -13,6 +13,7 @@ import com.socrata.datasync.job.Job;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.job.MetadataJob;
 import com.socrata.datasync.job.PortJob;
+import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 
 import java.io.File;
@@ -47,7 +48,8 @@ public class SimpleIntegrationWizard {
 	private static final String STANDARD_JOB_FILE_EXTENSION = "sij";
     private static final String PORT_JOB_FILE_EXTENSION = "spj";
     private static final String METADATA_JOB_FILE_EXTENSION = "smj";
-
+    private static final String GIS_JOB_FILE_EXTENSION = "gij";
+    
     // help icon balloon tip text
     private static final String FILE_CHUNKING_THRESHOLD_TIP_TEXT = "<html><body style='width: 300px'>If using the upsert, append, or " +
             "delete methods (over HTTP) and the CSV/TSV file to be published is larger than this value (in megabytes), " +
@@ -194,6 +196,8 @@ public class SimpleIntegrationWizard {
             newJobTab = new IntegrationJobTab((IntegrationJob) job, frame);
         } else if(job.getClass().equals(PortJob.class)) {
             newJobTab = new PortJobTab((PortJob) job, frame);
+        } else if(job.getClass().equals(GISJob.class)) {
+        	newJobTab = new GISJobTab((GISJob) job, frame);
         } else if(job.getClass().equals(MetadataJob.class)) {
         	newJobTab = new MetadataJobTab((MetadataJob) job, frame);
         } else {
@@ -319,10 +323,10 @@ public class SimpleIntegrationWizard {
 		public void actionPerformed(ActionEvent e) {
 			JFileChooser savedJobFileChooser = new JFileChooser();
             savedJobFileChooser.setCurrentDirectory(openToDirectory);
-            String fileExtensionsAllowed = "*." + STANDARD_JOB_FILE_EXTENSION + ", *." + PORT_JOB_FILE_EXTENSION + ", *." + METADATA_JOB_FILE_EXTENSION;
+            String fileExtensionsAllowed = "*." + STANDARD_JOB_FILE_EXTENSION + ", *." + PORT_JOB_FILE_EXTENSION + ", *."+ GIS_JOB_FILE_EXTENSION + ", *." + METADATA_JOB_FILE_EXTENSION;
         	FileNameExtensionFilter filter = new FileNameExtensionFilter(
                     "Socrata Job File (" + fileExtensionsAllowed + ")",
-                    STANDARD_JOB_FILE_EXTENSION, PORT_JOB_FILE_EXTENSION, METADATA_JOB_FILE_EXTENSION);
+                    STANDARD_JOB_FILE_EXTENSION, PORT_JOB_FILE_EXTENSION, GIS_JOB_FILE_EXTENSION, METADATA_JOB_FILE_EXTENSION);
         	savedJobFileChooser.setFileFilter(filter);
         	int returnVal = savedJobFileChooser.showOpenDialog(frame);
 			if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -347,6 +351,8 @@ public class SimpleIntegrationWizard {
                                 String openedFileExtension = openedFileLocation.substring(i+1);
                                 if(openedFileExtension.equals(STANDARD_JOB_FILE_EXTENSION)) {
                                     addJobTab(new IntegrationJob(openedFileLocation));
+                                } else if(openedFileExtension.equals(GIS_JOB_FILE_EXTENSION)){
+                                	addJobTab(new GISJob(openedFileLocation));
                                 } else if(openedFileExtension.equals(PORT_JOB_FILE_EXTENSION)) {
                                     addJobTab(new PortJob(openedFileLocation));
                                 } else if (openedFileExtension.equals(METADATA_JOB_FILE_EXTENSION)) {
@@ -407,6 +413,13 @@ public class SimpleIntegrationWizard {
             jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
         }
     }
+    
+    private class NewGISJobListener implements ActionListener {
+    	public void actionPerformed(ActionEvent e) {
+    		addJobTab(new GISJob());
+    		jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
+    	}
+    }
 
     private class NewMetadataJobListener implements ActionListener {
     	public void actionPerformed(ActionEvent e) {
@@ -438,6 +451,8 @@ public class SimpleIntegrationWizard {
         newJobMenu.add(newStandardJobItem);
         JMenuItem newPortJobItem = new JMenuItem("Port Job");
         newJobMenu.add(newPortJobItem);
+        JMenuItem newGISJobItem = new JMenuItem("GIS Job");
+        newJobMenu.add(newGISJobItem);
         JMenuItem newMetadataJobItem = new JMenuItem("Metadata Job (beta)");
         newJobMenu.add(newMetadataJobItem);
 		fileMenu.add(newJobMenu);
@@ -476,6 +491,7 @@ public class SimpleIntegrationWizard {
 
         newStandardJobItem.addActionListener(new NewStandardJobListener());
         newPortJobItem.addActionListener(new NewPortJobListener());
+        newGISJobItem.addActionListener(new NewGISJobListener());
         newMetadataJobItem.addActionListener(new NewMetadataJobListener());
 		openJobItem.addActionListener(new OpenJobListener());
 		saveJobItem.addActionListener(new SaveJobListener());

@@ -58,7 +58,7 @@ public class PortJobTab implements JobTab {
     private String jobFileLocation;
     private JLabel jobTabTitleLabel;
 
-    private JComboBox portMethodComboBox;
+    private JComboBox<PortMethod> portMethodComboBox;
     private JTextField sourceSiteDomainTextField;
     private JTextField sourceSetIDTextField;
     private JTextField sinkSiteDomainTextField;
@@ -66,10 +66,10 @@ public class PortJobTab implements JobTab {
 
     // Need to expose more of the JComponents locally in order to toggle between PublishMethod and PublishDataset
     private JPanel publishMethodContainerLeft;
-    private JComboBox publishMethodComboBox;
+    private JComboBox<PublishMethod> publishMethodComboBox;
     private JPanel publishMethodContainerRight;
     private JPanel publishDatasetContainerLeft;
-    private JComboBox publishDatasetComboBox;
+    private JComboBox<PublishDataset> publishDatasetComboBox;
     private JPanel publishDatasetContainerRight;
 
 
@@ -87,10 +87,12 @@ public class PortJobTab implements JobTab {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
                 "Port Method", PORT_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel portMethodContainerRight = new JPanel(flowRight);
-        portMethodComboBox = new JComboBox();
+        portMethodComboBox = new JComboBox<>();
+
         for (PortMethod method : PortMethod.values()) {
             portMethodComboBox.addItem(method);
         }
+
         portMethodComboBox.addItemListener(new PortMethodItemListener());
         portMethodContainerRight.add(portMethodComboBox);
         jobPanel.add(portMethodContainerRight);
@@ -149,7 +151,7 @@ public class PortJobTab implements JobTab {
                 "Publish Method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING);
         jobPanel.add(publishMethodContainerLeft);
         publishMethodContainerRight = new JPanel(flowRight);
-        publishMethodComboBox = new JComboBox();
+        publishMethodComboBox = new JComboBox<>();
         /*for (PublishMethod method : PublishMethod.values()) {
             // TODO: clean this up once publish method changes have been implemented
             if (!method.equals(PublishMethod.append)) {
@@ -169,7 +171,7 @@ public class PortJobTab implements JobTab {
         publishDatasetContainerLeft = UIUtility.generateLabelWithHelpBubble(
                 "Publish Destination Dataset?", PUBLISH_DATASET_TIP_TEXT, HELP_ICON_TOP_PADDING);
         publishDatasetContainerRight = new JPanel(flowRight);
-        publishDatasetComboBox = new JComboBox();
+        publishDatasetComboBox = new JComboBox<>();
         for (PublishDataset publish : PublishDataset.values()) {
             publishDatasetComboBox.addItem(publish);
         }

@@ -172,7 +172,7 @@ public class IntegrationJobTab implements JobTab {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
                 "Step 3 - Select update method", PUBLISH_METHOD_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel publishMethodTextFieldContainer = new JPanel(FLOW_RIGHT);
-        publishMethodComboBox = new JComboBox(PublishMethod.values());
+        publishMethodComboBox = new JComboBox<PublishMethod>(PublishMethod.values());
         publishMethodComboBox.addActionListener(new PublishMethodComboBoxListener());
 
         publishMethodTextFieldContainer.add(publishMethodComboBox);

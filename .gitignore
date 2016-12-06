@@ -18,3 +18,4 @@ src/test/resources/basic_test_config_staging.json
 common/
 _layouts/
 public/
+log.txt
