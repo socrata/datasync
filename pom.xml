@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>DataSync</groupId>
     <artifactId>DataSync</artifactId>
-    <version>1.7.2</version>
+    <version>1.7.3</version>
     <developers>
         <developer>
             <name>Ayn Leslie-Cook</name>
@@ -23,6 +23,16 @@
         <developer>
             <name>Louis Fettet</name>
             <email>louis.fettet@socrata.com</email>
+            <organization>Socrata</organization>
+        </developer>
+        <developer>
+            <name>Urmila Nadkarni</name>
+            <email>urmila.nadkarni@socrata.com</email>
+            <organization>Socrata</organization>
+        </developer>
+        <developer>
+            <name>Robert Macbomber</name>
+            <email>robert.macomber@socrata.com</email>
             <organization>Socrata</organization>
         </developer>
     </developers>
