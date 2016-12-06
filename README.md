@@ -1,7 +1,7 @@
 Socrata Datasync
 ================
 
-Last updated: December 1, 2016
+Last updated: December 6, 2016
 
 Authors: [Adrian Laurenzi](http://www.github.com/alaurenz) & [Louis Fettet](http://www.github.com/LouisFettet)
 
@@ -28,7 +28,7 @@ Standard jobs can be set up to take a CSV data file from a local machine or netw
 ![standard job tab](http://i.imgur.com/byN0ibq.png?1)
 
 ### GIS Jobs
-GIS jobs can be set up to handle geospatial datasets, such as zipped shapefiles, geoJSON, KML, or KMZ files and replace specific datasets on Socrata. The job can then be automated in a similar fashion to standard jobs. 
+GIS jobs can be set up to handle geospatial datasets, such as zipped shapefiles, geoJSON, KML, or KMZ files and replace specific datasets on Socrata. The job can then be automated in a similar fashion to standard jobs.
 
 ### Port Jobs
 Port jobs are used for moving data around that is already on the Socrata platform. Users that have publisher rights can make copies of datasets through this tool. Port jobs allow the copying of both dataset schemas (metadata and columns) and data (rows).
@@ -54,7 +54,7 @@ mvn clean compile -Dmaven.test.skip=true assembly:single
 This puts the JAR file into the "target" directory inside the repo.  So to open DataSync, simply:
 ```
 cd target
-java -jar DataSync-1.7.2-jar-with-dependencies.jar
+java -jar DataSync-1.7.3-jar-with-dependencies.jar
 ```
 
 ### Java SDK

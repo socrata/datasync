@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>DataSync</groupId>
     <artifactId>DataSync</artifactId>
-    <version>1.8</version>
+    <version>1.7.3</version>
     <developers>
         <developer>
             <name>Ayn Leslie-Cook</name>
@@ -30,9 +30,20 @@
             <organization>Socrata</organization>
         </developer>
         <developer>
+<<<<<<< HEAD
+            <name>Urmila Nadkarni</name>
+            <email>urmila.nadkarni@socrata.com</email>
+            <organization>Socrata</organization>
+        </developer>
+        <developer>
+            <name>Robert Macbomber</name>
+            <email>robert.macomber@socrata.com</email>
+            <organization>Socrata</organization>
+=======
           <name>Peter Austin Moore</name>
           <email>peter.moore@socrata.com</email>
           <organization>Socrata</organization>
+>>>>>>> master
         </developer>
     </developers>
     <build>
