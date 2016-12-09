@@ -19,15 +19,22 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.HttpContext;
 
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+
+import static org.apache.http.conn.ssl.SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER;
 
 public class HttpUtility {
 
@@ -87,10 +94,28 @@ public class HttpUtility {
             setSocketTimeout(60000). // 1m
             build();
 
-        clientBuilder.setRetryHandler(datasyncDefaultHandler);
-        clientBuilder.setKeepAliveStrategy(datasyncDefaultKeepAliveStrategy);
-        clientBuilder.setDefaultRequestConfig(requestConfig);
-        httpClient = clientBuilder.build();
+        SSLContext sslContext;
+        try {
+            sslContext = SSLContexts.custom().useTLS().build();
+        } catch (NoSuchAlgorithmException|KeyManagementException e) {
+            // there’s no way for the client to recover,
+            // so a checked exception is not necessary
+            throw new RuntimeException(e);
+        }
+
+        SSLConnectionSocketFactory factory = new SSLConnectionSocketFactory(
+            sslContext,
+            new String[] { "TLSv1.1", "TLSv1.2" },
+            null,
+            BROWSER_COMPATIBLE_HOSTNAME_VERIFIER
+        );
+
+        httpClient = HttpClients.custom().
+            setSSLSocketFactory(factory).
+            setRetryHandler(datasyncDefaultHandler).
+            setKeepAliveStrategy(datasyncDefaultKeepAliveStrategy).
+            setDefaultRequestConfig(requestConfig).
+            build();
     }
 
     /**
