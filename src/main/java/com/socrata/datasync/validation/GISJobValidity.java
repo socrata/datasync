@@ -14,8 +14,10 @@ import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.model.importer.Dataset;
+import com.socrata.model.importer.GeoDataset;
 import com.socrata.model.importer.DatasetInfo;
 import org.apache.commons.cli.CommandLine;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.ContentType;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -25,6 +27,7 @@ import org.joda.time.format.DateTimeFormatter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -86,13 +89,18 @@ public class GISJobValidity {
         return JobStatus.VALID;
     }
 
-    public static JobStatus validateDatasetDomain(UserPreferences userPrefs, String datasetID) {
+    public static JobStatus validateDataset(UserPreferences userPrefs, String datasetID) {
         try {
-            DatasetInfo datasetInfo = DatasetUtils.getGeoDatasetInfo(userPrefs, datasetID);
+            GeoDataset datasetInfo = DatasetUtils.getDatasetInfo(userPrefs, datasetID, GeoDataset.class);
 
             return JobStatus.VALID;
+        } catch (IllegalArgumentException e) {
+            // This means getDatasetInfo was unable to parse the response into a GeoDataset object.
+            return JobStatus.NOT_A_GEO_DATASET;
         } catch (Exception e) {
-            return JobStatus.INVALID_DATASET_ID;
+            // there’s no way for the client to recover,
+            // so a checked exception is not necessary
+            throw new RuntimeException(e);
         }
     }
 
