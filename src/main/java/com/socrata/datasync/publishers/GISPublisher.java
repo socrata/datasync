@@ -69,7 +69,7 @@ public class GISPublisher {
 
                 if (error) {
                     String message = array.get("message").toString();
-                    logging.log(Level.INFO,message);
+                    logging.log(Level.INFO, message);
                     JobStatus s = JobStatus.PUBLISH_ERROR;
                     s.setMessage(message);
                     return s;
@@ -87,7 +87,7 @@ public class GISPublisher {
             query = query + "&viewUid=" + URLEncoder.encode(datasetID,"UTF-8");
 
             URI uri = makeUri(connectionInfo.getUrl(),"replace",query);
-            logging.log(Level.INFO,uri.toString());
+            logging.log(Level.INFO, uri.toString());
             status = postReplaceGeoFile(uri, connectionInfo, userPrefs);
 
             return status;
@@ -115,7 +115,7 @@ public class GISPublisher {
             String result = EntityUtils.toString(resEntity);
             JSONParser parser = new JSONParser();
             JSONObject resJson = (JSONObject) parser.parse(result);
-            logging.log(Level.INFO, result);
+            logging.log(Level.FINE, result);
 
             boolean error = (boolean) resJson.get("error");
 
@@ -129,8 +129,8 @@ public class GISPublisher {
             ticket = resJson.get("ticket").toString();
 
             try {
-                logging.log(Level.INFO,"Polling for Status...");
-                status = pollForStatus(ticket, userPrefs,connectionInfo,false);
+                logging.log(Level.INFO, "Polling for Status...");
+                status = pollForStatus(ticket, userPrefs, connectionInfo, false);
 
                 return status;
             } catch (InterruptedException e) {
@@ -147,11 +147,10 @@ public class GISPublisher {
 
     public static JobStatus pollForStatus(String ticket, UserPreferences userPrefs, SocrataConnectionInfo connectionInfo, boolean complete) throws InterruptedException {
 
-        URI status_url = makeUri(connectionInfo.getUrl(),"status",ticket);
-        String[] status = new String[2];
+        URI status_url = makeUri(connectionInfo.getUrl(), "status", ticket);
         if (!complete) {
-            status = getStatus(status_url,userPrefs,connectionInfo);
-            logging.log(Level.INFO,status[1]);
+            String[] status = getStatus(status_url, userPrefs, connectionInfo);
+            logging.log(Level.FINE,status[1]);
             Thread.sleep(1000);
 
             if (status[0] == "Complete") {
@@ -164,7 +163,7 @@ public class GISPublisher {
                 return s;
             }
 
-            pollForStatus(ticket,userPrefs,connectionInfo,false);
+            pollForStatus(ticket, userPrefs, connectionInfo, false);
         }
 
         return JobStatus.SUCCESS;
@@ -231,7 +230,7 @@ public class GISPublisher {
         HttpResponse response = httpUtility.post(uri, httpEntity);
         HttpEntity resEntity = response.getEntity();
         String result = EntityUtils.toString(resEntity);
-        logging.log(Level.INFO,result);
+        logging.log(Level.FINE,result);
 
         return result;
     }
