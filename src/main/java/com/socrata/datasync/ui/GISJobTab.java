@@ -422,7 +422,7 @@ public class GISJobTab implements JobTab {
                                                 boolean containsHeaderRow)
             throws HttpException, URISyntaxException, InterruptedException, IOException {
 
-            Dataset datasetInfo = DatasetUtils.getDatasetInfo(prefs, datasetId);
+            Dataset datasetInfo = DatasetUtils.getDatasetInfo(prefs, datasetId, Dataset.class);
             boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
 
             String[] columns = null;

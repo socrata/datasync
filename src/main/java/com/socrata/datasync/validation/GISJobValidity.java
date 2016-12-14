@@ -14,6 +14,7 @@ import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.model.importer.Dataset;
+import com.socrata.model.importer.GeoDataset;
 import com.socrata.model.importer.DatasetInfo;
 import org.apache.commons.cli.CommandLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -25,6 +26,7 @@ import org.joda.time.format.DateTimeFormatter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -88,7 +90,7 @@ public class GISJobValidity {
 
     public static JobStatus validateDatasetDomain(UserPreferences userPrefs, String datasetID) {
         try {
-            DatasetInfo datasetInfo = DatasetUtils.getGeoDatasetInfo(userPrefs, datasetID);
+            GeoDataset datasetInfo = DatasetUtils.getDatasetInfo(userPrefs, datasetID, GeoDataset.class);
 
             return JobStatus.VALID;
         } catch (Exception e) {

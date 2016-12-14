@@ -49,7 +49,7 @@ public class DatasetUtils {
 
     private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
-    public static Dataset getDatasetInfo(UserPreferences userPrefs, String viewId) throws URISyntaxException, IOException, HttpException {
+    public static <T> T getDatasetInfo(UserPreferences userPrefs, String viewId, final Class<T> typ) throws URISyntaxException, IOException, HttpException {
         String justDomain = getDomainWithoutScheme(userPrefs);
         URI absolutePath = new URIBuilder()
             .setScheme("https")
@@ -57,15 +57,15 @@ public class DatasetUtils {
             .setPath("/api/views/" + viewId)
             .build();
 
-        ResponseHandler<Dataset> handler = new ResponseHandler<Dataset>() {
+        ResponseHandler<T> handler = new ResponseHandler<T>() {
             @Override
-            public Dataset handleResponse(
+            public T handleResponse(
                 final HttpResponse response) throws ClientProtocolException, IOException {
                 StatusLine statusLine = response.getStatusLine();
                 int status = statusLine.getStatusCode();
                 if (status >= 200 && status < 300) {
                     HttpEntity entity = response.getEntity();
-                    return entity != null ? mapper.readValue(entity.getContent(), Dataset.class) : null;
+                    return entity != null ? mapper.readValue(entity.getContent(), typ) : null;
                 } else {
                     throw new ClientProtocolException(statusLine.toString());
                 }
@@ -73,7 +73,7 @@ public class DatasetUtils {
         };
 
         HttpUtility util = new HttpUtility(userPrefs, true);
-        Dataset datasetInfo = util.get(absolutePath, "application/json", handler);
+        T datasetInfo = util.get(absolutePath, "application/json", handler);
         util.close();
         return datasetInfo;
     }
@@ -136,7 +136,7 @@ public class DatasetUtils {
      * @return list of field names or null if there
      */
     public static String getFieldNamesString(UserPreferences userPrefs, String datasetId) throws HttpException, IOException, URISyntaxException {
-        Dataset datasetInfo = getDatasetInfo(userPrefs, datasetId);
+        Dataset datasetInfo = getDatasetInfo(userPrefs, datasetId, Dataset.class);
         return getFieldNamesString(datasetInfo);
     }
 
@@ -212,27 +212,5 @@ public class DatasetUtils {
                 return true;
         }
         return false;
-    }
-
-    public static DatasetInfo getGeoDatasetInfo(UserPreferences userPrefs, String viewId)
-        throws URISyntaxException, IOException, HttpException {
-
-        String justDomain = getDomainWithoutScheme(userPrefs);
-        URI absolutePath = new URIBuilder()
-            .setScheme("https")
-            .setHost(justDomain)
-            .setPath("/api/views/" + viewId)
-            .build();
-
-        ResponseHandler<DatasetInfo> handler = new DatasetInfoResponseHandler();
-
-        HttpUtility util = new HttpUtility(userPrefs, true);
-        try {
-            DatasetInfo datasetInfo = util.get(absolutePath, "application/json", handler);
-
-            return datasetInfo;
-        } finally {
-            util.close();
-        }
     }
 }
