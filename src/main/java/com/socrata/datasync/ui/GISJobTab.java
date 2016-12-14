@@ -105,7 +105,7 @@ public class GISJobTab implements JobTab {
 
     private void addRunCommandFieldToJobPanel() {
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                         "Step 4 - Copy command for later (optional)", RUN_COMMAND_TIP_TEXT, HELP_ICON_TOP_PADDING));
+                         "Step 3 - Copy command for later (optional)", RUN_COMMAND_TIP_TEXT, HELP_ICON_TOP_PADDING));
         JPanel runCommandTextFieldContainer = new JPanel(FLOW_RIGHT);
         runCommandTextField = new JTextField(DEFAULT_RUN_JOB_COMMAND);
         runCommandTextField.setPreferredSize(new Dimension(
