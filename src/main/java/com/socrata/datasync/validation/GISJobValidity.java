@@ -17,6 +17,7 @@ import com.socrata.model.importer.Dataset;
 import com.socrata.model.importer.GeoDataset;
 import com.socrata.model.importer.DatasetInfo;
 import org.apache.commons.cli.CommandLine;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.ContentType;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -88,13 +89,18 @@ public class GISJobValidity {
         return JobStatus.VALID;
     }
 
-    public static JobStatus validateDatasetDomain(UserPreferences userPrefs, String datasetID) {
+    public static JobStatus validateDataset(UserPreferences userPrefs, String datasetID) {
         try {
             GeoDataset datasetInfo = DatasetUtils.getDatasetInfo(userPrefs, datasetID, GeoDataset.class);
 
             return JobStatus.VALID;
+        } catch (IllegalArgumentException e) {
+            // This means getDatasetInfo was unable to parse the response into a GeoDataset object.
+            return JobStatus.NOT_A_GEO_DATASET;
         } catch (Exception e) {
-            return JobStatus.INVALID_DATASET_ID;
+            // there’s no way for the client to recover,
+            // so a checked exception is not necessary
+            throw new RuntimeException(e);
         }
     }
 
