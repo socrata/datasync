@@ -209,7 +209,7 @@ public class GISJob extends Job {
             try {
                 File fileToPublishFile = new File(fileToPublish);
                 if (publishMethod == PublishMethod.replace) {
-                    runStatus = GISPublisher.replaceGeo(fileToPublishFile, connectionInfo, datasetID, userPrefs);
+                    runStatus = GISPublisher.replaceGeo(fileToPublishFile, connectionInfo, datasetID, layerMap, userPrefs);
                 } else {
                     runStatus = JobStatus.INVALID_PUBLISH_METHOD;
                 }

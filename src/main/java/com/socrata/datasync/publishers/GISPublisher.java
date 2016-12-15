@@ -2,7 +2,7 @@ package com.socrata.datasync.publishers;
 
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
-import com.socrata.datasync.imports2.Blueprint;
+import com.socrata.datasync.imports2.*;
 import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.HttpUtility;
@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,11 +35,12 @@ public class GISPublisher {
     public static JobStatus replaceGeo(File file,
                                        SocrataConnectionInfo connectionInfo,
                                        String datasetID,
+                                       Map<String, String> layerMap,
                                        UserPreferences userPrefs) {
         try {
             URI scan_url = makeUri(connectionInfo.getUrl(), "scan", "");
             Blueprint blueprint = postRawFile(scan_url, file, userPrefs);
-            return replaceGeoFile(blueprint, file, userPrefs, connectionInfo, datasetID);
+            return replaceGeoFile(blueprint, file, userPrefs, connectionInfo, datasetID, layerMap);
         } catch (IOException e) {
             String message = e.getMessage();
             JobStatus status = JobStatus.PUBLISH_ERROR;
@@ -51,7 +53,8 @@ public class GISPublisher {
                                             File file,
                                             UserPreferences userPrefs,
                                             SocrataConnectionInfo connectionInfo,
-                                            String datasetID) {
+                                            String datasetID,
+                                            Map<String, String> layerMap) {
         try {
             if (blueprint.getError() != null) {
                 String message = blueprint.getError().getMessage();
@@ -62,6 +65,8 @@ public class GISPublisher {
             }
 
             ObjectMapper mapper = new ObjectMapper();
+
+            applyLayerMapToBlueprintSummary(blueprint.getSummary(), layerMap);
             String blueprintSummary = mapper.writeValueAsString(blueprint.getSummary());
 
             String query = "&fileId=" +  URLEncoder.encode(blueprint.getFileId(),"UTF-8");
@@ -77,6 +82,14 @@ public class GISPublisher {
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage(message);
             return status;
+        }
+    }
+
+    private static void applyLayerMapToBlueprintSummary(Summary summary, Map<String, String> layerMap) {
+        for (Layer layer : summary.getLayers()) {
+            if (layerMap.containsKey(layer.getName())) {
+                layer.setReplacingUid(layerMap.get(layer.getName()));
+            }
         }
     }
 
