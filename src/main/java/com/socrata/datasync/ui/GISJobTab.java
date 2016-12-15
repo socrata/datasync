@@ -1,41 +1,20 @@
 package com.socrata.datasync.ui;
 
-import com.socrata.datasync.*;
-import com.socrata.datasync.DatasetUtils;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.Utils;
-import com.socrata.datasync.config.controlfile.ControlFile;
-import com.socrata.datasync.job.IntegrationJob;
-import com.socrata.datasync.config.userpreferences.UserPreferences;
-import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.model.ControlFileModel;
 import com.socrata.datasync.model.DatasetModel;
 import com.socrata.datasync.validation.GISJobValidity;
-import com.socrata.datasync.validation.IntegrationJobValidity;
-import com.socrata.exceptions.LongRunningQueryException;
-import com.socrata.exceptions.SodaError;
-import com.socrata.model.importer.Dataset;
-import org.apache.http.HttpException;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.dnd.InvalidDnDOperationException;
 import java.awt.event.*;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URISyntaxException;
 
-/**
- * Author: Adrian Laurenzi
- * Date: 9/11/13
- */
 public class GISJobTab implements JobTab {
 
     private static final int DATASET_ID_TEXTFIELD_WIDTH = 160;
@@ -43,12 +22,10 @@ public class GISJobTab implements JobTab {
     private static final int JOB_FILE_TEXTFIELD_WIDTH = 263;
     private static final int JOB_TEXTFIELD_HEIGHT = 26;
     private static final int JOB_FIELD_VGAP = 5;
-    private static final FlowLayout FLOW_LEFT = new FlowLayout(FlowLayout.LEFT, 0, 0);
     private static final FlowLayout FLOW_RIGHT = new FlowLayout(FlowLayout.LEFT, 0, JOB_FIELD_VGAP);
 
     private static final String DEFAULT_RUN_JOB_COMMAND = "(Generates when job is saved)";
     private static final String BROWSE_BUTTON_TEXT = "Browse...";
-    private static final String EMPTY_TEXTAREA_CONTENT = "";
 
     private static final String JOB_FILE_NAME = "Socrata GIS Job";
     public static final String JOB_FILE_EXTENSION = "gij";
@@ -57,36 +34,20 @@ public class GISJobTab implements JobTab {
     private static final String FILE_TO_PUBLISH_TIP_TEXT = "GeoJSON, kml/kmz, or zipped shape file containing the data to be published";
     private static final String DATASET_ID_TIP_TEXT = "<html><body style='width: 300px'>The identifier in the form of xxxx-xxxx (e.g. n38h-y5wp) " +
         "of the Socrata dataset where the data will be published</body></html>";
-    private static final String PUBLISH_METHOD_TIP_TEXT = "<html><body style='width: 400px'>Method used to publish data:<br>" +
-        "<strong>replace</strong>: the only allowable method for geospatial files.<br>";
-    private static final String CONTROL_FILE_TIP_TEXT = "<html><body style='width: 300px'>" +
-        "Establishes import configuration such as date formatting and Location column being populated" +
-        " from existing columns (for more information refer to Help -> control file configuration)</body></html>";
     private static final String RUN_COMMAND_TIP_TEXT = "<html><body style='width: 300px'>After saving the job this field will be populated with a command-line command that can be used to run the job." +
         " This command can be input into tools such as the Windows Task Scheduler or ETL tools to run the job automatically.</body></html>";
     public static final String COPY_TO_CLIPBOARD_BUTTON_TEXT = "Copy to clipboard";
 
     private String jobFileLocation;
-    private boolean usingControlFile;
 
     //Rest of the code assumes that this is never null. Adding to avoid null pointer exception when job initialization fails.
     private JLabel jobTabTitleLabel = new JLabel("Untitled GIS Job");
 
     private JTextField datasetIDTextField;
     private JTextField fileToPublishTextField;
-    private JComboBox<String> publishMethodComboBox;
-    private ButtonGroup publishMethodRadioButtonGroup;
-    private JRadioButton soda2Button;
-    private JRadioButton ftpButton;
-    private JRadioButton httpButton;
-    private JPanel publishViaFTPLabelContainer;
-    private JButton browseForControlFileButton;
-    private JPanel controlFileLabelContainer;
-    private JPanel controlFileSelectorContainer;
-    private JButton generateEditControlFileButton;
+    private JTextField runCommandTextField;
     private ControlFileModel controlFileModel;
     private DatasetModel datasetModel;
-    private JTextField runCommandTextField;
     private JFrame mainFrame;
     private JPanel jobPanel;
 
@@ -169,28 +130,6 @@ public class GISJobTab implements JobTab {
         } catch (Exception e) {
             JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage());
         }
-    }
-
-    private void updateControlFileModel(ControlFile controlFile, String fourbyfour)
-        throws LongRunningQueryException, InterruptedException, HttpException, IOException, URISyntaxException {
-
-        UserPreferences userPrefs = new UserPreferencesJava();
-
-        datasetModel = new DatasetModel(userPrefs, fourbyfour);
-
-        controlFileModel = new ControlFileModel(controlFile, datasetModel);
-    }
-
-    private void updatePublishViaReplaceUIFields(boolean showFileInfo) {
-        publishViaFTPLabelContainer.setVisible(true);
-
-        if (showFileInfo) {
-            controlFileLabelContainer.setVisible(true);
-            controlFileSelectorContainer.setVisible(true);
-        } else {
-            controlFileSelectorContainer.setVisible(false);
-        }
-        jobPanel.updateUI();
     }
 
     public JPanel getTabPanel() {
@@ -314,26 +253,6 @@ public class GISJobTab implements JobTab {
         }
     }
 
-
-    private class PublishMethodComboBoxListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            PublishMethod selectedPublishMethod = PublishMethod.replace;
-            ftpButton.setVisible(PublishMethod.replace.equals(selectedPublishMethod));
-            httpButton.setSelected(true);
-            //Should not be null
-            if (controlFileModel != null) {
-                controlFileModel.setType(Utils.capitalizeFirstLetter(selectedPublishMethod.name()));
-            }
-
-            updatePublishViaReplaceUIFields(controlFileNeeded());
-
-        }
-    }
-
-    private boolean controlFileNeeded() {
-        return httpButton.isSelected() || ftpButton.isSelected();
-    }
-
     private class JobCommandTextFieldListener implements MouseListener {
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -355,92 +274,5 @@ public class GISJobTab implements JobTab {
             String runJobCommand = runCommandTextField.getText();
             UIUtility.copyToClipboard(runJobCommand);
         }
-    }
-
-    private class EditControlFileListener implements ActionListener {
-        public void actionPerformed(ActionEvent evnt) {
-            final String generateControlFileErrorMessage;
-            if (!datasetIdValid()) {
-                generateControlFileErrorMessage = "Error generating control file: " +
-                    "you must enter valid Dataset ID";
-                JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
-            } else {
-                try {
-                    if (controlFileModel == null) {
-                        ControlFile controlFile = generateControlFile(
-                            new UserPreferencesJava(),
-                            fileToPublishTextField.getText(),
-                            PublishMethod.replace,
-                            datasetIDTextField.getText(),
-                            true);
-
-                        updateControlFileModel(controlFile,datasetIDTextField.getText());
-                    }
-
-                    ControlFileEditDialog editorFrame = new ControlFileEditDialog(controlFileModel,mainFrame);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    generateControlFileErrorMessage = "Error generating control file: " + e.getMessage();
-                    JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
-                }
-            }
-
-        }
-
-        private boolean fileToPublishIsSelected() {
-            String fileToPublish = fileToPublishTextField.getText();
-            return !"".equals(fileToPublish);
-        }
-
-        /**
-         * Generates default content of control.json based on given job parameters
-         *
-         * @param ddl Soda 2 ddl object
-         * @param publishMethod to use to publish (upsert, append, replace, or delete)
-         *               NOTE: this option will be overriden if userPrefs has pathToFTPControlFile or pathToControlFile set
-         * @param datasetId id of the Socrata dataset to publish to
-         * @param fileToPublish filename of file to publish (.tsv or .csv file)
-         * @param containsHeaderRow if true assume the first row in CSV/TSV file is a list of the dataset columns,
-         *                          otherwise upload all rows as new rows (column order must exactly match that of
-         *                          Socrata dataset)
-         * @return content of control.json based on given job parameters
-         * @throws com.socrata.exceptions.SodaError
-         * @throws InterruptedException
-         */
-        private String generateControlFileContent(UserPreferences prefs, String fileToPublish, PublishMethod publishMethod,
-                                                  String datasetId, boolean containsHeaderRow) throws HttpException, URISyntaxException, InterruptedException, IOException {
-            ControlFile control = generateControlFile(prefs,fileToPublish,publishMethod,datasetId,containsHeaderRow);
-            ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
-            return mapper.writeValueAsString(control);
-        }
-
-        private ControlFile generateControlFile(UserPreferences prefs,
-                                                String fileToPublish,
-                                                PublishMethod publishMethod,
-                                                String datasetId,
-                                                boolean containsHeaderRow)
-            throws HttpException, URISyntaxException, InterruptedException, IOException {
-
-            Dataset datasetInfo = DatasetUtils.getDatasetInfo(prefs, datasetId, Dataset.class);
-            boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
-
-            String[] columns = null;
-            if (!containsHeaderRow) {
-                if (PublishMethod.delete.equals(publishMethod)) {
-                    columns = new String[]{DatasetUtils.getRowIdentifierName(datasetInfo)};
-                } else {
-                    columns = DatasetUtils.getFieldNamesArray(datasetInfo);
-                }
-            }
-
-            return ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding, containsHeaderRow);
-        }
-
-    }
-
-    private boolean datasetIdValid() {
-        String datasetId = datasetIDTextField.getText();
-        return Utils.uidIsValid(datasetId);
     }
 }
