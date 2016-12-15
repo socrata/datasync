@@ -76,76 +76,18 @@ public class GISJobValidity {
      * so that we replace existing layers where possible instead of creating new ones and changing
      * the 4x4 / API endpoint of the dataset.
      */
-    public static JobStatus initializeLayerMapping(UserPreferences userPrefs, String datasetId, GISJob job) {
-        String fileToPublish = job.getFileToPublish();
-        String fileExtension = FilenameUtils.getExtension(fileToPublish);
-
-        if (fileExtension.equals(ZIP_EXT)) {
-            try {
-                GeoDataset dataset = DatasetUtils.getDatasetInfo(userPrefs, datasetId, GeoDataset.class);
-
-                // Get map of existing layer UIDs/names by looking at child views
-                Map<String, String> existingLayers = getLayerListFromExistingDataset(userPrefs, dataset);
-                // Get list of layer names in file by looking at .shp file names inside the zip
-                List<String> fileLayers = getLayerListFromShapefile(fileToPublish);
-
-                // Make a best effort to match file layers to existing layers by name
-                for (String fileLayer : fileLayers) {
-                    if (existingLayers.containsKey(fileLayer)) {
-                        job.getLayerMap().put(fileLayer, existingLayers.get(fileLayer));
-                    }
-                }
-
-                for (String key : job.getLayerMap().keySet()) {
-                    System.out.println(key + " : " + job.getLayerMap().get(key));
-                }
-
-                return JobStatus.VALID;
-            } catch (IllegalArgumentException e) {
-                // This means getDatasetInfo was unable to parse the response into a GeoDataset object.
-                return JobStatus.NOT_A_GEO_DATASET;
-            } catch (Exception e) {
-                // there’s no way for the client to recover,
-                // so a checked exception is not necessary
-                throw new RuntimeException(e);
-            }
-        } else {
-            job.setLayerMap(new HashMap<String, String>());
+    public static JobStatus validateLayerMapping(GISJob job) {
+        try {
+            job.initializeLayerMapping();
             return JobStatus.VALID;
-        }
-    }
-
-    private static Map<String, String> getLayerListFromExistingDataset(UserPreferences userPrefs, GeoDataset dataset) {
-        List<String> existingLayersUids = dataset.getChildViews();
-        Map<String, String> existingLayerInfo = new HashMap<>();
-
-        for (String uid : existingLayersUids) {
-            try {
-                Dataset child = DatasetUtils.getDatasetInfo(userPrefs, uid, Dataset.class);
-                existingLayerInfo.put(child.getName(), uid);
-            } catch (Exception e) {
-                // there’s no way for the client to recover,
-                // so a checked exception is not necessary
-                throw new RuntimeException(e);
-            }
-        }
-
-        return existingLayerInfo;
-    }
-
-    private static List<String> getLayerListFromShapefile(String filePath) throws IOException {
-        try (ZipFile zipFile = new ZipFile(filePath)) {
-            List<String> layers = new ArrayList<>();
-            Enumeration entries = zipFile.entries();
-            while (entries.hasMoreElements()) {
-                ZipEntry entry = (ZipEntry) entries.nextElement();
-                if (FilenameUtils.getExtension(entry.getName()).equals("shp")) {
-                    String layerName = FilenameUtils.getBaseName(entry.getName());
-                    layers.add(layerName);
-                }
-            }
-
-            return layers;
+        } catch (IllegalArgumentException e) {
+            // This means getDatasetInfo was unable to parse the response into a GeoDataset object.
+            return JobStatus.NOT_A_GEO_DATASET;
+        } catch (Exception e) {
+            // If something unexpected went wrong,
+            // Throw it so it can be debugged
+            // (The rest of Datasync seems to like to swallow exceptions)
+            throw new RuntimeException(e);
         }
     }
 

@@ -2,6 +2,7 @@ package com.socrata.datasync.ui;
 
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.Utils;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.model.ControlFileModel;
@@ -155,6 +156,7 @@ public class GISJobTab implements JobTab {
         newGISJob.setFileToPublish(fileToPublishTextField.getText());
         newGISJob.setPublishMethod(PublishMethod.replace);
         newGISJob.setPathToSavedFile(jobFileLocation);
+        GISJobValidity.validateLayerMapping(newGISJob);
 
         // TODO If an existing file was selected WARN user of overwriting
         // if first time saving this job: Open dialog box to select "Save as..." location
