@@ -8,15 +8,23 @@ import com.socrata.datasync.config.CommandLineOptions;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.job.JobStatus;
+import com.socrata.model.importer.Dataset;
 import com.socrata.model.importer.GeoDataset;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class GISJobValidity {
-    public static final List<String> allowedGeoFileToPublishExtensions = Arrays.asList("geojson","zip","kml","kmz");
+    public static final String GEOJSON_EXT = "geojson";
+    public static final String ZIP_EXT = "zip";
+    public static final String KML_EXT = "kml";
+    public static final String KMZ_EXT = "kmz";
+    public static final List<String> allowedGeoFileToPublishExtensions = Arrays.asList(GEOJSON_EXT, ZIP_EXT, KML_EXT, KMZ_EXT);
 
     /**
      * Checks that the command line arguments are sensible
@@ -25,7 +33,7 @@ public class GISJobValidity {
      * @return true if the commandLine is approved, false otherwise
      */
     public static boolean validateArgs(CommandLine cmd) {
-        return  validateDatasetIdArg(cmd) &&
+        return validateDatasetIdArg(cmd) &&
             validateFileToPublishArg(cmd) &&
             validatePublishMethodArg(cmd) &&
             validateProxyArgs(cmd);
@@ -55,7 +63,7 @@ public class GISJobValidity {
             return errorStatus;
         }
 
-        String fileExtension = Utils.getFileExtension(fileToPublish);
+        String fileExtension = FilenameUtils.getExtension(fileToPublish);
         if (!allowedGeoFileToPublishExtensions.contains(fileExtension)) {
             return JobStatus.FILE_TO_PUBLISH_INVALID_FORMAT;
         }
@@ -63,17 +71,81 @@ public class GISJobValidity {
         return JobStatus.VALID;
     }
 
-    public static JobStatus validateDataset(UserPreferences userPrefs, String datasetID) {
-        try {
-            DatasetUtils.getDatasetInfo(userPrefs, datasetID, GeoDataset.class);
+    /**
+     * This method attempts to map layers in the existing dataset to layers found in a shapefile,
+     * so that we replace existing layers where possible instead of creating new ones and changing
+     * the 4x4 / API endpoint of the dataset.
+     */
+    public static JobStatus initializeLayerMapping(UserPreferences userPrefs, String datasetId, GISJob job) {
+        String fileToPublish = job.getFileToPublish();
+        String fileExtension = FilenameUtils.getExtension(fileToPublish);
+
+        if (fileExtension.equals(ZIP_EXT)) {
+            try {
+                GeoDataset dataset = DatasetUtils.getDatasetInfo(userPrefs, datasetId, GeoDataset.class);
+
+                // Get map of existing layer UIDs/names by looking at child views
+                Map<String, String> existingLayers = getLayerListFromExistingDataset(userPrefs, dataset);
+                // Get list of layer names in file by looking at .shp file names inside the zip
+                List<String> fileLayers = getLayerListFromShapefile(fileToPublish);
+
+                // Make a best effort to match file layers to existing layers by name
+                for (String fileLayer : fileLayers) {
+                    if (existingLayers.containsKey(fileLayer)) {
+                        job.getLayerMap().put(fileLayer, existingLayers.get(fileLayer));
+                    }
+                }
+
+                for (String key : job.getLayerMap().keySet()) {
+                    System.out.println(key + " : " + job.getLayerMap().get(key));
+                }
+
+                return JobStatus.VALID;
+            } catch (IllegalArgumentException e) {
+                // This means getDatasetInfo was unable to parse the response into a GeoDataset object.
+                return JobStatus.NOT_A_GEO_DATASET;
+            } catch (Exception e) {
+                // there’s no way for the client to recover,
+                // so a checked exception is not necessary
+                throw new RuntimeException(e);
+            }
+        } else {
+            job.setLayerMap(new HashMap<String, String>());
             return JobStatus.VALID;
-        } catch (IllegalArgumentException e) {
-            // This means getDatasetInfo was unable to parse the response into a GeoDataset object.
-            return JobStatus.NOT_A_GEO_DATASET;
-        } catch (Exception e) {
-            // there’s no way for the client to recover,
-            // so a checked exception is not necessary
-            throw new RuntimeException(e);
+        }
+    }
+
+    private static Map<String, String> getLayerListFromExistingDataset(UserPreferences userPrefs, GeoDataset dataset) {
+        List<String> existingLayersUids = dataset.getChildViews();
+        Map<String, String> existingLayerInfo = new HashMap<>();
+
+        for (String uid : existingLayersUids) {
+            try {
+                Dataset child = DatasetUtils.getDatasetInfo(userPrefs, uid, Dataset.class);
+                existingLayerInfo.put(child.getName(), uid);
+            } catch (Exception e) {
+                // there’s no way for the client to recover,
+                // so a checked exception is not necessary
+                throw new RuntimeException(e);
+            }
+        }
+
+        return existingLayerInfo;
+    }
+
+    private static List<String> getLayerListFromShapefile(String filePath) throws IOException {
+        try (ZipFile zipFile = new ZipFile(filePath)) {
+            List<String> layers = new ArrayList<>();
+            Enumeration entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = (ZipEntry) entries.nextElement();
+                if (FilenameUtils.getExtension(entry.getName()).equals("shp")) {
+                    String layerName = FilenameUtils.getBaseName(entry.getName());
+                    layers.add(layerName);
+                }
+            }
+
+            return layers;
         }
     }
 

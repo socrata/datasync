@@ -22,6 +22,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -41,6 +43,7 @@ public class GISJob extends Job {
     private PublishMethod publishMethod = PublishMethod.replace;
     private boolean fileToPublishHasHeaderRow = true;
     private ControlFile controlFile = null;
+    private Map<String, String> layerMap = new HashMap<>();
 
     private String userAgent = "datasync";
 
@@ -71,17 +74,6 @@ public class GISJob extends Job {
      * of this object
      */
     public GISJob(String pathToFile) throws IOException, ControlDisagreementException {
-        this(pathToFile, false);
-        setUserAgentSijFile();
-    }
-
-    /**
-     * Loads GIS job data from a file and
-     * uses the saved data to populate the fields
-     * of this object
-     */
-    public GISJob(String pathToFile,
-                  boolean ignoreControlInconsistencies) throws IOException, ControlDisagreementException {
         userPrefs = new UserPreferencesJava();
 
         // first try reading the 'current' format
@@ -94,6 +86,9 @@ public class GISJob extends Job {
         setFileToPublish(loadedJob.getFileToPublish());
         setPublishMethod(loadedJob.getPublishMethod());
         setPathToSavedFile(pathToFile);
+        setLayerMap(loadedJob.getLayerMap());
+
+        setUserAgentSijFile();
     }
 
     @JsonProperty("fileVersionUID")
@@ -139,6 +134,14 @@ public class GISJob extends Job {
         return publishMethod;
     }
 
+    @JsonProperty("layerMap")
+    public void setLayerMap(Map<String, String> layerMap) {
+        this.layerMap = layerMap;
+    }
+
+    @JsonProperty("layerMap")
+    public Map<String, String> getLayerMap() { return layerMap; }
+
     public String getDefaultJobName() { return defaultJobName; }
 
     public void setUserAgent(String usrAgentName) {
@@ -169,14 +172,14 @@ public class GISJob extends Job {
      */
     public void configure(CommandLine cmd) {
         CommandLineOptions options = new CommandLineOptions();
-        String method = cmd.getOptionValue(options.PUBLISH_METHOD_FLAG);
-        setDatasetID(cmd.getOptionValue(options.DATASET_ID_FLAG));
-        setFileToPublish(cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG));
+        String method = cmd.getOptionValue(CommandLineOptions.PUBLISH_METHOD_FLAG);
+        setDatasetID(cmd.getOptionValue(CommandLineOptions.DATASET_ID_FLAG));
+        setFileToPublish(cmd.getOptionValue(CommandLineOptions.FILE_TO_PUBLISH_FLAG));
         if (method != null) {
             setPublishMethod(PublishMethod.valueOf(method));
         }
 
-        String userAgentName = cmd.getOptionValue(options.USER_AGENT_FLAG);
+        String userAgentName = cmd.getOptionValue(CommandLineOptions.USER_AGENT_FLAG);
         if (Utils.nullOrEmpty(userAgentName)) {
             userAgentName = userAgentNameCli;
         }
@@ -197,11 +200,11 @@ public class GISJob extends Job {
         JobStatus runStatus = JobStatus.SUCCESS;
 
         JobStatus validationStatus = GISJobValidity.validateJobParams(connectionInfo, this);
-        JobStatus datasetStatus = GISJobValidity.validateDataset(userPrefs, getDatasetID());
+        JobStatus layerMappingStatus = GISJobValidity.initializeLayerMapping(userPrefs, getDatasetID(), this);
         if (validationStatus.isError()) {
             runStatus = validationStatus;
-        } else if (datasetStatus.isError()) {
-            runStatus = datasetStatus;
+        } else if (layerMappingStatus.isError()) {
+            runStatus = layerMappingStatus;
         } else {
             try {
                 File fileToPublishFile = new File(fileToPublish);
