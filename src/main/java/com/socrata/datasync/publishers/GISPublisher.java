@@ -2,27 +2,25 @@ package com.socrata.datasync.publishers;
 
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.imports2.Blueprint;
 import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.HttpUtility;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.util.logging.Level;
@@ -38,10 +36,9 @@ public class GISPublisher {
                                        String datasetID,
                                        UserPreferences userPrefs) {
         URI scan_url = makeUri(connectionInfo.getUrl(), "scan","");
-        String blueprint = "";
         JobStatus status = JobStatus.SUCCESS;
         try {
-            blueprint = postRawFile(scan_url, file, userPrefs, connectionInfo);
+            Blueprint blueprint = postRawFile(scan_url, file, userPrefs, connectionInfo);
             status = replaceGeoFile(blueprint, file, userPrefs, connectionInfo, datasetID);
         } catch (IOException e) {
             String message = e.getMessage();
@@ -53,49 +50,36 @@ public class GISPublisher {
         return status;
     }
 
-    public static JobStatus replaceGeoFile(String blueprint,
+    public static JobStatus replaceGeoFile(Blueprint blueprint,
                                            File file,
                                            UserPreferences userPrefs,
                                            SocrataConnectionInfo connectionInfo,
                                            String datasetID) {
-        JobStatus status = JobStatus.SUCCESS;
-        JSONParser parser = new JSONParser();
         try {
-            Object obj = parser.parse(blueprint);
-            JSONObject array = (JSONObject)obj;
-
-            if (array.containsKey("error")) {
-                boolean error = (boolean) array.get("error");
-
-                if (error) {
-                    String message = array.get("message").toString();
-                    logging.log(Level.INFO, message);
-                    JobStatus s = JobStatus.PUBLISH_ERROR;
-                    s.setMessage(message);
-                    return s;
-                }
+            if (blueprint.getError() != null) {
+                String message = blueprint.getError().getMessage();
+                logging.log(Level.INFO, message);
+                JobStatus status = JobStatus.PUBLISH_ERROR;
+                status.setMessage(message);
+                return status;
             }
 
-            String fileId = array.get("fileId").toString();
-            String name = file.getName();
-            String bluepr = array.get("summary").toString();
-            String query = "";
+            ObjectMapper mapper = new ObjectMapper();
+            String blueprintSummary = mapper.writeValueAsString(blueprint.getSummary());
 
-            query = query + "&fileId=" +  URLEncoder.encode(fileId,"UTF-8");
-            query = query + "&name=" + URLEncoder.encode(name,"UTF-8");
-            query = query + "&blueprint=" + URLEncoder.encode(bluepr,"UTF-8");
+            String query = "&fileId=" +  URLEncoder.encode(blueprint.getFileId(),"UTF-8");
+            query = query + "&name=" + URLEncoder.encode(file.getName(),"UTF-8");
+            query = query + "&blueprint=" + URLEncoder.encode(blueprintSummary,"UTF-8");
             query = query + "&viewUid=" + URLEncoder.encode(datasetID,"UTF-8");
 
             URI uri = makeUri(connectionInfo.getUrl(),"replace",query);
             logging.log(Level.INFO, uri.toString());
-            status = postReplaceGeoFile(uri, connectionInfo, userPrefs);
-
-            return status;
-        } catch (ParseException | UnsupportedEncodingException e) {
+            return postReplaceGeoFile(uri, connectionInfo, userPrefs);
+        } catch (IOException e) {
             String message = e.getMessage();
-            JobStatus s = JobStatus.PUBLISH_ERROR;
-            s.setMessage(message);
-            return s;
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage(message);
+            return status;
         }
     }
 
@@ -216,7 +200,7 @@ public class GISPublisher {
         }
     }
 
-    public static String postRawFile(URI uri,
+    public static Blueprint postRawFile(URI uri,
                                      File file,
                                      UserPreferences userPrefs,
                                      SocrataConnectionInfo connectionInfo) throws IOException {
@@ -232,7 +216,8 @@ public class GISPublisher {
         String result = EntityUtils.toString(resEntity);
         logging.log(Level.FINE,result);
 
-        return result;
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(result, Blueprint.class);
     }
 
     public static URI makeUri(String domain,String method,String query) {
