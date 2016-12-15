@@ -35,26 +35,23 @@ public class GISPublisher {
                                        SocrataConnectionInfo connectionInfo,
                                        String datasetID,
                                        UserPreferences userPrefs) {
-        URI scan_url = makeUri(connectionInfo.getUrl(), "scan","");
-        JobStatus status = JobStatus.SUCCESS;
         try {
-            Blueprint blueprint = postRawFile(scan_url, file, userPrefs, connectionInfo);
-            status = replaceGeoFile(blueprint, file, userPrefs, connectionInfo, datasetID);
+            URI scan_url = makeUri(connectionInfo.getUrl(), "scan", "");
+            Blueprint blueprint = postRawFile(scan_url, file, userPrefs);
+            return replaceGeoFile(blueprint, file, userPrefs, connectionInfo, datasetID);
         } catch (IOException e) {
             String message = e.getMessage();
-            JobStatus s = JobStatus.PUBLISH_ERROR;
-            s.setMessage(message);
-            return s;
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage(message);
+            return status;
         }
-
-        return status;
     }
 
-    public static JobStatus replaceGeoFile(Blueprint blueprint,
-                                           File file,
-                                           UserPreferences userPrefs,
-                                           SocrataConnectionInfo connectionInfo,
-                                           String datasetID) {
+    private static JobStatus replaceGeoFile(Blueprint blueprint,
+                                            File file,
+                                            UserPreferences userPrefs,
+                                            SocrataConnectionInfo connectionInfo,
+                                            String datasetID) {
         try {
             if (blueprint.getError() != null) {
                 String message = blueprint.getError().getMessage();
@@ -83,14 +80,12 @@ public class GISPublisher {
         }
     }
 
-    public static JobStatus postReplaceGeoFile(URI uri,
-                                               SocrataConnectionInfo connectionInfo,
-                                               UserPreferences userPrefs) {
+    private static JobStatus postReplaceGeoFile(URI uri,
+                                                SocrataConnectionInfo connectionInfo,
+                                                UserPreferences userPrefs) {
         HttpUtility httpUtility = new HttpUtility(userPrefs, true, 3, 2);
-        JobStatus status = JobStatus.SUCCESS;
 
         try {
-            CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpEntity empty = MultipartEntityBuilder.create().build();
             HttpResponse response = httpUtility.post(uri,empty);
 
@@ -114,34 +109,31 @@ public class GISPublisher {
 
             try {
                 logging.log(Level.INFO, "Polling for Status...");
-                status = pollForStatus(ticket, userPrefs, connectionInfo, false);
-
-                return status;
+                return pollForStatus(ticket, userPrefs, connectionInfo, false);
             } catch (InterruptedException e) {
                 // This should be very rare, but we should throw if it happens.
                 throw new RuntimeException(e);
             }
         } catch (IOException | ParseException e) {
             String message = e.getMessage();
-            JobStatus s = JobStatus.PUBLISH_ERROR;
-            s.setMessage(message);
-            return s;
+            JobStatus status = JobStatus.PUBLISH_ERROR;
+            status.setMessage(message);
+            return status;
         }
     }
 
-    public static JobStatus pollForStatus(String ticket, UserPreferences userPrefs, SocrataConnectionInfo connectionInfo, boolean complete) throws InterruptedException {
-
-        URI status_url = makeUri(connectionInfo.getUrl(), "status", ticket);
+    private static JobStatus pollForStatus(String ticket, UserPreferences userPrefs, SocrataConnectionInfo connectionInfo, boolean complete) throws InterruptedException {
         if (!complete) {
-            String[] status = getStatus(status_url, userPrefs, connectionInfo);
+            URI status_url = makeUri(connectionInfo.getUrl(), "status", ticket);
+            String[] status = getStatus(status_url, userPrefs);
             logging.log(Level.FINE,status[1]);
             Thread.sleep(1000);
 
-            if (status[0] == "Complete") {
+            if (status[0].equals("Complete")) {
                 return JobStatus.SUCCESS;
             }
 
-            if (status[0] == "Error"){
+            if (status[0].equals("Error")) {
                 JobStatus s = JobStatus.PUBLISH_ERROR;
                 s.setMessage(status[1]);
                 return s;
@@ -153,7 +145,8 @@ public class GISPublisher {
         return JobStatus.SUCCESS;
     }
 
-    public static String[] getStatus(URI uri,UserPreferences userPrefs, SocrataConnectionInfo connectionInfo) {
+    private static String[] getStatus(URI uri,
+                                      UserPreferences userPrefs) {
         HttpUtility httpUtility = new HttpUtility(userPrefs, true, 3, 2);
         String[] status = new String[2];
 
@@ -200,10 +193,9 @@ public class GISPublisher {
         }
     }
 
-    public static Blueprint postRawFile(URI uri,
-                                     File file,
-                                     UserPreferences userPrefs,
-                                     SocrataConnectionInfo connectionInfo) throws IOException {
+    private static Blueprint postRawFile(URI uri,
+                                         File file,
+                                         UserPreferences userPrefs) throws IOException {
         HttpUtility httpUtility = new HttpUtility(userPrefs, true, 3, 2);
 
         logging.log(Level.INFO, "Posting file...");
@@ -220,16 +212,16 @@ public class GISPublisher {
         return mapper.readValue(result, Blueprint.class);
     }
 
-    public static URI makeUri(String domain,String method,String query) {
+    private static URI makeUri(String domain, String method, String query) {
         switch(method) {
-        case "scan":
-            return URI.create(domain + "/api/imports2?method=scanShape");
-        case "replace":
-            return URI.create(domain + "/api/imports2?method=replaceShapefile" + query);
-        case "status":
-            return URI.create(domain + "/api/imports2?ticket=" + query);
-        default:
-            return URI.create("");
+            case "scan":
+                return URI.create(domain + "/api/imports2?method=scanShape");
+            case "replace":
+                return URI.create(domain + "/api/imports2?method=replaceShapefile" + query);
+            case "status":
+                return URI.create(domain + "/api/imports2?ticket=" + query);
+            default:
+                return URI.create("");
         }
     }
 }
