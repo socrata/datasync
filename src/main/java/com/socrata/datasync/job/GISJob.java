@@ -252,10 +252,6 @@ public class GISJob extends Job {
                     getLayerMap().put(fileLayer, existingLayers.get(fileLayer));
                 }
             }
-
-            for (String key : getLayerMap().keySet()) {
-                System.out.println(key + " : " + getLayerMap().get(key));
-            }
         } else {
             setLayerMap(new HashMap<String, String>());
         }

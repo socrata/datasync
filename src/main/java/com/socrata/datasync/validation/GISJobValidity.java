@@ -1,23 +1,16 @@
 package com.socrata.datasync.validation;
 
-import com.socrata.datasync.DatasetUtils;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.Utils;
 import com.socrata.datasync.config.CommandLineOptions;
-import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.job.JobStatus;
-import com.socrata.model.importer.Dataset;
-import com.socrata.model.importer.GeoDataset;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class GISJobValidity {
     public static final String GEOJSON_EXT = "geojson";
