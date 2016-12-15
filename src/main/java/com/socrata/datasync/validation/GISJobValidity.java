@@ -79,19 +79,19 @@ public class GISJobValidity {
     }
 
     private static boolean validateFileToPublishArg(CommandLine cmd, CommandLineOptions options) {
-        if (cmd.getOptionValue(options.FILE_TO_PUBLISH_FLAG) != null) {
+        if (cmd.getOptionValue(CommandLineOptions.FILE_TO_PUBLISH_FLAG) != null) {
             return true;
         } else {
-            System.err.println("Missing required argument: -f,--" + options.FILE_TO_PUBLISH_FLAG + " is required");
+            System.err.println("Missing required argument: -f,--" + CommandLineOptions.FILE_TO_PUBLISH_FLAG + " is required");
             return false;
         }
     }
 
     private static boolean validateDatasetIdArg(CommandLine cmd, CommandLineOptions options) {
-        if (cmd.getOptionValue(options.DATASET_ID_FLAG) != null) {
+        if (cmd.getOptionValue(CommandLineOptions.DATASET_ID_FLAG) != null) {
             return true;
         } else {
-            System.err.println("Missing required argument: -i,--" + options.DATASET_ID_FLAG + " is required");
+            System.err.println("Missing required argument: -i,--" + CommandLineOptions.DATASET_ID_FLAG + " is required");
 
             return false;
         }
@@ -99,15 +99,15 @@ public class GISJobValidity {
 
     private static boolean validatePublishMethodArg(CommandLine cmd, CommandLineOptions options) {
         String method = cmd.getOptionValue("m");
-        String publishingWithDi2 = cmd.getOptionValue(options.PUBLISH_VIA_DI2_FLAG);
-        String publishingWithFtp = cmd.getOptionValue(options.PUBLISH_VIA_FTP_FLAG);
-        String controlFilePath = cmd.getOptionValue(options.PATH_TO_CONTROL_FILE_FLAG);
+        String publishingWithDi2 = cmd.getOptionValue(CommandLineOptions.PUBLISH_VIA_DI2_FLAG);
+        String publishingWithFtp = cmd.getOptionValue(CommandLineOptions.PUBLISH_VIA_FTP_FLAG);
+        String controlFilePath = cmd.getOptionValue(CommandLineOptions.PATH_TO_CONTROL_FILE_FLAG);
 
         if (method == null && controlFilePath == null
             && isNullOrFalse(publishingWithFtp) && isNullOrFalse(publishingWithDi2)) {
 
             System.err.println("Missing required argument: -m,--" +
-                               options.PUBLISH_METHOD_FLAG + " is required");
+                    CommandLineOptions.PUBLISH_METHOD_FLAG + " is required");
 
             return false;
         } else if (method == null && controlFilePath == null
@@ -128,7 +128,7 @@ public class GISJobValidity {
             }
 
             if (!publishMethodValid) {
-                System.err.println("Invalid argument: -m,--" + options.PUBLISH_METHOD_FLAG + " must be " +
+                System.err.println("Invalid argument: -m,--" + CommandLineOptions.PUBLISH_METHOD_FLAG + " must be " +
                                    Arrays.toString(PublishMethod.values()));
                 return false;
             }
@@ -138,15 +138,15 @@ public class GISJobValidity {
     }
 
     private static boolean validateProxyArgs(CommandLine cmd, CommandLineOptions options) {
-        String username = cmd.getOptionValue(options.PROXY_USERNAME_FLAG);
-        String password = cmd.getOptionValue(options.PROXY_PASSWORD_FLAG);
+        String username = cmd.getOptionValue(CommandLineOptions.PROXY_USERNAME_FLAG);
+        String password = cmd.getOptionValue(CommandLineOptions.PROXY_PASSWORD_FLAG);
         if(username == null && password != null) {
-            System.err.println("Missing required argument: -pun,--" + options.PROXY_USERNAME_FLAG + " is required if" +
-                               " supplying proxy credentials with -ppw, --" + options.PROXY_PASSWORD_FLAG);
+            System.err.println("Missing required argument: -pun,--" + CommandLineOptions.PROXY_USERNAME_FLAG + " is required if" +
+                               " supplying proxy credentials with -ppw, --" + CommandLineOptions.PROXY_PASSWORD_FLAG);
             return false;
         } else if(username != null && password == null) {
-            System.err.println("Missing required argument: -ppw,--" + options.PROXY_PASSWORD_FLAG + " is required if" +
-                               " supplying proxy credentials with -pun, --" + options.PROXY_USERNAME_FLAG);
+            System.err.println("Missing required argument: -ppw,--" + CommandLineOptions.PROXY_PASSWORD_FLAG + " is required if" +
+                               " supplying proxy credentials with -pun, --" + CommandLineOptions.PROXY_USERNAME_FLAG);
             return false;
         }
         return true;
