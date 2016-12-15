@@ -25,11 +25,10 @@ public class GISJobValidity {
      * @return true if the commandLine is approved, false otherwise
      */
     public static boolean validateArgs(CommandLine cmd) {
-        CommandLineOptions options = new CommandLineOptions();
-        return  validateDatasetIdArg(cmd, options) &&
-            validateFileToPublishArg(cmd, options) &&
-            validatePublishMethodArg(cmd, options) &&
-            validateProxyArgs(cmd, options);
+        return  validateDatasetIdArg(cmd) &&
+            validateFileToPublishArg(cmd) &&
+            validatePublishMethodArg(cmd) &&
+            validateProxyArgs(cmd);
     }
 
     /**
@@ -78,7 +77,7 @@ public class GISJobValidity {
         }
     }
 
-    private static boolean validateFileToPublishArg(CommandLine cmd, CommandLineOptions options) {
+    private static boolean validateFileToPublishArg(CommandLine cmd) {
         if (cmd.getOptionValue(CommandLineOptions.FILE_TO_PUBLISH_FLAG) != null) {
             return true;
         } else {
@@ -87,7 +86,7 @@ public class GISJobValidity {
         }
     }
 
-    private static boolean validateDatasetIdArg(CommandLine cmd, CommandLineOptions options) {
+    private static boolean validateDatasetIdArg(CommandLine cmd) {
         if (cmd.getOptionValue(CommandLineOptions.DATASET_ID_FLAG) != null) {
             return true;
         } else {
@@ -97,7 +96,7 @@ public class GISJobValidity {
         }
     }
 
-    private static boolean validatePublishMethodArg(CommandLine cmd, CommandLineOptions options) {
+    private static boolean validatePublishMethodArg(CommandLine cmd) {
         String method = cmd.getOptionValue("m");
         String publishingWithDi2 = cmd.getOptionValue(CommandLineOptions.PUBLISH_VIA_DI2_FLAG);
         String publishingWithFtp = cmd.getOptionValue(CommandLineOptions.PUBLISH_VIA_FTP_FLAG);
@@ -137,7 +136,7 @@ public class GISJobValidity {
         }
     }
 
-    private static boolean validateProxyArgs(CommandLine cmd, CommandLineOptions options) {
+    private static boolean validateProxyArgs(CommandLine cmd) {
         String username = cmd.getOptionValue(CommandLineOptions.PROXY_USERNAME_FLAG);
         String password = cmd.getOptionValue(CommandLineOptions.PROXY_PASSWORD_FLAG);
         if(username == null && password != null) {
