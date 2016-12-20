@@ -73,7 +73,7 @@ public class GISPublisher {
             query = query + "&viewUid=" + URLEncoder.encode(datasetID,"UTF-8");
 
             URI uri = makeUri(connectionInfo.getUrl(),"replace",query);
-            logging.log(Level.INFO, uri.toString());
+            logging.log(Level.FINE, uri.toString());
             return postReplaceGeoFile(uri, connectionInfo, userPrefs);
         } catch (IOException e) {
             String message = e.getMessage();
