@@ -73,20 +73,19 @@ Information about the status of the job will be output to STDOUT. If the job run
 
 ### Complete example job
 
-    java -jar <DATASYNC_JAR> -c config.json -t PortJob -pm copy_schema -pd1 https://opendata.socrata.com -pi1 97wa-y6ff -pd2 https://opendata.socrata.com -pdt ‘Port Job Test Title’ -pp true
-
+    java -jar <DATASYNC_JAR> --config config.json --jobType GISJob --publishMethod replace --datasetID 23rd-dssw --fileToPublish "/Users/snu/Desktop/evergreen_parcel_data.zip"
 
 config.json contents:
 
     {
         "domain": "https://opendata.socrata.com",
-        "username": "publisher@socrata.com",
+        "username": "snu@socrata.com",
         "password": "secret_password",
         "appToken": "fPsJQRDYN9KqZOgEZWyjoa1SG",
     }
 
 
-**Running a previously saved job file (.spj file)**
+**Running a previously saved job file (.gij file)**
 
 Simply run:
 
@@ -94,21 +93,20 @@ Simply run:
 
 For example:
 
-    java -jar <DATASYNC_JAR> /Users/john/Desktop/business_licenses.spj
+    java -jar <DATASYNC_JAR> /Users/snu/Desktop/parcels.gij
 
 
-**NOTE:** you can also create an .spj file directly (rather than saving a job using the DataSync UI) which stores the job details in JSON format. Here is an example:
+**NOTE:** you can also create an .gij file directly (rather than saving a job using the DataSync UI) which stores the job details in JSON format. Here is an example:
 
     {
-      "portMethod": "copy_all",
-      "sourceSiteDomain": "https://louis.demo.socrata.com",
-      "sourceSetID": "w8e5-buaa",
-      "sinkSiteDomain": "https://louis.demo.socrata.com",
-      "sinkSetID": "",
-      "publishMethod": "upsert",
-      "publishDataset": "publish",
-      "portResult": "",
-      "jobFilename": "job_saved_v0.3.spj",
-      "fileVersionUID": 1,
-      "pathToSavedJobFile": "/home/louis/Socrata/Github/datasync/src/test/resources/job_saved_v0.3.spj"
+      "defaultJobName": "City of Evergreen Parcel Data",
+      "datasetID": "23rd-dssw",
+      "fileToPublish": "/Users/snu/Desktop/evergreen_parcel_data.zip",
+      "publishMethod": "replace",
+      "layerMap": {
+        "parcels": "gvyj-jpky"
+      },
+      "fileVersionUID": 4,
+      "pathToSavedFile": "/Users/snu/Desktop/parcel_data.gij",
+      "jobFilename": "parcel_data.gij"
     }
