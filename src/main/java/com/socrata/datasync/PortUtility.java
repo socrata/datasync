@@ -30,14 +30,16 @@ public class PortUtility {
     private static final String groupingKey = "grouping_aggregate";
     private static final String drillingKey = "drill_down";
 
-	private PortUtility() {
-		throw new AssertionError("Never instantiate utility classes!");
-	}
+    private PortUtility() {
+        throw new AssertionError("Never instantiate utility classes!");
+    }
 
-	public static String portSchema(SodaDdl loader, SodaDdl creator,
-			final String sourceSetID, final String destinationDatasetTitle,
-            final boolean useNewBackend) throws SodaError, InterruptedException {
-		System.out.print("Copying schema from dataset " + sourceSetID);
+    public static String portSchema(SodaDdl loader, SodaDdl creator,
+                                    final String sourceSetID, final String destinationDatasetTitle,
+                                    final boolean useNewBackend)
+        throws SodaError, InterruptedException
+    {
+        System.out.print("Copying schema from dataset " + sourceSetID);
         Dataset sourceSet = (Dataset) loader.loadDatasetInfo(sourceSetID);
         if(destinationDatasetTitle != null && !destinationDatasetTitle.equals(""))
             sourceSet.setName(destinationDatasetTitle);
@@ -48,58 +50,80 @@ public class PortUtility {
 
         String sinkSetID = sinkSet.getId();
         System.out.println(" to dataset " + sinkSetID);
-		return sinkSetID;
-	}
+        return sinkSetID;
+    }
 
-	public static String publishDataset(SodaDdl publisher, String sinkSetID)
-			throws SodaError, InterruptedException {
-		DatasetInfo publishedSet = publisher.publish(sinkSetID);
-		String publishedID = publishedSet.getId();
-		return publishedID;
-	}
+    public static String publishDataset(SodaDdl publisher, String sinkSetID)
+        throws SodaError, InterruptedException
+    {
+        DatasetInfo publishedSet = publisher.publish(sinkSetID);
+        String publishedID = publishedSet.getId();
+        return publishedID;
+    }
 
     public static void portContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter, String sourceSetID,
                                     String sinkSetID, PublishMethod publishMethod)
-            throws InterruptedException, LongRunningQueryException, SodaError, IOException {
+        throws InterruptedException, LongRunningQueryException, SodaError, IOException
+    {
         switch (publishMethod) {
-            case upsert:
-                upsertContents(streamExporter, streamUpserter, sourceSetID, sinkSetID);
-                break;
-            case replace:
-                replaceContents(streamExporter, streamUpserter, sourceSetID, sinkSetID);
+        case upsert:
+            upsertContents(streamExporter, streamUpserter, sourceSetID, sinkSetID);
+            break;
+        case replace:
+            replaceContents(streamExporter, streamUpserter, sourceSetID, sinkSetID);
         }
     }
 
-	private static void upsertContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter,
-                    String sourceSetID, String sinkSetID) throws
-            InterruptedException, LongRunningQueryException, SodaError, IOException {
+    private static void upsertContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter,
+                                       String sourceSetID, String sinkSetID)
+        throws InterruptedException, LongRunningQueryException, SodaError, IOException
+    {
+        System.out.println("Upserting contents of dataset " + sourceSetID + " into dataset " + sinkSetID);
 
-		System.out.println("Upserting contents of dataset " + sourceSetID + " into dataset " + sinkSetID);
+        int retryLimit = 10;
+        int retryPause = 10000; // sleep 10 seconds before retrying on errors
 
-		// Limit of 1000 rows per export, so page through dataset using $offset
-		int offset = 0;
+        // Limit of 1000 rows per export, so page through dataset using $offset
+        int offset = 0;
         int rowsUpserted = 0;
         ClientResponse response;
-		ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper();
         List<Map<String, Object>> rowSet;
 
-		do {
-			SoqlQuery myQuery =new SoqlQueryBuilder().setOffset(offset).build();
-			response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
-            rowSet = mapper.readValue(response.getEntityInputStream(), new TypeReference<List<Map<String,Object>>>() {});
-			if (rowSet.size() > 0) {
+        do {
+            SoqlQuery myQuery =new SoqlQueryBuilder().setOffset(offset).build();
+            for(int retries = 0;; ++retries) {
+                try {
+                    response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
+                    rowSet = mapper.readValue(response.getEntityInputStream(), new TypeReference<List<Map<String,Object>>>() {});
+                    break;
+                } catch(SodaError|IOException e) {
+                    if(retries == retryLimit) throw e;
+                    Thread.sleep(retryPause);
+                }
+            }
+            if (rowSet.size() > 0) {
                 offset += rowSet.size();
-                UpsertResult result = streamUpserter.upsert(sinkSetID, rowSet);
+                UpsertResult result;
+                for(int retries = 0;; ++retries) {
+                    try {
+                        result = streamUpserter.upsert(sinkSetID, rowSet);
+                        break;
+                    } catch(SodaError e) {
+                        if(retries == retryLimit) throw e;
+                        Thread.sleep(retryPause);
+                    }
+                }
                 rowsUpserted += result.getRowsCreated() + result.getRowsUpdated();
                 System.out.println("\tUpserted " + rowsUpserted + " rows.");
             }
-		} while (rowSet.size() > 0);
+        } while (rowSet.size() > 0);
     }
 
     private static void replaceContents(Soda2Consumer streamExporter, Soda2Producer streamUpserter,
-                String sourceSetID, String sinkSetID) throws
-            InterruptedException, LongRunningQueryException, SodaError, IOException {
-
+                                        String sourceSetID, String sinkSetID)
+        throws InterruptedException, LongRunningQueryException, SodaError, IOException
+    {
         System.out.println("Replacing contents of dataset " + sourceSetID + " into dataset " + sinkSetID);
         // Limit of 1000 rows per export, so page through dataset using $offset
         int offset = 0;
@@ -118,9 +142,9 @@ public class PortUtility {
                 myQuery = new SoqlQueryBuilder().setOffset(offset).build();
                 response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
                 rowSet = mapper.readValue(response.getEntityInputStream(),
-                        new TypeReference<List<Map<String, Object>>>() {
-                        }
-                );
+                                          new TypeReference<List<Map<String, Object>>>() {
+                                          }
+                                          );
                 if (batchesRead > 0 && rowSet.size() > 0)
                     tempOut.write(",\n");
                 for (int i = 0; i < rowSet.size(); i++) {
@@ -143,7 +167,8 @@ public class PortUtility {
     }
 
     public static JobStatus assertSchemasAreAlike(SodaDdl sourceChecker, SodaDdl sinkChecker, String sourceSetID, String sinkSetID)
-            throws SodaError, InterruptedException {
+        throws SodaError, InterruptedException
+    {
         // We don't need to test metadata; we're only concerned with the columns...
         Dataset sourceSchema = (Dataset) sourceChecker.loadDatasetInfo(sourceSetID);
         Dataset sinkSchema = (Dataset) sinkChecker.loadDatasetInfo(sinkSetID);
@@ -156,12 +181,12 @@ public class PortUtility {
             for (int i = 0; i < sourceColumns.size(); i++) {
                 // The aspects of the columns that we care about are the API field names and their data types
                 if(!sourceColumns.get(i).getFieldName().equals(sinkColumns.get(i).getFieldName()) ||
-                        !sourceColumns.get(i).getDataTypeName().equals(sinkColumns.get(i).getDataTypeName())){
+                   !sourceColumns.get(i).getDataTypeName().equals(sinkColumns.get(i).getDataTypeName())){
                     return JobStatus.INVALID_SCHEMAS;
                 }
             }
         } else {
-                return JobStatus.INVALID_SCHEMAS;
+            return JobStatus.INVALID_SCHEMAS;
         }
         return JobStatus.SUCCESS;
     }
@@ -176,7 +201,7 @@ public class PortUtility {
      * Also removing the resourceName - no port job can succeed with one present.
      * @param schema the Dataset from soda-java representing the schema
      */
-     public static void adaptSchemaForAggregates(Dataset schema) {
+    public static void adaptSchemaForAggregates(Dataset schema) {
         // TODO: give users the option to choose a new resource name; in the meanwhile, it can be set after the job completes
         schema.setResourceName(null);
         List<Column> columns = schema.getColumns();
