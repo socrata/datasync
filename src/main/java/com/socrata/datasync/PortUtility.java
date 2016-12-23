@@ -99,6 +99,7 @@ public class PortUtility {
                     break;
                 } catch(SodaError|IOException e) {
                     if(retries == retryLimit) throw e;
+                    System.out.println("Caught an error, waiting a bit then retrying.  Error was: " + e.getMessage());
                     Thread.sleep(retryPause);
                 }
             }
@@ -111,6 +112,7 @@ public class PortUtility {
                         break;
                     } catch(SodaError e) {
                         if(retries == retryLimit) throw e;
+                        System.out.println("Caught an error, waiting a bit then retrying.  Error was: " + e.getMessage());
                         Thread.sleep(retryPause);
                     }
                 }
