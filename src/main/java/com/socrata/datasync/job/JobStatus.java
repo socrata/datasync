@@ -34,7 +34,9 @@ public enum JobStatus {
 
     FILE_TO_PUBLISH_DOESNT_EXIST("File To Publish does not exist", true),
 
-    FILE_TO_PUBLISH_INVALID_FORMAT("Incorrect File Format: File to publish must be a .CSV or .TSV file.", true),
+    FILE_TO_PUBLISH_INVALID_TABULAR_FORMAT("Incorrect File Format: File to publish must be a .CSV or .TSV file.", true),
+
+    FILE_TO_PUBLISH_INVALID_GIS_FORMAT("Incorrect File Format: File to publish must be a zipped shapefile, .KML, .KMZ or .GEOJSON file.", true),
 
     INVALID_PUBLISH_METHOD("Invalid publish method", true),
 
