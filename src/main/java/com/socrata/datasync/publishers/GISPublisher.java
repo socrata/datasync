@@ -56,7 +56,7 @@ public class GISPublisher {
         try {
             if (blueprint.getError() != null) {
                 String message = blueprint.getError().getMessage();
-                logging.log(Level.INFO, message);
+                System.out.println(message);
                 JobStatus status = JobStatus.PUBLISH_ERROR;
                 status.setMessage(message);
                 return status;
@@ -119,7 +119,6 @@ public class GISPublisher {
             ticket = resJson.get("ticket").toString();
 
             try {
-                logging.log(Level.INFO, "Polling for Status...");
                 return pollForStatus(ticket, userPrefs, connectionInfo, false);
             } catch (InterruptedException e) {
                 // This should be very rare, but we should throw if it happens.
@@ -137,7 +136,7 @@ public class GISPublisher {
         if (!complete) {
             URI status_url = makeUri(connectionInfo.getUrl(), "status", ticket);
             String[] status = getStatus(status_url, userPrefs);
-            logging.log(Level.FINE,status[1]);
+            System.out.println("Polling the job status: " + status[1]);
             Thread.sleep(1000);
 
             if (status[0].equals("Complete")) {
@@ -209,7 +208,7 @@ public class GISPublisher {
                                          UserPreferences userPrefs) throws IOException {
         HttpUtility httpUtility = new HttpUtility(userPrefs, true, 3, 2);
 
-        logging.log(Level.INFO, "Posting file...");
+        System.out.println("Posting file...");
         HttpEntity httpEntity = MultipartEntityBuilder.create()
             .addBinaryBody(file.getName(), file, ContentType.APPLICATION_OCTET_STREAM,file.getName())
             .build();
@@ -217,7 +216,7 @@ public class GISPublisher {
         HttpResponse response = httpUtility.post(uri, httpEntity);
         HttpEntity resEntity = response.getEntity();
         String result = EntityUtils.toString(resEntity);
-        logging.log(Level.FINE,result);
+        logging.log(Level.FINE, result);
 
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(result, Blueprint.class);
