@@ -246,10 +246,18 @@ public class GISJob extends Job {
             // Get list of layer names in file by looking at .shp file names inside the zip
             List<String> fileLayers = getLayerListFromShapefile(fileToPublish);
 
-            // Make a best effort to match file layers to existing layers by name
-            for (String fileLayer : fileLayers) {
-                if (existingLayers.containsKey(fileLayer)) {
-                    getLayerMap().put(fileLayer, existingLayers.get(fileLayer));
+            if (existingLayers.size() == 1 && fileLayers.size() == 1) {
+                // If there's one layer in the existing dataset and one layer in the file,
+                // assume we want to replace the existing layer.
+                for (String key : existingLayers.keySet()) {
+                    getLayerMap().put(fileLayers.get(0), existingLayers.get(key));
+                }
+            } else {
+                // Otherwise, make a best effort to match file layers to existing layers by name.
+                for (String fileLayer : fileLayers) {
+                    if (existingLayers.containsKey(fileLayer)) {
+                        getLayerMap().put(fileLayer, existingLayers.get(fileLayer));
+                    }
                 }
             }
         } else {
