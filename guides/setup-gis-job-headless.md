@@ -81,7 +81,7 @@ config.json contents:
         "domain": "https://opendata.socrata.com",
         "username": "snu@socrata.com",
         "password": "secret_password",
-        "appToken": "fPsJQRDYN9KqZOgEZWyjoa1SG",
+        "appToken": "fPsJQRDYN9KqZOgEZWyjoa1SG"
     }
 
 
@@ -89,7 +89,7 @@ config.json contents:
 
 Simply run:
 
-    java -jar <DATASYNC_JAR> <.spj FILE TO RUN>
+    java -jar <DATASYNC_JAR> <.gij FILE TO RUN>
 
 For example:
 
