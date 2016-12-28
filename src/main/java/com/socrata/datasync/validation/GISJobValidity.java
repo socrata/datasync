@@ -58,7 +58,7 @@ public class GISJobValidity {
 
         String fileExtension = FilenameUtils.getExtension(fileToPublish);
         if (!allowedGeoFileToPublishExtensions.contains(fileExtension)) {
-            return JobStatus.FILE_TO_PUBLISH_INVALID_FORMAT;
+            return JobStatus.FILE_TO_PUBLISH_INVALID_GIS_FORMAT;
         }
 
         return JobStatus.VALID;

@@ -80,7 +80,7 @@ public class IntegrationJobValidity {
 
         String fileExtension = Utils.getFileExtension(fileToPublish);
         if(!allowedFileToPublishExtensions.contains(fileExtension))
-            return JobStatus.FILE_TO_PUBLISH_INVALID_FORMAT;
+            return JobStatus.FILE_TO_PUBLISH_INVALID_TABULAR_FORMAT;
 
         final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
         Dataset schema;
