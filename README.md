@@ -1,9 +1,7 @@
 Socrata Datasync
 ================
 
-Last updated: December 6, 2016
-
-Authors: [Adrian Laurenzi](http://www.github.com/alaurenz) & [Louis Fettet](http://www.github.com/LouisFettet)
+Last updated: January 5, 2017
 
 Looking for the latest release? Get it here: https://github.com/socrata/datasync/releases
 
@@ -54,7 +52,7 @@ mvn clean compile -Dmaven.test.skip=true assembly:single
 This puts the JAR file into the "target" directory inside the repo.  So to open DataSync, simply:
 ```
 cd target
-java -jar DataSync-1.7.4-jar-with-dependencies.jar
+java -jar DataSync-1.8.0-jar-with-dependencies.jar
 ```
 
 ### Java SDK
