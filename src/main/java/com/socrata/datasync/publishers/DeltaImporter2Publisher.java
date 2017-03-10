@@ -4,6 +4,7 @@ import com.socrata.datasync.SizeCountingInputStream;
 import com.socrata.datasync.Utils;
 import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.config.controlfile.ControlFile;
+import com.socrata.datasync.config.controlfile.PortControlFile;
 import com.socrata.datasync.config.controlfile.FileTypeControl;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.deltaimporter2.*;
@@ -59,7 +60,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
     private static String domain;
     private static HttpUtility http;
     private static URIBuilder baseUri;
-    private ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+    private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
     private String pathToSignature = null;
     CloseableHttpResponse signatureResponse = null;
 
@@ -124,13 +125,13 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                 List<String> blobIds = postPatchBlobs(patch, datasetId, chunkSize);
 
                 // commit the chunks, thereby applying the diff
-                CommitMessage commit = new CommitMessage()
+                CommitMessage<ControlFile> commit = new CommitMessage<ControlFile>()
                         .filename(csvOrTsvFile.getName() + patchExtenstion + (useCompression ? compressionExtenstion : ""))
                         .relativeTo(pathToSignature)
                         .chunks(blobIds)
                         .control(controlFile)
                         .expectedSize(patch.getTotal());
-                String jobId = commitBlobPostings(commit, datasetId, uuid);
+                String jobId = commitJob(commit, datasetId, uuid);
 
                 // return status
                 return getJobStatus(datasetId, jobId);
@@ -149,6 +150,28 @@ public class DeltaImporter2Publisher implements AutoCloseable {
             }
         } while(retryCount < httpRetries);
         JobStatus jobStatus = JobStatus.PUBLISH_ERROR;
+        jobStatus.setMessage("Couldn't get the request through; too many retries"); // TODO Better message
+        return jobStatus;
+    }
+
+    public JobStatus copyWithDi2(String datasetId, PortControlFile controlFile) throws IOException {
+        String uuid = controlFile.generateAndAddOpaqueUUID();
+        int retryCount = 0;
+        do {
+            try {
+                CommitMessage<PortControlFile> commit = new CommitMessage<PortControlFile>().control(controlFile);
+                String jobId = commitJob(commit, datasetId, uuid);
+                return getJobStatus(datasetId, jobId);
+            } catch(CompletelyRestartJob e) {
+                retryCount += 1;
+            } catch(URISyntaxException | InterruptedException | HttpException e) {
+                e.printStackTrace();
+                JobStatus jobStatus = JobStatus.PORT_ERROR;
+                jobStatus.setMessage(e.getMessage());
+                return jobStatus;
+            }
+        } while(retryCount < httpRetries);
+        JobStatus jobStatus = JobStatus.PORT_ERROR;
         jobStatus.setMessage("Couldn't get the request through; too many retries"); // TODO Better message
         return jobStatus;
     }
@@ -279,7 +302,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
      * @param datasetId the 4x4 of the dataset to which the blobs belong
      * @return the jobId of the job applying the diff
      */
-    private String commitBlobPostings(final CommitMessage msg, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
+    private <T> String commitJob(final CommitMessage<T> msg, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
         System.out.println("Commiting the chunked diffs to apply the patch");
         final URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + commitPath).build();
 

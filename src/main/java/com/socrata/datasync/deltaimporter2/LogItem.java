@@ -1,6 +1,7 @@
 package com.socrata.datasync.deltaimporter2;
 
 import com.socrata.datasync.config.controlfile.ControlFile;
+import com.socrata.datasync.config.controlfile.PortControlFile;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
@@ -28,10 +29,14 @@ public class LogItem {
     public Integer getErrors() { return data == null ? null : data.errors; }
     public Map<String,Object> getDetails() { return data == null ? null : data.details; }
     public String getOpaqueUUID() {
-        if (data == null || data.control == null || data.control.opaque == null) {
+        if (data == null) {
             return null;
-        } else {
+        } else if(data.control != null) {
             return data.control.opaque;
+        } else if(data.portControl != null) {
+            return data.portControl.opaque;
+        } else {
+            return null;
         }
     }
 
@@ -49,6 +54,7 @@ public class LogItem {
         public Integer deleted;
         public Integer errors;
         public ControlFile control;
+        public PortControlFile portControl;
         public Map<String,Object> details;
 
     }

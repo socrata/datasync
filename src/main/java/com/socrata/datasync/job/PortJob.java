@@ -8,10 +8,13 @@ import com.socrata.datasync.PortUtility;
 import com.socrata.datasync.PublishDataset;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.SocrataConnectionInfo;
+import com.socrata.datasync.config.controlfile.PortControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
+import com.socrata.datasync.publishers.DeltaImporter2Publisher;
 import com.socrata.datasync.validation.PortJobValidity;
 import org.apache.commons.cli.CommandLine;
+import org.apache.http.HttpException;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -19,11 +22,14 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 public class PortJob extends Job {
+    boolean useOldCodePath = true;
+
     static AtomicInteger jobCounter = new AtomicInteger(0);
     int jobNum = jobCounter.getAndIncrement();
     private String defaultJobName = "Unsaved Port Job" + " (" + jobNum + ")";
@@ -214,7 +220,7 @@ public class PortJob extends Job {
 		JobStatus validationStatus = PortJobValidity.validateJobParams(connectionInfo, this);
 		if (validationStatus.isError()) {
 			runStatus = validationStatus;
-		} else {
+		} else if(useOldCodePath) {
 			// loader "loads" the source dataset metadata and schema
 			final SodaDdl loader = SodaDdl.newDdl(sourceSiteDomain,
 					connectionInfo.getUser(), connectionInfo.getPassword(),
@@ -282,7 +288,25 @@ public class PortJob extends Job {
 					runStatus.setMessage(errorMessage);
 				}
 			}
-		}
+		} else {
+            PortControlFile control = new PortControlFile(sinkSiteDomain,
+                                                          destinationDatasetTitle,
+                                                          userPrefs.getUseNewBackend(),
+                                                          portMethod.equals(PortMethod.copy_schema),
+                                                          publishDataset.equals(PublishDataset.publish));
+
+            // ok, what we need to do is send the JSONized control
+            // file to di2, get a job ID back, and poll the status in
+            // exactly the manner of all other di2 jobs
+
+            try {
+                DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs, "fixme");
+                runStatus = publisher.copyWithDi2(sourceSetID, control);
+            } catch(IOException e) {
+                runStatus = JobStatus.PORT_ERROR;
+                runStatus.setMessage(e.getMessage());
+            }
+        }
 		return runStatus;
 	}
 }
