@@ -45,6 +45,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
     private static final String datasyncPath = datasyncBasePath + "/id";
     private static final String statusPath = "/status";
     private static final String commitPath = "/commit";
+    private static final String portPath = "/copy";
     private static final String logPath = "/log";
     private static final String ssigContentType = "application/x-socrata-ssig";
     private static final String patchExtenstion = ".sdiff";
@@ -131,7 +132,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                         .chunks(blobIds)
                         .control(controlFile)
                         .expectedSize(patch.getTotal());
-                String jobId = commitJob(commit, datasetId, uuid);
+                String jobId = commitStandardJob(commit, datasetId, uuid);
 
                 // return status
                 return getJobStatus(datasetId, jobId);
@@ -160,7 +161,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
         do {
             try {
                 CommitMessage<PortControlFile> commit = new CommitMessage<PortControlFile>().control(controlFile);
-                String jobId = commitJob(commit, datasetId, uuid);
+                String jobId = commitPortJob(commit, datasetId, uuid);
                 return getJobStatus(datasetId, jobId);
             } catch(CompletelyRestartJob e) {
                 retryCount += 1;
@@ -302,9 +303,19 @@ public class DeltaImporter2Publisher implements AutoCloseable {
      * @param datasetId the 4x4 of the dataset to which the blobs belong
      * @return the jobId of the job applying the diff
      */
-    private <T> String commitJob(final CommitMessage<T> msg, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
+    private String commitStandardJob(final CommitMessage<ControlFile> msg, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
         System.out.println("Commiting the chunked diffs to apply the patch");
         final URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + commitPath).build();
+        return commitGenericJob(msg, committingPath, datasetId, uuid);
+    }
+
+    private String commitPortJob(final CommitMessage<PortControlFile> msg, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
+        System.out.println("Commiting the port job");
+        final URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + portPath).build();
+        return commitGenericJob(msg, committingPath, datasetId, uuid);
+    }
+
+    private <T> String commitGenericJob(final CommitMessage<T> msg, final URI committingPath, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
 
         // This is kinda ugly (kinda?) -- since this request isn't idempotent, we're handling retry logic ourselves
         // with checks to make sure that the request didn't actually go through on a failure.
@@ -314,7 +325,9 @@ public class DeltaImporter2Publisher implements AutoCloseable {
             int retries = 0;
 
             void go() throws IOException, URISyntaxException, CompletelyRestartJob {
-                StringEntity entity = new StringEntity(mapper.writeValueAsString(msg), ContentType.APPLICATION_JSON);
+                String e = mapper.writeValueAsString(msg);
+                System.out.println(e);
+                StringEntity entity = new StringEntity(e, ContentType.APPLICATION_JSON);
                 try (CloseableHttpResponse response = doPost(entity)) {
                     if(response == null) handleIOErrorPath();
                     else handleHttpResponsePath(response);

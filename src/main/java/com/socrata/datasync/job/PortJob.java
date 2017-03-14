@@ -23,12 +23,15 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URI;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 public class PortJob extends Job {
-    boolean useOldCodePath = true;
+    boolean useOldCodePath = false;
 
     static AtomicInteger jobCounter = new AtomicInteger(0);
     int jobNum = jobCounter.getAndIncrement();
@@ -289,20 +292,31 @@ public class PortJob extends Job {
 				}
 			}
 		} else {
-            PortControlFile control = new PortControlFile(sinkSiteDomain,
-                                                          destinationDatasetTitle,
-                                                          userPrefs.getUseNewBackend(),
-                                                          portMethod.equals(PortMethod.copy_schema),
-                                                          publishDataset.equals(PublishDataset.publish));
-
-            // ok, what we need to do is send the JSONized control
-            // file to di2, get a job ID back, and poll the status in
-            // exactly the manner of all other di2 jobs
-
             try {
+                PortControlFile control = new PortControlFile(new URI(sinkSiteDomain).getHost(),
+                                                              destinationDatasetTitle,
+                                                              userPrefs.getUseNewBackend(),
+                                                              portMethod.equals(PortMethod.copy_schema),
+                                                              publishDataset.equals(PublishDataset.publish));
+
+                // ok, what we need to do is send the JSONized control
+                // file to di2, get a job ID back, and poll the status in
+                // exactly the manner of all other di2 jobs
+
                 DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs, "fixme");
                 runStatus = publisher.copyWithDi2(sourceSetID, control);
-            } catch(IOException e) {
+                if(runStatus == JobStatus.SUCCESS) {
+                    // Urrrrghghghgh
+                    Pattern p = Pattern.compile("The new dataset id is (....-....)");
+                    Matcher m = p.matcher(runStatus.getMessage());
+                    if(m.find()) {
+                        sinkSetID = m.group(1);
+                    } else {
+                        runStatus = JobStatus.PORT_ERROR;
+                        runStatus.setMessage("Unable to find newly-created dataset");
+                    }
+                }
+            } catch(IOException | URISyntaxException e) {
                 runStatus = JobStatus.PORT_ERROR;
                 runStatus.setMessage(e.getMessage());
             }
