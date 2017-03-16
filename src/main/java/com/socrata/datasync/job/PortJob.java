@@ -8,6 +8,7 @@ import com.socrata.datasync.PortUtility;
 import com.socrata.datasync.PublishDataset;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.SocrataConnectionInfo;
+import com.socrata.datasync.Utils;
 import com.socrata.datasync.config.controlfile.PortControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
@@ -31,8 +32,6 @@ import java.util.regex.Matcher;
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 public class PortJob extends Job {
-    boolean useOldCodePath = false;
-
     static AtomicInteger jobCounter = new AtomicInteger(0);
     int jobNum = jobCounter.getAndIncrement();
     private String defaultJobName = "Unsaved Port Job" + " (" + jobNum + ")";
@@ -223,102 +222,112 @@ public class PortJob extends Job {
 		JobStatus validationStatus = PortJobValidity.validateJobParams(connectionInfo, this);
 		if (validationStatus.isError()) {
 			runStatus = validationStatus;
-		} else if(useOldCodePath) {
-			// loader "loads" the source dataset metadata and schema
-			final SodaDdl loader = SodaDdl.newDdl(sourceSiteDomain,
-					connectionInfo.getUser(), connectionInfo.getPassword(),
-					connectionInfo.getToken());
-
-            // special feature to enable porting datasets to Staging (where app token is different)
-            String portDestinationDomainAppToken = connectionInfo.getToken();
-            if(userPrefs.getPortDestinationDomainAppToken() != null && !userPrefs.getPortDestinationDomainAppToken().equals("")) {
-                portDestinationDomainAppToken = userPrefs.getPortDestinationDomainAppToken();
-            }
-
-			// creator "creates" a new dataset on the sink site (and publishes if applicable)
-            final SodaDdl creator = SodaDdl.newDdl(sinkSiteDomain,
-					connectionInfo.getUser(), connectionInfo.getPassword(),
-                    portDestinationDomainAppToken);
-			// streamExporter "exports" the source dataset rows
-			final Soda2Consumer streamExporter = Soda2Consumer.newConsumer(
-					sourceSiteDomain, connectionInfo.getUser(),
-					connectionInfo.getPassword(), connectionInfo.getToken());
-			// streamUpserter "upserts" the rows exported to the created dataset
-			final Soda2Producer streamUpserter = Soda2Producer.newProducer(
-					sinkSiteDomain, connectionInfo.getUser(),
-					connectionInfo.getPassword(), portDestinationDomainAppToken);
-			String errorMessage = "";
-			boolean noPortExceptions = false;
-			try {
-				if (portMethod.equals(PortMethod.copy_schema)) {
-					sinkSetID = PortUtility.portSchema(loader, creator,
-                            sourceSetID, destinationDatasetTitle, userPrefs.getUseNewBackend());
-					noPortExceptions = true;
-				} else if (portMethod.equals(PortMethod.copy_all)) {
-					sinkSetID = PortUtility.portSchema(loader, creator,
-							sourceSetID, destinationDatasetTitle, userPrefs.getUseNewBackend());
-					PortUtility.portContents(streamExporter, streamUpserter,
-							sourceSetID, sinkSetID, PublishMethod.upsert);
-					noPortExceptions = true;
-				} else if (portMethod.equals(PortMethod.copy_data)) {
-                    JobStatus schemaCheck = PortUtility.assertSchemasAreAlike(loader, creator, sourceSetID, sinkSetID);
-                    if (schemaCheck.isError()) {
-                        errorMessage = schemaCheck.getMessage();
-                    } else {
-                        PortUtility.portContents(streamExporter, streamUpserter,
-							sourceSetID, sinkSetID, publishMethod);
-                        noPortExceptions = true;
-                    }
-				} else {
-					errorMessage = JobStatus.INVALID_PORT_METHOD.toString();
-				}
-				try {
-					if (publishDataset.equals(PublishDataset.publish)) {
-						sinkSetID = PortUtility.publishDataset(creator,
-								sinkSetID);
-					}
-				} catch (Exception publishE) {
-					errorMessage += "\n" + publishE.getMessage();
-				}
-			} catch (Exception exception) {
-				errorMessage = exception.getMessage();
-			} finally {
-				if (noPortExceptions) {
-					// TODO (maybe) more DataPort error checking...?
-					runStatus = JobStatus.SUCCESS;
-				} else {
-					runStatus = JobStatus.PORT_ERROR;
-					runStatus.setMessage(errorMessage);
-				}
-			}
 		} else {
+            boolean useOldCodePath;
             try {
-                PortControlFile control = new PortControlFile(new URI(sinkSiteDomain).getHost(),
-                                                              destinationDatasetTitle,
-                                                              userPrefs.getUseNewBackend(),
-                                                              portMethod.equals(PortMethod.copy_schema),
-                                                              publishDataset.equals(PublishDataset.publish));
-
-                // ok, what we need to do is send the JSONized control
-                // file to di2, get a job ID back, and poll the status in
-                // exactly the manner of all other di2 jobs
-
-                DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs, "fixme");
-                runStatus = publisher.copyWithDi2(sourceSetID, control);
-                if(runStatus == JobStatus.SUCCESS) {
-                    // Urrrrghghghgh
-                    Pattern p = Pattern.compile("The new dataset id is (....-....)");
-                    Matcher m = p.matcher(runStatus.getMessage());
-                    if(m.find()) {
-                        sinkSetID = m.group(1);
-                    } else {
-                        runStatus = JobStatus.PORT_ERROR;
-                        runStatus.setMessage("Unable to find newly-created dataset");
-                    }
-                }
-            } catch(IOException | URISyntaxException e) {
+                useOldCodePath = !Utils.regionOfDomain(userPrefs, sourceSiteDomain).equals(Utils.regionOfDomain(userPrefs, sinkSiteDomain));
+            } catch(URISyntaxException | IOException e) {
                 runStatus = JobStatus.PORT_ERROR;
                 runStatus.setMessage(e.getMessage());
+                return runStatus;
+            }
+            if(useOldCodePath) {
+                // loader "loads" the source dataset metadata and schema
+                final SodaDdl loader = SodaDdl.newDdl(sourceSiteDomain,
+                                                      connectionInfo.getUser(), connectionInfo.getPassword(),
+                                                      connectionInfo.getToken());
+
+                // special feature to enable porting datasets to Staging (where app token is different)
+                String portDestinationDomainAppToken = connectionInfo.getToken();
+                if(userPrefs.getPortDestinationDomainAppToken() != null && !userPrefs.getPortDestinationDomainAppToken().equals("")) {
+                    portDestinationDomainAppToken = userPrefs.getPortDestinationDomainAppToken();
+                }
+
+                // creator "creates" a new dataset on the sink site (and publishes if applicable)
+                final SodaDdl creator = SodaDdl.newDdl(sinkSiteDomain,
+                                                       connectionInfo.getUser(), connectionInfo.getPassword(),
+                                                       portDestinationDomainAppToken);
+                // streamExporter "exports" the source dataset rows
+                final Soda2Consumer streamExporter = Soda2Consumer.newConsumer(
+                                                                               sourceSiteDomain, connectionInfo.getUser(),
+                                                                               connectionInfo.getPassword(), connectionInfo.getToken());
+                // streamUpserter "upserts" the rows exported to the created dataset
+                final Soda2Producer streamUpserter = Soda2Producer.newProducer(
+                                                                               sinkSiteDomain, connectionInfo.getUser(),
+                                                                               connectionInfo.getPassword(), portDestinationDomainAppToken);
+                String errorMessage = "";
+                boolean noPortExceptions = false;
+                try {
+                    if (portMethod.equals(PortMethod.copy_schema)) {
+                        sinkSetID = PortUtility.portSchema(loader, creator,
+                                                           sourceSetID, destinationDatasetTitle, userPrefs.getUseNewBackend());
+                        noPortExceptions = true;
+                    } else if (portMethod.equals(PortMethod.copy_all)) {
+                        sinkSetID = PortUtility.portSchema(loader, creator,
+                                                           sourceSetID, destinationDatasetTitle, userPrefs.getUseNewBackend());
+                        PortUtility.portContents(streamExporter, streamUpserter,
+                                                 sourceSetID, sinkSetID, PublishMethod.upsert);
+                        noPortExceptions = true;
+                    } else if (portMethod.equals(PortMethod.copy_data)) {
+                        JobStatus schemaCheck = PortUtility.assertSchemasAreAlike(loader, creator, sourceSetID, sinkSetID);
+                        if (schemaCheck.isError()) {
+                            errorMessage = schemaCheck.getMessage();
+                        } else {
+                            PortUtility.portContents(streamExporter, streamUpserter,
+                                                     sourceSetID, sinkSetID, publishMethod);
+                            noPortExceptions = true;
+                        }
+                    } else {
+                        errorMessage = JobStatus.INVALID_PORT_METHOD.toString();
+                    }
+                    try {
+                        if (publishDataset.equals(PublishDataset.publish)) {
+                            sinkSetID = PortUtility.publishDataset(creator,
+                                                                   sinkSetID);
+                        }
+                    } catch (Exception publishE) {
+                        errorMessage += "\n" + publishE.getMessage();
+                    }
+                } catch (Exception exception) {
+                    errorMessage = exception.getMessage();
+                } finally {
+                    if (noPortExceptions) {
+                        // TODO (maybe) more DataPort error checking...?
+                        runStatus = JobStatus.SUCCESS;
+                    } else {
+                        runStatus = JobStatus.PORT_ERROR;
+                        runStatus.setMessage(errorMessage);
+                    }
+                }
+            } else {
+                try {
+                    PortControlFile control = new PortControlFile(new URI(sinkSiteDomain).getHost(),
+                                                                  destinationDatasetTitle,
+                                                                  userPrefs.getUseNewBackend(),
+                                                                  portMethod.equals(PortMethod.copy_schema),
+                                                                  publishDataset.equals(PublishDataset.publish));
+
+                    // ok, what we need to do is send the JSONized control
+                    // file to di2, get a job ID back, and poll the status in
+                    // exactly the manner of all other di2 jobs
+
+                    DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs, "fixme");
+                    runStatus = publisher.copyWithDi2(sourceSetID, control);
+                    if(runStatus == JobStatus.SUCCESS) {
+                        // Urrrrghghghgh
+                        Pattern p = Pattern.compile("The new dataset id is (....-....)");
+                        Matcher m = p.matcher(runStatus.getMessage());
+                        if(m.find()) {
+                            sinkSetID = m.group(1);
+                        } else {
+                            runStatus = JobStatus.PORT_ERROR;
+                            runStatus.setMessage("Unable to find newly-created dataset");
+                        }
+                    }
+                } catch(IOException | URISyntaxException e) {
+                    runStatus = JobStatus.PORT_ERROR;
+                    runStatus.setMessage(e.getMessage());
+                }
             }
         }
 		return runStatus;

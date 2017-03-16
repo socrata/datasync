@@ -34,9 +34,7 @@ import java.util.zip.GZIPOutputStream;
  * A utility class for operations that make use of FTP
  */
 public class FTPDropbox2Publisher {
-    private static final String VERSION_API_ENDPOINT = "/api/version.json";
     private static final String FTP_HOST_SUFFIX = ".ftp.socrata.net";
-    private static final String X_SOCRATA_REGION = "X-Socrata-Region";
     private static final int FTP_HOST_PORT = 22222;
     private static final String FTP_CONTROL_FILENAME = "control.json";
     private static final String FTP_ENQUEUE_JOB_DIRNAME = "move-files-here-to-enqueue-job";
@@ -302,12 +300,8 @@ public class FTPDropbox2Publisher {
     }
 
     public static String getFTPHost(UserPreferences userPerfs) throws URISyntaxException, IOException {
-        HttpUtility http = new HttpUtility(userPerfs, true);
-        URI versionApiUri = new URI(userPerfs.getDomain() + VERSION_API_ENDPOINT);
-        try(CloseableHttpResponse response = http.get(versionApiUri, ContentType.APPLICATION_JSON.getMimeType())) {
-            String regionName = response.getHeaders(X_SOCRATA_REGION)[0].getValue();
-            return regionName + FTP_HOST_SUFFIX;
-        }
+        String regionName = Utils.regionOfDomain(userPerfs, userPerfs.getDomain());
+        return regionName + FTP_HOST_SUFFIX;
     }
 
 
