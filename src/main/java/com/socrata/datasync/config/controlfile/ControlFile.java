@@ -87,32 +87,28 @@ public class ControlFile {
                 .hasHeaderRow(hasHeaderRow)
                 .quote(quote);
 
-
-        if (!PublishMethod.delete.equals(publishMethod)) {
-            int skip = 0;
-            String separator = isCsv ? "," : "\t";
-            //Adding our standard export formats so that a customer can easily round-trip data into the system.
-            String[] timeFormats = new String[]{"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy","MM/dd/yyyy hh:mm:ss a Z","MM/dd/yyyy hh:mm:ss a"};
-            ftc.emptyTextIsNull(true)
-               .filePath(fileToPublish)
-               .ignoreColumns(new String[]{})
-               .fixedTimestampFormat(timeFormats)
-               .floatingTimestampFormat(timeFormats)
-               .separator(separator)
-               .skip(skip)
-               .timezone("UTC")
-               .useSocrataGeocoding(useSocrataGeocoding)
-               .trimWhitespace(true)
-               .trimServerWhitespace(false)
-               .overrides(new HashMap<String, ColumnOverride>())
-               .setAsideErrors(false);
+        int skip = 0;
+        String separator = isCsv ? "," : "\t";
+        //Adding our standard export formats so that a customer can easily round-trip data into the system.
+        String[] timeFormats = new String[]{"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy","MM/dd/yyyy hh:mm:ss a Z","MM/dd/yyyy hh:mm:ss a"};
+        ftc.emptyTextIsNull(true)
+           .filePath(fileToPublish)
+           .ignoreColumns(new String[]{})
+           .fixedTimestampFormat(timeFormats)
+           .floatingTimestampFormat(timeFormats)
+           .separator(separator)
+           .skip(skip)
+           .timezone("UTC")
+           .useSocrataGeocoding(useSocrataGeocoding)
+           .trimWhitespace(true)
+           .trimServerWhitespace(false)
+           .overrides(new HashMap<String, ColumnOverride>())
+           .setAsideErrors(false);
 
 
-            // for replace jobs, calculate column statistics
-            if (PublishMethod.replace.equals(publishMethod))
-                ftc.columnStatistics(true);
-
-        }
+        // for replace jobs, calculate column statistics
+        if (PublishMethod.replace.equals(publishMethod))
+            ftc.columnStatistics(true);
 
         if (isCsv) {
             return new ControlFile(Utils.capitalizeFirstLetter(publishMethod.name()), null, ftc, null, null);
