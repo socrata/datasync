@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.ContentType;
+import org.apache.http.Header;
 
 public class Utils {
 
@@ -237,7 +238,9 @@ public class Utils {
         HttpUtility http = new HttpUtility(userPrefs, false);
         URI versionApiUri = new URI(domain + VERSION_API_ENDPOINT);
         try(CloseableHttpResponse response = http.get(versionApiUri, ContentType.APPLICATION_JSON.getMimeType())) {
-            return response.getHeaders(X_SOCRATA_REGION)[0].getValue();
+            Header[] headers = response.getHeaders(X_SOCRATA_REGION);
+            if(headers.length == 0) return "development";
+            else return headers[0].getValue();
         }
     }
 }
