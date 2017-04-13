@@ -304,7 +304,7 @@ public class PortJob extends Job {
                     PortControlFile control = new PortControlFile(new URI(sinkSiteDomain).getHost(),
                                                                   destinationDatasetTitle,
                                                                   userPrefs.getUseNewBackend(),
-                                                                  portMethod.equals(PortMethod.copy_schema),
+                                                                  portMethod,
                                                                   publishDataset.equals(PublishDataset.publish));
 
                     // ok, what we need to do is send the JSONized control
