@@ -276,6 +276,10 @@ public class SimpleIntegrationWizard {
                 jobStatus = JobStatus.PUBLISH_ERROR;
                 jobStatus.setMessage("Error: ran out of memory " +
                         "(try decreasing the chunking size and/or threshold by going to Edit -> Preferences)");
+            } catch (Exception e) {
+                e.printStackTrace();
+                jobStatus = JobStatus.PUBLISH_ERROR;
+                jobStatus.setMessage("Unexpected error: " + e);
             }
             return null;
         }
