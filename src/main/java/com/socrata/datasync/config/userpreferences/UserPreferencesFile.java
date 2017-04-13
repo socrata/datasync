@@ -41,7 +41,7 @@ public class UserPreferencesFile implements UserPreferences {
     @JsonProperty("domain")
     public String getDomain() {
         if(domain == null) return null;
-        return domain.trim();
+        return UserPreferencesUtil.prefixDomain(domain.trim());
     }
 
     @JsonProperty("username")

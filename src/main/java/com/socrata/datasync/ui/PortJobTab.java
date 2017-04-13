@@ -2,6 +2,7 @@ package com.socrata.datasync.ui;
 
 import com.socrata.datasync.Utils;
 import com.socrata.datasync.job.JobStatus;
+import com.socrata.datasync.DatasetUtils;
 import com.socrata.datasync.PortMethod;
 import com.socrata.datasync.PublishDataset;
 import com.socrata.datasync.PublishMethod;
@@ -318,7 +319,7 @@ public class PortJobTab implements JobTab {
     public URI getURIToSinkDataset() {
         URI sinkDatasetURI = null;
         try {
-            sinkDatasetURI = new URI(sinkSiteDomainTextField.getText() + "/d/"
+            sinkDatasetURI = new URI("https://" + DatasetUtils.getDomainWithoutScheme(sinkSiteDomainTextField.getText()) + "/d/"
                     + sinkSetIDTextField.getText());
 
         } catch (URISyntaxException uriE) {

@@ -135,7 +135,7 @@ public class UserPreferencesJava implements UserPreferences {
     public String getDomain() {
 		String domain = userPrefs.get(DOMAIN, DEFAULT_DOMAIN);
 		if(domain == null) return null;
-		return domain.trim();
+		return UserPreferencesUtil.prefixDomain(domain.trim());
 	}
 
 	public String getUsername() {

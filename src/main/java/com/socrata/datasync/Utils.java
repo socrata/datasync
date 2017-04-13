@@ -236,7 +236,7 @@ public class Utils {
 
     public static String regionOfDomain(UserPreferences userPrefs, String domain) throws URISyntaxException, IOException {
         HttpUtility http = new HttpUtility(userPrefs, false);
-        URI versionApiUri = new URI(domain + VERSION_API_ENDPOINT);
+        URI versionApiUri = new URI("https://" + DatasetUtils.getDomainWithoutScheme(domain) + VERSION_API_ENDPOINT);
         try(CloseableHttpResponse response = http.get(versionApiUri, ContentType.APPLICATION_JSON.getMimeType())) {
             Header[] headers = response.getHeaders(X_SOCRATA_REGION);
             if(headers.length == 0) return "development";

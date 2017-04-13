@@ -3,6 +3,7 @@ package com.socrata.datasync.job;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
 import com.socrata.api.SodaDdl;
+import com.socrata.datasync.DatasetUtils;
 import com.socrata.datasync.PortMethod;
 import com.socrata.datasync.PortUtility;
 import com.socrata.datasync.PublishDataset;
@@ -301,7 +302,7 @@ public class PortJob extends Job {
                 }
             } else {
                 try {
-                    PortControlFile control = new PortControlFile(new URI(sinkSiteDomain).getHost(),
+                    PortControlFile control = new PortControlFile(new URI("https://" + DatasetUtils.getDomainWithoutScheme(sinkSiteDomain)).getHost(),
                                                                   destinationDatasetTitle,
                                                                   userPrefs.getUseNewBackend(),
                                                                   portMethod,
