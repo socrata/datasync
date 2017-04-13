@@ -46,8 +46,7 @@ public class SimpleIntegrationRunner {
                     // job ran successfully!
                     System.out.println("Job completed successfully");
                     if(job.getClass() == PortJob.class) {
-                        System.out.println(status.getMessage() + ". " +
-                                           "Your newly created dataset is at:\n" +
+                        System.out.println("Your newly created dataset is at:\n" +
                                            ((PortJob)job).getSinkSiteDomain() + "/d/" + ((PortJob)job).getSinkSetID());
                     }
                     System.out.println(status.getMessage());
@@ -74,8 +73,7 @@ public class SimpleIntegrationRunner {
             } else {
                 System.out.println("Job completed successfully");
                 if(job.getClass() == PortJob.class) {
-                    System.out.println(status.getMessage() + ". " +
-                        "Your newly created dataset is at:\n" +
+                    System.out.println("Your newly created dataset is at:\n" +
                         ((PortJob)job).getSinkSiteDomain() + "/d/" + ((PortJob)job).getSinkSetID());
                     }
                 System.out.println(status.getMessage());
