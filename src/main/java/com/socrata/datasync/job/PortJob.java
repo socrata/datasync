@@ -173,6 +173,8 @@ public class PortJob extends Job {
 	 * fields of this object
 	 */
 	public PortJob(String pathToFile) throws IOException {
+        userPrefs = new UserPreferencesJava();
+
         // first try reading the 'current' format
         ObjectMapper mapper = new ObjectMapper();
         // if reading new format fails...try reading old format into this object

@@ -9,6 +9,7 @@ import com.socrata.datasync.job.GISJob.ControlDisagreementException;
 import com.socrata.datasync.ui.GISJobTab;
 import com.socrata.datasync.job.MetadataJob;
 import com.socrata.datasync.ui.MetadataJobTab;
+import com.socrata.datasync.ui.PortJobTab;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +32,8 @@ public class SimpleIntegrationRunner {
             		job = new MetadataJob(jobFileToRun);
             	} else if(jobFileToRun.endsWith(GISJobTab.JOB_FILE_EXTENSION)) {
             		job = new GISJob(jobFileToRun);
+            	} else if(jobFileToRun.endsWith(PortJobTab.JOB_FILE_EXTENSION)) {
+            		job = new PortJob(jobFileToRun);
             	} else {
             		job = new IntegrationJob(jobFileToRun);
             	}
@@ -42,6 +45,11 @@ public class SimpleIntegrationRunner {
                 } else {
                     // job ran successfully!
                     System.out.println("Job completed successfully");
+                    if(job.getClass() == PortJob.class) {
+                        System.out.println(status.getMessage() + ". " +
+                                           "Your newly created dataset is at:\n" +
+                                           ((PortJob)job).getSinkSiteDomain() + "/d/" + ((PortJob)job).getSinkSetID());
+                    }
                     System.out.println(status.getMessage());
                 }
             } catch (IOException | IntegrationJob.ControlDisagreementException e) {
