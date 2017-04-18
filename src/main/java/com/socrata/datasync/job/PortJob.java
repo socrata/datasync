@@ -39,22 +39,22 @@ public class PortJob extends Job {
     private UserPreferences userPrefs;
 
     private PortMethod portMethod = PortMethod.copy_all;
-	private String sourceSiteDomain ="https://";
-	private String sourceSetID = "";
-	private String sinkSiteDomain= "https://";
-	private String sinkSetID = "";
-	private PublishMethod publishMethod = PublishMethod.upsert;
+    private String sourceSiteDomain ="https://";
+    private String sourceSetID = "";
+    private String sinkSiteDomain= "https://";
+    private String sinkSetID = "";
+    private PublishMethod publishMethod = PublishMethod.upsert;
     private PublishDataset publishDataset = PublishDataset.working_copy;
-	private String portResult = "";
-	private String destinationDatasetTitle = "";
+    private String portResult = "";
+    private String destinationDatasetTitle = "";
 
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
     private static final long fileVersionUID = 2L;
 
-	private static final String DEFAULT_JOB_NAME = "Untitled Port Job";
+    private static final String DEFAULT_JOB_NAME = "Untitled Port Job";
 
-	public PortJob() {
+    public PortJob() {
         userPrefs = new UserPreferencesJava();
     }
 
@@ -169,10 +169,10 @@ public class PortJob extends Job {
     }
 
     /**
-	 * Loads port job data from a file and uses the saved data to populate the
-	 * fields of this object
-	 */
-	public PortJob(String pathToFile) throws IOException {
+     * Loads port job data from a file and uses the saved data to populate the
+     * fields of this object
+     */
+    public PortJob(String pathToFile) throws IOException {
         userPrefs = new UserPreferencesJava();
 
         // first try reading the 'current' format
@@ -193,7 +193,7 @@ public class PortJob extends Job {
         } catch(IOException e){
             throw new IOException(e.toString());
         }
-	}
+    }
 
     // TODO: when get around to fixing up cmd line options, should take out the hard-coding here.
     public void configure(CommandLine cmd) {
@@ -219,14 +219,14 @@ public class PortJob extends Job {
 
 
 
-	public JobStatus run() {
-		SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
+    public JobStatus run() {
+        SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
 
-		JobStatus runStatus;
-		JobStatus validationStatus = PortJobValidity.validateJobParams(connectionInfo, this);
-		if (validationStatus.isError()) {
-			runStatus = validationStatus;
-		} else {
+        JobStatus runStatus;
+        JobStatus validationStatus = PortJobValidity.validateJobParams(connectionInfo, this);
+        if (validationStatus.isError()) {
+            runStatus = validationStatus;
+        } else {
             boolean useOldCodePath;
             try {
                 useOldCodePath = !Utils.regionOfDomain(userPrefs, sourceSiteDomain).equals(Utils.regionOfDomain(userPrefs, sinkSiteDomain));
@@ -334,6 +334,6 @@ public class PortJob extends Job {
                 }
             }
         }
-		return runStatus;
-	}
+        return runStatus;
+    }
 }

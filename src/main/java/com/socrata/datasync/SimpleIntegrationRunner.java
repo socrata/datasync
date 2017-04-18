@@ -15,28 +15,28 @@ import java.io.File;
 import java.io.IOException;
 
 public class SimpleIntegrationRunner {
-	/**
-	 * @author Adrian Laurenzi
-	 *
-	 * A command-line interface to DataSync
-	 * @throws ControlDisagreementException 
-	 */
+    /**
+     * @author Adrian Laurenzi
+     *
+     * A command-line interface to DataSync
+     * @throws ControlDisagreementException 
+     */
 
     public SimpleIntegrationRunner(String jobFileToRun) throws ControlDisagreementException {
         File jobFile = new File(jobFileToRun);
         if(jobFile.exists()) {
             try {
-            	Job job;
-            	//TODO BW: Follow how port jobs are run from command line?
-            	if (jobFileToRun.endsWith(MetadataJobTab.JOB_FILE_EXTENSION)) {
-            		job = new MetadataJob(jobFileToRun);
-            	} else if(jobFileToRun.endsWith(GISJobTab.JOB_FILE_EXTENSION)) {
-            		job = new GISJob(jobFileToRun);
-            	} else if(jobFileToRun.endsWith(PortJobTab.JOB_FILE_EXTENSION)) {
-            		job = new PortJob(jobFileToRun);
-            	} else {
-            		job = new IntegrationJob(jobFileToRun);
-            	}
+                Job job;
+                //TODO BW: Follow how port jobs are run from command line?
+                if (jobFileToRun.endsWith(MetadataJobTab.JOB_FILE_EXTENSION)) {
+                    job = new MetadataJob(jobFileToRun);
+                } else if(jobFileToRun.endsWith(GISJobTab.JOB_FILE_EXTENSION)) {
+                    job = new GISJob(jobFileToRun);
+                } else if(jobFileToRun.endsWith(PortJobTab.JOB_FILE_EXTENSION)) {
+                    job = new PortJob(jobFileToRun);
+                } else {
+                    job = new IntegrationJob(jobFileToRun);
+                }
                 JobStatus status = job.run();
                 if(status.isError()) {
                     System.err.print("Job completed with errors: ");
@@ -60,7 +60,7 @@ public class SimpleIntegrationRunner {
             System.err.println("Error running " + jobFileToRun + ": job file does not exist.");
             System.exit(1);
         }
-	}
+    }
 
     public SimpleIntegrationRunner(Job job) {
         JobStatus status;
