@@ -180,6 +180,7 @@ public class PortJob extends Job {
         // if reading new format fails...try reading old format into this object
         try {
             PortJob loadedJob = mapper.readValue(new File(pathToFile), PortJob.class);
+            loadedJob.setPathToSavedFile(pathToFile);
             setPathToSavedFile(loadedJob.getPathToSavedFile());
             setSourceSiteDomain(loadedJob.getSourceSiteDomain());
             setSourceSetID(loadedJob.getSourceSetID());

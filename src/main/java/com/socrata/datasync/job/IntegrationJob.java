@@ -116,6 +116,7 @@ public class IntegrationJob extends Job {
             loadOldSijFile(pathToFile);
             return;
         }
+        loadedJob.setPathToSavedFile(pathToFile);
         String controlPath = loadedJob.getPathToControlFile();
         String controlContent = loadedJob.getControlFileContent();
         try {

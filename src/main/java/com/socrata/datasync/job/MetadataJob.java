@@ -94,6 +94,7 @@ public class MetadataJob extends Job {
         ObjectMapper mapper = new ObjectMapper();
         try {
             MetadataJob loadedJob = mapper.readValue(new File(pathToFile), MetadataJob.class);
+            loadedJob.setPathToSavedFile(pathToFile);
             setDatasetID(loadedJob.getDatasetID());
             setTitle(loadedJob.getTitle());
             setDescription(loadedJob.getDescription());
