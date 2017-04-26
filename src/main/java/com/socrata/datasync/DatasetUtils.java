@@ -114,12 +114,7 @@ public class DatasetUtils {
 
     public static String getDomainWithoutScheme(String domain){
         String[] schemaAndDomain = domain.trim().split("//");
-        String justDomain;
-        if(schemaAndDomain.length > 0) {
-            justDomain = schemaAndDomain[schemaAndDomain.length - 1];
-        } else {
-            justDomain = schemaAndDomain[0];
-        }
+        String justDomain = schemaAndDomain[schemaAndDomain.length - 1];
         return justDomain.split("[/:]")[0];
     }
 
