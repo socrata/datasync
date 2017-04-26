@@ -1,9 +1,9 @@
 package com.socrata.datasync;
 
 public enum PortMethod {
-	copy_data("Copy data only"),
-	
-	copy_schema("Copy schema only"),
+    copy_data("Copy data only"),
+
+    copy_schema("Copy schema only"),
 
     copy_all("Copy schema and data");
 

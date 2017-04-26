@@ -57,10 +57,10 @@ public class IntegrationJob extends Job {
 
     private UserPreferences userPrefs;
     private String datasetID = "";
-	private String fileToPublish = "";
-	private PublishMethod publishMethod = null;
+    private String fileToPublish = "";
+    private PublishMethod publishMethod = null;
     private boolean fileToPublishHasHeaderRow = true;
-	private String pathToControlFile = null;
+    private String pathToControlFile = null;
     private String controlFileContent = null;
     private boolean publishViaFTP = false;
     private boolean publishViaDi2Http = false;
@@ -77,7 +77,7 @@ public class IntegrationJob extends Job {
 
     public IntegrationJob() {
         userPrefs = new UserPreferencesJava();
-	}
+    }
 
     /*
      * This is a method that enables DataSync preferences to be established
@@ -89,14 +89,14 @@ public class IntegrationJob extends Job {
     }
 
     /**
-	 * Loads integration job data from a file and
-	 * uses the saved data to populate the fields
-	 * of this object
-	 */
-	public IntegrationJob(String pathToFile) throws IOException, ControlDisagreementException {
+     * Loads integration job data from a file and
+     * uses the saved data to populate the fields
+     * of this object
+     */
+    public IntegrationJob(String pathToFile) throws IOException, ControlDisagreementException {
         this(pathToFile, false);
         setUserAgentSijFile();
-	}
+    }
 
     /**
      * Loads integration job data from a file and
@@ -116,6 +116,7 @@ public class IntegrationJob extends Job {
             loadOldSijFile(pathToFile);
             return;
         }
+        loadedJob.setPathToSavedFile(pathToFile);
         String controlPath = loadedJob.getPathToControlFile();
         String controlContent = loadedJob.getControlFileContent();
         try {
@@ -269,8 +270,8 @@ public class IntegrationJob extends Job {
      * @throws IOException
      */
     public JobStatus run() {
-		SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
-		UpsertResult result = null;
+        SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
+        UpsertResult result = null;
         String publishExceptions = "";
         JobStatus runStatus = JobStatus.SUCCESS;
 
@@ -344,7 +345,7 @@ public class IntegrationJob extends Job {
         String logPublishingErrorMessage = logRunResults(runStatus, result);
         emailAdmin(runStatus, logPublishingErrorMessage);
         return runStatus;
-	}
+    }
 
 
     /**

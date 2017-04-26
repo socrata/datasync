@@ -24,28 +24,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SimpleIntegrationWizard {
-	/**
-	 * @author Adrian Laurenzi
-	 *
-	 * GUI interface to DataSync
-	 */
-	private static final String TITLE = "Socrata DataSync " + VersionProvider.getThisVersion();
+    /**
+     * @author Adrian Laurenzi
+     *
+     * GUI interface to DataSync
+     */
+    private static final String TITLE = "Socrata DataSync " + VersionProvider.getThisVersion();
     private static final String LOGO_FILE_PATH = "/datasync_logo.png";
-	private static final String LOADING_SPINNER_FILE_PATH = "/loading_spinner.gif";
-	private static final int FRAME_WIDTH = 800;
-	private static final int FRAME_HEIGHT = 550;
-	private static final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 350);
+    private static final String LOADING_SPINNER_FILE_PATH = "/loading_spinner.gif";
+    private static final int FRAME_WIDTH = 800;
+    private static final int FRAME_HEIGHT = 550;
+    private static final Dimension JOB_PANEL_DIMENSION = new Dimension(780, 350);
     private static final Dimension BUTTON_PANEL_DIMENSION = new Dimension(780, 40);
     private static final int SSL_PORT_TEXTFIELD_HEIGHT = 26;
-	private static final int DEFAULT_TEXTFIELD_COLS = 25;
-	private static final Dimension AUTH_DETAILS_DIMENSION = new Dimension(465, 100);
-	private static final int PREFERENCES_FRAME_WIDTH = 475;
-	private static final int PREFERENCES_FRAME_HEIGHT = 675;
+    private static final int DEFAULT_TEXTFIELD_COLS = 25;
+    private static final Dimension AUTH_DETAILS_DIMENSION = new Dimension(465, 100);
+    private static final int PREFERENCES_FRAME_WIDTH = 475;
+    private static final int PREFERENCES_FRAME_HEIGHT = 675;
 
-	private static UserPreferencesJava userPrefs;
+    private static UserPreferencesJava userPrefs;
 
     // TODO remove these declarations from this file (duplicates...)
-	private static final String STANDARD_JOB_FILE_EXTENSION = "sij";
+    private static final String STANDARD_JOB_FILE_EXTENSION = "sij";
     private static final String PORT_JOB_FILE_EXTENSION = "spj";
     private static final String METADATA_JOB_FILE_EXTENSION = "smj";
     private static final String GIS_JOB_FILE_EXTENSION = "gij";
@@ -74,77 +74,77 @@ public class SimpleIntegrationWizard {
     private static final String FAQ_URL = "http://socrata.github.io/datasync/resources/faq-common-problems.html";
 
     private JTextField domainTextField, usernameTextField, apiKeyTextField;
-	private JPasswordField passwordField;
+    private JPasswordField passwordField;
     private JTextField filesizeChunkingCutoffTextField, numRowsPerChunkTextField;
-	private JTextField logDatasetIDTextField, adminEmailTextField;
-	private JTextField outgoingMailServerTextField, smtpPortTextField, sslPortTextField, smtpUsernameTextField;
+    private JTextField logDatasetIDTextField, adminEmailTextField;
+    private JTextField outgoingMailServerTextField, smtpPortTextField, sslPortTextField, smtpUsernameTextField;
     private JTextField proxyHostTextField, proxyPortTextField, proxyUsernameTextField, proxyPasswordTextField;
     private JPasswordField smtpPasswordField;
-	private JCheckBox useSSLCheckBox;
-	private JCheckBox emailUponErrorCheckBox;
+    private JCheckBox useSSLCheckBox;
+    private JCheckBox emailUponErrorCheckBox;
 
-	/**
-	 * Stores a list of open JobTabs. Each JobTab object contains
+    /**
+     * Stores a list of open JobTabs. Each JobTab object contains
      * the UI content of a single job tab. The indices of the
      * tabs within jobTabsPane correspond to the indices of the
      * JobTab objects (holding the UI for each tab) within this
      * list.
      *
-	 * *IMPORTANT*: only modify this list in the 'addJobTab' and
+     * *IMPORTANT*: only modify this list in the 'addJobTab' and
      *              'closeJobTab' methods
-	 */
-	private List<JobTab> jobTabs;
+     */
+    private List<JobTab> jobTabs;
 
-	private JTabbedPane jobTabsPane;
-	private JFrame frame;
-	private JFrame prefsFrame;
+    private JTabbedPane jobTabsPane;
+    private JFrame frame;
+    private JFrame prefsFrame;
     private JPanel loadingNoticePanel;
     private JButton runJobNowButton;
 
     /*
-	 * Constructs the GUI and displays it on the screen.
-	 */
-	public SimpleIntegrationWizard() {
-		// load user preferences (saved locally)
-		userPrefs = new UserPreferencesJava();
+     * Constructs the GUI and displays it on the screen.
+     */
+    public SimpleIntegrationWizard() {
+        // load user preferences (saved locally)
+        userPrefs = new UserPreferencesJava();
 
-		// Build GUI
-		frame = new JFrame(TITLE);
-		frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
+        // Build GUI
+        frame = new JFrame(TITLE);
+        frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
 
         jobTabs = new ArrayList<>();
-		// save tabs on close
-		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		frame.addWindowListener(new WindowAdapter() {
+        // save tabs on close
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent we) {
-            	saveAuthenticationInfoFromForm();
-            	// TODO save open tabs to userPrefs
+                saveAuthenticationInfoFromForm();
+                // TODO save open tabs to userPrefs
                 System.exit(0);
             }
         });
 
-		JMenuBar menuBar = generateMenuBar();
-		frame.setJMenuBar(menuBar);
+        JMenuBar menuBar = generateMenuBar();
+        frame.setJMenuBar(menuBar);
 
-		JPanel mainPanel = generateMainPanel();
-		loadAuthenticationInfoIntoForm();
-		generatePreferencesFrame();
+        JPanel mainPanel = generateMainPanel();
+        loadAuthenticationInfoIntoForm();
+        generatePreferencesFrame();
 
         frame.add(mainPanel);
 
         frame.pack();
         // centers the window
-     	frame.setLocationRelativeTo(null);
-		frame.setVisible(true);
+         frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
 
-		// Alert user if new version is available
-		try {
-			checkVersion();
-		} catch (Exception e) {
-			// do nothing upon failure
-		}
-	}
+        // Alert user if new version is available
+        try {
+            checkVersion();
+        } catch (Exception e) {
+            // do nothing upon failure
+        }
+    }
 
     private void generatePreferencesFrame() {
         prefsFrame = new JFrame("Preferences");
@@ -164,12 +164,12 @@ public class SimpleIntegrationWizard {
     /**
      * Queries github for the most recent release. If query is successful
      * and the major version of the user's datasync is outdated, alerts
-	 * that a new version is available
-	 *
-	 * @throws URISyntaxException
-	 */
-	private void checkVersion() throws URISyntaxException {
-		if(VersionProvider.isLatestMajorVersion() == VersionProvider.VersionStatus.NOT_LATEST) {
+     * that a new version is available
+     *
+     * @throws URISyntaxException
+     */
+    private void checkVersion() throws URISyntaxException {
+        if(VersionProvider.isLatestMajorVersion() == VersionProvider.VersionStatus.NOT_LATEST) {
             String currentVersion = VersionProvider.getLatestVersion();
             if (currentVersion != null) {
                 Object[] options = {"Download Now", "No Thanks"};
@@ -188,53 +188,53 @@ public class SimpleIntegrationWizard {
                 }
             }
         }
-	}
+    }
 
-	private void addJobTab(Job job) throws IllegalArgumentException {
+    private void addJobTab(Job job) throws IllegalArgumentException {
         JobTab newJobTab;
         if(job.getClass().equals(IntegrationJob.class)) {
             newJobTab = new IntegrationJobTab((IntegrationJob) job, frame);
         } else if(job.getClass().equals(PortJob.class)) {
             newJobTab = new PortJobTab((PortJob) job, frame);
         } else if(job.getClass().equals(GISJob.class)) {
-        	newJobTab = new GISJobTab((GISJob) job, frame);
+            newJobTab = new GISJobTab((GISJob) job, frame);
         } else if(job.getClass().equals(MetadataJob.class)) {
-        	newJobTab = new MetadataJobTab((MetadataJob) job, frame);
+            newJobTab = new MetadataJobTab((MetadataJob) job, frame);
         } else {
             throw new IllegalArgumentException("Given job is invalid: unrecognized class '" + job.getClass() + "'");
         }
         JPanel newJobPanel = newJobTab.getTabPanel();
 
-		// Build the tab with close button
-	    FlowLayout tabLayout = new FlowLayout(FlowLayout.CENTER, 5, 0);
-	    JPanel tabPanel = new JPanel(tabLayout);
-	    tabPanel.setOpaque(false);
+        // Build the tab with close button
+        FlowLayout tabLayout = new FlowLayout(FlowLayout.CENTER, 5, 0);
+        JPanel tabPanel = new JPanel(tabLayout);
+        tabPanel.setOpaque(false);
 
-	    // Create a JButton for the close tab button
-	    JButton closeTabButton = new AwesomeButton("cross41");
-	    closeTabButton.setBorder(null);
-	    closeTabButton.setFocusable(false);
+        // Create a JButton for the close tab button
+        JButton closeTabButton = new AwesomeButton("cross41");
+        closeTabButton.setBorder(null);
+        closeTabButton.setFocusable(false);
 
-	    tabPanel.add(newJobTab.getJobTabTitleLabel());
-	    tabPanel.add(closeTabButton);
-	    // Add a thin border to keep the image below the top edge of the tab when the tab is selected
-	    tabPanel.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
+        tabPanel.add(newJobTab.getJobTabTitleLabel());
+        tabPanel.add(closeTabButton);
+        // Add a thin border to keep the image below the top edge of the tab when the tab is selected
+        tabPanel.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
 
-		// Put tab with close button into tabbed pane
-	    //TODO: BW: Possibly implement way to keep other tabs from being scrollable?
-	    JScrollPane newJobScrollPanel = new JScrollPane(newJobPanel);
-	    newJobScrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        // Put tab with close button into tabbed pane
+        //TODO: BW: Possibly implement way to keep other tabs from being scrollable?
+        JScrollPane newJobScrollPanel = new JScrollPane(newJobPanel);
+        newJobScrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         jobTabsPane.addTab(null, newJobScrollPanel);
-	    int pos = jobTabsPane.indexOfComponent(newJobScrollPanel);
+        int pos = jobTabsPane.indexOfComponent(newJobScrollPanel);
 
-	    // Now assign the component for the tab
-	    jobTabsPane.setTabComponentAt(pos, tabPanel);
+        // Now assign the component for the tab
+        jobTabsPane.setTabComponentAt(pos, tabPanel);
 
-	    closeTabButton.addActionListener(new CloseJobFromTabListener());
+        closeTabButton.addActionListener(new CloseJobFromTabListener());
 
         jobTabs.add(newJobTab);
-	    assert(jobTabsValid());
-	}
+        assert(jobTabsValid());
+    }
 
     private void closeJobTab(int tabIndex) throws IllegalArgumentException {
         if(tabIndex >= jobTabsPane.getTabCount()) {
@@ -245,18 +245,18 @@ public class SimpleIntegrationWizard {
         assert(jobTabsValid());
     }
 
-	private class RunJobNowListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			saveAuthenticationInfoFromForm();
+    private class RunJobNowListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            saveAuthenticationInfoFromForm();
 
-			// run integration job with data from form
-	        int selectedJobTabIndex = jobTabsPane.getSelectedIndex();
+            // run integration job with data from form
+            int selectedJobTabIndex = jobTabsPane.getSelectedIndex();
             JobTab selectedJobTab = jobTabs.get(selectedJobTabIndex);
 
             SwingWorker jobWorker = new RunJobWorker(selectedJobTab);
             jobWorker.execute();
-		}
-	}
+        }
+    }
 
     private class RunJobWorker extends SwingWorker<Void, String> {
         private JobTab jobTabToRun;
@@ -276,6 +276,10 @@ public class SimpleIntegrationWizard {
                 jobStatus = JobStatus.PUBLISH_ERROR;
                 jobStatus.setMessage("Error: ran out of memory " +
                         "(try decreasing the chunking size and/or threshold by going to Edit -> Preferences)");
+            } catch (Exception e) {
+                e.printStackTrace();
+                jobStatus = JobStatus.PUBLISH_ERROR;
+                jobStatus.setMessage("Unexpected error: " + e);
             }
             return null;
         }
@@ -309,33 +313,33 @@ public class SimpleIntegrationWizard {
         }
     }
 
-	private class SaveJobListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			saveAuthenticationInfoFromForm();
+    private class SaveJobListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            saveAuthenticationInfoFromForm();
             int selectedJobTabIndex = jobTabsPane.getSelectedIndex();
             JobTab selectedJobTab = jobTabs.get(selectedJobTabIndex);
             selectedJobTab.saveJob();
-		}
-	}
+        }
+    }
 
-	private File openToDirectory = new File(".");
+    private File openToDirectory = new File(".");
     private class OpenJobListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			JFileChooser savedJobFileChooser = new JFileChooser();
+        public void actionPerformed(ActionEvent e) {
+            JFileChooser savedJobFileChooser = new JFileChooser();
             savedJobFileChooser.setCurrentDirectory(openToDirectory);
             String fileExtensionsAllowed = "*." + STANDARD_JOB_FILE_EXTENSION + ", *." + PORT_JOB_FILE_EXTENSION + ", *."+ GIS_JOB_FILE_EXTENSION + ", *." + METADATA_JOB_FILE_EXTENSION;
-        	FileNameExtensionFilter filter = new FileNameExtensionFilter(
+            FileNameExtensionFilter filter = new FileNameExtensionFilter(
                     "Socrata Job File (" + fileExtensionsAllowed + ")",
                     STANDARD_JOB_FILE_EXTENSION, PORT_JOB_FILE_EXTENSION, GIS_JOB_FILE_EXTENSION, METADATA_JOB_FILE_EXTENSION);
-        	savedJobFileChooser.setFileFilter(filter);
-        	int returnVal = savedJobFileChooser.showOpenDialog(frame);
-			if (returnVal == JFileChooser.APPROVE_OPTION) {
-				File openedFile = savedJobFileChooser.getSelectedFile();
-				// Ensure file exists
-				if(openedFile.exists()) {
-					openToDirectory = savedJobFileChooser.getCurrentDirectory();
-					// ensure this job is not already open
-					String openedFileLocation = openedFile.getAbsolutePath();
+            savedJobFileChooser.setFileFilter(filter);
+            int returnVal = savedJobFileChooser.showOpenDialog(frame);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File openedFile = savedJobFileChooser.getSelectedFile();
+                // Ensure file exists
+                if(openedFile.exists()) {
+                    openToDirectory = savedJobFileChooser.getCurrentDirectory();
+                    // ensure this job is not already open
+                    String openedFileLocation = openedFile.getAbsolutePath();
                     int indexOfAlreadyOpenFile = -1;
                     for(int curTabIndex = 0; curTabIndex < jobTabs.size(); curTabIndex++) {
                         String curTabJobFileLocation = jobTabs.get(curTabIndex).getJobFileLocation();
@@ -344,7 +348,7 @@ public class SimpleIntegrationWizard {
                             break;
                         }
                     }
-					if(indexOfAlreadyOpenFile == -1) {
+                    if(indexOfAlreadyOpenFile == -1) {
                         try {
                             int i = openedFileLocation.lastIndexOf('.');
                             if (i > 0) {
@@ -352,11 +356,11 @@ public class SimpleIntegrationWizard {
                                 if(openedFileExtension.equals(STANDARD_JOB_FILE_EXTENSION)) {
                                     addJobTab(new IntegrationJob(openedFileLocation));
                                 } else if(openedFileExtension.equals(GIS_JOB_FILE_EXTENSION)){
-                                	addJobTab(new GISJob(openedFileLocation));
+                                    addJobTab(new GISJob(openedFileLocation));
                                 } else if(openedFileExtension.equals(PORT_JOB_FILE_EXTENSION)) {
                                     addJobTab(new PortJob(openedFileLocation));
                                 } else if (openedFileExtension.equals(METADATA_JOB_FILE_EXTENSION)) {
-                                	addJobTab(new MetadataJob(openedFileLocation));
+                                    addJobTab(new MetadataJob(openedFileLocation));
                                 } else {
                                     throw new Exception("unrecognized file extension (" + openedFileExtension + ")");
                                 }
@@ -375,14 +379,14 @@ public class SimpleIntegrationWizard {
                         } catch(Exception e2) {
                             JOptionPane.showMessageDialog(frame, "Error opening " + openedFileLocation + ": " + e2.toString());
                         }
-	                } else {
-	                	// file already open, select that tab
-	                	jobTabsPane.setSelectedIndex(indexOfAlreadyOpenFile);
-	                }
-				}
+                    } else {
+                        // file already open, select that tab
+                        jobTabsPane.setSelectedIndex(indexOfAlreadyOpenFile);
+                    }
+                }
             }
-		}
-	}
+        }
+    }
 
     private class AuthenticationDetailsFocusListener implements FocusListener {
         @Override
@@ -393,12 +397,12 @@ public class SimpleIntegrationWizard {
         }
     }
 
-	private class NewStandardJobListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
+    private class NewStandardJobListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
             addJobTab(getNewIntegrationJob());
             jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
-		}
-	}
+        }
+    }
 
     private IntegrationJob getNewIntegrationJob() {
         IntegrationJob newJob = new IntegrationJob();
@@ -415,36 +419,36 @@ public class SimpleIntegrationWizard {
     }
     
     private class NewGISJobListener implements ActionListener {
-    	public void actionPerformed(ActionEvent e) {
-    		addJobTab(new GISJob());
-    		jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
-    	}
+        public void actionPerformed(ActionEvent e) {
+            addJobTab(new GISJob());
+            jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
+        }
     }
 
     private class NewMetadataJobListener implements ActionListener {
-    	public void actionPerformed(ActionEvent e) {
-    		addJobTab(new MetadataJob());
-    		jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
-    	}
+        public void actionPerformed(ActionEvent e) {
+            addJobTab(new MetadataJob());
+            jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
+        }
     }
 
-	/**
-	 * Listen for action to close currently selected tab
-	 */
-	private class CloseJobFromTabListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			JComponent source = (JComponent) e.getSource();
-		    Container tabComponent = source.getParent();
-		    int jobTabIndex = jobTabsPane.indexOfTabComponent(tabComponent);
-		    closeJobTab(jobTabIndex);
-		}
-	}
+    /**
+     * Listen for action to close currently selected tab
+     */
+    private class CloseJobFromTabListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            JComponent source = (JComponent) e.getSource();
+            Container tabComponent = source.getParent();
+            int jobTabIndex = jobTabsPane.indexOfTabComponent(tabComponent);
+            closeJobTab(jobTabIndex);
+        }
+    }
 
-	private JMenuBar generateMenuBar() {
-		JMenuBar menuBar = new JMenuBar();
+    private JMenuBar generateMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
 
-		JMenu fileMenu = new JMenu("File");
-		menuBar.add(fileMenu);
+        JMenu fileMenu = new JMenu("File");
+        menuBar.add(fileMenu);
 
         JMenu newJobMenu = new JMenu("New...");
         JMenuItem newStandardJobItem = new JMenuItem("Standard Job");
@@ -455,22 +459,22 @@ public class SimpleIntegrationWizard {
         newJobMenu.add(newGISJobItem);
         JMenuItem newMetadataJobItem = new JMenuItem("Metadata Job (beta)");
         newJobMenu.add(newMetadataJobItem);
-		fileMenu.add(newJobMenu);
+        fileMenu.add(newJobMenu);
 
-		JMenuItem openJobItem = new JMenuItem("Open Job");
-		openJobItem.setAccelerator(KeyStroke.getKeyStroke(
-			KeyEvent.VK_O, ActionEvent.CTRL_MASK));
-		fileMenu.add(openJobItem);
+        JMenuItem openJobItem = new JMenuItem("Open Job");
+        openJobItem.setAccelerator(KeyStroke.getKeyStroke(
+            KeyEvent.VK_O, ActionEvent.CTRL_MASK));
+        fileMenu.add(openJobItem);
 
-		JMenuItem saveJobItem = new JMenuItem("Save Job");
-		saveJobItem.setAccelerator(KeyStroke.getKeyStroke(
-			KeyEvent.VK_S, ActionEvent.CTRL_MASK));
-		fileMenu.add(saveJobItem);
+        JMenuItem saveJobItem = new JMenuItem("Save Job");
+        saveJobItem.setAccelerator(KeyStroke.getKeyStroke(
+            KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+        fileMenu.add(saveJobItem);
 
-		JMenuItem runJobItem = new JMenuItem("Run Job Now");
-		runJobItem.setAccelerator(KeyStroke.getKeyStroke(
-			KeyEvent.VK_R, ActionEvent.CTRL_MASK));
-		fileMenu.add(runJobItem);
+        JMenuItem runJobItem = new JMenuItem("Run Job Now");
+        runJobItem.setAccelerator(KeyStroke.getKeyStroke(
+            KeyEvent.VK_R, ActionEvent.CTRL_MASK));
+        fileMenu.add(runJobItem);
       JMenuItem prefsItem = new JMenuItem("Preferences");
       fileMenu.add(prefsItem);
 
@@ -493,10 +497,10 @@ public class SimpleIntegrationWizard {
         newPortJobItem.addActionListener(new NewPortJobListener());
         newGISJobItem.addActionListener(new NewGISJobListener());
         newMetadataJobItem.addActionListener(new NewMetadataJobListener());
-		openJobItem.addActionListener(new OpenJobListener());
-		saveJobItem.addActionListener(new SaveJobListener());
-		runJobItem.addActionListener(new RunJobNowListener());
-		prefsItem.addActionListener(new OpenPreferencesListener());
+        openJobItem.addActionListener(new OpenJobListener());
+        saveJobItem.addActionListener(new SaveJobListener());
+        runJobItem.addActionListener(new RunJobNowListener());
+        prefsItem.addActionListener(new OpenPreferencesListener());
         gettingStartedGuideItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -546,18 +550,18 @@ public class SimpleIntegrationWizard {
             }
         });
 
-		return menuBar;
-	}
+        return menuBar;
+    }
 
-	private JPanel generateMainPanel() {
-		JPanel mainContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
-		mainContainer.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
+    private JPanel generateMainPanel() {
+        JPanel mainContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        mainContainer.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT));
 
-		// Build empty job tabbed pane
-		JPanel jobTabsContainer = new JPanel(new GridLayout(1, 1));
-		jobTabsContainer.setPreferredSize(JOB_PANEL_DIMENSION);
-		jobTabsPane = new JTabbedPane();
-		jobTabsContainer.add(jobTabsPane);
+        // Build empty job tabbed pane
+        JPanel jobTabsContainer = new JPanel(new GridLayout(1, 1));
+        jobTabsContainer.setPreferredSize(JOB_PANEL_DIMENSION);
+        jobTabsPane = new JTabbedPane();
+        jobTabsContainer.add(jobTabsPane);
         jobTabsPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
         JPanel jobButtonContainer = new JPanel(new GridLayout(1,2));
@@ -582,7 +586,7 @@ public class SimpleIntegrationWizard {
         mainContainer.add(jobButtonContainer);
 
         JPanel authenticationDetailsPanel = generateAuthenticationDetailsFormPanel();
-		mainContainer.add(authenticationDetailsPanel);
+        mainContainer.add(authenticationDetailsPanel);
 
         URL logoImageURL = getClass().getResource(LOGO_FILE_PATH);
         if(logoImageURL != null) {
@@ -596,7 +600,7 @@ public class SimpleIntegrationWizard {
 
         addJobTab(getNewIntegrationJob());
         return mainContainer;
-	}
+    }
 
     private void generateLoadingNotice() {
         loadingNoticePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -611,7 +615,7 @@ public class SimpleIntegrationWizard {
     }
 
     private JPanel generatePreferencesPanel() {
-		JPanel prefsPanel = new JPanel(new GridLayout(0,2));
+        JPanel prefsPanel = new JPanel(new GridLayout(0,2));
 
         // File chunking settings
         JLabel fileChunkingSettingsLabel = new JLabel(" File Chunking Settings");
@@ -647,56 +651,56 @@ public class SimpleIntegrationWizard {
         prefsPanel.add(loggingAutoEmailSettingsLabel);
         prefsPanel.add(new JLabel(""));
 
-		prefsPanel.add(new JLabel(" Log Dataset ID (e.g., n38h-y5wp)"));
-		logDatasetIDTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
-		prefsPanel.add(logDatasetIDTextField);
+        prefsPanel.add(new JLabel(" Log Dataset ID (e.g., n38h-y5wp)"));
+        logDatasetIDTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(logDatasetIDTextField);
 
-		prefsPanel.add(new JLabel(" Admin Email"));
-		adminEmailTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
-		prefsPanel.add(adminEmailTextField);
+        prefsPanel.add(new JLabel(" Admin Email"));
+        adminEmailTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(adminEmailTextField);
 
-		emailUponErrorCheckBox = new JCheckBox(" Auto-email admin upon error");
-		prefsPanel.add(emailUponErrorCheckBox);
-		prefsPanel.add(new JLabel("*must fill in SMTP Settings below"));
+        emailUponErrorCheckBox = new JCheckBox(" Auto-email admin upon error");
+        prefsPanel.add(emailUponErrorCheckBox);
+        prefsPanel.add(new JLabel("*must fill in SMTP Settings below"));
 
         // Auto-email SMTP settings
-		JLabel smtpSettingsLabel = new JLabel(" SMTP Settings");
-		smtpSettingsLabel.setFont(boldFont);
-		prefsPanel.add(smtpSettingsLabel);
-		prefsPanel.add(new JLabel(""));
+        JLabel smtpSettingsLabel = new JLabel(" SMTP Settings");
+        smtpSettingsLabel.setFont(boldFont);
+        prefsPanel.add(smtpSettingsLabel);
+        prefsPanel.add(new JLabel(""));
 
-		prefsPanel.add(new JLabel(" Outgoing Mail Server"));
-		outgoingMailServerTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
-		prefsPanel.add(outgoingMailServerTextField);
-		prefsPanel.add(new JLabel(" SMTP Port"));
-		smtpPortTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
-		prefsPanel.add(smtpPortTextField);
-		final JPanel sslPortContainer = new JPanel(
-				new FlowLayout(FlowLayout.LEFT, 0, 0));
-		sslPortContainer.setVisible(false);
-		useSSLCheckBox = new JCheckBox("Use SSL");
-		prefsPanel.add(useSSLCheckBox);
-		sslPortContainer.add(new JLabel(" SSL Port  "));
-		sslPortTextField = new JTextField();
-		sslPortTextField.setPreferredSize(new Dimension(
-				50, SSL_PORT_TEXTFIELD_HEIGHT));
-		sslPortContainer.add(sslPortTextField);
-		useSSLCheckBox.addItemListener(new ItemListener() {
-		    public void itemStateChanged(ItemEvent e) {
-		    	if(useSSLCheckBox.isSelected()) {
-		    		sslPortContainer.setVisible(true);
-		    	} else {
-		    		sslPortContainer.setVisible(false);
-		    	}
-		    }
-		});
-		prefsPanel.add(sslPortContainer);
-		prefsPanel.add(new JLabel(" SMTP Username"));
-		smtpUsernameTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
-		prefsPanel.add(smtpUsernameTextField);
-		prefsPanel.add(new JLabel(" SMTP Password"));
-		smtpPasswordField = new JPasswordField(DEFAULT_TEXTFIELD_COLS);
-		prefsPanel.add(smtpPasswordField);
+        prefsPanel.add(new JLabel(" Outgoing Mail Server"));
+        outgoingMailServerTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(outgoingMailServerTextField);
+        prefsPanel.add(new JLabel(" SMTP Port"));
+        smtpPortTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(smtpPortTextField);
+        final JPanel sslPortContainer = new JPanel(
+                new FlowLayout(FlowLayout.LEFT, 0, 0));
+        sslPortContainer.setVisible(false);
+        useSSLCheckBox = new JCheckBox("Use SSL");
+        prefsPanel.add(useSSLCheckBox);
+        sslPortContainer.add(new JLabel(" SSL Port  "));
+        sslPortTextField = new JTextField();
+        sslPortTextField.setPreferredSize(new Dimension(
+                50, SSL_PORT_TEXTFIELD_HEIGHT));
+        sslPortContainer.add(sslPortTextField);
+        useSSLCheckBox.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+                if(useSSLCheckBox.isSelected()) {
+                    sslPortContainer.setVisible(true);
+                } else {
+                    sslPortContainer.setVisible(false);
+                }
+            }
+        });
+        prefsPanel.add(sslPortContainer);
+        prefsPanel.add(new JLabel(" SMTP Username"));
+        smtpUsernameTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(smtpUsernameTextField);
+        prefsPanel.add(new JLabel(" SMTP Password"));
+        smtpPasswordField = new JPasswordField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(smtpPasswordField);
 
 
         // Proxy settings
@@ -724,39 +728,39 @@ public class SimpleIntegrationWizard {
         testSMTPSettingsContainer.add(testSMTPSettingsButton);
         prefsPanel.add(testSMTPSettingsContainer);
 
-		JPanel prefsButtonContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		JButton cancelPrefsButton = new JButton("Cancel");
-		cancelPrefsButton.addActionListener(new CancelPreferencesListener());
-		prefsButtonContainer.add(cancelPrefsButton);
-		JButton savePrefsButton = new JButton("Save");
-		savePrefsButton.addActionListener(new SavePreferencesListener());
-		prefsButtonContainer.add(savePrefsButton);
-		prefsPanel.add(prefsButtonContainer);
+        JPanel prefsButtonContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton cancelPrefsButton = new JButton("Cancel");
+        cancelPrefsButton.addActionListener(new CancelPreferencesListener());
+        prefsButtonContainer.add(cancelPrefsButton);
+        JButton savePrefsButton = new JButton("Save");
+        savePrefsButton.addActionListener(new SavePreferencesListener());
+        prefsButtonContainer.add(savePrefsButton);
+        prefsPanel.add(prefsButtonContainer);
 
-		loadPreferencesIntoForm();
+        loadPreferencesIntoForm();
 
-		return prefsPanel;
-	}
+        return prefsPanel;
+    }
 
-	private void loadPreferencesIntoForm() {
+    private void loadPreferencesIntoForm() {
         filesizeChunkingCutoffTextField.setText(userPrefs.getFilesizeChunkingCutoffMB());
         numRowsPerChunkTextField.setText(userPrefs.getNumRowsPerChunk());
 
-		adminEmailTextField.setText(userPrefs.getAdminEmail());
-		logDatasetIDTextField.setText(userPrefs.getLogDatasetID());
-		emailUponErrorCheckBox.setSelected(userPrefs.emailUponError());
+        adminEmailTextField.setText(userPrefs.getAdminEmail());
+        logDatasetIDTextField.setText(userPrefs.getLogDatasetID());
+        emailUponErrorCheckBox.setSelected(userPrefs.emailUponError());
 
-		outgoingMailServerTextField.setText(userPrefs.getOutgoingMailServer());
-		smtpPortTextField.setText(userPrefs.getSmtpPort());
+        outgoingMailServerTextField.setText(userPrefs.getOutgoingMailServer());
+        smtpPortTextField.setText(userPrefs.getSmtpPort());
         String sslPort = userPrefs.getSslPort();
-		sslPortTextField.setText(sslPort);
-		if(sslPort.equals("")) {
-			useSSLCheckBox.setSelected(false);
-		} else {
-			useSSLCheckBox.setSelected(true);
-		}
-		smtpUsernameTextField.setText(userPrefs.getSmtpUsername());
-		smtpPasswordField.setText(userPrefs.getSmtpPassword());
+        sslPortTextField.setText(sslPort);
+        if(sslPort.equals("")) {
+            useSSLCheckBox.setSelected(false);
+        } else {
+            useSSLCheckBox.setSelected(true);
+        }
+        smtpUsernameTextField.setText(userPrefs.getSmtpUsername());
+        smtpPasswordField.setText(userPrefs.getSmtpPassword());
 
         proxyHostTextField.setText(userPrefs.getProxyHost());
         proxyPortTextField.setText(userPrefs.getProxyPort());
@@ -765,7 +769,7 @@ public class SimpleIntegrationWizard {
 
     }
 
-	private void savePreferences() {
+    private void savePreferences() {
         try {
             userPrefs.saveFilesizeChunkingCutoffMB(
                     Integer.parseInt(filesizeChunkingCutoffTextField.getText()));
@@ -779,20 +783,20 @@ public class SimpleIntegrationWizard {
             JOptionPane.showMessageDialog(prefsFrame, "Invalid chunk size: must be an integer");
         }
 
-		userPrefs.saveAdminEmail(adminEmailTextField.getText());
-		userPrefs.saveLogDatasetID(logDatasetIDTextField.getText());
-		userPrefs.saveEmailUponError(emailUponErrorCheckBox.isSelected());
+        userPrefs.saveAdminEmail(adminEmailTextField.getText());
+        userPrefs.saveLogDatasetID(logDatasetIDTextField.getText());
+        userPrefs.saveEmailUponError(emailUponErrorCheckBox.isSelected());
 
-		userPrefs.saveOutgoingMailServer(outgoingMailServerTextField.getText());
-		userPrefs.saveSMTPPort(smtpPortTextField.getText());
-		if(useSSLCheckBox.isSelected()) {
-			userPrefs.saveSSLPort(sslPortTextField.getText());
-		} else {
-			userPrefs.saveSSLPort("");
-		}
-		userPrefs.saveSMTPUsername(smtpUsernameTextField.getText());
-		String smtpPassword = new String(smtpPasswordField.getPassword());
-    	userPrefs.saveSMTPPassword(smtpPassword);
+        userPrefs.saveOutgoingMailServer(outgoingMailServerTextField.getText());
+        userPrefs.saveSMTPPort(smtpPortTextField.getText());
+        if(useSSLCheckBox.isSelected()) {
+            userPrefs.saveSSLPort(sslPortTextField.getText());
+        } else {
+            userPrefs.saveSSLPort("");
+        }
+        userPrefs.saveSMTPUsername(smtpUsernameTextField.getText());
+        String smtpPassword = new String(smtpPasswordField.getPassword());
+        userPrefs.saveSMTPPassword(smtpPassword);
 
         userPrefs.saveProxyHost(proxyHostTextField.getText());
         userPrefs.saveProxyPort(proxyPortTextField.getText());
@@ -801,66 +805,66 @@ public class SimpleIntegrationWizard {
 
     }
 
-	private class SavePreferencesListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			// TODO validation of email and log dataset ID
-			savePreferences();
-			prefsFrame.setVisible(false);
-		}
-	}
+    private class SavePreferencesListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            // TODO validation of email and log dataset ID
+            savePreferences();
+            prefsFrame.setVisible(false);
+        }
+    }
 
-	private class CancelPreferencesListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			loadPreferencesIntoForm();
-			prefsFrame.setVisible(false);
-		}
-	}
+    private class CancelPreferencesListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            loadPreferencesIntoForm();
+            prefsFrame.setVisible(false);
+        }
+    }
 
-	private class TestSMTPSettingsListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			savePreferences();
-			String adminEmail = userPrefs.getAdminEmail();
-			String message;
-			try {
-				SMTPMailer.send(adminEmail, "Socrata DataSync Test Email",
-						"This email confirms that your SMTP Settings are valid.");
-				message = "Sent test email to " + adminEmail + ". Please ensure the "
-						+ "email was delievered successfully (it may take a few minutes).";
-			} catch (Exception emailE) {
-				message = "Error sending email to " + adminEmail + ":\n" + emailE.getMessage();
-			}
-			JOptionPane.showMessageDialog(prefsFrame, message);
-		}
-	}
+    private class TestSMTPSettingsListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            savePreferences();
+            String adminEmail = userPrefs.getAdminEmail();
+            String message;
+            try {
+                SMTPMailer.send(adminEmail, "Socrata DataSync Test Email",
+                        "This email confirms that your SMTP Settings are valid.");
+                message = "Sent test email to " + adminEmail + ". Please ensure the "
+                        + "email was delievered successfully (it may take a few minutes).";
+            } catch (Exception emailE) {
+                message = "Error sending email to " + adminEmail + ":\n" + emailE.getMessage();
+            }
+            JOptionPane.showMessageDialog(prefsFrame, message);
+        }
+    }
 
-	private class OpenPreferencesListener implements ActionListener {
-		public void actionPerformed(ActionEvent e) {
-			// centers the window
-			prefsFrame.setLocationRelativeTo(null);
-			prefsFrame.setVisible(true);
-		}
-	}
+    private class OpenPreferencesListener implements ActionListener {
+        public void actionPerformed(ActionEvent e) {
+            // centers the window
+            prefsFrame.setLocationRelativeTo(null);
+            prefsFrame.setVisible(true);
+        }
+    }
 
-	private JPanel generateAuthenticationDetailsFormPanel() {
-		JPanel authenticationDetailsPanel = new JPanel(new GridLayout(0,2));
+    private JPanel generateAuthenticationDetailsFormPanel() {
+        JPanel authenticationDetailsPanel = new JPanel(new GridLayout(0,2));
 
         authenticationDetailsPanel.add(
                 UIUtility.generateLabelWithHelpBubble("Domain", DOMAIN_TIP_TEXT));
-		domainTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
-		authenticationDetailsPanel.add(domainTextField);
-		authenticationDetailsPanel.add(
+        domainTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        authenticationDetailsPanel.add(domainTextField);
+        authenticationDetailsPanel.add(
                 UIUtility.generateLabelWithHelpBubble("Username", USERNAME_TIP_TEXT));
-		usernameTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
-		authenticationDetailsPanel.add(usernameTextField);
-		authenticationDetailsPanel.add(
+        usernameTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        authenticationDetailsPanel.add(usernameTextField);
+        authenticationDetailsPanel.add(
                 UIUtility.generateLabelWithHelpBubble("Password", PASSWORD_TIP_TEXT));
-		passwordField = new JPasswordField(DEFAULT_TEXTFIELD_COLS);
-		authenticationDetailsPanel.add(passwordField);
-		authenticationDetailsPanel.add(
+        passwordField = new JPasswordField(DEFAULT_TEXTFIELD_COLS);
+        authenticationDetailsPanel.add(passwordField);
+        authenticationDetailsPanel.add(
                 UIUtility.generateLabelWithHelpBubble("App Token", APP_TOKEN_TIP_TEXT));
-		apiKeyTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
-		authenticationDetailsPanel.add(apiKeyTextField);
-		authenticationDetailsPanel.setPreferredSize(AUTH_DETAILS_DIMENSION);
+        apiKeyTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        authenticationDetailsPanel.add(apiKeyTextField);
+        authenticationDetailsPanel.setPreferredSize(AUTH_DETAILS_DIMENSION);
 
         AuthenticationDetailsFocusListener focusListener = new AuthenticationDetailsFocusListener();
         domainTextField.addFocusListener(focusListener);
@@ -868,36 +872,36 @@ public class SimpleIntegrationWizard {
         passwordField.addFocusListener(focusListener);
         apiKeyTextField.addFocusListener(focusListener);
 
-		return authenticationDetailsPanel;
-	}
+        return authenticationDetailsPanel;
+    }
 
-	/**
-	 * Ensures consistency of fields within job tabs
-	 * @return true if no issues were found, false otherwise
-	 */
-	private boolean jobTabsValid() {
+    /**
+     * Ensures consistency of fields within job tabs
+     * @return true if no issues were found, false otherwise
+     */
+    private boolean jobTabsValid() {
         return (jobTabsPane.getTabCount() == jobTabs.size());
-	}
+    }
 
     /**
      * Saves user authentication data input into form
      */
     private void saveAuthenticationInfoFromForm() {
-    	userPrefs.saveDomain(domainTextField.getText());
-    	userPrefs.saveUsername(usernameTextField.getText());
-		String password = new String(passwordField.getPassword());
-    	userPrefs.savePassword(password);
-    	userPrefs.saveAPIKey(apiKeyTextField.getText());
+        userPrefs.saveDomain(domainTextField.getText());
+        userPrefs.saveUsername(usernameTextField.getText());
+        String password = new String(passwordField.getPassword());
+        userPrefs.savePassword(password);
+        userPrefs.saveAPIKey(apiKeyTextField.getText());
     }
 
     /**
      * Loads user authentication data from userPrefs
      */
     private void loadAuthenticationInfoIntoForm() {
-    	domainTextField.setText(userPrefs.getDomain());
-		usernameTextField.setText(userPrefs.getUsername());
-		passwordField.setText(userPrefs.getPassword());
-		apiKeyTextField.setText(userPrefs.getAPIKey());
+        domainTextField.setText(userPrefs.getDomain());
+        usernameTextField.setText(userPrefs.getUsername());
+        passwordField.setText(userPrefs.getPassword());
+        apiKeyTextField.setText(userPrefs.getAPIKey());
     }
 
 }

@@ -4,7 +4,7 @@ package com.socrata.datasync.job;
  * @author Adrian Laurenzi
  */
 public enum JobStatus {
-	/**
+    /**
      * Job completed
      */
     SUCCESS("Success", false),
@@ -57,7 +57,7 @@ public enum JobStatus {
     INVALID_FILE("Invalid file or file type", true),
 
     NOT_A_GEO_DATASET("The dataset you chose is not a geo dataset", true);
-	
+
     /**
      * The human-readable message to store.
      */
@@ -90,7 +90,7 @@ public enum JobStatus {
 
 
     public void setMessage(final String newMessage) {
-    	message = newMessage;
+        message = newMessage;
     }
 
     /**

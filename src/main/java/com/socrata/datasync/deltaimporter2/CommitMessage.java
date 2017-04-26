@@ -7,7 +7,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import java.util.List;
 
 @JsonPropertyOrder(alphabetic=true)
-public class CommitMessage {
+public class CommitMessage<T> {
     public String filename;
     public String relativeTo;
     public List<String> chunks;
@@ -16,16 +16,16 @@ public class CommitMessage {
     public Long expectedSize;
 
     @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
-    public ControlFile control;
+    public T control;
 
     // Builder methods
-    public CommitMessage filename(String f) { filename = f; return this; }
+    public CommitMessage<T> filename(String f) { filename = f; return this; }
 
-    public CommitMessage relativeTo(String r) { relativeTo = r; return this; }
+    public CommitMessage<T> relativeTo(String r) { relativeTo = r; return this; }
 
-    public CommitMessage chunks(List<String> c) { chunks = c; return this; }
+    public CommitMessage<T> chunks(List<String> c) { chunks = c; return this; }
 
-    public CommitMessage control(ControlFile c) { control = c; return this; }
+    public CommitMessage<T> control(T c) { control = c; return this; }
 
-    public CommitMessage expectedSize(Long s) { expectedSize = s; return this; }
+    public CommitMessage<T> expectedSize(Long s) { expectedSize = s; return this; }
 }

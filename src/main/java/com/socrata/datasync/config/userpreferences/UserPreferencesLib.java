@@ -52,7 +52,7 @@ public class UserPreferencesLib implements UserPreferences {
 
     public String getDomain() {
         if(domain == null) return null;
-        return domain.trim();
+        return UserPreferencesUtil.prefixDomain(domain.trim());
     }
 
     public void setDomain(String domain) {

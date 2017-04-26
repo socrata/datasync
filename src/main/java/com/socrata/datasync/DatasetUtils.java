@@ -108,10 +108,14 @@ public class DatasetUtils {
         return sample;
     }
 
-    private static String getDomainWithoutScheme(UserPreferences userPrefs){
-        String[] schemaAndDomain = userPrefs.getDomain().trim().split("//");
-        String justDomain = schemaAndDomain[schemaAndDomain.length -1];
-        return justDomain;
+    public static String getDomainWithoutScheme(UserPreferences userPrefs){
+        return getDomainWithoutScheme(userPrefs.getDomain());
+    }
+
+    public static String getDomainWithoutScheme(String domain){
+        String[] schemaAndDomain = domain.trim().split("//");
+        String justDomain = schemaAndDomain[schemaAndDomain.length - 1];
+        return justDomain.split("[/:]")[0];
     }
 
 

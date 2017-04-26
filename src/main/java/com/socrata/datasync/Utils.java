@@ -2,6 +2,7 @@ package com.socrata.datasync;
 
 import au.com.bytecode.opencsv.CSVReader;
 import com.socrata.datasync.config.controlfile.FileTypeControl;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
 
 import java.awt.Desktop;
 import java.io.FileInputStream;
@@ -12,6 +13,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
@@ -20,7 +22,14 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.entity.ContentType;
+import org.apache.http.Header;
+
 public class Utils {
+
+    private static final String VERSION_API_ENDPOINT = "/api/version.json";
+    private static final String X_SOCRATA_REGION = "X-Socrata-Region";
 
     public static final String BOM = "\uFEFF";
 
@@ -222,6 +231,19 @@ public class Utils {
         } catch (Exception e) {
             return "DataSync/" + VersionProvider.getThisVersion() +
                     " (" + agentName + "; Error obtaining OS/Java/Locale info)";
+        }
+    }
+
+    public static String regionOfDomain(UserPreferences userPrefs, String domain) throws URISyntaxException, IOException {
+        HttpUtility http = new HttpUtility(userPrefs, false);
+        URI versionApiUri = new URI("https://" + DatasetUtils.getDomainWithoutScheme(domain) + VERSION_API_ENDPOINT);
+        try(CloseableHttpResponse response = http.get(versionApiUri, ContentType.APPLICATION_JSON.getMimeType())) {
+            Header[] headers = response.getHeaders(X_SOCRATA_REGION);
+            if(headers.length == 0) {
+                return "development";
+            } else {
+                return headers[0].getValue();
+            }
         }
     }
 }

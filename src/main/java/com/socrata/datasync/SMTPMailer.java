@@ -21,9 +21,9 @@ import javax.mail.internet.MimeMessage;
  * @author doraemon
  */
 public class SMTPMailer {
-	
+
     private SMTPMailer() {
-    	
+
     }
 
     /**
@@ -34,11 +34,11 @@ public class SMTPMailer {
      * @param title title of the message
      * @param message message to be sent
      * @throws AddressException if the email address parse failed
-     * @throws MessagingException if the connection is dead or not in the connected state 
-     * 							   or if the message is not a MimeMessage
+     * @throws MessagingException if the connection is dead or not in the connected state
+     *                                or if the message is not a MimeMessage
      */
     public static void send(String recipientEmail, String title, String message)
-    		throws AddressException, MessagingException {
+            throws AddressException, MessagingException {
         SMTPMailer.send(recipientEmail, "", title, message);
     }
 
@@ -51,12 +51,12 @@ public class SMTPMailer {
      * @param message message to be sent
      * @throws AddressException if the email address parse failed
      * @throws MessagingException if the connection is dead or not in the connected state
-     * 							   or if the message is not a MimeMessage
+     *                                or if the message is not a MimeMessage
      */
-    public static void send(String recipientEmail, String ccEmail, String title, String message) 
-    		throws AddressException, MessagingException {
-    	UserPreferences userPrefs = new UserPreferencesJava();
-    	
+    public static void send(String recipientEmail, String ccEmail, String title, String message)
+            throws AddressException, MessagingException {
+        UserPreferences userPrefs = new UserPreferencesJava();
+
         //Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
         final String SSL_FACTORY = "javax.net.ssl.SSLSocketFactory";
 
@@ -72,8 +72,8 @@ public class SMTPMailer {
 
         if(useSSL) {
 
-        	props.setProperty("mail.smtp.socketFactory.class", SSL_FACTORY);
-        	props.setProperty("mail.smtp.socketFactory.port", sslPort);
+            props.setProperty("mail.smtp.socketFactory.class", SSL_FACTORY);
+            props.setProperty("mail.smtp.socketFactory.port", sslPort);
             props.setProperty("mail.smtps.auth", "true");
             /*
         If set to false, the QUIT command is sent and the connection is immediately closed. If set
@@ -107,9 +107,9 @@ public class SMTPMailer {
         SMTPTransport t = (SMTPTransport)session.getTransport("smtp");
         if (useSSL)
             t = (SMTPTransport)session.getTransport("smtps");
-        
+
         t.connect(userPrefs.getOutgoingMailServer(), userPrefs.getSmtpUsername(), userPrefs.getSmtpPassword());
-        t.sendMessage(msg, msg.getAllRecipients());      
+        t.sendMessage(msg, msg.getAllRecipients());
         t.close();
     }
 }

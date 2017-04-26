@@ -84,6 +84,7 @@ public class GISJob extends Job {
 
         loadedJob = mapper.readValue(new File(pathToFile), GISJob.class);
 
+        loadedJob.setPathToSavedFile(pathToFile);
         setDatasetID(loadedJob.getDatasetID());
         setFileToPublish(loadedJob.getFileToPublish());
         setPublishMethod(loadedJob.getPublishMethod());

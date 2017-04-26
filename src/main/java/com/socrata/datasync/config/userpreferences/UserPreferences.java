@@ -7,7 +7,6 @@ import com.socrata.datasync.SocrataConnectionInfo;
  * Date: 12/2/13
  */
 public interface UserPreferences {
-
     public String getDomain();
 
     public String getHost();
