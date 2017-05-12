@@ -25,8 +25,10 @@ public class PortControlFile {
     @JsonPropertyOrder(alphabetic=true)
     public static class CopyData implements CopyType {
         public final String type;
-        public CopyData() {
+        public String destinationDataset;
+        public CopyData(String destinationDataset) {
             this.type = "data";
+            this.destinationDataset = destinationDataset;
         }
     }
 
@@ -58,6 +60,7 @@ public class PortControlFile {
 
     public PortControlFile(String destinationDomain,
                            String destinationName,
+                           String destinationDataset,
                            boolean toNbe,
                            PortMethod copyType,
                            Boolean publish)
@@ -68,7 +71,7 @@ public class PortControlFile {
 
         switch(copyType) {
         case copy_data:
-            this.copyType = new CopyData();
+            this.copyType = new CopyData(destinationDataset);
             break;
         case copy_schema:
             this.copyType = new CopySchema(toNbe);

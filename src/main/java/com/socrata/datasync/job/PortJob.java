@@ -307,6 +307,7 @@ public class PortJob extends Job {
                 try {
                     PortControlFile control = new PortControlFile(new URI("https://" + DatasetUtils.getDomainWithoutScheme(sinkSiteDomain)).getHost(),
                                                                   destinationDatasetTitle,
+                                                                  sinkSetID,
                                                                   userPrefs.getUseNewBackend(),
                                                                   portMethod,
                                                                   publishDataset.equals(PublishDataset.publish));
