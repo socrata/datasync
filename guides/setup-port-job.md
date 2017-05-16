@@ -4,7 +4,7 @@ title: Setup a Port Job (GUI)
 bodyclass: homepage
 ---
 
-Port jobs are used for copying datasets that are already on the Socrata platform. Port jobs allow users with publishing rights to copy both dataset schemas (metadata and columns) and data (rows). This guide shows how to setup and run a Port Job using the graphical user interface.
+Port jobs are used for copying datasets that are already on the Socrata platform. Port jobs allow users with publishing rights to copy both dataset schemas (metadata and columns) and data (rows). Port jobs also allow users to port derived views as stand-alone datasets. This guide shows how to setup and run a Port Job using the graphical user interface.
 
 ### Step 1: Download DataSync
 Navigate to the DataSync [download page](https://github.com/socrata/datasync/releases), and download the latest version.

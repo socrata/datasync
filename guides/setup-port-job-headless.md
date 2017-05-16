@@ -4,7 +4,7 @@ title: Setup a Port Job (Headlessly)
 bodyclass: homepage
 ---
 
-Port jobs are used for copying datasets that are already on the Socrata platform. Port jobs allow users with publishing rights to copy both dataset schemas (metadata and columns) and data (rows).  This guide shows how to setup and run a Port Job using the command line interface.
+Port jobs are used for copying datasets that are already on the Socrata platform. Port jobs allow users with publishing rights to copy both dataset schemas (metadata and columns) and data (rows). Port jobs also allow users to port derived views as stand-alone datasets. This guide shows how to setup and run a Port Job using the command line interface.
 
 ### Step 1: Setup your configuration
 Information about your domain, username, password and app token is required for all DataSync jobs.  Note that the user running the job must have publisher rights on the dataset. A number of other global settings, such as logging and emailing preferences can also be configured.  Please refer to the [configuration guide]({{ site.baseurl }}/resources/preferences-config.html) to establish your credentials and preferences.
