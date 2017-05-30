@@ -91,10 +91,16 @@ public class SMTPMailer {
         // -- Create a new message --
         final MimeMessage msg = new MimeMessage(session);
 
-        // -- Set the FROM and TO fields --
+        // -- Set the FROM field --
+        String sender;
         if (userPrefs.getSmtpUsername() != null && !userPrefs.getSmtpUsername().isEmpty()) {
-            msg.setFrom(new InternetAddress(userPrefs.getSmtpUsername()));
+            sender = userPrefs.getSmtpUsername();
+        } else {
+            sender = "no-reply@" + DatasetUtils.getDomainWithoutScheme(userPrefs);
         }
+        msg.setFrom(new InternetAddress(sender));
+
+        // -- Set the TO field --
         msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail, false));
 
         if (ccEmail.length() > 0) {
