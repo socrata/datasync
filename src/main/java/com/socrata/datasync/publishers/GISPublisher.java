@@ -54,9 +54,8 @@ public class GISPublisher {
                                             String datasetID,
                                             Map<String, String> layerMap) {
         try {
-            if (blueprint.getError() != null) {
-                String message = blueprint.getError().getMessage();
-                System.out.println(message);
+            if (blueprint.getError()) {
+                String message = blueprint.getMessage();
                 JobStatus status = JobStatus.PUBLISH_ERROR;
                 status.setMessage(message);
                 return status;
