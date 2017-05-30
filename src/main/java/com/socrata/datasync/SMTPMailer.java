@@ -92,7 +92,9 @@ public class SMTPMailer {
         final MimeMessage msg = new MimeMessage(session);
 
         // -- Set the FROM and TO fields --
-        msg.setFrom(new InternetAddress(userPrefs.getSmtpUsername()));
+        if (userPrefs.getSmtpUsername() != null && !userPrefs.getSmtpUsername().isEmpty()) {
+            msg.setFrom(new InternetAddress(userPrefs.getSmtpUsername()));
+        }
         msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail, false));
 
         if (ccEmail.length() > 0) {
