@@ -302,8 +302,8 @@ public class PortJobTab implements JobTab {
             // Update job tab title label
             jobTabTitleLabel.setText(newPortJob.getJobFilename());
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(mainFrame,
-                    "Error saving " + selectedJobFileLocation + ": " + e.getMessage());
+            UIUtility.showErrorDialog("An error occurred while saving " +
+                    selectedJobFileLocation + ".", e, mainFrame);
         }
     }
 

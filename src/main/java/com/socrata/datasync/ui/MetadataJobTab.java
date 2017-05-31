@@ -270,8 +270,8 @@ public class MetadataJobTab implements JobTab {
                 runCommandTextField.setText(runJobCommand);
             }
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(mainFrame,
-                    "Error saving " + selectedJobFileLocation + ": " + e.getMessage());
+            UIUtility.showErrorDialog("An error occurred while saving " +
+                    selectedJobFileLocation + ".", e, mainFrame);
         }
     }
 

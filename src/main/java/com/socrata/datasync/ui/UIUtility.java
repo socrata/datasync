@@ -10,6 +10,10 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * Author: Adrian Laurenzi
@@ -90,6 +94,34 @@ public class UIUtility {
         constraints.anchor = GridBagConstraints.LINE_START;
         constraints.ipadx = 10;
         return constraints;
+    }
+
+    public static void showErrorDialog(String errorText, Exception e, Component dialogParent) {
+        final String stackTrace = getStackTraceString(e);
+
+        JTextArea textArea = new JTextArea(stackTrace);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(scrollPane.getWidth(), 100));
+
+        JButton copyButton = new JButton("Copy error to clipboard");
+        copyButton.setPreferredSize(new Dimension(50, 30));
+        copyButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                copyToClipboard(stackTrace);
+            }
+        });
+
+        String contactText = "Please contact support@socrata.com with " +
+                "the following diagnostic information.";
+        Object[] dialogElements = new Object[] { errorText, contactText, copyButton, scrollPane};
+        JOptionPane.showMessageDialog(dialogParent, dialogElements);
+    }
+
+    static String getStackTraceString(Exception e) {
+        StringWriter errors = new StringWriter();
+        e.printStackTrace(new PrintWriter(errors));
+        return errors.toString();
     }
 
     /**

@@ -830,10 +830,11 @@ public class SimpleIntegrationWizard {
                         "This email confirms that your SMTP Settings are valid.");
                 message = "Sent test email to " + adminEmail + ". Please ensure the "
                         + "email was delievered successfully (it may take a few minutes).";
+                JOptionPane.showMessageDialog(prefsFrame, message);
             } catch (Exception emailE) {
-                message = "Error sending email to " + adminEmail + ":\n" + emailE.getMessage();
+                UIUtility.showErrorDialog("An error occurred while sending email to " +
+                        adminEmail + ".", emailE, prefsFrame);
             }
-            JOptionPane.showMessageDialog(prefsFrame, message);
         }
     }
 

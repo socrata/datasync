@@ -129,7 +129,7 @@ public class GISJobTab implements JobTab {
 
             jobTabTitleLabel = new JLabel(job.getJobFilename());
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage());
+            UIUtility.showErrorDialog("An error occurred while loading the saved job.", e, mainFrame);
         }
     }
 
@@ -201,8 +201,8 @@ public class GISJobTab implements JobTab {
                 runCommandTextField.setText(runJobCommand);
             }
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(mainFrame,
-                                          "Error saving " + selectedJobFileLocation + ": " + e.getMessage());
+            UIUtility.showErrorDialog("An error occurred while saving " +
+                    selectedJobFileLocation + ".", e, mainFrame);
         }
     }
 

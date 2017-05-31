@@ -1,6 +1,5 @@
 package com.socrata.datasync.ui;
 
-import com.socrata.datasync.*;
 import com.socrata.datasync.DatasetUtils;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.datasync.Utils;
@@ -8,16 +7,13 @@ import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
-import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.model.ControlFileModel;
 import com.socrata.datasync.model.DatasetModel;
 import com.socrata.datasync.validation.IntegrationJobValidity;
 import com.socrata.exceptions.LongRunningQueryException;
-import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.Dataset;
 import org.apache.http.HttpException;
-import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -25,10 +21,8 @@ import org.codehaus.jackson.map.SerializationConfig;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.dnd.InvalidDnDOperationException;
 import java.awt.event.*;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
@@ -268,8 +262,8 @@ public class IntegrationJobTab implements JobTab {
 
             jobTabTitleLabel = new JLabel(job.getJobFilename());
         }
-        catch (Exception e){
-            JOptionPane.showMessageDialog(mainFrame, "Error: " + e.getMessage());
+        catch (Exception e) {
+            UIUtility.showErrorDialog("An error occurred while loading the saved job.", e, mainFrame);
         }
     }
 
@@ -379,8 +373,8 @@ public class IntegrationJobTab implements JobTab {
                 runCommandTextField.setText(runJobCommand);
             }
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(mainFrame,
-                    "Error saving " + selectedJobFileLocation + ": " + e.getMessage());
+            UIUtility.showErrorDialog("An error occurred while saving " +
+                    selectedJobFileLocation + ".", e, mainFrame);
         }
     }
 
@@ -495,13 +489,9 @@ public class IntegrationJobTab implements JobTab {
 
                             updateControlFileModel(controlFile,datasetIDTextField.getText());
                         }
-
-                        ControlFileEditDialog editorFrame = new ControlFileEditDialog(controlFileModel,mainFrame);
-
                     } catch (Exception e) {
-                        e.printStackTrace();
-                        generateControlFileErrorMessage = "Error generating control file: " + e.getMessage();
-                        JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
+                        String errorText = "An error occurred while generating the control file.";
+                        UIUtility.showErrorDialog(errorText, e, mainFrame);
                     }
                 }
 
