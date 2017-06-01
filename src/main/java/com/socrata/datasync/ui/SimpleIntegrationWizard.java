@@ -8,6 +8,7 @@ import javax.swing.border.Border;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.socrata.datasync.*;
+import com.socrata.datasync.exceptions.ControlDisagreementException;
 import com.socrata.datasync.job.IntegrationJob;
 import com.socrata.datasync.job.Job;
 import com.socrata.datasync.job.JobStatus;
@@ -336,19 +337,19 @@ public class SimpleIntegrationWizard {
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File openedFile = savedJobFileChooser.getSelectedFile();
                 // Ensure file exists
-                if(openedFile.exists()) {
+                if (openedFile.exists()) {
                     openToDirectory = savedJobFileChooser.getCurrentDirectory();
                     // ensure this job is not already open
                     String openedFileLocation = openedFile.getAbsolutePath();
                     int indexOfAlreadyOpenFile = -1;
-                    for(int curTabIndex = 0; curTabIndex < jobTabs.size(); curTabIndex++) {
+                    for (int curTabIndex = 0; curTabIndex < jobTabs.size(); curTabIndex++) {
                         String curTabJobFileLocation = jobTabs.get(curTabIndex).getJobFileLocation();
                         if(curTabJobFileLocation.equals(openedFileLocation)) {
                             indexOfAlreadyOpenFile = curTabIndex;
                             break;
                         }
                     }
-                    if(indexOfAlreadyOpenFile == -1) {
+                    if (indexOfAlreadyOpenFile == -1) {
                         try {
                             int i = openedFileLocation.lastIndexOf('.');
                             if (i > 0) {
@@ -367,7 +368,7 @@ public class SimpleIntegrationWizard {
                             }
                             // Switch to opened file's tab
                             jobTabsPane.setSelectedIndex(jobTabsPane.getTabCount() - 1);
-                        } catch(IntegrationJob.ControlDisagreementException ex) {
+                        } catch (ControlDisagreementException ex) {
                             JOptionPane.showMessageDialog(frame, "Warning: \n" + ex.getMessage() + " found in \n'" +
                                 openedFileLocation + "'. \nLoading job, but please confirm the contents of your control file are accurate.");
                             try {
@@ -376,7 +377,7 @@ public class SimpleIntegrationWizard {
                             } catch(Exception e2) {
                                 JOptionPane.showMessageDialog(frame, "Error opening " + openedFileLocation + ": " + e2.toString());
                             }
-                        } catch(Exception e2) {
+                        } catch (Exception e2) {
                             JOptionPane.showMessageDialog(frame, "Error opening " + openedFileLocation + ": " + e2.toString());
                         }
                     } else {

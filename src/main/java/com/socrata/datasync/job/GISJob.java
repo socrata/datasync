@@ -1,11 +1,11 @@
 package com.socrata.datasync.job;
 
-import com.socrata.api.SodaImporter;
 import com.socrata.datasync.*;
 import com.socrata.datasync.config.CommandLineOptions;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
+import com.socrata.datasync.exceptions.ControlDisagreementException;
 import com.socrata.datasync.publishers.GISPublisher;
 import com.socrata.datasync.validation.GISJobValidity;
 import com.socrata.model.importer.Dataset;
@@ -333,12 +333,6 @@ public class GISJob extends Job {
         if (userPrefs.emailUponError() && adminEmail != null && !adminEmail.equals("")) {
             sendErrorNotificationEmail(
                 adminEmail, connectionInfo, status, status.getMessage(), logDatasetID);
-        }
-    }
-
-    public class ControlDisagreementException extends Exception {
-        public ControlDisagreementException(String msg) {
-            super(msg);
         }
     }
 }

@@ -487,7 +487,7 @@ public class IntegrationJobTab implements JobTab {
                                     datasetIDTextField.getText(),
                                     true);
 
-                            updateControlFileModel(controlFile,datasetIDTextField.getText());
+                            updateControlFileModel(controlFile, datasetIDTextField.getText());
                         }
                     } catch (Exception e) {
                         String errorText = "An error occurred while generating the control file.";

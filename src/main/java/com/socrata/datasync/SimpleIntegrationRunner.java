@@ -1,13 +1,13 @@
 package com.socrata.datasync;
 
+import com.socrata.datasync.exceptions.ControlDisagreementException;
+import com.socrata.datasync.job.GISJob;
 import com.socrata.datasync.job.IntegrationJob;
+import com.socrata.datasync.job.MetadataJob;
 import com.socrata.datasync.job.Job;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.job.PortJob;
-import com.socrata.datasync.job.GISJob;
-import com.socrata.datasync.job.GISJob.ControlDisagreementException;
 import com.socrata.datasync.ui.GISJobTab;
-import com.socrata.datasync.job.MetadataJob;
 import com.socrata.datasync.ui.MetadataJobTab;
 import com.socrata.datasync.ui.PortJobTab;
 
@@ -52,7 +52,7 @@ public class SimpleIntegrationRunner {
                     }
                     System.out.println(status.getMessage());
                 }
-            } catch (IOException | IntegrationJob.ControlDisagreementException e) {
+            } catch (IOException | ControlDisagreementException e) {
                 System.err.println("Error running " + jobFileToRun + ":\n " + e.toString());
                 System.exit(1);
             }

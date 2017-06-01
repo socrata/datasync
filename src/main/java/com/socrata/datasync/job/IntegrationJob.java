@@ -12,6 +12,7 @@ import com.socrata.datasync.config.CommandLineOptions;
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
+import com.socrata.datasync.exceptions.ControlDisagreementException;
 import com.socrata.datasync.publishers.DeltaImporter2Publisher;
 import com.socrata.datasync.publishers.FTPDropbox2Publisher;
 import com.socrata.datasync.publishers.Soda2Publisher;
@@ -543,12 +544,6 @@ public class IntegrationJob extends Job {
             JobStatus status = JobStatus.PUBLISH_ERROR;
             status.setMessage("Unable to read in and interpret control file contents: " + e);
             return status;
-        }
-    }
-
-    public class ControlDisagreementException extends Exception {
-        public ControlDisagreementException(String msg) {
-            super(msg);
         }
     }
 

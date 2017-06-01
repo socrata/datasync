@@ -1,15 +1,15 @@
 package com.socrata.datasync;
 
+import com.socrata.datasync.config.CommandLineOptions;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
+import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
+import com.socrata.datasync.exceptions.ControlDisagreementException;
 import com.socrata.datasync.job.Job;
 import com.socrata.datasync.job.Jobs;
 import com.socrata.datasync.job.LoadPreferencesJob;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.job.GISJob;
-import com.socrata.datasync.job.GISJob.ControlDisagreementException;
-import com.socrata.datasync.config.CommandLineOptions;
-import com.socrata.datasync.config.userpreferences.UserPreferences;
-import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
-import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import com.socrata.datasync.ui.SimpleIntegrationWizard;
 
 import java.io.File;
