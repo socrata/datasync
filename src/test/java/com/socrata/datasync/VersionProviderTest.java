@@ -35,7 +35,7 @@ public class VersionProviderTest {
 
     @Test
     public void testGetLatestVersion() throws URISyntaxException {
-        TestCase.assertEquals("1.8.1", VersionProvider.getLatestVersion());
+        TestCase.assertEquals("1.8.2", VersionProvider.getLatestVersion());
     }
 
     @Test
@@ -48,6 +48,6 @@ public class VersionProviderTest {
 
     @Test
     public void testGetThisVersion() {
-        TestCase.assertEquals("1.8.1", VersionProvider.getThisVersion());
+        TestCase.assertEquals("1.8.2", VersionProvider.getThisVersion());
     }
 }
