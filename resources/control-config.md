@@ -151,23 +151,23 @@ The action is given by one of the following strings:
     </tr>
   </thead>
   <tbody>
-  <tr>
-    <td>Replace</td>
-    <td>Use if the the CSV/TSV represents the desired new state for the dataset. DataSync will calculate the minimal set of changes required, updating the dataset accordingly.</td>
-  </tr>
-  <tr>
-    <td>Append</td>
-    <td>Deprecated.  See Upsert.</td>
-  </tr>
-  <tr>
-    <td>Upsert</td>
-    <td>Use if the CSV/TSV contains updates to the dataset, rather than the complete dataset. If the dataset does not have a RowID, then all rows in the CSV are appended, even if they duplicate existing rows. If the dataset does have a RowID, then matching row IDs will be updated and new row IDs will be appended.</td>
-  </tr>
-  <tr>
-    <td>Delete</td>
-    <td>Use if the CSV/TSV contains row IDs of rows to delete. This option requires that a [row indentifier](http://dev.socrata.com/docs/row-identifiers.html) be set on the dataset.</td>
-  </tr>
-</tbody>
+    <tr>
+      <td>Replace</td>
+      <td>Use if the the CSV/TSV represents the desired new state for the dataset. DataSync will calculate the minimal set of changes required, updating the dataset accordingly.</td>
+    </tr>
+    <tr>
+      <td>Append</td>
+      <td>Deprecated.  See Upsert.</td>
+    </tr>
+    <tr>
+      <td>Upsert</td>
+      <td>Use if the CSV/TSV contains updates to the dataset, rather than the complete dataset. If the dataset does not have a RowID, then all rows in the CSV are appended, even if they duplicate existing rows. If the dataset does have a RowID, then matching row IDs will be updated and new row IDs will be appended.</td>
+    </tr>
+    <tr>
+      <td>Delete</td>
+      <td>Use if the CSV/TSV contains row IDs of rows to delete. This option requires that a <a href="http://dev.socrata.com/docs/row-identifiers.html">row identifier</a> be set on the dataset.</td>
+    </tr>
+  </tbody>
 </table>
 
 
