@@ -25,6 +25,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.sun.jersey.api.client.ClientHandlerException;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -387,13 +389,34 @@ public class IntegrationJob extends Job {
         upsertObjects.add(ImmutableMap.copyOf(newCols));
 
         String logPublishingErrorMessage = null;
-        try {
-            producer.upsert(logDatasetID, upsertObjects);
-        }
-        catch (SodaError | InterruptedException e) {
-            e.printStackTrace();
-            logPublishingErrorMessage = e.getMessage();
-        }
+
+        int retryLimit = 10;
+        boolean retry;
+        do {
+            retry = false;
+            try {
+                producer.upsert(logDatasetID, upsertObjects);
+            }
+            catch (SodaError | InterruptedException e) {
+                e.printStackTrace();
+                logPublishingErrorMessage = e.getMessage();
+            }
+            catch (ClientHandlerException e) {
+                if(e.getCause() instanceof SocketException) {
+                    System.out.println("Socket exception while updating logging dataset: " + e.getCause().getMessage());
+                    if(retryLimit-- > 0) {
+                        System.out.println("Retrying");
+                        retry = true;
+                    } else {
+                        e.printStackTrace();
+                        logPublishingErrorMessage = e.getMessage();
+                    }
+                } else {
+                    throw e;
+                }
+            }
+        } while(retry);
+
         return logPublishingErrorMessage;
     }
 
