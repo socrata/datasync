@@ -42,7 +42,8 @@ public class ControlFileModel extends Observable {
     private CSVModel csvModel;
     private DatasetModel datasetModel;
     private String path;
-    final String fieldSeparator = ",";
+    final String constructingFieldSeparator = ",";
+    final String deconstructingFieldSeparator = "\\s*,\\s*";
 
     public ControlFileModel (ControlFile file, DatasetModel dataset) throws IOException{
         controlFile = file;
@@ -299,7 +300,7 @@ public class ControlFileModel extends Observable {
         for (int i = 0; i < array.length; i++){
             strbuf.append(array[i]);
             if (i+1 != array.length)
-                strbuf.append(fieldSeparator);
+                strbuf.append(constructingFieldSeparator);
         }
          return strbuf.toString();
     }
@@ -313,13 +314,13 @@ public class ControlFileModel extends Observable {
      }
 
     public void setFixedDateTime(String fixed){
-        String[] newDateTime = fixed.split(fieldSeparator);
+        String[] newDateTime = fixed.split(deconstructingFieldSeparator);
         controlFile.getFileTypeControl().fixedTimestampFormat(newDateTime);
         updateListeners();
     }
 
     public void setFloatingDateTime(String floating){
-        String[] newDateTime = floating.split(fieldSeparator);
+        String[] newDateTime = floating.split(deconstructingFieldSeparator);
         controlFile.getFileTypeControl().floatingTimestampFormat(newDateTime);
         updateListeners();
     }
