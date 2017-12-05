@@ -3,6 +3,7 @@ package com.socrata.datasync;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
+import com.socrata.model.importer.GeoDataset;
 import com.socrata.model.importer.DatasetInfo;
 import org.apache.http.HttpException;
 import org.apache.http.HttpStatus;
@@ -22,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +51,25 @@ public class DatasetUtils {
 
     private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
-    public static <T> T getDatasetInfo(UserPreferences userPrefs, String viewId, final Class<T> typ) throws URISyntaxException, IOException, HttpException {
+    public static Dataset getDatasetInfo(UserPreferences userPrefs, String viewId) throws URISyntaxException, IOException, HttpException {
+        Dataset ds = getDatasetInfoReflective(userPrefs, viewId, Dataset.class);
+        removeSystemColumns(ds.getColumns());
+        return ds;
+    }
+
+    public static GeoDataset getGeoDatasetInfo(UserPreferences userPrefs, String viewId) throws URISyntaxException, IOException, HttpException {
+        return getDatasetInfoReflective(userPrefs, viewId, GeoDataset.class);
+    }
+
+    private static void removeSystemColumns(List<Column> columns) {
+        Iterator<Column> it = columns.iterator();
+        while(it.hasNext()) {
+            Column c = it.next();
+            if(c.getFieldName().startsWith(":")) it.remove();
+        }
+    }
+
+    private static <T> T getDatasetInfoReflective(UserPreferences userPrefs, String viewId, final Class<T> typ) throws URISyntaxException, IOException, HttpException {
         String justDomain = getDomainWithoutScheme(userPrefs);
         URI absolutePath = new URIBuilder()
             .setScheme("https")
@@ -140,7 +160,7 @@ public class DatasetUtils {
      * @return list of field names or null if there
      */
     public static String getFieldNamesString(UserPreferences userPrefs, String datasetId) throws HttpException, IOException, URISyntaxException {
-        Dataset datasetInfo = getDatasetInfo(userPrefs, datasetId, Dataset.class);
+        Dataset datasetInfo = getDatasetInfo(userPrefs, datasetId);
         return getFieldNamesString(datasetInfo);
     }
 

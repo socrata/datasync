@@ -240,7 +240,7 @@ public class GISJob extends Job {
         String fileExtension = FilenameUtils.getExtension(fileToPublish);
 
         if (fileExtension.equals(GISJobValidity.ZIP_EXT)) {
-            GeoDataset dataset = DatasetUtils.getDatasetInfo(userPrefs, getDatasetID(), GeoDataset.class);
+            GeoDataset dataset = DatasetUtils.getGeoDatasetInfo(userPrefs, getDatasetID());
 
             // Get map of existing layer UIDs/names by looking at child views
             Map<String, String> existingLayers = getLayerListFromExistingDataset(userPrefs, dataset);
@@ -272,7 +272,7 @@ public class GISJob extends Job {
 
         for (String uid : existingLayersUids) {
             try {
-                Dataset child = DatasetUtils.getDatasetInfo(userPrefs, uid, Dataset.class);
+                Dataset child = DatasetUtils.getDatasetInfo(userPrefs, uid);
                 existingLayerInfo.put(child.getName(), uid);
             } catch (Exception e) {
                 // there’s no way for the client to recover,

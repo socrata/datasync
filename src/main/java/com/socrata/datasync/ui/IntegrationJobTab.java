@@ -537,7 +537,7 @@ public class IntegrationJobTab implements JobTab {
         private ControlFile generateControlFile(UserPreferences prefs, String fileToPublish, PublishMethod publishMethod,
                                                 String datasetId, boolean containsHeaderRow) throws HttpException, URISyntaxException, InterruptedException, IOException {
 
-            Dataset datasetInfo = DatasetUtils.getDatasetInfo(prefs, datasetId, Dataset.class);
+            Dataset datasetInfo = DatasetUtils.getDatasetInfo(prefs, datasetId);
             boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
 
             String[] columns = null;

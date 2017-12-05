@@ -48,7 +48,7 @@ public class DatasetModel extends AbstractTableModel {
     private boolean initializeDataset(UserPreferences prefs, String fourbyfour)
         throws LongRunningQueryException, InterruptedException, HttpException, IOException, URISyntaxException {
 
-        datasetInfo = DatasetUtils.getDatasetInfo(prefs, fourbyfour, Dataset.class);
+        datasetInfo = DatasetUtils.getDatasetInfo(prefs, fourbyfour);
 
         columns = (ArrayList<Column>) datasetInfo.getColumns();
 
