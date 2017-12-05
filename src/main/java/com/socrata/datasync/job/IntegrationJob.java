@@ -25,6 +25,8 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.joda.time.LocalDateTime;
+import org.joda.time.format.ISODateTimeFormat;
 import com.sun.jersey.api.client.ClientHandlerException;
 
 import java.io.BufferedInputStream;
@@ -364,8 +366,8 @@ public class IntegrationJob extends Job {
         Map<String, Object> newCols = new HashMap<>();
 
         // add standard log data
-        Date currentDateTime = new Date();
-        newCols.put("Date", currentDateTime);
+        LocalDateTime currentDateTime = new LocalDateTime();
+        newCols.put("Date", ISODateTimeFormat.dateTime().print(currentDateTime));
         newCols.put("DatasetID", job.getDatasetID());
         newCols.put("FileToPublish", job.getFileToPublish());
         if(job.getPublishMethod() != null)
