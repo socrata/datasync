@@ -216,15 +216,6 @@ public class UserPreferencesJava implements UserPreferences {
         return "";
     }
 
-    /**
-     * This preference is for internal testing usage only (returns false
-     * because useNewBackend should only be set when DataSync is run in
-     * command-line mode).
-     */
-    public boolean getUseNewBackend() {
-        return false;
-    }
-
     public String getHost() {
         String domain = getDomain();
         if (domain != null) {

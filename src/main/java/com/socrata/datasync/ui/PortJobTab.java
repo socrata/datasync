@@ -53,6 +53,8 @@ public class PortJobTab implements JobTab {
     private final String PUBLISH_DATASET_TIP_TEXT = "<html><body style='width: 280px'>If <strong>Yes</strong>, publish the newly created destination dataset.<br>" +
             "If <strong>No</strong>, create it as an unpublished working copy.</body></html>";
 
+    private final String NBE_TIP_TEXT = "When checked, port the dataset into the new backend if possible.";
+
     private JFrame mainFrame;
     private JPanel jobPanel;
 
@@ -64,6 +66,7 @@ public class PortJobTab implements JobTab {
     private JTextField sourceSetIDTextField;
     private JTextField sinkSiteDomainTextField;
     private JTextField sinkSetIDTextField;
+    private JCheckBox useNewBackend; // may be null
 
     // Need to expose more of the JComponents locally in order to toggle between PublishMethod and PublishDataset
     private JPanel publishMethodContainerLeft;
@@ -76,6 +79,9 @@ public class PortJobTab implements JobTab {
 
     // build Container with all tab components and load data into form
     public PortJobTab(PortJob job, JFrame containingFrame) {
+        boolean useUseNewBackend = System.getenv("SOCRATA_SHOW_NBE_CHECKBOX") != null;
+        UserPreferences userPrefs = new UserPreferencesJava();
+
         mainFrame = containingFrame;
 
         // build tab panel form
@@ -146,6 +152,15 @@ public class PortJobTab implements JobTab {
         destinationSetIDTextFieldContainer.add(openSinkDatasetButton);
         jobPanel.add(destinationSetIDTextFieldContainer);
 
+        if(useUseNewBackend) {
+            jobPanel.add(UIUtility.generateLabelWithHelpBubble("Use new checkbox", NBE_TIP_TEXT, HELP_ICON_TOP_PADDING));
+            JPanel useNewBackendCheckboxContainer = new JPanel(flowRight);
+            System.out.println(job.getUseNewBackend());
+            useNewBackend = new JCheckBox("Copy into new backend", job.getUseNewBackend());
+            useNewBackendCheckboxContainer.add(useNewBackend);
+            jobPanel.add(useNewBackendCheckboxContainer);
+        }
+
         // Publish Method (toggles with Publish Query based on Port Method choice)
         // We will build out the specs of this element without adding it to the jobPanel.
         publishMethodContainerLeft = UIUtility.generateLabelWithHelpBubble(
@@ -196,7 +211,6 @@ public class PortJobTab implements JobTab {
             jobPanel.add(publishMethodContainerRight);
             publishMethodComboBox.setEnabled(true);
         }
-        UserPreferences userPrefs = new UserPreferencesJava();
         SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
         if (job.getSourceSiteDomain().equals("https://") &&
                 !connectionInfo.getUrl().equals("https://")) {
@@ -236,6 +250,7 @@ public class PortJobTab implements JobTab {
         jobToRun.setSourceSiteDomain(sourceSiteDomainTextField.getText());
         jobToRun.setSourceSetID(sourceSetIDTextField.getText());
         jobToRun.setSinkSiteDomain(sinkSiteDomainTextField.getText());
+        if(useNewBackend != null) jobToRun.setUseNewBackend(useNewBackend.isSelected());
         if (publishMethodComboBox.isEnabled()) {
             jobToRun.setPublishMethod((PublishMethod) publishMethodComboBox
                     .getSelectedItem());
@@ -263,6 +278,7 @@ public class PortJobTab implements JobTab {
         newPortJob.setSourceSiteDomain(sourceSiteDomainTextField.getText());
         newPortJob.setSourceSetID(sourceSetIDTextField.getText());
         newPortJob.setSinkSiteDomain(sinkSiteDomainTextField.getText());
+        if(useNewBackend != null) newPortJob.setUseNewBackend(useNewBackend.isSelected());
         newPortJob.setSinkSetID(sinkSetIDTextField.getText());
         newPortJob.setPublishMethod((PublishMethod) publishMethodComboBox
                 .getSelectedItem());
@@ -342,6 +358,7 @@ public class PortJobTab implements JobTab {
                         jobPanel.add(publishMethodContainerLeft);
                         jobPanel.add(publishMethodContainerRight);
                         publishMethodComboBox.setEnabled(true);
+                        if(useNewBackend != null) useNewBackend.setEnabled(false);
                         jobPanel.updateUI();
                         break;
                     case copy_schema:
@@ -354,6 +371,7 @@ public class PortJobTab implements JobTab {
                         jobPanel.add(publishDatasetContainerLeft);
                         jobPanel.add(publishDatasetContainerRight);
                         publishDatasetComboBox.setEnabled(true);
+                        if(useNewBackend != null) useNewBackend.setEnabled(true);
                         jobPanel.updateUI();
                         break;
                 }

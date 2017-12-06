@@ -29,6 +29,7 @@ public class UserPreferencesLib implements UserPreferences {
     private String smtpPassword;
     private String filesizeChunkingCutoffMB;
     private String numRowsPerChunk;
+    private boolean useNewBackend;
     private String portDestinationDomainAppToken;
 
     // When a file to be published is larger than this value (in MB), file is chunked
@@ -220,7 +221,11 @@ public class UserPreferencesLib implements UserPreferences {
     public UserPreferencesLib numRowsPerChunk(String numRows) { setNumRowsPerChunk(numRows); return this; }
 
     public boolean getUseNewBackend() {
-        return false;
+        return useNewBackend;
+    }
+
+    public void setUseNewBackend(boolean useNewBackend) {
+        this.useNewBackend = useNewBackend;
     }
 
     public void setPortDestinationDomainAppToken(String portDestinationDomainAppToken) {

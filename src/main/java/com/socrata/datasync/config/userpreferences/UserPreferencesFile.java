@@ -33,7 +33,6 @@ public class UserPreferencesFile implements UserPreferences {
     private String filesizeChunkingCutoffMB;
     private String numRowsPerChunk;
     private String portDestinationDomainAppToken;
-    private boolean useNewBackend;
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
     private static final long fileVersionUID = 5L;
@@ -137,9 +136,6 @@ public class UserPreferencesFile implements UserPreferences {
     public String getPortDestinationDomainAppToken() {
         return portDestinationDomainAppToken;
     }
-
-    @JsonProperty("useNewBackend")
-    public boolean getUseNewBackend() { return useNewBackend; }
 
     @JsonProperty("proxyUsername")
     public void setProxyUsername(String username) { proxyUsername = username; }

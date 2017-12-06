@@ -47,6 +47,7 @@ public class PortJob extends Job {
     private PublishDataset publishDataset = PublishDataset.working_copy;
     private String portResult = "";
     private String destinationDatasetTitle = "";
+    private boolean useNewBackend = false;
 
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
@@ -162,6 +163,16 @@ public class PortJob extends Job {
         this.portResult = portResult;
     }
 
+    @JsonProperty("useNewBackend")
+    public boolean getUseNewBackend() {
+        return useNewBackend;
+    }
+
+    @JsonProperty("useNewBackend")
+    public void setUseNewBackend(boolean useNewBackend) {
+        this.useNewBackend = useNewBackend;
+    }
+
     public String getDefaultJobName() { return defaultJobName; }
 
     public boolean validateArgs(CommandLine cmd) {
@@ -190,6 +201,7 @@ public class PortJob extends Job {
             setPublishMethod(loadedJob.getPublishMethod());
             setPublishDataset(loadedJob.getPublishDataset());
             setDestinationDatasetTitle(loadedJob.getDestinationDatasetTitle());
+            setUseNewBackend(loadedJob.getUseNewBackend());
         } catch(IOException e){
             throw new IOException(e.toString());
         }
@@ -264,11 +276,11 @@ public class PortJob extends Job {
                 try {
                     if (portMethod.equals(PortMethod.copy_schema)) {
                         sinkSetID = PortUtility.portSchema(loader, creator,
-                                                           sourceSetID, destinationDatasetTitle, userPrefs.getUseNewBackend());
+                                                           sourceSetID, destinationDatasetTitle, useNewBackend);
                         noPortExceptions = true;
                     } else if (portMethod.equals(PortMethod.copy_all)) {
                         sinkSetID = PortUtility.portSchema(loader, creator,
-                                                           sourceSetID, destinationDatasetTitle, userPrefs.getUseNewBackend());
+                                                           sourceSetID, destinationDatasetTitle, useNewBackend);
                         PortUtility.portContents(streamExporter, streamUpserter,
                                                  sourceSetID, sinkSetID, PublishMethod.upsert);
                         noPortExceptions = true;
@@ -308,7 +320,7 @@ public class PortJob extends Job {
                     PortControlFile control = new PortControlFile(new URI("https://" + DatasetUtils.getDomainWithoutScheme(sinkSiteDomain)).getHost(),
                                                                   destinationDatasetTitle,
                                                                   sinkSetID,
-                                                                  userPrefs.getUseNewBackend(),
+                                                                  useNewBackend,
                                                                   portMethod,
                                                                   publishDataset.equals(PublishDataset.publish));
 
