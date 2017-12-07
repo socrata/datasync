@@ -334,7 +334,7 @@ public class MetadataJobTab implements JobTab {
         metadataJob.setDescription(descriptionTextArea.getText());
         metadataJob.setCategory(categoryTextField.getText());
         if (!StringUtils.isBlank(keywordsTextField.getText())) {
-            metadataJob.setKeywords(Arrays.asList(keywordsTextField.getText().split("\\s*,\\s*")));
+            metadataJob.setKeywords(Arrays.asList(Utils.commaSplit(keywordsTextField.getText())));
         }
         else {
             metadataJob.setKeywords(null);

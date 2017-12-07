@@ -2,6 +2,8 @@ package com.socrata.datasync;
 
 import com.socrata.datasync.config.controlfile.ControlFile;
 import junit.framework.TestCase;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
@@ -79,5 +81,50 @@ public class UtilsTest {
         for(int i=0; i<Math.max(expectedHeaders4.length, actualHeaders4.length); i++)
             TestCase.assertEquals(expectedHeaders4[i], actualHeaders4[i]);
 
+    }
+
+    @Test
+    public void testSplitEmpty() {
+        assertArrayEquals(new String[0], Utils.commaSplit(""));
+    }
+
+    @Test
+    public void testSplitEscaped() {
+        assertArrayEquals(new String[] { "a,b" }, Utils.commaSplit("a\\,b"));
+    }
+
+    @Test
+    public void testSplitUnecaped() {
+        assertArrayEquals(new String[] { "a", "b" }, Utils.commaSplit("a,b"));
+    }
+
+    @Test
+    public void testSplitWhitespace() {
+        assertArrayEquals(new String[] { "a", "b" }, Utils.commaSplit("  a  ,  b   "));
+    }
+
+    @Test
+    public void testSplitOne() {
+        assertArrayEquals(new String[] { "a" }, Utils.commaSplit("  a  "));
+    }
+
+    @Test
+    public void testJoinNone() {
+        assertEquals("", Utils.commaJoin(new String[0]));
+    }
+
+    @Test
+    public void testJoinOne() {
+        assertEquals("abc", Utils.commaJoin(new String[] { "abc" }));
+    }
+
+    @Test
+    public void testJoinTrim() {
+        assertEquals("abc, def", Utils.commaJoin(new String[] { "  abc  ",  " def " }));
+    }
+
+    @Test
+    public void testJoinEscape() {
+        assertEquals("abc, def\\,ghi", Utils.commaJoin(new String[] { "  abc  ",  " def,ghi " }));
     }
 }

@@ -4,6 +4,7 @@ import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.controlfile.LocationColumn;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.validation.IntegrationJobValidity;
+import com.socrata.datasync.Utils;
 import com.socrata.model.importer.Column;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -42,8 +43,6 @@ public class ControlFileModel extends Observable {
     private CSVModel csvModel;
     private DatasetModel datasetModel;
     private String path;
-    final String constructingFieldSeparator = ",";
-    final String deconstructingFieldSeparator = "\\s*,\\s*";
 
     public ControlFileModel (ControlFile file, DatasetModel dataset) throws IOException{
         controlFile = file;
@@ -295,18 +294,8 @@ public class ControlFileModel extends Observable {
             return getColumnAtPosition(i);
     }
 
-    public String getStringFromArray(String[] array){
-        StringBuffer strbuf = new StringBuffer();
-        for (int i = 0; i < array.length; i++){
-            strbuf.append(array[i]);
-            if (i+1 != array.length)
-                strbuf.append(constructingFieldSeparator);
-        }
-         return strbuf.toString();
-    }
-
     public String getFloatingDateTime(){
-        return getStringFromArray(controlFile.getFileTypeControl().floatingTimestampFormat);
+        return Utils.commaJoin(controlFile.getFileTypeControl().floatingTimestampFormat);
     }
 
     public String getTimezone(){
@@ -314,13 +303,13 @@ public class ControlFileModel extends Observable {
      }
 
     public void setFixedDateTime(String fixed){
-        String[] newDateTime = fixed.split(deconstructingFieldSeparator);
+        String[] newDateTime = Utils.commaSplit(fixed);
         controlFile.getFileTypeControl().fixedTimestampFormat(newDateTime);
         updateListeners();
     }
 
     public void setFloatingDateTime(String floating){
-        String[] newDateTime = floating.split(deconstructingFieldSeparator);
+        String[] newDateTime = Utils.commaSplit(floating);
         controlFile.getFileTypeControl().floatingTimestampFormat(newDateTime);
         updateListeners();
     }
