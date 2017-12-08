@@ -477,6 +477,9 @@ public class IntegrationJobTab implements JobTab {
     }
 
     private class EditControlFileListener implements ActionListener {
+        String lastDatasetId;
+        String lastFile;
+
         public void actionPerformed(ActionEvent evnt) {
             String generateControlFileErrorMessage;
                 if(!datasetIdValid()) {
@@ -485,7 +488,7 @@ public class IntegrationJobTab implements JobTab {
                     JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
                 } else {
                     try {
-                        if (controlFileModel == null) {
+                        if (controlFileModel == null || !datasetIDTextField.getText().equals(lastDatasetId) || !fileToPublishTextField.getText().equals(lastFile)) {
                             ControlFile controlFile = generateControlFile(
                                     new UserPreferencesJava(),
                                     fileToPublishTextField.getText(),
@@ -494,6 +497,8 @@ public class IntegrationJobTab implements JobTab {
                                     true);
 
                             updateControlFileModel(controlFile,datasetIDTextField.getText());
+                            lastDatasetId = datasetIDTextField.getText();
+                            lastFile = fileToPublishTextField.getText();
                         }
 
                         ControlFileEditDialog editorFrame = new ControlFileEditDialog(controlFileModel,mainFrame);
