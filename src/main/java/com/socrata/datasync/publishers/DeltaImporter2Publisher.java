@@ -7,6 +7,7 @@ import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.controlfile.PortControlFile;
 import com.socrata.datasync.config.controlfile.FileTypeControl;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.ui.SimpleIntegrationWizard;
 import com.socrata.datasync.deltaimporter2.*;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.ssync.PatchComputer;
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import javax.swing.*;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -118,6 +120,8 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                     @Override
                     protected void progress(long count) {
                         System.out.println("\tRead " + count + " of " + fileSize + " bytes of " + csvOrTsvFile.getName());
+                        int pct = (int) (count*100/fileSize);
+                        updateStatus("Reading File", pct, true, "");
                     }
                 };
                 // compute the patch between the csv/tsv file and its previous signature
@@ -264,7 +268,8 @@ public class DeltaImporter2Publisher implements AutoCloseable {
      */
     private List<String> postPatchBlobs(InputStream patchStream, String datasetId, int chunkSize) throws
             IOException, URISyntaxException, HttpException {
-        System.out.println("Chunking and posting the diff");
+        updateStatus("Chunking and posting the diff", 0, false, "");
+        System.out.println("Creating the diff...");
 
         URI postingPath = baseUri.setPath(datasyncPath + "/" + datasetId).build();
         List<String> blobIds = new LinkedList<>();
@@ -292,6 +297,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
             } while (status != HttpStatus.SC_CREATED && retries < httpRetries);
             //We hit the max number of retries without success and should throw an exception accordingly.
             if (retries >= httpRetries) throw new HttpException(statusLine.toString());
+            updateStatus("Uploading file", 0, false, bytesRead + " bytes");
             System.out.println("\tUploaded " + bytesRead + " bytes");
         }
         return blobIds;
@@ -305,13 +311,14 @@ public class DeltaImporter2Publisher implements AutoCloseable {
      * @return the jobId of the job applying the diff
      */
     private String commitStandardJob(final CommitMessage<ControlFile> msg, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
-        System.out.println("Commiting the chunked diffs to apply the patch");
+        updateStatus("Commiting the job", 0, false, "");
+        System.out.println("Committing the job");
         final URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + commitPath).build();
         return commitGenericJob(msg, committingPath, datasetId, uuid);
     }
 
     private String commitPortJob(final CommitMessage<PortControlFile> msg, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
-        System.out.println("Commiting the port job");
+        System.out.println("Committing the port job");
         final URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + portPath).build();
         return commitGenericJob(msg, committingPath, datasetId, uuid);
     }
@@ -431,9 +438,9 @@ public class DeltaImporter2Publisher implements AutoCloseable {
     private JobStatus getJobStatus(String datasetId, String jobId) throws
             URISyntaxException, IOException, InterruptedException, HttpException {
         JobStatus jobStatus = null;
-        String status = null;
+        StatusResponse status = null;
         StatusLine statusLine = null;
-        URI statusUri = baseUri.setPath(datasyncPath + "/" + datasetId + statusPath + "/" + jobId).build();
+        URI statusUri = baseUri.setPath(datasyncPath + "/" + datasetId + statusPath + "/" + jobId + ".json").build();
         URI logUri = baseUri.setPath(datasyncPath + "/" + datasetId + logPath + "/" + jobId + ".json").build();
         int retries = 0;
         while (jobStatus == null && retries < httpRetries) {
@@ -442,15 +449,49 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                 int statusCode = statusLine.getStatusCode();
                 if (statusCode == HttpStatus.SC_OK) {
                     retries = 0; // we got one, so reset the retry count.
-                    status = IOUtils.toString(response.getEntity().getContent());
-                    System.out.print("Polling the job status: " + status);
-                    if (status.startsWith("SUCCESS")) {
+                    status = mapper.readValue(IOUtils.toString(response.getEntity().getContent()), StatusResponse.class);
+                    System.out.println("Polling the job status: " + status.english);
+                    if(status.type.equals("read-input-rows")) {
+                        long rows = ((Number)status.data.get("rows")).longValue();
+                        long total = ((Number)status.data.get("total")).longValue();
+                        int percent = (int)(rows * 100 / total);
+                        updateStatus("Reading Rows from File...", percent, true, "");
+                    } else if(status.type.equals("read-dataset-rows")) {
+                        Object rows = status.data.get("rows");
+                        updateStatus("Reading Rows from Dataset...", 0, false, rows + " rows");
+                    } else if(status.type.equals("applying-diff")) {
+                        Object bytes = status.data.get("bytesWritten");
+                        updateStatus("Applying diff...", 0, false, bytes + " bytes");
+                    } else if(status.type.equals("counting-records")) {
+                        Object records = status.data.get("recordsFound");
+                        updateStatus("Counting records...", 0, false, records + " records");
+                    } else if(status.type.equals("computing-upsert")) {
+                        Object inserts = status.data.get("inserts");
+                        Object updates = status.data.get("updates");
+                        Object deletes = status.data.get("deletes");
+                        updateStatus("Counting upsert...", 0, false, inserts + " inserts, " + updates + " updates, " + deletes + " deletes");
+                    } else if(status.type.equals("uploading-upsert")) {
+                        long bytes = ((Number)status.data.get("sentBytes")).longValue();
+                        long total = ((Number)status.data.get("totalBytes")).longValue();
+                        int percent = (int)(bytes * 100 / total);
+                        updateStatus("Uploading Upsert Script...", percent, true, "");
+                    } else if(status.type.equals("storing-completed")) {
+                        long bytes = ((Number)status.data.get("bytesWritten")).longValue();
+                        long total = ((Number)status.data.get("totalBytes")).longValue();
+                        int percent = (int)(bytes * 100 / total);
+                        updateStatus("Storing File...", percent, true, "");
+                    } else if(status.english.startsWith("SUCCESS")) {
+                        updateStatus("Processing...", 0, false, "");
                         jobStatus = JobStatus.SUCCESS;
-                    } else if (status.startsWith("FAILURE")) {
+                        break;
+                    } else if(status.english.startsWith("FAILURE")) {
+                        updateStatus("Processing...", 0, false, "");
                         jobStatus = JobStatus.PUBLISH_ERROR;
+                        break;
                     } else {
-                        Thread.sleep(1000);
+                        updateStatus(status.english, 0, false, "");
                     }
+                    Thread.sleep(1000);
                 } else if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_SERVICE_UNAVAILABLE) {
                     // No-penalty retry; we're willing to keep doing this forever
                     Thread.sleep(1000);
@@ -463,9 +504,13 @@ public class DeltaImporter2Publisher implements AutoCloseable {
         if (jobStatus == null) {
             throw new HttpException(statusLine.toString());
         }
-        jobStatus.setMessage(status + "(jobId:" + jobId + ")");
+        jobStatus.setMessage(status.english + "(jobId:" + jobId + ")");
         if(!jobStatus.isError()) loadStatusWithCRUD(jobStatus, logUri);
         return jobStatus;
+    }
+
+    private void updateStatus(String loadingLabel, int progressPercent, boolean showProgress, String message) {
+        SimpleIntegrationWizard.updateStatus(loadingLabel, progressPercent, showProgress, message);
     }
 
     private Commital getJobCommitment(String datasetId, String uuid) throws URISyntaxException {

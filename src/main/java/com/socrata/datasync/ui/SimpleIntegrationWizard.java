@@ -101,12 +101,18 @@ public class SimpleIntegrationWizard {
     private JFrame frame;
     private JFrame prefsFrame;
     private JPanel loadingNoticePanel;
+    private JPanel progressPanel;
     private JButton runJobNowButton;
+    private JLabel loadingTextLabel = new JLabel("Processing...");
+    private JProgressBar progress = new JProgressBar(0, 100);
+    private JLabel progressText = new JLabel("");
+
+    private static SimpleIntegrationWizard instance;
 
     /*
      * Constructs the GUI and displays it on the screen.
      */
-    public SimpleIntegrationWizard() {
+    private SimpleIntegrationWizard() {
         // load user preferences (saved locally)
         userPrefs = new UserPreferencesJava();
 
@@ -146,6 +152,11 @@ public class SimpleIntegrationWizard {
         } catch (Exception e) {
             // do nothing upon failure
         }
+    }
+
+    public static SimpleIntegrationWizard get() {
+        if(instance == null) instance = new SimpleIntegrationWizard();
+        return instance;
     }
 
     private void generatePreferencesFrame() {
@@ -266,6 +277,10 @@ public class SimpleIntegrationWizard {
 
         public RunJobWorker(JobTab jobTabToRun){
             loadingNoticePanel.setVisible(true);
+            progressPanel.setVisible(true);
+            loadingNoticePanel.add(loadingTextLabel);
+            progressPanel.add(progress);
+            progressPanel.add(progressText);
             runJobNowButton.setEnabled(false);
             this.jobTabToRun = jobTabToRun;
         }
@@ -293,6 +308,7 @@ public class SimpleIntegrationWizard {
         @Override
         protected void done() {
             loadingNoticePanel.setVisible(false);
+            progressPanel.setVisible(false);
             runJobNowButton.setEnabled(true);
 
             // show popup with returned status
@@ -571,21 +587,25 @@ public class SimpleIntegrationWizard {
         jobTabsContainer.add(jobTabsPane);
         jobTabsPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
-        JPanel jobButtonContainer = new JPanel(new GridLayout(1,2));
+        JPanel jobButtonContainer = new JPanel(new GridLayout(1,3));
         JPanel leftButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         runJobNowButton = new JButton("Run Job Now");
         runJobNowButton.addActionListener(new RunJobNowListener());
         leftButtonPanel.add(runJobNowButton);
         leftButtonPanel.add(UIUtility.generateHelpBubble(RUN_JOB_NOW_TIP_TEXT));
 
+        JPanel noticesContainer = new JPanel(new GridLayout(2, 1));
         generateLoadingNotice();
-        leftButtonPanel.add(loadingNoticePanel);
+        noticesContainer.add(loadingNoticePanel);
+        generateProgressBar();
+        noticesContainer.add(progressPanel);
 
         JPanel rightButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton saveJobButton = new JButton("Save Job");
         saveJobButton.addActionListener(new SaveJobListener());
         rightButtonPanel.add(saveJobButton);
         jobButtonContainer.add(leftButtonPanel);
+        jobButtonContainer.add(noticesContainer);
         jobButtonContainer.add(rightButtonPanel);
 
         jobButtonContainer.setPreferredSize(BUTTON_PANEL_DIMENSION);
@@ -611,14 +631,20 @@ public class SimpleIntegrationWizard {
 
     private void generateLoadingNotice() {
         loadingNoticePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        URL spinnerImageURL = getClass().getResource(LOADING_SPINNER_FILE_PATH);
-        if(spinnerImageURL != null) {
-            JLabel loadingImageLabel = new JLabel(new ImageIcon(spinnerImageURL));
-            loadingNoticePanel.add(loadingImageLabel);
-        }
-        JLabel loadingTextLabel = new JLabel(" Job is in progress...");
-        loadingNoticePanel.add(loadingTextLabel);
+        // URL spinnerImageURL = getClass().getResource(LOADING_SPINNER_FILE_PATH);
+        // if(spinnerImageURL != null) {
+        //     JLabel loadingImageLabel = new JLabel(new ImageIcon(spinnerImageURL));
+        //     loadingNoticePanel.add(loadingImageLabel);
+        // }
+        // JLabel loadingTextLabel = new JLabel(" Job is in progress...");
+        // loadingNoticePanel.add(loadingTextLabel);
         loadingNoticePanel.setVisible(false);
+    }
+
+    private void generateProgressBar() {
+        progressPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+
+        progressPanel.setVisible(false);
     }
 
     private JPanel generatePreferencesPanel() {
@@ -922,4 +948,18 @@ public class SimpleIntegrationWizard {
         passwordField.setText(userPrefs.getPassword());
     }
 
+    public static void updateStatus(String loadingLabel, int progressPercent, boolean showProgress, String message) {
+        if(instance != null) {
+            instance.loadingTextLabel.setText(loadingLabel);
+            instance.progress.setValue(0);
+            if(showProgress) {
+                instance.progress.setVisible(true);
+                instance.progressText.setText("");
+                instance.progress.setValue(progressPercent);
+            } else {
+                instance.progress.setVisible(false);
+                instance.progressText.setText(message);
+            }
+        }
+    }
 }
