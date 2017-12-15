@@ -7,6 +7,7 @@ import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.controlfile.PortControlFile;
 import com.socrata.datasync.config.controlfile.FileTypeControl;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
+import com.socrata.datasync.ui.SimpleIntegrationWizard;
 import com.socrata.datasync.deltaimporter2.*;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.ssync.PatchComputer;
@@ -24,7 +25,9 @@ import org.apache.http.entity.StringEntity;
 import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
+import sun.java2d.pipe.SpanShapeRenderer;
 
+import javax.swing.*;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -117,6 +120,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                     @Override
                     protected void progress(long count) {
                         System.out.println("\tRead " + count + " of " + fileSize + " bytes of " + csvOrTsvFile.getName());
+                        SimpleIntegrationWizard.loadingTextLabel.setText("Reading File");
                     }
                 };
                 // compute the patch between the csv/tsv file and its previous signature
@@ -263,6 +267,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
      */
     private List<String> postPatchBlobs(InputStream patchStream, String datasetId, int chunkSize) throws
             IOException, URISyntaxException, HttpException {
+        SimpleIntegrationWizard.loadingTextLabel.setText("Chunking and posting the diff");
         System.out.println("Chunking and posting the diff");
 
         URI postingPath = baseUri.setPath(datasyncPath + "/" + datasetId).build();
@@ -304,13 +309,14 @@ public class DeltaImporter2Publisher implements AutoCloseable {
      * @return the jobId of the job applying the diff
      */
     private String commitStandardJob(final CommitMessage<ControlFile> msg, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
-        System.out.println("Commiting the chunked diffs to apply the patch");
+        SimpleIntegrationWizard.loadingTextLabel.setText("Commiting the chunked diffs to apply the patch");
+        System.out.println("Committing the chunked diffs to apply the patch");
         final URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + commitPath).build();
         return commitGenericJob(msg, committingPath, datasetId, uuid);
     }
 
     private String commitPortJob(final CommitMessage<PortControlFile> msg, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
-        System.out.println("Commiting the port job");
+        System.out.println("Committing the port job");
         final URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + portPath).build();
         return commitGenericJob(msg, committingPath, datasetId, uuid);
     }
@@ -443,9 +449,63 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                     retries = 0; // we got one, so reset the retry count.
                     status = IOUtils.toString(response.getEntity().getContent());
                     System.out.print("Polling the job status: " + status);
-                    if (status.startsWith("SUCCESS")) {
+                    if(status.contains("Awaiting worker")) {
+                        updateStatus("Awaiting worker...", 0, false,"");
+
+                    } else if(status.startsWith("Applying")) {
+                        updateStatus("Applying Diff...", 0, false, status.split("gz")[1].replaceAll("\\D+","") + " bytes");
+
+                    } else if(status.startsWith("Counting")) {
+                        updateStatus("Counting Records...", 0, false, status.split("so")[0].replaceAll("\\D+","") + " records");
+
+                    }
+                    // Reading in Rows
+                    else if(status.contains("rows (")) {
+                        // Reading rows
+                        String[] parts = status.split("of");
+                        int total = Integer.parseInt(parts[1].split("from")[0].replaceAll("\\D+",""));
+                        int rows = Integer.parseInt(parts[0].replaceAll("\\D+",""));
+                        int percent = rows * 100 / total;
+
+                        updateStatus("Reading Rows from File...", percent, true,"");
+
+                    } else if (status.startsWith("Computing ")) {
+                        // Computing the upsert script
+                        updateStatus("Computing Upsert Script", 0, false, "");
+                        String[] parts = status.split("found ");
+                        String [] text = parts[1].split("in ");
+                        String[] computes = text[0].split(", ");
+                        for(int i = 0; i < computes.length; i++) {
+                            computes[i] = computes[i].replace("and ","");
+                            if (!computes[i].startsWith("0")) {
+                                updateStatus("Computing Upsert Script...", 0, false, "<html>" + computes[i] + "</html>");
+                            }
+                        }
+                    } else if (status.startsWith("Uploading ")) {
+                        // Uploading Upsert Script
+                        String[] parts = status.split("sent ");
+                        String [] text = parts[1].split("of ");
+                        int total = Integer.parseInt(text[1].replaceAll("\\D+",""));
+                        int rows = Integer.parseInt(text[0].replaceAll("\\D+",""));
+                        int percent = rows * 100 / total;
+
+                        updateStatus("Uploading Upsert Script...", percent, true,"");
+
+                    } else if (status.startsWith("Storing ")) {
+                        // Storing File
+                        String[] parts = status.split(": ");
+                        String [] text = parts[1].split("of ");
+                        int total = Integer.parseInt(text[1].replaceAll("\\D+",""));
+                        int rows = Integer.parseInt(text[0].replaceAll("\\D+",""));
+                        int percent = rows * 100 / total;
+
+                        updateStatus("Storing File...", percent, true,"");
+
+                    } else if (status.startsWith("SUCCESS")) {
+                        updateStatus("Processing...", 0, false, "");
                         jobStatus = JobStatus.SUCCESS;
                     } else if (status.startsWith("FAILURE")) {
+                        updateStatus("Processing...", 0, false, "");
                         jobStatus = JobStatus.PUBLISH_ERROR;
                     } else {
                         Thread.sleep(1000);
@@ -466,7 +526,18 @@ public class DeltaImporter2Publisher implements AutoCloseable {
         if(!jobStatus.isError()) loadStatusWithCRUD(jobStatus, logUri);
         return jobStatus;
     }
-
+    private void updateStatus(String loadingLabel, int progressPercent, boolean showProgress, String message) {
+        SimpleIntegrationWizard.loadingTextLabel.setText(loadingLabel);
+        SimpleIntegrationWizard.progress.setValue(0);
+        if(showProgress) {
+            SimpleIntegrationWizard.progress.setVisible(true);
+            SimpleIntegrationWizard.progressText.setText("");
+            SimpleIntegrationWizard.progress.setValue(progressPercent);
+        } else {
+            SimpleIntegrationWizard.progress.setVisible(false);
+            SimpleIntegrationWizard.progressText.setText(message);
+        }
+    }
     private Commital getJobCommitment(String datasetId, String uuid) throws URISyntaxException {
         URI logUri = baseUri.setPath(datasyncPath + "/" + datasetId + logPath + "/index.json").build();
         try(CloseableHttpResponse response = http.get(logUri, ContentType.APPLICATION_JSON.getMimeType())) {
