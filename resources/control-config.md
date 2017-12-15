@@ -201,7 +201,7 @@ The following are options available to both CSV files or TSV files within the `c
   </tr>
 <tr>
     <td>columns</td>
-    <td>JSON list of column names. If null then the first line of the CSV after any skipped records is used. If specified, it must be an array of strings and must not contain nulls. Note that the column names, whether provided in “columns” or in the first row of the CSV, must match the <a href="datasync/resources/faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html">API field names</a>, not the display name of the columns.</td>
+    <td>JSON list of column names. If null then the first line of the CSV after any skipped records is used. If specified, it must be an array of strings and must not contain nulls. Note that the column names, whether provided in “columns” or in the first row of the CSV, must match the <a href="faq-common-problems#how-do-i-find-the-api-field-names-for-my-columns.html">API field names</a>, not the display name of the columns.</td>
   </tr>
 <tr>
     <td>ignoreColumns</td>
