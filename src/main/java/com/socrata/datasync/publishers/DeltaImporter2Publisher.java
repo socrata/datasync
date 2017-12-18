@@ -21,9 +21,10 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -61,7 +62,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
     private static String domain;
     private static HttpUtility http;
     private static URIBuilder baseUri;
-    private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+    private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
     private String pathToSignature = null;
     CloseableHttpResponse signatureResponse = null;
 
@@ -521,7 +522,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
             if (statusCode == HttpStatus.SC_OK) {
                 // The payload that we get back from DI2 may change over time.  Since we are only looking at the delta
                 // section, disable the strict parsing.
-                mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                 LogItem[] deltaLog = mapper.readValue(response.getEntity().getContent(), LogItem[].class);
                 LogItem deltas = getLogItem(deltaLog, finishedLogKey);
                 if (deltas != null) {

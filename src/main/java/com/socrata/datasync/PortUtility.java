@@ -14,9 +14,9 @@ import com.socrata.model.importer.Dataset;
 import com.socrata.model.importer.DatasetInfo;
 import com.socrata.model.soql.SoqlQuery;
 import com.sun.jersey.api.client.ClientResponse;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.File;
 import java.io.FileInputStream;

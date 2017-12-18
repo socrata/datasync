@@ -8,9 +8,9 @@ import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
 import com.socrata.exceptions.LongRunningQueryException;
 import org.apache.http.HttpException;
 import junit.framework.TestCase;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
 import org.junit.Test;
 
 import java.io.File;

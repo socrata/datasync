@@ -2,8 +2,8 @@ package com.socrata.datasync.deltaimporter2;
 
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.controlfile.PortControlFile;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Map;
 

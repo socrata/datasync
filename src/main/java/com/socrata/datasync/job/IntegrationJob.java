@@ -20,11 +20,12 @@ import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import org.apache.commons.cli.CommandLine;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.ISODateTimeFormat;
 import com.sun.jersey.api.client.ClientHandlerException;
@@ -77,7 +78,7 @@ public class IntegrationJob extends Job {
     private String userAgentNameSijFile = ".sij File";
 
     private ObjectMapper controlFileMapper =
-            new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+            new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     public IntegrationJob() {
         userPrefs = new UserPreferencesJava();

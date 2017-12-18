@@ -17,10 +17,11 @@ import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.Dataset;
 import org.apache.http.HttpException;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -234,7 +235,7 @@ public class IntegrationJobTab implements JobTab {
     private void loadJobDataIntoUIFields(IntegrationJob job)  {
         try {
             if (job.getControlFileContent() != null) {
-                ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+                ObjectMapper mapper = new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
                 ControlFile controlFile = mapper.readValue(job.getControlFileContent(), ControlFile.class);
                 //Ideally this could be saved with the control file or factored out.  However, we're stuck with this redundant call
                 // because of DI2's strict enforcement of control files and the current factoring of what CSVTableModel knows about
@@ -535,7 +536,7 @@ public class IntegrationJobTab implements JobTab {
         private String generateControlFileContent(UserPreferences prefs, String fileToPublish, PublishMethod publishMethod,
                                                   String datasetId, boolean containsHeaderRow) throws HttpException, URISyntaxException, InterruptedException, IOException {
             ControlFile control = generateControlFile(prefs,fileToPublish,publishMethod,datasetId,containsHeaderRow);
-            ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+            ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
             return mapper.writeValueAsString(control);
         }
 

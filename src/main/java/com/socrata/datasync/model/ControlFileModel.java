@@ -6,8 +6,9 @@ import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.validation.IntegrationJobValidity;
 import com.socrata.datasync.Utils;
 import com.socrata.model.importer.Column;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -365,7 +366,7 @@ public class ControlFileModel extends Observable {
     }
 
     public String getControlFileContents()  {
-        ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+        ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
         try {
             return mapper.writeValueAsString(controlFile);
         } catch (IOException e) {

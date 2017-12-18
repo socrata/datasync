@@ -2,7 +2,7 @@ package com.socrata.datasync;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.ContentType;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.util.ResourceBundle;

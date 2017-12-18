@@ -5,7 +5,7 @@ import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 import org.apache.commons.cli.CommandLine;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;

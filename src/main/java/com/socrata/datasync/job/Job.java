@@ -3,7 +3,7 @@ package com.socrata.datasync.job;
 import com.socrata.datasync.Utils;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;

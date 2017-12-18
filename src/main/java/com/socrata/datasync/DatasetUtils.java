@@ -15,8 +15,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.utils.URIBuilder;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URI;
@@ -49,7 +50,7 @@ public class DatasetUtils {
 
     private static final String LOCATION_DATATYPE_NAME = "location";
 
-    private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+    private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     public static Dataset getDatasetInfo(UserPreferences userPrefs, String viewId) throws URISyntaxException, IOException, HttpException {
         Dataset ds = getDatasetInfoReflective(userPrefs, viewId, Dataset.class);

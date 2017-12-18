@@ -2,7 +2,7 @@ package com.socrata.datasync.config.userpreferences;
 
 import com.socrata.datasync.TestBase;
 import junit.framework.TestCase;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 import java.io.File;

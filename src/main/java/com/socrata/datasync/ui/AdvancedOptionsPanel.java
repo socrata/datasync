@@ -1,8 +1,9 @@
 package com.socrata.datasync.ui;
 
 import com.socrata.datasync.model.ControlFileModel;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import javax.swing.*;
 import java.awt.*;
@@ -286,7 +287,7 @@ public class AdvancedOptionsPanel extends JPanel implements Observer {
 
     private void showEditControlFileDialog() {
         try {
-            ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+            ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
             String textAreaContent = mapper.writeValueAsString(model.getControlFile());
 
             JTextArea controlFileContentTextArea = new JTextArea();

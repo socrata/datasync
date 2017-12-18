@@ -17,10 +17,10 @@ import com.socrata.datasync.publishers.DeltaImporter2Publisher;
 import com.socrata.datasync.validation.PortJobValidity;
 import org.apache.commons.cli.CommandLine;
 import org.apache.http.HttpException;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.io.File;
 import java.io.IOException;

@@ -5,7 +5,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
