@@ -37,7 +37,7 @@ public class FileTypeControl {
     public Map<String, ColumnOverride> overrides;
     public Map<String, LocationColumn> analyticLocations;
     public Map<String, LocationColumn> syntheticLocations;
-    public Map<String, LocationColumn> syntheticPoints;
+    public Map<String, SyntheticPointColumn> syntheticPoints;
     public Boolean useSocrataGeocoding;
     public String action;
     public Boolean columnStatistics;
@@ -137,7 +137,7 @@ public class FileTypeControl {
 
     public FileTypeControl analyticLocations(Map<String, LocationColumn> s) { analyticLocations = s; return this; }
 
-    public FileTypeControl syntheticPoints(Map<String, LocationColumn> s) { syntheticPoints = s; return this; }
+    public FileTypeControl syntheticPoints(Map<String, SyntheticPointColumn> s) { syntheticPoints = s; return this; }
 
     public FileTypeControl useSocrataGeocoding(boolean u) { useSocrataGeocoding = u; return this; }
 
