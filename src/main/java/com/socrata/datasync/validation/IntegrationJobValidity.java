@@ -618,15 +618,18 @@ public class IntegrationJobValidity {
         }
 
 
-        Map<String,LocationColumn> syntheticColumnsMap =  fileControl.syntheticLocations;
+        Map<String,?> syntheticColumnsMap =  fileControl.syntheticLocations;
 
         if (syntheticColumnsMap != null) {
             Set<String> syntheticColumns = syntheticColumnsMap.keySet();
-            for (String synthetic : syntheticColumns) {
-                if (columnNames.contains(synthetic))
-                    columnNames.remove(synthetic);
-            }
+            columnNames.removeAll(syntheticColumnsMap.keySet());
         }
+
+        syntheticColumnsMap = fileControl.syntheticPoints;
+        if (syntheticColumnsMap != null) {
+            columnNames.removeAll(syntheticColumnsMap.keySet());
+        }
+
         if (columnNames.size() > 0 && method.equals(PublishMethod.replace)) {
             if (rowIdentifier == null) {
                 JobStatus status = JobStatus.MISSING_COLUMNS;

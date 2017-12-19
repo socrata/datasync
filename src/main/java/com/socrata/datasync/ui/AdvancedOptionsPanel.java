@@ -109,7 +109,8 @@ public class AdvancedOptionsPanel extends JPanel implements Observer {
             }
         });
 
-        showSynthetic = UIUtility.getButtonAsLink("Manage Synthetic Columns (" + model.getSyntheticLocations().size() +")");
+        int size = isNBE() ? model.getSyntheticPoints().size() : model.getSyntheticLocations().size();
+        showSynthetic = UIUtility.getButtonAsLink("Manage Synthetic Columns (" + size +")");
         showSynthetic.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -117,12 +118,20 @@ public class AdvancedOptionsPanel extends JPanel implements Observer {
                     renderCollapsed();
                 else {
                     //If there are no locations to show, take me to the dialog where I can create one
-                    if (model.getSyntheticLocations().isEmpty()) {
-                        JDialog dialog = new SyntheticLocationDialog(model, (JFrame) ((JDialog) SwingUtilities.getRoot((JButton) e.getSource())).getParent(), model.getSyntheticLocations(), null, "Manage synthetic columns");
+                    if (isNBE()) {
+                        if (model.getSyntheticPoints().isEmpty()) {
+                            JDialog dialog = new SyntheticPointDialog(model, (JFrame) ((JDialog) SwingUtilities.getRoot((JButton) e.getSource())).getParent(), model.getSyntheticPoints(), null, "Manage synthetic columns");
+                        } else {
+                            renderSyntheticPointsExpanded();
+                        }
+                    } else {
+                        if (model.getSyntheticLocations().isEmpty()) {
+                            JDialog dialog = new SyntheticLocationDialog(model, (JFrame) ((JDialog) SwingUtilities.getRoot((JButton) e.getSource())).getParent(), model.getSyntheticLocations(), null, "Manage synthetic columns");
 
+                        }
+                        else
+                            renderSyntheticLocationsExpanded();
                     }
-                    else
-                        renderSyntheticExpanded();
                 }
             }
         });
@@ -144,11 +153,13 @@ public class AdvancedOptionsPanel extends JPanel implements Observer {
         else
             advancedOptions.setText("Advanced Import Options");
 
-        if (model.getDatasetModel().getLocationCount() > 0) {
-            if (syntheticExpanded)
+        if (model.getDatasetModel().getLocationCount() > 0 || model.getDatasetModel().getPointCount() > 0) {
+            if (syntheticExpanded) {
                 showSynthetic.setText("Hide Synthetic Columns");
-            else
-                showSynthetic.setText("Manage Synthetic Columns (" + model.getSyntheticLocations().size() + ")");
+            } else {
+                int size = isNBE() ? model.getSyntheticPoints().size() : model.getSyntheticLocations().size();
+                showSynthetic.setText("Manage Synthetic Columns (" + size + ")");
+            }
 
             showSynthetic.setAlignmentX(LEFT_ALIGNMENT);
             showSynthetic.setHorizontalAlignment(SwingConstants.LEFT);
@@ -158,6 +169,10 @@ public class AdvancedOptionsPanel extends JPanel implements Observer {
         panel.add(advancedOptions);
 
         return panel;
+    }
+
+    private boolean isNBE() {
+        return model.getDatasetModel().getDatasetInfo().isNewBackend();
     }
 
     private void renderCollapsed(){
@@ -171,7 +186,16 @@ public class AdvancedOptionsPanel extends JPanel implements Observer {
 
     }
 
-    private void renderSyntheticExpanded(){
+    private void renderSyntheticPointsExpanded(){
+        this.removeAll();
+        syntheticExpanded = true;
+        setLayout(new BorderLayout());
+        add(new SyntheticPointsContainer(model), BorderLayout.CENTER);
+        add(getBottomPanel(),BorderLayout.SOUTH);
+        this.revalidate();
+    }
+
+    private void renderSyntheticLocationsExpanded(){
         this.removeAll();
         syntheticExpanded = true;
         setLayout(new BorderLayout());

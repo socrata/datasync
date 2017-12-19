@@ -280,6 +280,9 @@ public class SimpleIntegrationWizard {
                 e.printStackTrace();
                 jobStatus = JobStatus.PUBLISH_ERROR;
                 jobStatus.setMessage("Unexpected error: " + e);
+            } catch (Error e) {
+                e.printStackTrace();
+                throw e;
             }
             return null;
         }
@@ -291,7 +294,9 @@ public class SimpleIntegrationWizard {
             runJobNowButton.setEnabled(true);
 
             // show popup with returned status
-            if(jobStatus.isError()) {
+            if(jobStatus == null) {
+                System.out.println("null jobStatus?!");
+            } else if(jobStatus.isError()) {
                 JOptionPane.showMessageDialog(frame, "Job completed with errors: " + jobStatus.getMessage());
             } else {
                 if (jobTabToRun.getClass().equals(PortJobTab.class)) {

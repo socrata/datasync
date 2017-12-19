@@ -13,7 +13,7 @@ import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
 import com.socrata.model.importer.DatasetInfo;
 import com.socrata.model.soql.SoqlQuery;
-import com.sun.jersey.api.client.ClientResponse;
+import javax.ws.rs.core.Response;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -86,7 +87,7 @@ public class PortUtility {
         // Limit of 1000 rows per export, so page through dataset using $offset
         int offset = 0;
         int rowsUpserted = 0;
-        ClientResponse response;
+        Response response;
         ObjectMapper mapper = new ObjectMapper();
         List<Map<String, Object>> rowSet;
 
@@ -95,7 +96,7 @@ public class PortUtility {
             for(int retries = 0;; ++retries) {
                 try {
                     response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
-                    rowSet = mapper.readValue(response.getEntityInputStream(), new TypeReference<List<Map<String,Object>>>() {});
+                    rowSet = mapper.readValue(response.readEntity(InputStream.class), new TypeReference<List<Map<String,Object>>>() {});
                     break;
                 } catch(SodaError|IOException e) {
                     if(retries == retryLimit) throw e;
@@ -131,7 +132,7 @@ public class PortUtility {
         int offset = 0;
         int batchesRead = 0;
         SoqlQuery myQuery;
-        ClientResponse response;
+        Response response;
         ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         List<Map<String, Object>> rowSet;
         final File tempFile = File.createTempFile("replacement_dataset", ".json");
@@ -143,7 +144,7 @@ public class PortUtility {
             do {
                 myQuery = new SoqlQueryBuilder().setOffset(offset).build();
                 response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
-                rowSet = mapper.readValue(response.getEntityInputStream(),
+                rowSet = mapper.readValue(response.readEntity(InputStream.class),
                                           new TypeReference<List<Map<String, Object>>>() {
                                           }
                                           );

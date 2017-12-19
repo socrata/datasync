@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.ISODateTimeFormat;
-import com.sun.jersey.api.client.ClientHandlerException;
+import javax.ws.rs.ProcessingException;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -404,7 +404,7 @@ public class IntegrationJob extends Job {
                 e.printStackTrace();
                 logPublishingErrorMessage = e.getMessage();
             }
-            catch (ClientHandlerException e) {
+            catch (ProcessingException e) {
                 if(e.getCause() instanceof SocketException) {
                     System.out.println("Socket exception while updating logging dataset: " + e.getCause().getMessage());
                     if(retryLimit-- > 0) {
