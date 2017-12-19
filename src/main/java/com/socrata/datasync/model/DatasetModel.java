@@ -78,6 +78,15 @@ public class DatasetModel extends AbstractTableModel {
         return locationCount;
     }
 
+    public int getPointCount() {
+        int pointCount = 0;
+        for (Column c : columns){
+            if (c.getDataTypeName().equals("point"))
+                pointCount++;
+        }
+        return pointCount;
+    }
+
     public Dataset getDatasetInfo(){
         return datasetInfo;
     }

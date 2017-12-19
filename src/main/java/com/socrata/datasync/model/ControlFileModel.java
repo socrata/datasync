@@ -2,6 +2,7 @@ package com.socrata.datasync.model;
 
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.controlfile.LocationColumn;
+import com.socrata.datasync.config.controlfile.SyntheticPointColumn;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.validation.IntegrationJobValidity;
 import com.socrata.datasync.Utils;
@@ -335,6 +336,23 @@ public class ControlFileModel extends Observable {
             controlFile.getFileTypeControl().syntheticLocations = map;
         }
 
+        syncSynth(fieldName);
+    }
+
+    public void setSyntheticPoint(String fieldName, SyntheticPointColumn locationField) {
+        Map<String, SyntheticPointColumn> columnsMap = controlFile.getFileTypeControl().syntheticPoints;
+        if (columnsMap != null) {
+            controlFile.getFileTypeControl().syntheticPoints.put(fieldName, locationField);
+        } else {
+            HashMap<String, SyntheticPointColumn> map = new HashMap<>();
+            map.put(fieldName, locationField);
+            controlFile.getFileTypeControl().syntheticPoints = map;
+        }
+
+        syncSynth(fieldName);
+    }
+
+    private void syncSynth(String fieldName) {
         //Reset the location column
         int locationIndex = getIndexOfColumnName(fieldName);
         if (locationIndex != -1) {
@@ -350,6 +368,13 @@ public class ControlFileModel extends Observable {
         if (locations == null)
             locations = new HashMap<>();
         return locations;
+    }
+
+    public Map<String, SyntheticPointColumn> getSyntheticPoints() {
+        Map<String, SyntheticPointColumn> points = controlFile.getFileTypeControl().syntheticPoints;
+        if (points == null)
+            points = new HashMap<>();
+        return points;
     }
 
     public ArrayList<Column> getUnmappedDatasetColumns(){
