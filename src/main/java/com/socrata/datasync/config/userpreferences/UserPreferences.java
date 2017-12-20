@@ -15,9 +15,6 @@ public interface UserPreferences {
 
     public String getPassword();
 
-    // API key a.k.a. App token
-    public String getAPIKey();
-
     public String getProxyHost();
 
     public String getProxyPort();
@@ -45,8 +42,6 @@ public interface UserPreferences {
     public String getFilesizeChunkingCutoffMB();
 
     public String getNumRowsPerChunk();
-
-    public String getPortDestinationDomainAppToken();
 
     public SocrataConnectionInfo getConnectionInfo();
 

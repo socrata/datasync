@@ -60,10 +60,24 @@
             <resource>
                 <directory>images/</directory>
             </resource>
+            <resource>
+                <directory>.</directory>
+                <filtering>true</filtering>
+                <includes>
+                  <include>api-key.txt</include>
+                </includes>
+            </resource>
         </resources>
         <testResources>
             <testResource>
                 <directory>src/test/java</directory>
+            </testResource>
+            <testResource>
+                <directory>.</directory>
+                <filtering>true</filtering>
+                <includes>
+                  <include>api-key.txt</include>
+                </includes>
             </testResource>
         </testResources>
         <plugins>

@@ -58,7 +58,6 @@ public class LoadPreferencesJob extends Job {
         newUserPrefs.saveDomain(userPrefs.getDomain());
         newUserPrefs.saveUsername(userPrefs.getUsername());
         newUserPrefs.savePassword(userPrefs.getPassword());
-        newUserPrefs.saveAPIKey(userPrefs.getAPIKey());
         newUserPrefs.saveAdminEmail(userPrefs.getAdminEmail());
         newUserPrefs.saveEmailUponError(userPrefs.emailUponError());
         newUserPrefs.saveLogDatasetID(userPrefs.getLogDatasetID());

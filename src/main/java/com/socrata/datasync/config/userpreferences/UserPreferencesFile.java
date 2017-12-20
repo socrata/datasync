@@ -17,7 +17,6 @@ public class UserPreferencesFile implements UserPreferences {
     private String domain;
     private String username;
     private String password;
-    private String appToken;
     private String proxyHost;
     private String proxyPort;
     private String proxyUsername;
@@ -32,7 +31,6 @@ public class UserPreferencesFile implements UserPreferences {
     private String smtpPassword;
     private String filesizeChunkingCutoffMB;
     private String numRowsPerChunk;
-    private String portDestinationDomainAppToken;
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
     private static final long fileVersionUID = 5L;
@@ -51,15 +49,6 @@ public class UserPreferencesFile implements UserPreferences {
     @JsonProperty("password")
     public String getPassword() {
         return password;
-    }
-
-    @JsonProperty("appToken")
-    public String getAppToken() {
-        return appToken;
-    }
-    // Alias for getAppToken
-    public String getAPIKey() {
-        return appToken;
     }
 
     @JsonProperty("proxyHost")
@@ -132,11 +121,6 @@ public class UserPreferencesFile implements UserPreferences {
         return numRowsPerChunk;
     }
 
-    @JsonProperty("portDestinationDomainAppToken")
-    public String getPortDestinationDomainAppToken() {
-        return portDestinationDomainAppToken;
-    }
-
     @JsonProperty("proxyUsername")
     public void setProxyUsername(String username) { proxyUsername = username; }
 
@@ -154,7 +138,7 @@ public class UserPreferencesFile implements UserPreferences {
 
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(
-                this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());
+                this.getDomain(), this.getUsername(), this.getPassword());
     }
 
 }

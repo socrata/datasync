@@ -39,7 +39,7 @@ This repository is our development basecamp. If you find a bug or have questions
 ### Apache Maven
 DataSync uses Maven for building and package management. For more information: [What is Maven?](http://maven.apache.org/what-is-maven.html)
 
-To build the project run:
+To build the project, first you'll need to create an application token on your profile page.  Put the random string it produces in a file called "api-key.txt" in the root directory of this project, then run
 ```
 mvn clean install
 ```
@@ -57,5 +57,6 @@ java -jar DataSync-1.8.2-jar-with-dependencies.jar
 
 ### Java SDK
 
-DataSync can be used as a Java SDK, for detailed documentation refer to:
+DataSync can be used as a Java SDK, for detailed documentation refer
+to:
 [http://socrata.github.io/datasync/guides/datasync-library-sdk.html](http://socrata.github.io/datasync/guides/datasync-library-sdk.html)

@@ -70,7 +70,7 @@ public class HttpUtility {
         HttpClientBuilder clientBuilder = HttpClients.custom();
         if (useAuth) {
             authHeader = getAuthHeader(userPrefs.getUsername(), userPrefs.getPassword());
-            appToken = userPrefs.getAPIKey();
+            appToken = userPrefs.getConnectionInfo().getToken();
         }
         authRequired = useAuth;
         if(userPrefs != null) {

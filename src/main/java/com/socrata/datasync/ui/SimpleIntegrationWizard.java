@@ -61,7 +61,6 @@ public class SimpleIntegrationWizard {
     private static final String DOMAIN_TIP_TEXT = "The domain of the Socrata data site you wish to publish data to (e.g. https://explore.data.gov/)";
     private static final String USERNAME_TIP_TEXT = "Socrata account username (account must have Publisher or Administrator permissions)";
     private static final String PASSWORD_TIP_TEXT = "Socrata account password";
-    private static final String APP_TOKEN_TIP_TEXT = "You can create an app token free at http://dev.socrata.com/register";
     private static final String RUN_JOB_NOW_TIP_TEXT = "<html><body style='width: 300px'>" +
             "To view detailed logging information run the job by copying the" +
             " 'Command to execute with scheduler' and running it in your Terminal/Command Prompt (instead of clicking 'Run Job Now' button)</body></html>";
@@ -73,7 +72,7 @@ public class SimpleIntegrationWizard {
     private static final String SCHEDULING_GUIDE_URL = "http://socrata.github.io/datasync/resources/schedule-job.html";
     private static final String FAQ_URL = "http://socrata.github.io/datasync/resources/faq-common-problems.html";
 
-    private JTextField domainTextField, usernameTextField, apiKeyTextField;
+    private JTextField domainTextField, usernameTextField;
     private JPasswordField passwordField;
     private JTextField filesizeChunkingCutoffTextField, numRowsPerChunkTextField;
     private JTextField logDatasetIDTextField, adminEmailTextField;
@@ -865,17 +864,12 @@ public class SimpleIntegrationWizard {
                 UIUtility.generateLabelWithHelpBubble("Password", PASSWORD_TIP_TEXT));
         passwordField = new JPasswordField(DEFAULT_TEXTFIELD_COLS);
         authenticationDetailsPanel.add(passwordField);
-        authenticationDetailsPanel.add(
-                UIUtility.generateLabelWithHelpBubble("App Token", APP_TOKEN_TIP_TEXT));
-        apiKeyTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
-        authenticationDetailsPanel.add(apiKeyTextField);
         authenticationDetailsPanel.setPreferredSize(AUTH_DETAILS_DIMENSION);
 
         AuthenticationDetailsFocusListener focusListener = new AuthenticationDetailsFocusListener();
         domainTextField.addFocusListener(focusListener);
         usernameTextField.addFocusListener(focusListener);
         passwordField.addFocusListener(focusListener);
-        apiKeyTextField.addFocusListener(focusListener);
 
         return authenticationDetailsPanel;
     }
@@ -896,7 +890,6 @@ public class SimpleIntegrationWizard {
         userPrefs.saveUsername(usernameTextField.getText());
         String password = new String(passwordField.getPassword());
         userPrefs.savePassword(password);
-        userPrefs.saveAPIKey(apiKeyTextField.getText());
     }
 
     /**
@@ -906,7 +899,6 @@ public class SimpleIntegrationWizard {
         domainTextField.setText(userPrefs.getDomain());
         usernameTextField.setText(userPrefs.getUsername());
         passwordField.setText(userPrefs.getPassword());
-        apiKeyTextField.setText(userPrefs.getAPIKey());
     }
 
 }

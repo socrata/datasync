@@ -14,7 +14,6 @@ public class UserPreferencesLib implements UserPreferences {
     private String domain;
     private String username;
     private String password;
-    private String appToken;
     private String adminEmail;
     private String proxyHost;
     private String proxyPort;
@@ -30,7 +29,6 @@ public class UserPreferencesLib implements UserPreferences {
     private String filesizeChunkingCutoffMB;
     private String numRowsPerChunk;
     private boolean useNewBackend;
-    private String portDestinationDomainAppToken;
 
     // When a file to be published is larger than this value (in MB), file is chunked
     private static final String DEFAULT_FILESIZE_CHUNK_CUTOFF_MB = "10";
@@ -48,7 +46,6 @@ public class UserPreferencesLib implements UserPreferences {
         smtpPassword = "";
         filesizeChunkingCutoffMB = DEFAULT_FILESIZE_CHUNK_CUTOFF_MB;
         numRowsPerChunk = DEFAULT_NUM_ROWS_PER_CHUNK;
-        portDestinationDomainAppToken = "";
     }
 
     public String getDomain() {
@@ -78,16 +75,11 @@ public class UserPreferencesLib implements UserPreferences {
 
     public UserPreferencesLib password(String password) { setPassword(password); return this; }
 
-    public String getAPIKey() { return appToken; }
-
-    public String getAppToken() {
-        return appToken;
-    }
-
+    @Deprecated
     public void setAppToken(String appToken) {
-        this.appToken = appToken;
     }
 
+    @Deprecated
     public UserPreferencesLib appToken(String appToken) { setAppToken(appToken); return this; }
 
     public String getProxyHost() { return proxyHost; }
@@ -228,17 +220,13 @@ public class UserPreferencesLib implements UserPreferences {
         this.useNewBackend = useNewBackend;
     }
 
+    @Deprecated
     public void setPortDestinationDomainAppToken(String portDestinationDomainAppToken) {
-        this.portDestinationDomainAppToken = portDestinationDomainAppToken;
-    }
-
-    public String getPortDestinationDomainAppToken() {
-        return portDestinationDomainAppToken;
     }
 
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(
-                this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());
+                this.getDomain(), this.getUsername(), this.getPassword());
     }
 
     public String getHost() {
