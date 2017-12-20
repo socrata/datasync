@@ -14,7 +14,6 @@ public class UserPreferencesLib implements UserPreferences {
     private String domain;
     private String username;
     private String password;
-    private String appToken;
     private String adminEmail;
     private String proxyHost;
     private String proxyPort;
@@ -78,16 +77,11 @@ public class UserPreferencesLib implements UserPreferences {
 
     public UserPreferencesLib password(String password) { setPassword(password); return this; }
 
-    public String getAPIKey() { return appToken; }
-
-    public String getAppToken() {
-        return appToken;
-    }
-
+    @Deprecated
     public void setAppToken(String appToken) {
-        this.appToken = appToken;
     }
 
+    @Deprecated
     public UserPreferencesLib appToken(String appToken) { setAppToken(appToken); return this; }
 
     public String getProxyHost() { return proxyHost; }
@@ -238,7 +232,7 @@ public class UserPreferencesLib implements UserPreferences {
 
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(
-                this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());
+                this.getDomain(), this.getUsername(), this.getPassword());
     }
 
     public String getHost() {

@@ -19,7 +19,6 @@ public class UserPreferencesJava implements UserPreferences {
     private static final String DOMAIN = "domain";
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
-    private static final String API_KEY = "api_key";
 
     private static final String PROXY_USERNAME = "proxy_username";
     private static final String PROXY_PASSWORD = "proxy_password";
@@ -67,11 +66,6 @@ public class UserPreferencesJava implements UserPreferences {
 
     public void savePassword(String password) {
         saveKeyValuePair(PASSWORD, password);
-    }
-
-    // API key a.k.a. App token
-    public void saveAPIKey(String apiKey) {
-        saveKeyValuePair(API_KEY, apiKey);
     }
 
     public void saveProxyHost(String host) { saveKeyValuePair(PROXY_HOST, host); }
@@ -144,11 +138,6 @@ public class UserPreferencesJava implements UserPreferences {
 
     public String getPassword() {
         return userPrefs.get(PASSWORD, "");
-    }
-
-    // API key a.k.a. App token
-    public String getAPIKey() {
-        return userPrefs.get(API_KEY, "");
     }
 
     public String getProxyHost() { return userPrefs.get(PROXY_HOST, null); }
@@ -228,7 +217,7 @@ public class UserPreferencesJava implements UserPreferences {
 
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(
-                this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());
+                this.getDomain(), this.getUsername(), this.getPassword());
     }
 
     @Override
@@ -236,7 +225,6 @@ public class UserPreferencesJava implements UserPreferences {
         return "domain: " + getDomain() + "\n" +
                 "username: " + getUsername() + "\n" +
                 "password: " + getPassword().replaceAll(".", "*") +"\n" +
-                "appToken: " + getAPIKey() + "\n" +
                 "proxyHost:" + getProxyHost() + "\n" +
                 "proxyPort:" + getProxyPort() + "\n" +
                 "adminEmail: " + getAdminEmail() + "\n" +

@@ -17,7 +17,6 @@ public class UserPreferencesFile implements UserPreferences {
     private String domain;
     private String username;
     private String password;
-    private String appToken;
     private String proxyHost;
     private String proxyPort;
     private String proxyUsername;
@@ -51,15 +50,6 @@ public class UserPreferencesFile implements UserPreferences {
     @JsonProperty("password")
     public String getPassword() {
         return password;
-    }
-
-    @JsonProperty("appToken")
-    public String getAppToken() {
-        return appToken;
-    }
-    // Alias for getAppToken
-    public String getAPIKey() {
-        return appToken;
     }
 
     @JsonProperty("proxyHost")
@@ -154,7 +144,7 @@ public class UserPreferencesFile implements UserPreferences {
 
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(
-                this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());
+                this.getDomain(), this.getUsername(), this.getPassword());
     }
 
 }
