@@ -100,7 +100,9 @@ public class IntegrationJobTab implements JobTab {
     private JLabel jobTabTitleLabel = new JLabel("Untitled");
 
     private JTextField datasetIDTextField;
+    private String lastDatasetId; // used to decide when to regen the control file
     private JTextField fileToPublishTextField;
+    private String lastFileToPublish; // used to decide when to regen the control file
     private JComboBox publishMethodComboBox;
     private ButtonGroup publishMethodRadioButtonGroup;
     private JRadioButton soda2Button;
@@ -134,10 +136,11 @@ public class IntegrationJobTab implements JobTab {
 
 
         loadJobDataIntoUIFields(job);
+        lastDatasetId = datasetIDTextField.getText();
+        lastFileToPublish = fileToPublishTextField.getText();
 
         if(job.getPublishMethod() == null)
             publishMethodComboBox.setSelectedItem(PublishMethod.replace);
-
     }
 
 
@@ -196,9 +199,6 @@ public class IntegrationJobTab implements JobTab {
         datasetIDTextField = new JTextField();
         datasetIDTextField.setPreferredSize(new Dimension(
                 DATASET_ID_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
-        RegenerateControlFileListener regenerateListener = new RegenerateControlFileListener();
-        datasetIDTextField.addActionListener(regenerateListener);
-        datasetIDTextField.addFocusListener(regenerateListener);
         datasetIDTextFieldContainer.add(datasetIDTextField);
         jobPanel.add(datasetIDTextFieldContainer);
     }
@@ -217,9 +217,6 @@ public class IntegrationJobTab implements JobTab {
                 fileToPublishChooser, fileToPublishTextField);
         openButton.addActionListener(chooserListener);
         fileSelectorContainer.add(openButton);
-        RegenerateControlFileListener regenerateListener = new RegenerateControlFileListener();
-        fileToPublishTextField.addActionListener(regenerateListener);
-        fileToPublishTextField.addFocusListener(regenerateListener);
         jobPanel.add(fileSelectorContainer);
     }
 
@@ -477,10 +474,11 @@ public class IntegrationJobTab implements JobTab {
         }
     }
 
-    private class EditControlFileListener implements ActionListener {
-        String lastDatasetId;
-        String lastFile;
+    private boolean isDirty() {
+        return controlFileModel == null || !datasetIDTextField.getText().equals(lastDatasetId) || !fileToPublishTextField.getText().equals(lastFileToPublish);
+    }
 
+    private class EditControlFileListener implements ActionListener {
         public void actionPerformed(ActionEvent evnt) {
             String generateControlFileErrorMessage;
                 if(!datasetIdValid()) {
@@ -489,7 +487,7 @@ public class IntegrationJobTab implements JobTab {
                     JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
                 } else {
                     try {
-                        if (controlFileModel == null || !datasetIDTextField.getText().equals(lastDatasetId) || !fileToPublishTextField.getText().equals(lastFile)) {
+                        if (isDirty()) {
                             ControlFile controlFile = generateControlFile(
                                     new UserPreferencesJava(),
                                     fileToPublishTextField.getText(),
@@ -499,7 +497,7 @@ public class IntegrationJobTab implements JobTab {
 
                             updateControlFileModel(controlFile,datasetIDTextField.getText());
                             lastDatasetId = datasetIDTextField.getText();
-                            lastFile = fileToPublishTextField.getText();
+                            lastFileToPublish = fileToPublishTextField.getText();
                         }
 
                         ControlFileEditDialog editorFrame = new ControlFileEditDialog(controlFileModel,mainFrame);
