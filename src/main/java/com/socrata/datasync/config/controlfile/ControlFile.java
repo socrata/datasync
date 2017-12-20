@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import java.util.HashMap;
+import java.util.TreeMap;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -102,7 +102,7 @@ public class ControlFile {
            .useSocrataGeocoding(useSocrataGeocoding)
            .trimWhitespace(true)
            .trimServerWhitespace(false)
-           .overrides(new HashMap<String, ColumnOverride>())
+           .overrides(new TreeMap<String, ColumnOverride>())
            .setAsideErrors(false);
 
 
