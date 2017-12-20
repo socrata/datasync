@@ -18,10 +18,10 @@ import java.util.Map;
 public class SyntheticPointPanel extends JPanel {
 
     String fieldName;
-    GeocodedPointColumn locationColumn;
+    SyntheticPointColumn locationColumn;
     ControlFileModel model;
 
-    public SyntheticPointPanel(ControlFileModel model, String fieldName, GeocodedPointColumn column){
+    public SyntheticPointPanel(ControlFileModel model, String fieldName, SyntheticPointColumn column){
         this.model = model;
         this.fieldName = fieldName;
         this.locationColumn = column;

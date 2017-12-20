@@ -15,4 +15,5 @@ import java.util.Map;
             @JsonSubTypes.Type(value = ProvidedPointColumn.class, name = "point")
     })
 public interface SyntheticPointColumn {
+    public Map<String, String> findComponentColumns();
 }
