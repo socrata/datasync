@@ -331,7 +331,7 @@ public class ControlFileModel extends Observable {
         if (columnsMap != null) {
             controlFile.getFileTypeControl().syntheticLocations.put(fieldName, locationField);
         } else {
-            HashMap<String, LocationColumn> map = new HashMap<>();
+            TreeMap<String, LocationColumn> map = new TreeMap<>();
             map.put(fieldName, locationField);
             controlFile.getFileTypeControl().syntheticLocations = map;
         }
@@ -344,7 +344,7 @@ public class ControlFileModel extends Observable {
         if (columnsMap != null) {
             controlFile.getFileTypeControl().syntheticPoints.put(fieldName, locationField);
         } else {
-            HashMap<String, SyntheticPointColumn> map = new HashMap<>();
+            TreeMap<String, SyntheticPointColumn> map = new TreeMap<>();
             map.put(fieldName, locationField);
             controlFile.getFileTypeControl().syntheticPoints = map;
         }
@@ -366,14 +366,14 @@ public class ControlFileModel extends Observable {
     public Map<String, LocationColumn> getSyntheticLocations(){
         Map<String, LocationColumn> locations = controlFile.getFileTypeControl().syntheticLocations;
         if (locations == null)
-            locations = new HashMap<>();
+            locations = new TreeMap<>();
         return locations;
     }
 
     public Map<String, SyntheticPointColumn> getSyntheticPoints() {
         Map<String, SyntheticPointColumn> points = controlFile.getFileTypeControl().syntheticPoints;
         if (points == null)
-            points = new HashMap<>();
+            points = new TreeMap<>();
         return points;
     }
 
