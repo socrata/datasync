@@ -44,7 +44,7 @@ public class SyntheticPointPanel extends JPanel {
         manage.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JDialog dialog = new SyntheticPointDialog(model,(JFrame) ((JDialog)SwingUtilities.getRoot((JButton) e.getSource())).getParent(),model.getSyntheticPoints(),fieldName,"Manage synthetic columns");
+                JDialog dialog = SyntheticPointDialog.create(model, (JFrame) ((JDialog)SwingUtilities.getRoot((JButton) e.getSource())).getParent(),model.getSyntheticPoints(), fieldName);
             }
         });
 

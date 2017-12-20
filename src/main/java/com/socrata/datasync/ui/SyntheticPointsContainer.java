@@ -56,7 +56,7 @@ public class SyntheticPointsContainer extends JPanel implements Observer {
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JDialog dialog = new SyntheticPointDialog(model, (JFrame) ((JDialog) SwingUtilities.getRoot((JButton) e.getSource())).getParent(), model.getSyntheticPoints(), null, "Manage synthetic columns");
+                JDialog dialog = SyntheticPointDialog.create(model, (JFrame) ((JDialog) SwingUtilities.getRoot((JButton) e.getSource())).getParent(), model.getSyntheticPoints());
             }
         });
         return button;

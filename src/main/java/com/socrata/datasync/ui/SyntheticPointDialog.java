@@ -33,7 +33,15 @@ public class SyntheticPointDialog extends JDialog {
     JLabel headerLabel;
     JComboBox activeLocation;
 
-    public SyntheticPointDialog(ControlFileModel model, JFrame parent, Map<String, SyntheticPointColumn> syntheticColumns, String initFieldName, String title) { //}, String message){
+    public static JDialog create(ControlFileModel model, JFrame parent, Map<String, SyntheticPointColumn> syntheticColumns) {
+        return create(model, parent, syntheticColumns, null);
+    }
+
+    public static JDialog create(ControlFileModel model, JFrame parent, Map<String, SyntheticPointColumn> syntheticColumns, String initFieldName) {
+        return new SyntheticPointDialog(model, parent, syntheticColumns, initFieldName, "Manage synthetic columns");
+    }
+
+    private SyntheticPointDialog(ControlFileModel model, JFrame parent, Map<String, SyntheticPointColumn> syntheticColumns, String initFieldName, String title) {
         super(parent, title);
         this.model = model;
         //Copy the columns so that playing around with them in the dialog doesn't accidentially change the underlying model.
