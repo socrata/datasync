@@ -9,7 +9,7 @@ import java.util.Map;
 
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=false)
-public class ProvidedPointColumn implements SyntheticPointColumn {
+public class ProvidedPointColumn extends SyntheticPointColumn implements Cloneable {
     // all of these fields should be set to the column id of the relevant field
     public String latitude;
     public String longitude;
@@ -38,4 +38,8 @@ public class ProvidedPointColumn implements SyntheticPointColumn {
     public ProvidedPointColumn latitude(String l) { latitude = l; return this; }
 
     public ProvidedPointColumn longitude(String l) { longitude = l; return this; }
+
+    public ProvidedPointColumn clone() {
+        return (ProvidedPointColumn) super.clone();
+    }
 }

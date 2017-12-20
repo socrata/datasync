@@ -9,7 +9,7 @@ import java.util.Map;
 
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=false)
-public class LocationColumn {
+public class LocationColumn extends SyntheticColumn implements Cloneable {
     // all of these fields should be set to the column id of the relevant field
     public String address;
     public String city;
@@ -53,4 +53,13 @@ public class LocationColumn {
     public LocationColumn state(String s) { state = s; return this; }
 
     public LocationColumn zip(String z) { zip = z; return this; }
+
+    public LocationColumn clone() {
+        try {
+            return (LocationColumn) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

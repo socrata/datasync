@@ -56,7 +56,7 @@ public class SyntheticPointsContainer extends JPanel implements Observer {
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JDialog dialog = new SyntheticPointDialog(model, (JFrame) ((JDialog) SwingUtilities.getRoot((JButton) e.getSource())).getParent(), model.getSyntheticPoints(), null, "Manage synthetic columns");
+                JDialog dialog = SyntheticPointDialog.create(model, (JFrame) ((JDialog) SwingUtilities.getRoot((JButton) e.getSource())).getParent(), model.getSyntheticPoints());
             }
         });
         return button;
@@ -67,7 +67,7 @@ public class SyntheticPointsContainer extends JPanel implements Observer {
         Map<String, SyntheticPointColumn> locations = model.getSyntheticPoints();
         if (locations != null && !locations.isEmpty()){
             for (String key : locations.keySet()){
-                JPanel panel  = new SyntheticPointPanel(model, key, (GeocodedPointColumn) locations.get(key));
+                JPanel panel  = new SyntheticPointPanel(model, key, locations.get(key));
                 panel.setAlignmentX(LEFT_ALIGNMENT);
                 this.add(Box.createRigidArea(new Dimension(10,5)));
                 this.add(panel);

@@ -6,13 +6,17 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.PROPERTY)
     @JsonSubTypes(value = {
             @JsonSubTypes.Type(value = GeocodedPointColumn.class, name = "geocoded"),
             @JsonSubTypes.Type(value = ProvidedPointColumn.class, name = "point")
     })
-public interface SyntheticPointColumn {
+public abstract class SyntheticPointColumn extends SyntheticColumn {
+    public SyntheticPointColumn clone() {
+        try {
+            return (SyntheticPointColumn) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

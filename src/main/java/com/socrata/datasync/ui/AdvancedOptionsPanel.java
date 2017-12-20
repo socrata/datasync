@@ -120,7 +120,7 @@ public class AdvancedOptionsPanel extends JPanel implements Observer {
                     //If there are no locations to show, take me to the dialog where I can create one
                     if (isNBE()) {
                         if (model.getSyntheticPoints().isEmpty()) {
-                            JDialog dialog = new SyntheticPointDialog(model, (JFrame) ((JDialog) SwingUtilities.getRoot((JButton) e.getSource())).getParent(), model.getSyntheticPoints(), null, "Manage synthetic columns");
+                            JDialog dialog = SyntheticPointDialog.create(model, (JFrame) ((JDialog) SwingUtilities.getRoot((JButton) e.getSource())).getParent(), model.getSyntheticPoints());
                         } else {
                             renderSyntheticPointsExpanded();
                         }

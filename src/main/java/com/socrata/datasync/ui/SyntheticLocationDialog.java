@@ -274,7 +274,7 @@ public class SyntheticLocationDialog extends JDialog {
         LocationColumn locationColumn = syntheticColumnsCopy.get(fieldName);
         if (locationColumn == null) {
             locationColumn = new LocationColumn();
-            syntheticColumnsCopy.put(fieldName,locationColumn);
+            syntheticColumnsCopy.put(fieldName, locationColumn.clone());
         }
         return locationColumn;
     }
