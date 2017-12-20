@@ -269,11 +269,8 @@ public class SimpleIntegrationWizard {
 
         @Override
         protected Void doInBackground() {
-            System.out.println("tick");
             try {
-                System.out.println("tock");
                 jobStatus = jobTabToRun.runJobNow();
-                System.out.println("tack");
             } catch (OutOfMemoryError err) {
                 jobStatus = JobStatus.PUBLISH_ERROR;
                 jobStatus.setMessage("Error: ran out of memory " +
