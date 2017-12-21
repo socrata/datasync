@@ -18,6 +18,7 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.List;
@@ -273,6 +274,10 @@ public class Utils {
     }
 
     public static String commaJoin(String[] ss) {
+        return commaJoin(Arrays.asList(ss));
+    }
+
+    public static String commaJoin(List<String> ss) {
         StringBuilder sb = new StringBuilder();
         boolean didOne = false;
         for(String s : ss) {

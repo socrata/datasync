@@ -68,6 +68,7 @@ public class LoadPreferencesJob extends Job {
         newUserPrefs.saveSMTPPassword(userPrefs.getSmtpPassword());
         newUserPrefs.saveProxyHost(userPrefs.getProxyHost());
         newUserPrefs.saveProxyPort(userPrefs.getProxyPort());
+        newUserPrefs.saveDefaultTimeFormats(userPrefs.getDefaultTimeFormats());
         if (userPrefs.getFilesizeChunkingCutoffMB() != null)
             newUserPrefs.saveFilesizeChunkingCutoffMB(Integer.parseInt(userPrefs.getFilesizeChunkingCutoffMB()));
         if (userPrefs.getNumRowsPerChunk() != null)

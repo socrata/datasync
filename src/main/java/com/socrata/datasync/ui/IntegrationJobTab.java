@@ -121,8 +121,12 @@ public class IntegrationJobTab implements JobTab {
 
     private boolean usingControlFile;
 
+    private UserPreferences userPrefs;
+
     // build Container with all tab components populated with given job data
-    public IntegrationJobTab(IntegrationJob job, JFrame containingFrame) {
+    public IntegrationJobTab(IntegrationJob job, JFrame containingFrame, UserPreferences userPrefs) {
+        this.userPrefs = userPrefs;
+
         mainFrame = containingFrame;
 
         // build tab panel form
@@ -552,7 +556,7 @@ public class IntegrationJobTab implements JobTab {
                     columns = DatasetUtils.getFieldNamesArray(datasetInfo);
             }
 
-            return ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding, containsHeaderRow);
+            return ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding, containsHeaderRow, userPrefs.getDefaultTimeFormats());
         }
 
     }
