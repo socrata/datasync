@@ -734,11 +734,12 @@ public class SimpleIntegrationWizard {
         testSMTPSettingsButton.addActionListener(new TestSMTPSettingsListener());
         testSMTPSettingsContainer.add(testSMTPSettingsButton);
         prefsPanel.add(testSMTPSettingsContainer);
+        prefsPanel.add(new JLabel(""));
 
         // Parsing settings
         JLabel parsingSettingsLabel = new JLabel(" Parsing Settings");
-        proxySettingsLabel.setFont(boldFont);
-        prefsPanel.add(proxySettingsLabel);
+        parsingSettingsLabel.setFont(boldFont);
+        prefsPanel.add(parsingSettingsLabel);
         prefsPanel.add(new JLabel(""));
 
         prefsPanel.add(new JLabel(" Default time formats"));
