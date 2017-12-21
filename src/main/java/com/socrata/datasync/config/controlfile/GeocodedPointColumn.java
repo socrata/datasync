@@ -9,7 +9,7 @@ import java.util.Map;
 
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=false)
-public class GeocodedPointColumn implements SyntheticPointColumn {
+public class GeocodedPointColumn extends SyntheticPointColumn {
     // all of these fields should be set to the column id of the relevant field
     public String address;
     public String city;
