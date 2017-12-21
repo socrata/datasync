@@ -36,7 +36,6 @@ public class UserPreferencesFile implements UserPreferences {
     private String smtpPassword;
     private String filesizeChunkingCutoffMB;
     private String numRowsPerChunk;
-    private String portDestinationDomainAppToken;
     private List<String> timeFormats;
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
@@ -126,11 +125,6 @@ public class UserPreferencesFile implements UserPreferences {
     @JsonProperty("numRowsPerChunk")
     public String getNumRowsPerChunk() {
         return numRowsPerChunk;
-    }
-
-    @JsonProperty("portDestinationDomainAppToken")
-    public String getPortDestinationDomainAppToken() {
-        return portDestinationDomainAppToken;
     }
 
     @JsonProperty("proxyUsername")

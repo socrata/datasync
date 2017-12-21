@@ -34,7 +34,6 @@ public class UserPreferencesLib implements UserPreferences {
     private String filesizeChunkingCutoffMB;
     private String numRowsPerChunk;
     private boolean useNewBackend;
-    private String portDestinationDomainAppToken;
     private List<String> defaultTimeFormats;
 
     // When a file to be published is larger than this value (in MB), file is chunked
@@ -53,7 +52,6 @@ public class UserPreferencesLib implements UserPreferences {
         smtpPassword = "";
         filesizeChunkingCutoffMB = DEFAULT_FILESIZE_CHUNK_CUTOFF_MB;
         numRowsPerChunk = DEFAULT_NUM_ROWS_PER_CHUNK;
-        portDestinationDomainAppToken = "";
         defaultTimeFormats = Arrays.asList(DEFAULT_TIME_FORMATS);
     }
 
@@ -229,12 +227,8 @@ public class UserPreferencesLib implements UserPreferences {
         this.useNewBackend = useNewBackend;
     }
 
+    @Deprecated
     public void setPortDestinationDomainAppToken(String portDestinationDomainAppToken) {
-        this.portDestinationDomainAppToken = portDestinationDomainAppToken;
-    }
-
-    public String getPortDestinationDomainAppToken() {
-        return portDestinationDomainAppToken;
     }
 
     public SocrataConnectionInfo getConnectionInfo() {

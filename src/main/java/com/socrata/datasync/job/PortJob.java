@@ -253,16 +253,10 @@ public class PortJob extends Job {
                                                       connectionInfo.getUser(), connectionInfo.getPassword(),
                                                       connectionInfo.getToken());
 
-                // special feature to enable porting datasets to Staging (where app token is different)
-                String portDestinationDomainAppToken = connectionInfo.getToken();
-                if(userPrefs.getPortDestinationDomainAppToken() != null && !userPrefs.getPortDestinationDomainAppToken().equals("")) {
-                    portDestinationDomainAppToken = userPrefs.getPortDestinationDomainAppToken();
-                }
-
                 // creator "creates" a new dataset on the sink site (and publishes if applicable)
                 final SodaDdl creator = SodaDdl.newDdl(sinkSiteDomain,
                                                        connectionInfo.getUser(), connectionInfo.getPassword(),
-                                                       portDestinationDomainAppToken);
+                                                       connectionInfo.getToken());
                 // streamExporter "exports" the source dataset rows
                 final Soda2Consumer streamExporter = Soda2Consumer.newConsumer(
                                                                                sourceSiteDomain, connectionInfo.getUser(),
@@ -270,7 +264,7 @@ public class PortJob extends Job {
                 // streamUpserter "upserts" the rows exported to the created dataset
                 final Soda2Producer streamUpserter = Soda2Producer.newProducer(
                                                                                sinkSiteDomain, connectionInfo.getUser(),
-                                                                               connectionInfo.getPassword(), portDestinationDomainAppToken);
+                                                                               connectionInfo.getPassword(), connectionInfo.getToken());
                 String errorMessage = "";
                 boolean noPortExceptions = false;
                 try {
