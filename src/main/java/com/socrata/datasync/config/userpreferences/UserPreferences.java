@@ -1,12 +1,19 @@
 package com.socrata.datasync.config.userpreferences;
 
 import com.socrata.datasync.SocrataConnectionInfo;
+import java.util.List;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Author: Adrian Laurenzi
  * Date: 12/2/13
  */
 public interface UserPreferences {
+    public static final String[] DEFAULT_TIME_FORMATS = new String[] {
+        "ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy","MM/dd/yyyy hh:mm:ss a Z","MM/dd/yyyy hh:mm:ss a"
+    };
+
     public String getDomain();
 
     public String getHost();
@@ -51,4 +58,5 @@ public interface UserPreferences {
 
     public void setProxyUsername(String username);
 
+    public List<String> getDefaultTimeFormats();
 }

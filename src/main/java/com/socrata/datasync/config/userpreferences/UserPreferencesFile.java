@@ -5,6 +5,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 public class UserPreferencesFile implements UserPreferences {
@@ -32,6 +37,7 @@ public class UserPreferencesFile implements UserPreferences {
     private String filesizeChunkingCutoffMB;
     private String numRowsPerChunk;
     private String portDestinationDomainAppToken;
+    private List<String> timeFormats;
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
     private static final long fileVersionUID = 5L;
@@ -132,6 +138,12 @@ public class UserPreferencesFile implements UserPreferences {
 
     @JsonProperty("proxyPassword")
     public void setProxyPassword(String password) { proxyPassword = password; }
+
+    @JsonProperty("defaultTimeFormats")
+    public List<String> getDefaultTimeFormats() {
+        if(timeFormats == null) return Collections.unmodifiableList(Arrays.asList(DEFAULT_TIME_FORMATS));
+        return Collections.unmodifiableList(timeFormats);
+    }
 
     public String getHost() {
         if (domain != null) {

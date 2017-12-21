@@ -14,6 +14,7 @@ import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.job.MetadataJob;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.job.GISJob;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 
 import java.io.File;
@@ -21,6 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SimpleIntegrationWizard {
@@ -81,6 +83,7 @@ public class SimpleIntegrationWizard {
     private JPasswordField smtpPasswordField;
     private JCheckBox useSSLCheckBox;
     private JCheckBox emailUponErrorCheckBox;
+    private JTextField timeFormatsTextField;
 
     /**
      * Stores a list of open JobTabs. Each JobTab object contains
@@ -192,7 +195,7 @@ public class SimpleIntegrationWizard {
     private void addJobTab(Job job) throws IllegalArgumentException {
         JobTab newJobTab;
         if(job.getClass().equals(IntegrationJob.class)) {
-            newJobTab = new IntegrationJobTab((IntegrationJob) job, frame);
+            newJobTab = new IntegrationJobTab((IntegrationJob) job, frame, userPrefs);
         } else if(job.getClass().equals(PortJob.class)) {
             newJobTab = new PortJobTab((PortJob) job, frame);
         } else if(job.getClass().equals(GISJob.class)) {
@@ -732,6 +735,16 @@ public class SimpleIntegrationWizard {
         testSMTPSettingsContainer.add(testSMTPSettingsButton);
         prefsPanel.add(testSMTPSettingsContainer);
 
+        // Parsing settings
+        JLabel parsingSettingsLabel = new JLabel(" Parsing Settings");
+        proxySettingsLabel.setFont(boldFont);
+        prefsPanel.add(proxySettingsLabel);
+        prefsPanel.add(new JLabel(""));
+
+        prefsPanel.add(new JLabel(" Default time formats"));
+        timeFormatsTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(timeFormatsTextField);
+
         JPanel prefsButtonContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton cancelPrefsButton = new JButton("Cancel");
         cancelPrefsButton.addActionListener(new CancelPreferencesListener());
@@ -770,7 +783,7 @@ public class SimpleIntegrationWizard {
         proxyPortTextField.setText(userPrefs.getProxyPort());
         proxyUsernameTextField.setText(userPrefs.getProxyUsername());
         proxyPasswordTextField.setText(userPrefs.getProxyPassword());
-
+        timeFormatsTextField.setText(Utils.commaJoin(userPrefs.getDefaultTimeFormats()));
     }
 
     private void savePreferences() {
@@ -807,6 +820,13 @@ public class SimpleIntegrationWizard {
         userPrefs.saveProxyUsername(proxyUsernameTextField.getText());
         userPrefs.saveProxyPassword(proxyPasswordTextField.getText());
 
+        String newTimeFormats = timeFormatsTextField.getText();
+        if(newTimeFormats.trim().isEmpty()) {
+            userPrefs.saveDefaultTimeFormats(Arrays.asList(UserPreferences.DEFAULT_TIME_FORMATS));
+            timeFormatsTextField.setText(Utils.commaJoin(UserPreferences.DEFAULT_TIME_FORMATS));
+        } else {
+            userPrefs.saveDefaultTimeFormats(Arrays.asList(Utils.commaSplit(newTimeFormats)));
+        }
     }
 
     private class SavePreferencesListener implements ActionListener {

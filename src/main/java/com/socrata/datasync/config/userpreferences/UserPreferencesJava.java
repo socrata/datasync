@@ -1,9 +1,14 @@
 package com.socrata.datasync.config.userpreferences;
 
 import com.socrata.datasync.SocrataConnectionInfo;
+import com.socrata.datasync.Utils;
 
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class UserPreferencesJava implements UserPreferences {
     /**
@@ -43,6 +48,8 @@ public class UserPreferencesJava implements UserPreferences {
     private static final String DEFAULT_FILESIZE_CHUNK_CUTOFF_MB = "10";
     // During chunking files are uploaded NUM_ROWS_PER_CHUNK rows per chunk
     private static final String DEFAULT_NUM_ROWS_PER_CHUNK = "10000";
+
+    private static final String TIME_FORMATS = "time_formats";
 
     private final String DEFAULT_DOMAIN = "https://";
     private final String DEFAULT_SSL_PORT = "465";
@@ -117,6 +124,10 @@ public class UserPreferencesJava implements UserPreferences {
 
     public void saveSMTPPassword(String password) {
         saveKeyValuePair(SMTP_PASSWORD, password);
+    }
+
+    public void saveDefaultTimeFormats(List<String> defaultTimeFormats) {
+        saveKeyValuePair(TIME_FORMATS, Utils.commaJoin(defaultTimeFormats));
     }
 
     public void setProxyUsername(String username) {};  // never save proxy credentials
@@ -220,6 +231,10 @@ public class UserPreferencesJava implements UserPreferences {
                 this.getDomain(), this.getUsername(), this.getPassword());
     }
 
+    public List<String> getDefaultTimeFormats() {
+        return Collections.unmodifiableList(Arrays.asList(Utils.commaSplit(userPrefs.get(TIME_FORMATS, Utils.commaJoin(DEFAULT_TIME_FORMATS)))));
+    }
+
     @Override
     public String toString() {
         return "domain: " + getDomain() + "\n" +
@@ -236,7 +251,8 @@ public class UserPreferencesJava implements UserPreferences {
                 "smtpUsername: " + getSmtpUsername() + "\n" +
                 "smtpPassword: " + getSmtpPassword().replaceAll(".", "*") + "\n" +
                 "filesizeChunkingCutoffMB: " + getFilesizeChunkingCutoffMB() + "\n" +
-                "numRowsPerChunk: " + getNumRowsPerChunk() + "\n";
+                "numRowsPerChunk: " + getNumRowsPerChunk() + "\n" +
+                "defaultTimeFormats: " + getDefaultTimeFormats() + "\n";
     }
 
     private void saveKeyValuePair(String key, String value) {

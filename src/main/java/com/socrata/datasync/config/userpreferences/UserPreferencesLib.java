@@ -3,6 +3,11 @@ package com.socrata.datasync.config.userpreferences;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.job.LoadPreferencesJob;
 
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Collections;
+
 /**
  * Author: Adrian Laurenzi
  * Date: 6/13/14
@@ -30,6 +35,7 @@ public class UserPreferencesLib implements UserPreferences {
     private String numRowsPerChunk;
     private boolean useNewBackend;
     private String portDestinationDomainAppToken;
+    private List<String> defaultTimeFormats;
 
     // When a file to be published is larger than this value (in MB), file is chunked
     private static final String DEFAULT_FILESIZE_CHUNK_CUTOFF_MB = "10";
@@ -48,6 +54,7 @@ public class UserPreferencesLib implements UserPreferences {
         filesizeChunkingCutoffMB = DEFAULT_FILESIZE_CHUNK_CUTOFF_MB;
         numRowsPerChunk = DEFAULT_NUM_ROWS_PER_CHUNK;
         portDestinationDomainAppToken = "";
+        defaultTimeFormats = Arrays.asList(DEFAULT_TIME_FORMATS);
     }
 
     public String getDomain() {
@@ -242,6 +249,14 @@ public class UserPreferencesLib implements UserPreferences {
         } else {
             return null;
         }
+    }
+
+    public List<String> getDefaultTimeFormats() {
+        return Collections.unmodifiableList(defaultTimeFormats);
+    }
+
+    public void setDefaultTimeForamts(List<String> defaultTimeFormats) {
+        this.defaultTimeFormats = new ArrayList<>(defaultTimeFormats);
     }
 
     public UserPreferencesLib load() {

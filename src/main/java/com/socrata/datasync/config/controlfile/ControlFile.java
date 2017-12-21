@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.util.TreeMap;
+import java.util.List;
 
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=true)
@@ -72,7 +73,8 @@ public class ControlFile {
                                                   final PublishMethod publishMethod,
                                                   final String[] columns,
                                                   final boolean useSocrataGeocoding,
-                                                  final boolean hasHeaderRow) {
+                                                  final boolean hasHeaderRow,
+                                                  final List<String> timeFormats) {
 
 
         String fileToPublishExtension = Utils.getFileExtension(fileToPublish);
@@ -89,13 +91,11 @@ public class ControlFile {
 
         int skip = 0;
         String separator = isCsv ? "," : "\t";
-        //Adding our standard export formats so that a customer can easily round-trip data into the system.
-        String[] timeFormats = new String[]{"ISO8601", "MM/dd/yy", "MM/dd/yyyy", "dd-MMM-yyyy","MM/dd/yyyy hh:mm:ss a Z","MM/dd/yyyy hh:mm:ss a","yyyy-MM-dd"};
         ftc.emptyTextIsNull(true)
            .filePath(fileToPublish)
            .ignoreColumns(new String[]{})
-           .fixedTimestampFormat(timeFormats)
-           .floatingTimestampFormat(timeFormats)
+           .fixedTimestampFormat(timeFormats.toArray(new String[0]))
+           .floatingTimestampFormat(timeFormats.toArray(new String[0]))
            .separator(separator)
            .skip(skip)
            .timezone("UTC")
