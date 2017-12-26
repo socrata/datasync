@@ -120,7 +120,8 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                     @Override
                     protected void progress(long count) {
                         System.out.println("\tRead " + count + " of " + fileSize + " bytes of " + csvOrTsvFile.getName());
-                        SimpleIntegrationWizard.loadingTextLabel.setText("Reading File");
+                        int pct = (int) (count*100/fileSize);
+                        updateStatus("Reading File", pct, true, "");
                     }
                 };
                 // compute the patch between the csv/tsv file and its previous signature
@@ -267,8 +268,8 @@ public class DeltaImporter2Publisher implements AutoCloseable {
      */
     private List<String> postPatchBlobs(InputStream patchStream, String datasetId, int chunkSize) throws
             IOException, URISyntaxException, HttpException {
-        SimpleIntegrationWizard.loadingTextLabel.setText("Chunking and posting the diff");
-        System.out.println("Chunking and posting the diff");
+        updateStatus("Chunking and posting the diff", 0, false, "");
+        System.out.println("Creating the diff...");
 
         URI postingPath = baseUri.setPath(datasyncPath + "/" + datasetId).build();
         List<String> blobIds = new LinkedList<>();
@@ -296,6 +297,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
             } while (status != HttpStatus.SC_CREATED && retries < httpRetries);
             //We hit the max number of retries without success and should throw an exception accordingly.
             if (retries >= httpRetries) throw new HttpException(statusLine.toString());
+            updateStatus("Uploading file", 0, false, bytesRead + " bytes");
             System.out.println("\tUploaded " + bytesRead + " bytes");
         }
         return blobIds;
@@ -309,8 +311,8 @@ public class DeltaImporter2Publisher implements AutoCloseable {
      * @return the jobId of the job applying the diff
      */
     private String commitStandardJob(final CommitMessage<ControlFile> msg, final String datasetId, final String uuid) throws URISyntaxException, IOException, CompletelyRestartJob {
-        SimpleIntegrationWizard.loadingTextLabel.setText("Commiting the chunked diffs to apply the patch");
-        System.out.println("Committing the chunked diffs to apply the patch");
+        updateStatus("Commiting the job", 0, false, "");
+        System.out.println("Committing the job");
         final URI committingPath = baseUri.setPath(datasyncPath + "/" + datasetId + commitPath).build();
         return commitGenericJob(msg, committingPath, datasetId, uuid);
     }
@@ -506,18 +508,11 @@ public class DeltaImporter2Publisher implements AutoCloseable {
         if(!jobStatus.isError()) loadStatusWithCRUD(jobStatus, logUri);
         return jobStatus;
     }
+
     private void updateStatus(String loadingLabel, int progressPercent, boolean showProgress, String message) {
-        SimpleIntegrationWizard.loadingTextLabel.setText(loadingLabel);
-        SimpleIntegrationWizard.progress.setValue(0);
-        if(showProgress) {
-            SimpleIntegrationWizard.progress.setVisible(true);
-            SimpleIntegrationWizard.progressText.setText("");
-            SimpleIntegrationWizard.progress.setValue(progressPercent);
-        } else {
-            SimpleIntegrationWizard.progress.setVisible(false);
-            SimpleIntegrationWizard.progressText.setText(message);
-        }
+        SimpleIntegrationWizard.updateStatus(loadingLabel, progressPercent, showProgress, message);
     }
+
     private Commital getJobCommitment(String datasetId, String uuid) throws URISyntaxException {
         URI logUri = baseUri.setPath(datasyncPath + "/" + datasetId + logPath + "/index.json").build();
         try(CloseableHttpResponse response = http.get(logUri, ContentType.APPLICATION_JSON.getMimeType())) {

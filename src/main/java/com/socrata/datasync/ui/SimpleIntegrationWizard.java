@@ -103,14 +103,16 @@ public class SimpleIntegrationWizard {
     private JPanel loadingNoticePanel;
     private JPanel progressPanel;
     private JButton runJobNowButton;
-    public static JLabel loadingTextLabel = new JLabel("Processing...");
-    public static JProgressBar progress = new JProgressBar(0, 100);
-    public static JLabel progressText = new JLabel("");
+    private JLabel loadingTextLabel = new JLabel("Processing...");
+    private JProgressBar progress = new JProgressBar(0, 100);
+    private JLabel progressText = new JLabel("");
+
+    private static SimpleIntegrationWizard instance;
 
     /*
      * Constructs the GUI and displays it on the screen.
      */
-    public SimpleIntegrationWizard() {
+    private SimpleIntegrationWizard() {
         // load user preferences (saved locally)
         userPrefs = new UserPreferencesJava();
 
@@ -150,6 +152,11 @@ public class SimpleIntegrationWizard {
         } catch (Exception e) {
             // do nothing upon failure
         }
+    }
+
+    public static SimpleIntegrationWizard get() {
+        if(instance == null) instance = new SimpleIntegrationWizard();
+        return instance;
     }
 
     private void generatePreferencesFrame() {
@@ -941,4 +948,18 @@ public class SimpleIntegrationWizard {
         passwordField.setText(userPrefs.getPassword());
     }
 
+    public static void updateStatus(String loadingLabel, int progressPercent, boolean showProgress, String message) {
+        if(instance != null) {
+            instance.loadingTextLabel.setText(loadingLabel);
+            instance.progress.setValue(0);
+            if(showProgress) {
+                instance.progress.setVisible(true);
+                instance.progressText.setText("");
+                instance.progress.setValue(progressPercent);
+            } else {
+                instance.progress.setVisible(false);
+                instance.progressText.setText(message);
+            }
+        }
+    }
 }

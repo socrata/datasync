@@ -29,7 +29,7 @@ public class Main {
     public static void main(String[] args) throws ParseException, ControlDisagreementException {
         if(args.length == 0) {
             // Open GUI (default)
-            new SimpleIntegrationWizard();
+            SimpleIntegrationWizard.get();
         } else if(args.length == 1) {
             if (args[0].equals("-?") || args[0].equals("--help")) {
                 printHelp();
