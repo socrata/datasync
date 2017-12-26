@@ -101,7 +101,11 @@ public class SimpleIntegrationWizard {
     private JFrame frame;
     private JFrame prefsFrame;
     private JPanel loadingNoticePanel;
+    private JPanel progressPanel;
     private JButton runJobNowButton;
+    public static JLabel loadingTextLabel = new JLabel("Processing...");
+    public static JProgressBar progress = new JProgressBar(0, 100);
+    public static JLabel progressText = new JLabel("");
 
     /*
      * Constructs the GUI and displays it on the screen.
@@ -266,6 +270,10 @@ public class SimpleIntegrationWizard {
 
         public RunJobWorker(JobTab jobTabToRun){
             loadingNoticePanel.setVisible(true);
+            progressPanel.setVisible(true);
+            loadingNoticePanel.add(loadingTextLabel);
+            progressPanel.add(progress);
+            progressPanel.add(progressText);
             runJobNowButton.setEnabled(false);
             this.jobTabToRun = jobTabToRun;
         }
@@ -293,6 +301,7 @@ public class SimpleIntegrationWizard {
         @Override
         protected void done() {
             loadingNoticePanel.setVisible(false);
+            progressPanel.setVisible(false);
             runJobNowButton.setEnabled(true);
 
             // show popup with returned status
@@ -571,7 +580,7 @@ public class SimpleIntegrationWizard {
         jobTabsContainer.add(jobTabsPane);
         jobTabsPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
-        JPanel jobButtonContainer = new JPanel(new GridLayout(1,2));
+        JPanel jobButtonContainer = new JPanel(new GridLayout(1,4));
         JPanel leftButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         runJobNowButton = new JButton("Run Job Now");
         runJobNowButton.addActionListener(new RunJobNowListener());
@@ -579,13 +588,15 @@ public class SimpleIntegrationWizard {
         leftButtonPanel.add(UIUtility.generateHelpBubble(RUN_JOB_NOW_TIP_TEXT));
 
         generateLoadingNotice();
-        leftButtonPanel.add(loadingNoticePanel);
+        generateProgressBar();
 
         JPanel rightButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton saveJobButton = new JButton("Save Job");
         saveJobButton.addActionListener(new SaveJobListener());
         rightButtonPanel.add(saveJobButton);
         jobButtonContainer.add(leftButtonPanel);
+        jobButtonContainer.add(loadingNoticePanel);
+        jobButtonContainer.add(progressPanel);
         jobButtonContainer.add(rightButtonPanel);
 
         jobButtonContainer.setPreferredSize(BUTTON_PANEL_DIMENSION);
@@ -611,14 +622,20 @@ public class SimpleIntegrationWizard {
 
     private void generateLoadingNotice() {
         loadingNoticePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        URL spinnerImageURL = getClass().getResource(LOADING_SPINNER_FILE_PATH);
-        if(spinnerImageURL != null) {
-            JLabel loadingImageLabel = new JLabel(new ImageIcon(spinnerImageURL));
-            loadingNoticePanel.add(loadingImageLabel);
-        }
-        JLabel loadingTextLabel = new JLabel(" Job is in progress...");
-        loadingNoticePanel.add(loadingTextLabel);
+        // URL spinnerImageURL = getClass().getResource(LOADING_SPINNER_FILE_PATH);
+        // if(spinnerImageURL != null) {
+        //     JLabel loadingImageLabel = new JLabel(new ImageIcon(spinnerImageURL));
+        //     loadingNoticePanel.add(loadingImageLabel);
+        // }
+        // JLabel loadingTextLabel = new JLabel(" Job is in progress...");
+        // loadingNoticePanel.add(loadingTextLabel);
         loadingNoticePanel.setVisible(false);
+    }
+
+    private void generateProgressBar() {
+        progressPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+
+        progressPanel.setVisible(false);
     }
 
     private JPanel generatePreferencesPanel() {
