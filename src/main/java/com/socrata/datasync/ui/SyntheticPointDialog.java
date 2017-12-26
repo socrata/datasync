@@ -25,7 +25,41 @@ import java.util.Map;
  * a location column
  */
 public class SyntheticPointDialog extends JDialog {
-    Map<String, SyntheticPointColumn> syntheticColumnsCopy;
+    static class PointSpec {
+        enum Active {
+            GEOCODED, PROVIDED
+        }
+
+        Active active;
+        GeocodedPointColumn geocoded;
+        ProvidedPointColumn provided;
+
+        PointSpec(SyntheticPointColumn pt) {
+            if(pt == null) {
+                active = Active.GEOCODED;
+                geocoded = new GeocodedPointColumn();
+                provided = new ProvidedPointColumn();
+            } else if(pt instanceof GeocodedPointColumn) {
+                active = Active.GEOCODED;
+                geocoded = (GeocodedPointColumn) pt;
+                provided = new ProvidedPointColumn();
+            } else {
+                active = Active.PROVIDED;
+                geocoded = new GeocodedPointColumn();
+                provided = (ProvidedPointColumn) pt;
+            }
+        }
+
+        public SyntheticPointColumn getPointColumn() {
+            return active == Active.GEOCODED ? geocoded : provided;
+        }
+
+        @Override
+        public String toString() {
+            return "#<" + active + " " + geocoded + " " + provided + ">";
+        }
+    }
+    Map<String, PointSpec> syntheticColumnsCopy;
     Map<String, Integer> columnIndexes;
     ControlFileModel model;
     JComboBox addressCombo;
@@ -80,7 +114,6 @@ public class SyntheticPointDialog extends JDialog {
                 } else {
                     ensureActiveIsProvided();
                 }
-                updateSyntheticComponentComboboxes();
             }
         });
 
@@ -91,8 +124,11 @@ public class SyntheticPointDialog extends JDialog {
     }
 
     //Make a copy of the columns so that we don't change the control file just by launching the dialog.
-    private Map<String, SyntheticPointColumn> copySyntheticColumns(Map<String,SyntheticPointColumn> original){
-        Map<String, SyntheticPointColumn> result = new TreeMap<>(original);
+    private Map<String, PointSpec> copySyntheticColumns(Map<String, SyntheticPointColumn> original){
+        Map<String, PointSpec> result = new TreeMap<>();
+        for(Map.Entry<String, SyntheticPointColumn> ent : original.entrySet()) {
+            result.put(ent.getKey(), new PointSpec(ent.getValue().clone()));
+        }
         return result;
     }
 
@@ -148,77 +184,79 @@ public class SyntheticPointDialog extends JDialog {
     }
 
     private void addFieldListeners() {
-        addressCombo.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    GeocodedPointColumn col = ensureActiveIsGeocoded();
+        abstract class Listener<T extends SyntheticPointColumn> implements ItemListener {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(e.getStateChange() == ItemEvent.SELECTED) {
+                    T col = extractPoint(getActiveLocation());
                     SyntheticComboBoxItem item =  (SyntheticComboBoxItem) e.getItem();
-                    col.address = model.getColumnAtPosition(item.getIndex());
+                    setField(col, model.getColumnAtPosition(item.getIndex()));
+                }
+            }
+
+            abstract T extractPoint(PointSpec spec);
+            abstract void setField(T col, String value);
+        }
+
+        abstract class GeocodedListener extends Listener<GeocodedPointColumn> {
+            GeocodedPointColumn extractPoint(PointSpec spec) {
+                return spec.geocoded;
+            }
+        }
+
+        abstract class ProvidedListener extends Listener<ProvidedPointColumn> {
+            ProvidedPointColumn extractPoint(PointSpec spec) {
+                return spec.provided;
+            }
+        }
+
+        addressCombo.addItemListener(new GeocodedListener() {
+                void setField(GeocodedPointColumn col, String value) {
+                    col.address = value;
                 }
             });
 
-        cityCombo.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    GeocodedPointColumn col = ensureActiveIsGeocoded();
-                    SyntheticComboBoxItem item =  (SyntheticComboBoxItem) e.getItem();
-                    col.city = model.getColumnAtPosition(item.getIndex());
+        cityCombo.addItemListener(new GeocodedListener() {
+                void setField(GeocodedPointColumn col, String value) {
+                    col.city = value;
                 }
             });
 
-        stateCombo.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    GeocodedPointColumn col = ensureActiveIsGeocoded();
-                    SyntheticComboBoxItem item =  (SyntheticComboBoxItem) e.getItem();
-                    col.state = model.getColumnAtPosition(item.getIndex());
+        stateCombo.addItemListener(new GeocodedListener() {
+                void setField(GeocodedPointColumn col, String value) {
+                    col.state = value;
                 }
             });
 
-        zipCombo.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    GeocodedPointColumn col = ensureActiveIsGeocoded();
-                    SyntheticComboBoxItem item =  (SyntheticComboBoxItem) e.getItem();
-                    col.zip = model.getColumnAtPosition(item.getIndex());
+        zipCombo.addItemListener(new GeocodedListener() {
+                void setField(GeocodedPointColumn col, String value) {
+                    col.zip = value;
                 }
             });
 
-        countryCombo.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    GeocodedPointColumn col = ensureActiveIsGeocoded();
-                    SyntheticComboBoxItem item =  (SyntheticComboBoxItem) e.getItem();
-                    col.country = model.getColumnAtPosition(item.getIndex());
+        countryCombo.addItemListener(new GeocodedListener() {
+                void setField(GeocodedPointColumn col, String value) {
+                    col.country = value;
                 }
             });
 
-        latCombo.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    ProvidedPointColumn col = ensureActiveIsProvided();
-                    SyntheticComboBoxItem item =  (SyntheticComboBoxItem) e.getItem();
-                    col.latitude = model.getColumnAtPosition(item.getIndex());
+        latCombo.addItemListener(new ProvidedListener() {
+                void setField(ProvidedPointColumn col, String value) {
+                    col.latitude = value;
                 }
             });
 
-        lonCombo.addItemListener(new ItemListener() {
-                @Override
-                public void itemStateChanged(ItemEvent e) {
-                    ProvidedPointColumn col = ensureActiveIsProvided();
-                    SyntheticComboBoxItem item =  (SyntheticComboBoxItem) e.getItem();
-                    col.longitude = model.getColumnAtPosition(item.getIndex());
+        lonCombo.addItemListener(new ProvidedListener() {
+                void setField(ProvidedPointColumn col, String value) {
+                    col.longitude = value;
                 }
             });
     }
 
     private void updateSyntheticComponentComboboxes(){
-        SyntheticPointColumn locationColumn = getActiveLocation();
-        if(locationColumn instanceof GeocodedPointColumn) {
-            updateGeocodedComponentComboboxes((GeocodedPointColumn) locationColumn);
-        } else {
-            updateProvidedComponentComboboxes((ProvidedPointColumn) locationColumn);
-        }
+        PointSpec locationColumn = getActiveLocation();
+        updateGeocodedComponentComboboxes(locationColumn.geocoded);
+        updateProvidedComponentComboboxes(locationColumn.provided);
     }
 
     private int indexOf(String name) {
@@ -228,10 +266,10 @@ public class SyntheticPointDialog extends JDialog {
     }
 
     private void updatePane() {
-        if(getActiveLocation() instanceof ProvidedPointColumn) {
-            tabs.setSelectedIndex(PROVIDED_PANE);
-        } else {
+        if(getActiveLocation().active == PointSpec.Active.GEOCODED) {
             tabs.setSelectedIndex(GEOCODED_PANE);
+        } else {
+            tabs.setSelectedIndex(PROVIDED_PANE);
         }
     }
 
@@ -374,52 +412,27 @@ public class SyntheticPointDialog extends JDialog {
         return (String) activeLocation.getSelectedItem();
     }
 
-    private SyntheticPointColumn getActiveLocation() {
+    private PointSpec getActiveLocation() {
         String fieldName = getActiveFieldName();
-        SyntheticPointColumn locationColumn = syntheticColumnsCopy.get(fieldName);
+        PointSpec locationColumn = syntheticColumnsCopy.get(fieldName);
         if (locationColumn == null) {
-            locationColumn = new GeocodedPointColumn();
+            locationColumn = new PointSpec(null);
             syntheticColumnsCopy.put(fieldName,locationColumn);
         }
         return locationColumn;
     }
 
-    private GeocodedPointColumn ensureActiveIsGeocoded() {
-        SyntheticPointColumn col = getActiveLocation();
-        if(col instanceof ProvidedPointColumn) {
-            GeocodedPointColumn pt = new GeocodedPointColumn();
-            pt.address = valueFrom(addressCombo);
-            pt.city = valueFrom(cityCombo);
-            pt.state = valueFrom(stateCombo);
-            pt.zip = valueFrom(zipCombo);
-            pt.country = valueFrom(countryCombo);
-            syntheticColumnsCopy.put(getActiveFieldName(), pt);
-            return pt;
-        }
-        return (GeocodedPointColumn) col;
+    private void ensureActiveIsGeocoded() {
+        getActiveLocation().active = PointSpec.Active.GEOCODED;
     }
 
-    private String valueFrom(JComboBox box) {
-        SyntheticComboBoxItem item = (SyntheticComboBoxItem) box.getSelectedItem();
-        if(item == null) return null;
-        else return model.getColumnAtPosition(item.getIndex());
-    }
-
-    private ProvidedPointColumn ensureActiveIsProvided() {
-        SyntheticPointColumn col = getActiveLocation();
-        if(col instanceof GeocodedPointColumn) {
-            ProvidedPointColumn pt = new ProvidedPointColumn();
-            pt.latitude = valueFrom(latCombo);
-            pt.longitude = valueFrom(lonCombo);
-            syntheticColumnsCopy.put(getActiveFieldName(), pt);
-            return pt;
-        }
-        return (ProvidedPointColumn) col;
+    private void ensureActiveIsProvided() {
+        getActiveLocation().active = PointSpec.Active.PROVIDED;
     }
 
     private void commitUpdates() {
         for (String field : syntheticColumnsCopy.keySet()) {
-            model.setSyntheticPoint(field, syntheticColumnsCopy.get(field));
+            model.setSyntheticPoint(field, syntheticColumnsCopy.get(field).getPointColumn());
         }
     }
 }

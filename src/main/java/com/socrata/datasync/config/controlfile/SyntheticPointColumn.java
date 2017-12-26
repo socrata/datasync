@@ -12,4 +12,11 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
             @JsonSubTypes.Type(value = ProvidedPointColumn.class, name = "point")
     })
 public abstract class SyntheticPointColumn extends SyntheticColumn {
+    public SyntheticPointColumn clone() {
+        try {
+            return (SyntheticPointColumn) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
