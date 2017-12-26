@@ -580,23 +580,25 @@ public class SimpleIntegrationWizard {
         jobTabsContainer.add(jobTabsPane);
         jobTabsPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
-        JPanel jobButtonContainer = new JPanel(new GridLayout(1,4));
+        JPanel jobButtonContainer = new JPanel(new GridLayout(1,3));
         JPanel leftButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         runJobNowButton = new JButton("Run Job Now");
         runJobNowButton.addActionListener(new RunJobNowListener());
         leftButtonPanel.add(runJobNowButton);
         leftButtonPanel.add(UIUtility.generateHelpBubble(RUN_JOB_NOW_TIP_TEXT));
 
+        JPanel noticesContainer = new JPanel(new GridLayout(2, 1));
         generateLoadingNotice();
+        noticesContainer.add(loadingNoticePanel);
         generateProgressBar();
+        noticesContainer.add(progressPanel);
 
         JPanel rightButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton saveJobButton = new JButton("Save Job");
         saveJobButton.addActionListener(new SaveJobListener());
         rightButtonPanel.add(saveJobButton);
         jobButtonContainer.add(leftButtonPanel);
-        jobButtonContainer.add(loadingNoticePanel);
-        jobButtonContainer.add(progressPanel);
+        jobButtonContainer.add(noticesContainer);
         jobButtonContainer.add(rightButtonPanel);
 
         jobButtonContainer.setPreferredSize(BUTTON_PANEL_DIMENSION);
