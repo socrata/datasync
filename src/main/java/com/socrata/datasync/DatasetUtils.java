@@ -1,5 +1,6 @@
 package com.socrata.datasync;
 
+import au.com.bytecode.opencsv.CSVReader;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
@@ -20,8 +21,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -30,31 +33,13 @@ import java.util.Map;
 import java.util.Set;
 
 public class DatasetUtils {
-
-    private static class DatasetInfoResponseHandler implements ResponseHandler<DatasetInfo> {
-        @Override
-        public DatasetInfo handleResponse(final HttpResponse response)
-            throws ClientProtocolException, IOException {
-
-            StatusLine statusLine = response.getStatusLine();
-            int status = statusLine.getStatusCode();
-            if (status >= 200 && status < 300) {
-                HttpEntity entity = response.getEntity();
-                return entity != null ? mapper.readValue(entity.getContent(), DatasetInfo.class) : null;
-            } else {
-                throw new ClientProtocolException(statusLine.toString());
-            }
-        }
-    }
-
-
     private static final String LOCATION_DATATYPE_NAME = "location";
 
     private static ObjectMapper mapper = new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     public static Dataset getDatasetInfo(UserPreferences userPrefs, String viewId) throws URISyntaxException, IOException, HttpException {
         Dataset ds = getDatasetInfoReflective(userPrefs, viewId, Dataset.class);
-        removeSystemColumns(ds.getColumns());
+        removeSystemAndComputedColumns(ds);
         return ds;
     }
 
@@ -62,12 +47,16 @@ public class DatasetUtils {
         return getDatasetInfoReflective(userPrefs, viewId, GeoDataset.class);
     }
 
-    private static void removeSystemColumns(List<Column> columns) {
+    private static void removeSystemAndComputedColumns(Dataset ds) {
+        List<Column> columns = ds.getColumns();
         Iterator<Column> it = columns.iterator();
         while(it.hasNext()) {
             Column c = it.next();
-            if(c.getFieldName().startsWith(":")) it.remove();
+            if(c.getFieldName().startsWith(":") || c.getComputationStrategy() != null) {
+                it.remove();
+            }
         }
+        ds.setColumns(columns);
     }
 
     private static <T> T getDatasetInfoReflective(UserPreferences userPrefs, String viewId, final Class<T> typ) throws URISyntaxException, IOException, HttpException {
@@ -99,12 +88,12 @@ public class DatasetUtils {
         return datasetInfo;
     }
 
-    public static String getDatasetSample(UserPreferences userPrefs, String viewId, int rowsToSample) throws URISyntaxException, IOException, HttpException {
+    public static List<List<String>> getDatasetSample(UserPreferences userPrefs, Dataset dataset, int rowsToSample) throws URISyntaxException, IOException, HttpException {
         String justDomain = getDomainWithoutScheme(userPrefs);
         URI absolutePath = new URIBuilder()
             .setScheme("https")
             .setHost(justDomain)
-            .setPath("/resource/" + viewId + ".csv")
+            .setPath("/resource/" + dataset.getId() + ".csv")
             .addParameter("$limit",""+rowsToSample)
             .build();
 
@@ -126,7 +115,37 @@ public class DatasetUtils {
         HttpUtility util = new HttpUtility(userPrefs, true);
         String sample = util.get(absolutePath, "application/csv", handler);
         util.close();
-        return sample;
+
+        CSVReader reader = new CSVReader(new StringReader(sample));
+
+        List<List<String>> results = new ArrayList<>();
+
+        Set<String> expectedFieldNames = new HashSet<String>();
+        for(Column c : dataset.getColumns()) {
+            expectedFieldNames.add(c.getFieldName());
+        }
+        String[] row = reader.readNext();
+        boolean[] keep = new boolean[row.length];
+        for(int i = 0; i != row.length; ++i) {
+            keep[i] = expectedFieldNames.contains(row[i]);
+        }
+        results.add(filter(keep, row));
+
+        while((row = reader.readNext()) != null) {
+            results.add(filter(keep, row));
+        }
+
+        return results;
+    }
+
+    private static List<String> filter(boolean[] filter, String[] elems) {
+        List<String> result = new ArrayList<>();
+
+        for(int i = 0; i != elems.length; ++i) {
+            if(filter[i]) result.add(elems[i]);
+        }
+
+        return result;
     }
 
     public static String getDomainWithoutScheme(UserPreferences userPrefs){

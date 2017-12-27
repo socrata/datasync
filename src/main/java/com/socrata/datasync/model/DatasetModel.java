@@ -1,6 +1,5 @@
 package com.socrata.datasync.model;
 
-import au.com.bytecode.opencsv.CSVReader;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.datasync.DatasetUtils;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
@@ -19,6 +18,7 @@ import java.net.URISyntaxException;
 import org.apache.http.HttpException;
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.List;
 
 
 /**
@@ -52,15 +52,10 @@ public class DatasetModel extends AbstractTableModel {
 
         columns = (ArrayList<Column>) datasetInfo.getColumns();
 
-        String csv = DatasetUtils.getDatasetSample(prefs, fourbyfour, rowsToSample);
+        List<List<String>> csv = DatasetUtils.getDatasetSample(prefs, datasetInfo, rowsToSample);
 
-        CSVReader reader = new CSVReader(new StringReader(csv));
-
-        String[] lines = reader.readNext();
-
-        while (lines != null) {
-            insertData(lines);
-            lines = reader.readNext();
+        for(List<String> row : csv) {
+            insertData(row.toArray(new Object[0]));
         }
 
         return true;
