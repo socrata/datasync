@@ -48,7 +48,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
     private static final String datasyncPath = datasyncBasePath + "/id";
     private static final String statusPath = "/status";
     private static final String commitPath = "/commit";
-    private static final String portPath = "/copy";
+    private static final String portPath = "/copy_from";
     private static final String logPath = "/log";
     private static final String ssigContentType = "application/x-socrata-ssig";
     private static final String patchExtenstion = ".sdiff";

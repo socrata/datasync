@@ -1,5 +1,6 @@
 package com.socrata.datasync;
 
+import com.socrata.api.DatasetDestination;
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
@@ -23,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -37,17 +39,26 @@ public class PortUtility {
 
     public static String portSchema(SodaDdl loader, SodaDdl creator,
                                     final String sourceSetID, final String destinationDatasetTitle,
-                                    final boolean useNewBackend)
+                                    boolean actuallyCopySchema)
         throws SodaError, InterruptedException
     {
         System.out.print("Copying schema from dataset " + sourceSetID);
         Dataset sourceSet = (Dataset) loader.loadDatasetInfo(sourceSetID);
+
         if(destinationDatasetTitle != null && !destinationDatasetTitle.equals(""))
             sourceSet.setName(destinationDatasetTitle);
 
-        adaptSchemaForAggregates(sourceSet);
+        DatasetDestination destination =
+            sourceSet.isNewBackend() ? DatasetDestination.NBE
+                                     : DatasetDestination.OBE;
 
-        DatasetInfo sinkSet = creator.createDataset(sourceSet, useNewBackend);
+        if(actuallyCopySchema) {
+            adaptSchemaForAggregates(sourceSet);
+        } else {
+            sourceSet.setColumns(Collections.<Column>emptyList());
+        }
+
+        DatasetInfo sinkSet = creator.createDataset(sourceSet, destination);
 
         String sinkSetID = sinkSet.getId();
         System.out.println(" to dataset " + sinkSetID);
