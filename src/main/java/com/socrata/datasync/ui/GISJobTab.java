@@ -104,6 +104,7 @@ public class GISJobTab implements JobTab {
                                                     JOB_FILE_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
         fileSelectorContainer.add(fileToPublishTextField);
         JFileChooser fileToPublishChooser = new JFileChooser();
+        fileToPublishChooser.setCurrentDirectory(new File("."));
         JButton openButton = new JButton(BROWSE_BUTTON_TEXT);
         FileToPublishSelectorListener chooserListener = new FileToPublishSelectorListener(
             fileToPublishChooser, fileToPublishTextField);
@@ -165,6 +166,7 @@ public class GISJobTab implements JobTab {
         String selectedJobFileLocation = jobFileLocation;
         if (selectedJobFileLocation.equals("")) {
             JFileChooser savedJobFileChooser = new JFileChooser();
+            savedJobFileChooser.setCurrentDirectory(new File("."));
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 JOB_FILE_NAME + " (*." + JOB_FILE_EXTENSION + ")", JOB_FILE_EXTENSION);
             savedJobFileChooser.setFileFilter(filter);
@@ -216,10 +218,12 @@ public class GISJobTab implements JobTab {
 
     private class FileToPublishSelectorListener implements ActionListener {
         JFileChooser fileChooser;
+        File base;
         JTextField filePathTextField;
 
         public FileToPublishSelectorListener(JFileChooser chooser, JTextField textField) {
             fileChooser = chooser;
+            base = fileChooser.getCurrentDirectory().getAbsoluteFile();
             filePathTextField = textField;
             fileChooser.setFileFilter(
                 UIUtility.getFileChooserFilter(GISJobValidity.allowedGeoFileToPublishExtensions));
@@ -228,7 +232,7 @@ public class GISJobTab implements JobTab {
         public void actionPerformed(ActionEvent e) {
             if (fileChooser.showOpenDialog(mainFrame) == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
-                filePathTextField.setText(file.getAbsolutePath());
+                filePathTextField.setText(UIUtility.relativize(base, file));
             }
 
             // If open command was cancelled by user: do nothing
