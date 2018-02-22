@@ -294,6 +294,7 @@ public class PortJobTab implements JobTab {
         String selectedJobFileLocation = jobFileLocation;
         if (selectedJobFileLocation.equals("")) {
             JFileChooser savedJobFileChooser = new JFileChooser();
+            savedJobFileChooser.setCurrentDirectory(new File("."));
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
                     JOB_FILE_NAME + " (*." + JOB_FILE_EXTENSION + ")",
                     JOB_FILE_EXTENSION);
