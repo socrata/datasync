@@ -247,16 +247,19 @@ public class PortJob extends Job {
                 runStatus.setMessage(e.getMessage());
                 return runStatus;
             }
-            if(useOldCodePath) {
-                // loader "loads" the source dataset metadata and schema
-                final SodaDdl loader = SodaDdl.newDdl(sourceSiteDomain,
-                                                      connectionInfo.getUser(), connectionInfo.getPassword(),
-                                                      connectionInfo.getToken());
 
-                // creator "creates" a new dataset on the sink site (and publishes if applicable)
-                final SodaDdl creator = SodaDdl.newDdl(sinkSiteDomain,
-                                                       connectionInfo.getUser(), connectionInfo.getPassword(),
-                                                       connectionInfo.getToken());
+            // loader "loads" the source dataset metadata and schema
+            final SodaDdl loader = SodaDdl.newDdl(sourceSiteDomain,
+                                                  connectionInfo.getUser(), connectionInfo.getPassword(),
+                                                  connectionInfo.getToken());
+
+            // creator "creates" a new dataset on the sink site (and publishes if applicable)
+            final SodaDdl creator = SodaDdl.newDdl(sinkSiteDomain,
+                                                   connectionInfo.getUser(), connectionInfo.getPassword(),
+                                                   connectionInfo.getToken());
+
+
+            if(useOldCodePath) {
                 // streamExporter "exports" the source dataset rows
                 final Soda2Consumer streamExporter = Soda2Consumer.newConsumer(
                                                                                sourceSiteDomain, connectionInfo.getUser(),
@@ -311,10 +314,28 @@ public class PortJob extends Job {
                 }
             } else {
                 try {
-                    PortControlFile control = new PortControlFile(new URI("https://" + DatasetUtils.getDomainWithoutScheme(sinkSiteDomain)).getHost(),
+                    if (portMethod.equals(PortMethod.copy_schema)) {
+                        sinkSetID = PortUtility.portSchema(loader, creator,
+                                                           sourceSetID, destinationDatasetTitle, useNewBackend);
+                    } else if (portMethod.equals(PortMethod.copy_all)) {
+                        sinkSetID = PortUtility.portSchema(loader, creator,
+                                                           sourceSetID, destinationDatasetTitle, useNewBackend);
+                    } else if (portMethod.equals(PortMethod.copy_data)) {
+                        JobStatus schemaCheck = PortUtility.assertSchemasAreAlike(loader, creator, sourceSetID, sinkSetID);
+                        if (schemaCheck.isError()) {
+                            runStatus = JobStatus.PORT_ERROR;
+                            runStatus.setMessage(schemaCheck.getMessage());
+                            return runStatus;
+                        }
+                    } else {
+                        runStatus = JobStatus.PORT_ERROR;
+                        runStatus.setMessage(JobStatus.INVALID_PORT_METHOD.toString());
+                        return runStatus;
+                    }
+
+                    PortControlFile control = new PortControlFile(new URI("https://" + DatasetUtils.getDomainWithoutScheme(sourceSiteDomain)).getHost(),
+                                                                  sourceSetID,
                                                                   destinationDatasetTitle,
-                                                                  sinkSetID,
-                                                                  useNewBackend,
                                                                   portMethod,
                                                                   publishDataset.equals(PublishDataset.publish));
 
@@ -323,7 +344,7 @@ public class PortJob extends Job {
                     // exactly the manner of all other di2 jobs
 
                     DeltaImporter2Publisher publisher = new DeltaImporter2Publisher(userPrefs, "fixme");
-                    runStatus = publisher.copyWithDi2(sourceSetID, control);
+                    runStatus = publisher.copyWithDi2(sinkSetID, control);
                     if(runStatus == JobStatus.SUCCESS) {
                         // Urrrrghghghgh
                         Pattern p = Pattern.compile("The new dataset id is (....-....)");
@@ -335,7 +356,7 @@ public class PortJob extends Job {
                             runStatus.setMessage("Unable to find newly-created dataset");
                         }
                     }
-                } catch(IOException | URISyntaxException e) {
+                } catch(Exception e) {
                     runStatus = JobStatus.PORT_ERROR;
                     runStatus.setMessage(e.getMessage());
                 }
