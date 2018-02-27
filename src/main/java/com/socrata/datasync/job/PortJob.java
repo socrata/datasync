@@ -8,6 +8,7 @@ import com.socrata.datasync.PortMethod;
 import com.socrata.datasync.PortUtility;
 import com.socrata.datasync.PublishDataset;
 import com.socrata.datasync.PublishMethod;
+import com.socrata.datasync.TargetBackend;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.Utils;
 import com.socrata.datasync.config.controlfile.PortControlFile;
@@ -47,7 +48,7 @@ public class PortJob extends Job {
     private PublishDataset publishDataset = PublishDataset.working_copy;
     private String portResult = "";
     private String destinationDatasetTitle = "";
-    private boolean useNewBackend = false;
+    private TargetBackend targetBackend = TargetBackend.same;
 
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
@@ -163,14 +164,14 @@ public class PortJob extends Job {
         this.portResult = portResult;
     }
 
-    @JsonProperty("useNewBackend")
-    public boolean getUseNewBackend() {
-        return useNewBackend;
+    @JsonProperty("targetNewBackend")
+    public TargetBackend getTargetBackend() {
+        return targetBackend;
     }
 
-    @JsonProperty("useNewBackend")
-    public void setUseNewBackend(boolean useNewBackend) {
-        this.useNewBackend = useNewBackend;
+    @JsonProperty("targetNewBackend")
+    public void setTargetBackend(TargetBackend targetBackend) {
+        this.targetBackend = targetBackend;
     }
 
     public String getDefaultJobName() { return defaultJobName; }
@@ -201,7 +202,7 @@ public class PortJob extends Job {
             setPublishMethod(loadedJob.getPublishMethod());
             setPublishDataset(loadedJob.getPublishDataset());
             setDestinationDatasetTitle(loadedJob.getDestinationDatasetTitle());
-            setUseNewBackend(loadedJob.getUseNewBackend());
+            setTargetBackend(loadedJob.getTargetBackend());
         } catch(IOException e){
             throw new IOException(e.toString());
         }
@@ -273,11 +274,11 @@ public class PortJob extends Job {
                 try {
                     if (portMethod.equals(PortMethod.copy_schema)) {
                         sinkSetID = PortUtility.portSchema(loader, creator,
-                                                           sourceSetID, destinationDatasetTitle, useNewBackend);
+                                                           sourceSetID, destinationDatasetTitle, targetBackend);
                         noPortExceptions = true;
                     } else if (portMethod.equals(PortMethod.copy_all)) {
                         sinkSetID = PortUtility.portSchema(loader, creator,
-                                                           sourceSetID, destinationDatasetTitle, useNewBackend);
+                                                           sourceSetID, destinationDatasetTitle, targetBackend);
                         PortUtility.portContents(streamExporter, streamUpserter,
                                                  sourceSetID, sinkSetID, PublishMethod.upsert);
                         noPortExceptions = true;
@@ -316,10 +317,10 @@ public class PortJob extends Job {
                 try {
                     if (portMethod.equals(PortMethod.copy_schema)) {
                         sinkSetID = PortUtility.portSchema(loader, creator,
-                                                           sourceSetID, destinationDatasetTitle, useNewBackend);
+                                                           sourceSetID, destinationDatasetTitle, targetBackend);
                     } else if (portMethod.equals(PortMethod.copy_all)) {
                         sinkSetID = PortUtility.portSchema(loader, creator,
-                                                           sourceSetID, destinationDatasetTitle, useNewBackend);
+                                                           sourceSetID, destinationDatasetTitle, targetBackend);
                     } else if (portMethod.equals(PortMethod.copy_data)) {
                         JobStatus schemaCheck = PortUtility.assertSchemasAreAlike(loader, creator, sourceSetID, sinkSetID);
                         if (schemaCheck.isError()) {

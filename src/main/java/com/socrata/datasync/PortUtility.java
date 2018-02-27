@@ -37,13 +37,17 @@ public class PortUtility {
 
     public static String portSchema(SodaDdl loader, SodaDdl creator,
                                     final String sourceSetID, final String destinationDatasetTitle,
-                                    final boolean useNewBackend)
+                                    final TargetBackend targetBackend)
         throws SodaError, InterruptedException
     {
         System.out.print("Copying schema from dataset " + sourceSetID);
         Dataset sourceSet = (Dataset) loader.loadDatasetInfo(sourceSetID);
         if(destinationDatasetTitle != null && !destinationDatasetTitle.equals(""))
             sourceSet.setName(destinationDatasetTitle);
+
+        boolean useNewBackend;
+        if(targetBackend == TargetBackend.same) useNewBackend = sourceSet.isNewBackend();
+        else useNewBackend = targetBackend == TargetBackend.nbe;
 
         adaptSchemaForAggregates(sourceSet);
 
