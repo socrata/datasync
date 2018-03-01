@@ -42,7 +42,6 @@ public class PortJob extends Job {
     private PortMethod portMethod = PortMethod.copy_all;
     private String sourceSiteDomain ="https://";
     private String sourceSetID = "";
-    private String sinkSiteDomain= "https://";
     private String sinkSetID = "";
     private PublishMethod publishMethod = PublishMethod.upsert;
     private PublishDataset publishDataset = PublishDataset.working_copy;
@@ -102,16 +101,6 @@ public class PortJob extends Job {
     @JsonProperty("sourceSetID")
     public void setSourceSetID(String sourceSetID) {
         this.sourceSetID = sourceSetID;
-    }
-
-    @JsonProperty("sinkSiteDomain")
-    public String getSinkSiteDomain() {
-        return sinkSiteDomain;
-    }
-
-    @JsonProperty("sinkSiteDomain")
-    public void setSinkSiteDomain(String sinkSiteDomain) {
-        this.sinkSiteDomain = sinkSiteDomain;
     }
 
     @JsonProperty("publishMethod")
@@ -174,6 +163,10 @@ public class PortJob extends Job {
         this.targetBackend = targetBackend;
     }
 
+    public String getSinkSiteDomain() {
+        return userPrefs.getDomain();
+    }
+
     public String getDefaultJobName() { return defaultJobName; }
 
     public boolean validateArgs(CommandLine cmd) {
@@ -196,7 +189,6 @@ public class PortJob extends Job {
             setPathToSavedFile(loadedJob.getPathToSavedFile());
             setSourceSiteDomain(loadedJob.getSourceSiteDomain());
             setSourceSetID(loadedJob.getSourceSetID());
-            setSinkSiteDomain(loadedJob.getSinkSiteDomain());
             setSinkSetID(loadedJob.getSinkSetID());
             setPortMethod(loadedJob.getPortMethod());
             setPublishMethod(loadedJob.getPublishMethod());
@@ -213,7 +205,6 @@ public class PortJob extends Job {
         setPortMethod(PortMethod.valueOf(cmd.getOptionValue("pm")));
         setSourceSiteDomain(cmd.getOptionValue("pd1"));
         setSourceSetID(cmd.getOptionValue("pi1"));
-        setSinkSiteDomain(cmd.getOptionValue("pd2"));
 
         if (cmd.getOptionValue("pi2") != null)
             setSinkSetID(cmd.getOptionValue("pi2"));
@@ -242,7 +233,7 @@ public class PortJob extends Job {
         } else {
             boolean useOldCodePath;
             try {
-                useOldCodePath = !Utils.regionOfDomain(userPrefs, sourceSiteDomain).equals(Utils.regionOfDomain(userPrefs, sinkSiteDomain));
+                useOldCodePath = !Utils.regionOfDomain(userPrefs, sourceSiteDomain).equals(Utils.regionOfDomain(userPrefs, userPrefs.getDomain()));
             } catch(URISyntaxException | IOException e) {
                 runStatus = JobStatus.PORT_ERROR;
                 runStatus.setMessage(e.getMessage());
@@ -255,7 +246,7 @@ public class PortJob extends Job {
                                                   connectionInfo.getToken());
 
             // creator "creates" a new dataset on the sink site (and publishes if applicable)
-            final SodaDdl creator = SodaDdl.newDdl(sinkSiteDomain,
+            final SodaDdl creator = SodaDdl.newDdl(userPrefs.getDomain(),
                                                    connectionInfo.getUser(), connectionInfo.getPassword(),
                                                    connectionInfo.getToken());
 
@@ -267,7 +258,7 @@ public class PortJob extends Job {
                                                                                connectionInfo.getPassword(), connectionInfo.getToken());
                 // streamUpserter "upserts" the rows exported to the created dataset
                 final Soda2Producer streamUpserter = Soda2Producer.newProducer(
-                                                                               sinkSiteDomain, connectionInfo.getUser(),
+                                                                               userPrefs.getDomain(), connectionInfo.getUser(),
                                                                                connectionInfo.getPassword(), connectionInfo.getToken());
                 String errorMessage = "";
                 boolean noPortExceptions = false;
