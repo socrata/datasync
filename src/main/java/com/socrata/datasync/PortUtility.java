@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -37,19 +38,25 @@ public class PortUtility {
 
     public static String portSchema(SodaDdl loader, SodaDdl creator,
                                     final String sourceSetID, final String destinationDatasetTitle,
-                                    final TargetBackend targetBackend)
+                                    final TargetBackend targetBackend,
+                                    boolean actuallyCopySchema)
         throws SodaError, InterruptedException
     {
         System.out.print("Copying schema from dataset " + sourceSetID);
         Dataset sourceSet = (Dataset) loader.loadDatasetInfo(sourceSetID);
+
         if(destinationDatasetTitle != null && !destinationDatasetTitle.equals(""))
             sourceSet.setName(destinationDatasetTitle);
 
         boolean useNewBackend;
-        if(targetBackend == TargetBackend.same) useNewBackend = sourceSet.isNewBackend();
-        else useNewBackend = targetBackend == TargetBackend.nbe;
+        if(targetBackend == TargetBackend.nbe) useNewBackend = true;
+        else useNewBackend = sourceSet.isNewBackend();
 
-        adaptSchemaForAggregates(sourceSet);
+        if(actuallyCopySchema) {
+            adaptSchemaForAggregates(sourceSet);
+        } else {
+            sourceSet.setColumns(Collections.<Column>emptyList());
+        }
 
         DatasetInfo sinkSet = creator.createDataset(sourceSet, useNewBackend);
 

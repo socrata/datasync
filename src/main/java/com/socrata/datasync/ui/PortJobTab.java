@@ -65,7 +65,7 @@ public class PortJobTab implements JobTab {
     private JTextField sourceSiteDomainTextField;
     private JTextField sourceSetIDTextField;
     private JTextField sinkSetIDTextField;
-    private JComboBox targetBackendComboBox; // may be null
+    private JComboBox<TargetBackend> targetBackendComboBox; // may be null
 
     // Need to expose more of the JComponents locally in order to toggle between PublishMethod and PublishDataset
     private JPanel publishMethodContainerLeft;

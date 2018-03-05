@@ -47,7 +47,7 @@ public class PortJob extends Job {
     private PublishDataset publishDataset = PublishDataset.working_copy;
     private String portResult = "";
     private String destinationDatasetTitle = "";
-    private TargetBackend targetBackend = TargetBackend.same;
+    private TargetBackend targetBackend = TargetBackend.default_backend;
 
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
@@ -265,11 +265,13 @@ public class PortJob extends Job {
                 try {
                     if (portMethod.equals(PortMethod.copy_schema)) {
                         sinkSetID = PortUtility.portSchema(loader, creator,
-                                                           sourceSetID, destinationDatasetTitle, targetBackend);
+                                                           sourceSetID, destinationDatasetTitle, targetBackend,
+                                                           true);
                         noPortExceptions = true;
                     } else if (portMethod.equals(PortMethod.copy_all)) {
                         sinkSetID = PortUtility.portSchema(loader, creator,
-                                                           sourceSetID, destinationDatasetTitle, targetBackend);
+                                                           sourceSetID, destinationDatasetTitle, targetBackend,
+                                                           true);
                         PortUtility.portContents(streamExporter, streamUpserter,
                                                  sourceSetID, sinkSetID, PublishMethod.upsert);
                         noPortExceptions = true;
@@ -308,10 +310,12 @@ public class PortJob extends Job {
                 try {
                     if (portMethod.equals(PortMethod.copy_schema)) {
                         sinkSetID = PortUtility.portSchema(loader, creator,
-                                                           sourceSetID, destinationDatasetTitle, targetBackend);
+                                                           sourceSetID, destinationDatasetTitle, targetBackend,
+                                                           false);
                     } else if (portMethod.equals(PortMethod.copy_all)) {
                         sinkSetID = PortUtility.portSchema(loader, creator,
-                                                           sourceSetID, destinationDatasetTitle, targetBackend);
+                                                           sourceSetID, destinationDatasetTitle, targetBackend,
+                                                           false);
                     } else if (portMethod.equals(PortMethod.copy_data)) {
                         JobStatus schemaCheck = PortUtility.assertSchemasAreAlike(loader, creator, sourceSetID, sinkSetID);
                         if (schemaCheck.isError()) {

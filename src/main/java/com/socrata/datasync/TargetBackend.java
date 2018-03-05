@@ -1,5 +1,15 @@
 package com.socrata.datasync;
 
 public enum TargetBackend {
-    same, obe, nbe;
+    default_backend("Default"), nbe("NBE");
+
+    TargetBackend(String humanReadable) {
+        this.humanReadable = humanReadable;
+    }
+
+    private final String humanReadable;
+
+    public String toString() {
+        return humanReadable;
+    }
 }
