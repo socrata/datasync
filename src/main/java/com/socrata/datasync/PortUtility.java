@@ -1,5 +1,6 @@
 package com.socrata.datasync;
 
+import com.socrata.api.DatasetDestination;
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
@@ -38,7 +39,6 @@ public class PortUtility {
 
     public static String portSchema(SodaDdl loader, SodaDdl creator,
                                     final String sourceSetID, final String destinationDatasetTitle,
-                                    final TargetBackend targetBackend,
                                     boolean actuallyCopySchema)
         throws SodaError, InterruptedException
     {
@@ -48,9 +48,9 @@ public class PortUtility {
         if(destinationDatasetTitle != null && !destinationDatasetTitle.equals(""))
             sourceSet.setName(destinationDatasetTitle);
 
-        boolean useNewBackend;
-        if(targetBackend == TargetBackend.nbe) useNewBackend = true;
-        else useNewBackend = sourceSet.isNewBackend();
+        DatasetDestination destination =
+            sourceSet.isNewBackend() ? DatasetDestination.NBE
+                                     : DatasetDestination.OBE;
 
         if(actuallyCopySchema) {
             adaptSchemaForAggregates(sourceSet);
@@ -58,7 +58,7 @@ public class PortUtility {
             sourceSet.setColumns(Collections.<Column>emptyList());
         }
 
-        DatasetInfo sinkSet = creator.createDataset(sourceSet, useNewBackend);
+        DatasetInfo sinkSet = creator.createDataset(sourceSet, destination);
 
         String sinkSetID = sinkSet.getId();
         System.out.println(" to dataset " + sinkSetID);

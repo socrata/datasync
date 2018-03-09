@@ -6,7 +6,6 @@ import com.socrata.datasync.DatasetUtils;
 import com.socrata.datasync.PortMethod;
 import com.socrata.datasync.PublishDataset;
 import com.socrata.datasync.PublishMethod;
-import com.socrata.datasync.TargetBackend;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.config.userpreferences.UserPreferences;
@@ -65,7 +64,6 @@ public class PortJobTab implements JobTab {
     private JTextField sourceSiteDomainTextField;
     private JTextField sourceSetIDTextField;
     private JTextField sinkSetIDTextField;
-    private JComboBox<TargetBackend> targetBackendComboBox; // may be null
 
     // Need to expose more of the JComponents locally in order to toggle between PublishMethod and PublishDataset
     private JPanel publishMethodContainerLeft;
@@ -79,7 +77,6 @@ public class PortJobTab implements JobTab {
 
     // build Container with all tab components and load data into form
     public PortJobTab(PortJob job, JFrame containingFrame) {
-        boolean useTargetBackend = System.getenv("SOCRATA_SHOW_TARGET_BACKEND") != null;
         userPrefs = new UserPreferencesJava();
 
         mainFrame = containingFrame;
@@ -141,18 +138,6 @@ public class PortJobTab implements JobTab {
                 OPEN_SINK_DATASET_BUTTON_HEIGHT));
         destinationSetIDTextFieldContainer.add(openSinkDatasetButton);
         jobPanel.add(destinationSetIDTextFieldContainer);
-
-        if(useTargetBackend) {
-            jobPanel.add(UIUtility.generateLabelWithHelpBubble("Target backend", NBE_TIP_TEXT, HELP_ICON_TOP_PADDING));
-            JPanel targetBackendContainer = new JPanel(flowRight);
-            targetBackendComboBox = new JComboBox<>();
-
-            for (TargetBackend method : TargetBackend.values()) {
-                targetBackendComboBox.addItem(method);
-            }
-            targetBackendContainer.add(targetBackendComboBox);
-            jobPanel.add(targetBackendContainer);
-        }
 
         // Publish Method (toggles with Publish Query based on Port Method choice)
         // We will build out the specs of this element without adding it to the jobPanel.
@@ -236,7 +221,6 @@ public class PortJobTab implements JobTab {
                 .getSelectedItem());
         jobToRun.setSourceSiteDomain(sourceSiteDomainTextField.getText());
         jobToRun.setSourceSetID(sourceSetIDTextField.getText());
-        if(targetBackendComboBox != null) jobToRun.setTargetBackend((TargetBackend) targetBackendComboBox.getSelectedItem());
         if (publishMethodComboBox.isEnabled()) {
             jobToRun.setPublishMethod((PublishMethod) publishMethodComboBox
                     .getSelectedItem());
@@ -263,7 +247,6 @@ public class PortJobTab implements JobTab {
                 .getSelectedItem());
         newPortJob.setSourceSiteDomain(sourceSiteDomainTextField.getText());
         newPortJob.setSourceSetID(sourceSetIDTextField.getText());
-        if(targetBackendComboBox != null) newPortJob.setTargetBackend((TargetBackend) targetBackendComboBox.getSelectedItem());
         newPortJob.setSinkSetID(sinkSetIDTextField.getText());
         newPortJob.setPublishMethod((PublishMethod) publishMethodComboBox
                 .getSelectedItem());
@@ -344,7 +327,6 @@ public class PortJobTab implements JobTab {
                         jobPanel.add(publishMethodContainerLeft);
                         jobPanel.add(publishMethodContainerRight);
                         publishMethodComboBox.setEnabled(true);
-                        if(targetBackendComboBox != null) targetBackendComboBox.setEnabled(false);
                         jobPanel.updateUI();
                         break;
                     case copy_schema:
@@ -357,7 +339,6 @@ public class PortJobTab implements JobTab {
                         jobPanel.add(publishDatasetContainerLeft);
                         jobPanel.add(publishDatasetContainerRight);
                         publishDatasetComboBox.setEnabled(true);
-                        if(targetBackendComboBox != null) targetBackendComboBox.setEnabled(true);
                         jobPanel.updateUI();
                         break;
                 }
