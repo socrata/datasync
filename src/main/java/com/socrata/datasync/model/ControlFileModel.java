@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import info.debatty.java.stringsimilarity.WeightedLevenshtein;
+import info.debatty.java.stringsimilarity.CharacterInsDelInterface;
+import info.debatty.java.stringsimilarity.CharacterSubstitutionInterface;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,17 +95,117 @@ public class ControlFileModel extends Observable {
         return controlFile;
     }
 
-    private void matchColumns(){
+    private static final CharacterSubstitutionInterface insDel =
+        new CharacterSubstitutionInterface() {
+            public double cost(char c1, char c2) {
+                // Where we minify the cost of a change, we return
+                // something non-zero because we don't want to ignore
+                // it entirely, because we want to prefer solutions
+                // with a minimal number of even expected changes.
+                if(!Character.isAlphabetic(c1) && !Character.isDigit(c1) && c2 == '_') return 0.1;
+                if(Character.isUpperCase(c1) && Character.isLowerCase(c2)) return 0.1;
+                return 1.0;
+            }
+        };
+
+    private static final CharacterInsDelInterface subst =
+        new CharacterInsDelInterface() {
+            public double deletionCost(char c) {
+                if(Character.isAlphabetic(c) || Character.isDigit(c) || c == '_') {
+                    return 1.0;
+                }
+                return 0.1;
+            }
+            public double insertionCost(char c) {
+                return 1.0;
+            }
+        };
+
+    private static final WeightedLevenshtein csvToFieldName = new WeightedLevenshtein(insDel, subst);
+
+    private static final CharacterSubstitutionInterface penalizeChanges =
+        new CharacterSubstitutionInterface() {
+            public double cost(char c1, char c2) {
+                if(c1 == '_' && !Character.isAlphabetic(c2) && !Character.isDigit(c2)) return 0;
+                return 1.0;
+            }
+        };
+
+    private static final CharacterInsDelInterface penalizeDeletions =
+        new CharacterInsDelInterface() {
+            public double deletionCost(char c) {
+                return 1.0;
+            }
+            public double insertionCost(char c) {
+                return 0;
+            }
+        };
+
+    private static final WeightedLevenshtein fieldNameToCsv = new WeightedLevenshtein(penalizeChanges, penalizeDeletions);
+
+    public static double editDistance(String csvHeader, String fieldName) {
+        double editDistance = csvToFieldName.distance(csvHeader, fieldName);
+        // ok, if we stop and produce a solution here, we'll get
+        // badly confused if the CSV has extra columns in it
+        // (because if we encounter one such early, we'll
+        // basically pick a random existing column to pair it
+        // with).  So instead we'll look at the edit distance from
+        // dataset column to the CSV field name, heavily
+        // penalizing deletions.  If the result is a significant
+        // fraction of the size of the dataset column name, we'll
+        // consider things unmatched.
+        if(fieldNameToCsv.distance(fieldName, csvHeader) < fieldName.length() * 0.75) {
+            return editDistance;
+        } else {
+            // Nope; too many deletions / unexpected changes in the
+            // field name -> csv name direction, reject this
+            // possibility.
+            return Double.POSITIVE_INFINITY;
+        }
+    }
+
+    private void matchColumns() {
+        List<String> fieldNames = new ArrayList<>();
+        for(Column column : datasetModel.getColumns()) {
+            fieldNames.add(column.getFieldName());
+        }
+        Set<String> usedFieldNames = new HashSet<>();
+
         for (int i = 0; i < csvModel.getColumnCount(); i++) {
             String csvHeader = csvModel.getColumnName(i);
-            //TODO: I'm running over the dataset column list probably an unnecessary number of times.  Consider fixing later
-            Column col = datasetModel.getColumnByFieldName(csvHeader);
-            //If we can't match on field name, check for a match on the friendly name
-            if (col == null){
-                col = datasetModel.getColumnByFriendlyName(csvHeader);
+
+            Column col = null;
+
+            if(col == null) {
+                // ok, we're doing a fuzzy match, so we want to find
+                // the leftmost unused column with the minimum edit
+                // distance to this field name.
+                double minimumEditDistance = Double.POSITIVE_INFINITY;
+                String bestFieldName = null;
+                for(String fieldName : fieldNames) {
+                    if(usedFieldNames.contains(fieldName)) continue;
+                    double editDistance = editDistance(csvHeader, fieldName);
+                    if(editDistance < minimumEditDistance) {
+                        bestFieldName = fieldName;
+                        minimumEditDistance = editDistance;
+                    }
+                }
+                if(bestFieldName != null) {
+                    col = datasetModel.getColumnByFieldName(bestFieldName);
+                }
             }
-            if (col != null)
+
+            // We weren't able to find a match by field name, fall
+            // back to human names.
+            if(col == null) {
+                col = datasetModel.getColumnByFriendlyName(csvHeader);
+                if(usedFieldNames.contains(col.getFieldName())) col = null; // oops already used it
+            }
+
+            if (col != null) {
                 updateColumnAtPosition(col.getFieldName(), i);
+                usedFieldNames.add(col.getFieldName());
+            }
         }
     }
 
