@@ -1,10 +1,17 @@
 package com.socrata.datasync.config.controlfile;
 
+import java.io.IOException;
+
 import com.socrata.datasync.Utils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import com.socrata.datasync.PortMethod;
 
@@ -19,6 +26,24 @@ public class PortControlFile {
     public Boolean publish;
     public String opaque;
 
+    public static class CopyTypeDeserializer extends StdDeserializer<CopyType> {
+        public CopyTypeDeserializer() {
+            super(CopyType.class);
+        }
+
+        public CopyType deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
+            JsonNode node = jp.getCodec().readTree(jp);
+            String type = node.get("type").asText();
+            switch(type) {
+            case "data": return new CopyData();
+            case "schema": return new CopySchema();
+            case "schema_and_data": return new CopyAll();
+            default: return null;
+            }
+        }
+    }
+
+    @JsonDeserialize(using = CopyTypeDeserializer.class)
     public static interface CopyType {}
 
     @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
