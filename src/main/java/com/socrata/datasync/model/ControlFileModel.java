@@ -63,6 +63,7 @@ public class ControlFileModel extends Observable {
         if (!file.getFileTypeControl().hasColumns()){
             initializeColumns();
         }
+
         // Now attempt to match those in the dataset to those in the CSV
         matchColumns();
     }
@@ -164,47 +165,116 @@ public class ControlFileModel extends Observable {
         }
     }
 
-    private void matchColumns() {
-        List<String> fieldNames = new ArrayList<>();
-        for(Column column : datasetModel.getColumns()) {
-            fieldNames.add(column.getFieldName());
+    private static class Guess implements Comparable<Guess> {
+        public final Column column;
+        public final double badness;
+        public final int index;
+
+        public Guess(Column column, double badness, int index) {
+            this.column = column;
+            this.badness = badness;
+            this.index = index;
         }
+
+        public int compareTo(Guess that) {
+            if(this.badness < that.badness) return -1;
+            if(this.badness > that.badness) return 1;
+            if(this.index < that.index) return -1;
+            if(this.index > that.index) return 1;
+            return 0;
+        }
+
+        @Override public boolean equals(Object that) {
+            if(that instanceof Guess) return compareTo((Guess) that) == 0;
+            return false;
+        }
+    }
+
+    private static int bestGuess(SortedMap<Integer, PriorityQueue<Guess>> allPreferences) {
+        // Returns the leftmost column with the best (== lowest)
+        // badness at the head.  Precondition: allPreferences is
+        // non-empty.
+        int best = -1;
+        double bestBadness = Double.POSITIVE_INFINITY;
+        for(Map.Entry<Integer, PriorityQueue<Guess>> ent : allPreferences.entrySet()) {
+            if(best == -1) {
+                best = ent.getKey();
+                if(ent.getValue().isEmpty()) bestBadness = Double.POSITIVE_INFINITY;
+                else bestBadness = ent.getValue().peek().badness;
+            } else if(ent.getValue().isEmpty()) {
+                // ok, we're definitely not better than our best
+                // guess.
+            } else if(ent.getValue().peek().badness < bestBadness) {
+                best = ent.getKey();
+                bestBadness = ent.getValue().peek().badness;
+            }
+            if(bestBadness == 0) return best; // short circuit: we're not going to get any better
+        }
+        return best;
+    }
+
+    static final boolean DEBUG = false;
+    private static void debug(Object... items) {
+        if(DEBUG) {
+            StringBuilder sb = new StringBuilder();
+            for(Object item : items) {
+                sb.append(item);
+            }
+            System.out.println(sb.toString());
+        }
+    }
+
+    private void matchColumns() {
+        debug("Starting match columns");
+
+        List<String> columnNames = new ArrayList<>();
+        for(Column column : datasetModel.getColumns()) {
+            columnNames.add(column.getName());
+        }
+
+        SortedMap<Integer, PriorityQueue<Guess>> allPreferences = new TreeMap<>();
         Set<String> usedFieldNames = new HashSet<>();
 
         for (int i = 0; i < csvModel.getColumnCount(); i++) {
             String csvHeader = csvModel.getColumnName(i);
+            debug("Looking at CSV column: ", csvHeader);
 
-            Column col = null;
-
-            if(col == null) {
-                // ok, we're doing a fuzzy match, so we want to find
-                // the leftmost unused column with the minimum edit
-                // distance to this field name.
-                double minimumEditDistance = Double.POSITIVE_INFINITY;
-                String bestFieldName = null;
-                for(String fieldName : fieldNames) {
-                    if(usedFieldNames.contains(fieldName)) continue;
-                    double editDistance = editDistance(csvHeader, fieldName);
-                    if(editDistance < minimumEditDistance) {
-                        bestFieldName = fieldName;
-                        minimumEditDistance = editDistance;
-                    }
-                }
-                if(bestFieldName != null) {
-                    col = datasetModel.getColumnByFieldName(bestFieldName);
-                }
+            PriorityQueue<Guess> preferences = new PriorityQueue<>();
+            int idx = 0;
+            for(Column column : datasetModel.getColumns()) {
+                double editDistanceToName = editDistance(csvHeader, column.getName());
+                double editDistanceToFieldName = editDistance(csvHeader, column.getFieldName());
+                double badness = Math.min(editDistanceToName, editDistanceToFieldName);
+                debug("  Badness to ", column.getName(), " (", column.getFieldName(), ") : ", badness);
+                preferences.add(new Guess(column, badness, idx));
+                idx += 1;
             }
 
-            // We weren't able to find a match by field name, fall
-            // back to human names.
-            if(col == null) {
-                col = datasetModel.getColumnByFriendlyName(csvHeader);
-                if(usedFieldNames.contains(col.getFieldName())) col = null; // oops already used it
-            }
+            allPreferences.put(i, preferences);
+        }
 
-            if (col != null) {
-                updateColumnAtPosition(col.getFieldName(), i);
-                usedFieldNames.add(col.getFieldName());
+        while(!allPreferences.isEmpty()) {
+            int bestGuess = bestGuess(allPreferences);
+            debug("Column with the least badness is ", csvModel.getColumnName(bestGuess));
+            PriorityQueue<Guess> preferences = allPreferences.remove(bestGuess);
+            if(preferences.isEmpty()) {
+                debug("  It has no preference.  Bailing.");
+                return; // we can short-circuit: all remaining guesses are infinite badness
+            }
+            Guess guess = preferences.poll();
+            if(guess.badness == Double.POSITIVE_INFINITY) {
+                debug("  Its most-prefered choice is infinitely bad.  Bailing.");
+                return; // again, all further guesses are infinite
+            }
+            Column col = guess.column;
+            debug("  That best matches column ", col.getName(), " (", col.getFieldName(), ")");
+            updateColumnAtPosition(col.getFieldName(), bestGuess);
+            usedFieldNames.add(col.getFieldName());
+
+            for(PriorityQueue<Guess> nextGuess : allPreferences.values()) {
+                while(!nextGuess.isEmpty() && usedFieldNames.contains(nextGuess.peek().column.getFieldName())) {
+                    nextGuess.poll();
+                }
             }
         }
     }
