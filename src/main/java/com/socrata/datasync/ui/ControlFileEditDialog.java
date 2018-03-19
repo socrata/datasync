@@ -13,7 +13,7 @@ import java.awt.*;
 public class ControlFileEditDialog extends JDialog {
 
     ControlFileModel controlFileModel;
-    private static final Dimension CONTROL_FILE_DIALOG_DIMENSIONS = new Dimension(550, 640);
+    private static final Dimension CONTROL_FILE_DIALOG_DIMENSIONS = new Dimension(750, 640);
 
     public ControlFileEditDialog(ControlFileModel controlFileModel, JFrame parent){
         super(parent,"Map Fields");
