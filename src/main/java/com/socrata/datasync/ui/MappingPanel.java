@@ -10,6 +10,8 @@ import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Provides UI to allow the customer to map a single column in the CSV to a single field name in the dataset
@@ -23,12 +25,34 @@ public class MappingPanel extends JPanel {
     JLabel CSVTitle = new JLabel();
     JLabel CSVPreview = new JLabel();
     int index;
-    JComboBox<String> columnNamesComboBox;
+
+    private static class FieldSelector {
+        public final String humanName;
+        public final String fieldName;
+
+        public FieldSelector(String humanName, String fieldName) {
+            this.humanName = humanName;
+            this.fieldName = fieldName;
+        }
+
+        @Override
+        public String toString() {
+            return humanName + " (" + fieldName + ")";
+        }
+    }
+
+    JComboBox<FieldSelector> columnNamesComboBox;
     JLabel arrow = new JLabel("" + '\u2192');
     String lastSelection;
     ControlFileModel model;
+    Map<String, Integer> fieldNameOrder;
     final int IGNORE_INDEX = 0;
-    final String ignoreField = "- Ignore this field -";
+    final FieldSelector ignoreField = new FieldSelector("", "") {
+            @Override
+            public String toString() {
+                return "- Ignore this field -";
+            }
+        };
 
     public MappingPanel(int index, ControlFileModel model, DatasetModel datasetModel){
         initializeValues(index, model, datasetModel);
@@ -62,7 +86,7 @@ public class MappingPanel extends JPanel {
         if (model.isIgnored(selection))
             columnNamesComboBox.setSelectedIndex(IGNORE_INDEX);
         else
-            columnNamesComboBox.setSelectedItem(selection);
+            columnNamesComboBox.setSelectedIndex(fieldNameOrder.get(selection) + 1);
         lastSelection = selection;
     }
 
@@ -75,8 +99,10 @@ public class MappingPanel extends JPanel {
         columnNamesComboBox.addItem(ignoreField);
 
         ArrayList<Column> columns = datasetModel.getColumns();
+        fieldNameOrder = new HashMap<>();
         for (Column column : columns) {
-            columnNamesComboBox.addItem(column.getFieldName());
+            fieldNameOrder.put(column.getFieldName(), fieldNameOrder.size());
+            columnNamesComboBox.addItem(new FieldSelector(column.getName(), column.getFieldName()));
         }
         update();
 
@@ -98,8 +124,8 @@ public class MappingPanel extends JPanel {
     private void layoutComponents(){
        // this.setLayout(new BoxLayout(this,BoxLayout.X_AXIS));
         this.setLayout(new BorderLayout());
-        this.setMinimumSize(new Dimension(800,48));
-        this.setMaximumSize(new Dimension(800,48));
+        this.setMinimumSize(new Dimension(1000,48));
+        this.setMaximumSize(new Dimension(1000,48));
 
         CSVValuePreview.setLayout(new BoxLayout(CSVValuePreview,BoxLayout.Y_AXIS));
 
@@ -113,8 +139,8 @@ public class MappingPanel extends JPanel {
         CSVValuePreview.setMaximumSize(new Dimension(300, 48));
 
         columnNamesComboBox.setBorder(BorderFactory.createEmptyBorder(5,5,10,5));
-        columnNamesComboBox.setPreferredSize(new Dimension(200,48));
-        columnNamesComboBox.setMaximumSize(new Dimension(200, 48));
+        columnNamesComboBox.setPreferredSize(new Dimension(400, 48));
+        columnNamesComboBox.setMaximumSize(new Dimension(400, 48));
 
         this.add(CSVValuePreview,BorderLayout.WEST);
         this.add(arrow, BorderLayout.CENTER);
@@ -138,8 +164,8 @@ public class MappingPanel extends JPanel {
 
         fieldLabel.setBorder(BorderFactory.createEmptyBorder(5,7,0,0));
 
-        fieldLabel.setPreferredSize(new Dimension(200,16));
-        fieldLabel.setMaximumSize(new Dimension(200, 16));
+        fieldLabel.setPreferredSize(new Dimension(400,16));
+        fieldLabel.setMaximumSize(new Dimension(400, 16));
         header.add(csvLabel,BorderLayout.WEST);
         //header.add()
         header.add(fieldLabel, BorderLayout.EAST);
@@ -154,13 +180,13 @@ public class MappingPanel extends JPanel {
         public void itemStateChanged(ItemEvent e) {
             JComboBox box = (JComboBox) e.getSource();
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                String selectedItem = (String) box.getSelectedItem();
+                FieldSelector selectedItem = (FieldSelector) box.getSelectedItem();
                 //Apparently there is a way to select a null item in Java?
                 if (selectedItem != null) {
                     if (selectedItem.equals(ignoreField)) {
                         model.ignoreColumnInCSVAtPosition(index);
                     } else {
-                        model.updateColumnAtPosition(selectedItem, index);
+                        model.updateColumnAtPosition(selectedItem.fieldName, index);
                     }
                 }
             }
