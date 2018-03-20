@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import info.debatty.java.stringsimilarity.Levenshtein;
 import info.debatty.java.stringsimilarity.WeightedLevenshtein;
 import info.debatty.java.stringsimilarity.CharacterInsDelInterface;
 import info.debatty.java.stringsimilarity.CharacterSubstitutionInterface;
@@ -144,7 +145,7 @@ public class ControlFileModel extends Observable {
 
     private static final WeightedLevenshtein fieldNameToCsv = new WeightedLevenshtein(penalizeChanges, penalizeDeletions);
 
-    public static double editDistance(String csvHeader, String fieldName) {
+    public static double fieldNameEditDistance(String csvHeader, String fieldName) {
         double editDistance = csvToFieldName.distance(csvHeader, fieldName);
         // ok, if we stop and produce a solution here, we'll get
         // badly confused if the CSV has extra columns in it
@@ -155,12 +156,24 @@ public class ControlFileModel extends Observable {
         // penalizing deletions.  If the result is a significant
         // fraction of the size of the dataset column name, we'll
         // consider things unmatched.
-        if(fieldNameToCsv.distance(fieldName, csvHeader) < fieldName.length() * 0.75) {
+        if(fieldNameToCsv.distance(fieldName, csvHeader) < fieldName.length() * 0.25) {
             return editDistance;
         } else {
             // Nope; too many deletions / unexpected changes in the
             // field name -> csv name direction, reject this
             // possibility.
+            return Double.POSITIVE_INFINITY;
+        }
+    }
+
+    private static final Levenshtein csvToHumanName = new Levenshtein();
+
+    public static double humanNameEditDistance(String csvHeader, String humanName) {
+        double editDistance = csvToHumanName.distance(csvHeader, humanName);
+        if(editDistance < Math.max(csvHeader.length(), humanName.length()) * 0.25) {
+            return editDistance;
+        } else {
+            // too much change to the human name; just assume they're different
             return Double.POSITIVE_INFINITY;
         }
     }
@@ -275,8 +288,8 @@ public class ControlFileModel extends Observable {
             PriorityQueue<Guess> preferences = new PriorityQueue<>();
             int idx = 0;
             for(Column column : datasetModel.getColumns()) {
-                double editDistanceToName = editDistance(csvHeader, column.getName());
-                double editDistanceToFieldName = editDistance(csvHeader, column.getFieldName());
+                double editDistanceToName = humanNameEditDistance(csvHeader, column.getName());
+                double editDistanceToFieldName = fieldNameEditDistance(csvHeader, column.getFieldName());
                 double badness = Math.min(editDistanceToName, editDistanceToFieldName);
                 debug("  Badness to ", column.getName(), " (", column.getFieldName(), ") : ", badness);
                 preferences.add(new Guess(column, badness, idx));
@@ -293,13 +306,15 @@ public class ControlFileModel extends Observable {
             PriorityQueue<Guess> preferences = candidate.preferences;
             if(preferences.isEmpty()) {
                 debug("  It has no preferences.  Bailing.");
-                return; // we can short-circuit: all remaining guesses are infinite badness
+                ignoreColumnInCSVAtPosition(candidate.sourceColumnIndex);
+                continue;
             }
 
             Guess guess = preferences.poll();
             if(guess.badness == Double.POSITIVE_INFINITY) {
                 debug("  Its most-prefered choice is infinitely bad.  Bailing.");
-                return; // again, all further guesses are infinite
+                ignoreColumnInCSVAtPosition(candidate.sourceColumnIndex);
+                continue;
             }
 
             if(usedFieldNames.contains(guess.column.getFieldName())) {
