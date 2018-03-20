@@ -177,15 +177,49 @@ public class ControlFileModel extends Observable {
         }
 
         public int compareTo(Guess that) {
-            if(this.badness < that.badness) return -1;
-            if(this.badness > that.badness) return 1;
-            if(this.index < that.index) return -1;
-            if(this.index > that.index) return 1;
-            return 0;
+            int badnessOrd = Double.compare(this.badness, that.badness);
+            if(badnessOrd == 0) return Integer.compare(this.index, that.index);
+            else return badnessOrd;
         }
 
         @Override public boolean equals(Object that) {
             if(that instanceof Guess) return compareTo((Guess) that) == 0;
+            return false;
+        }
+    }
+
+    private static class Candidate implements Comparable<Candidate> {
+        public final int sourceColumnIndex;
+        public final PriorityQueue<Guess> preferences;
+
+        public Candidate(int sourceColumnIndex, PriorityQueue<Guess> preferences) {
+            this.sourceColumnIndex = sourceColumnIndex;
+            this.preferences = preferences;
+        }
+
+        public int compareTo(Candidate that) {
+            boolean thisIsInfinitelyBad = this.preferences.isEmpty() || this.preferences.peek().badness == Double.POSITIVE_INFINITY;
+            boolean thatIsInfinitelyBad = that.preferences.isEmpty() || that.preferences.peek().badness == Double.POSITIVE_INFINITY;
+
+            if(thisIsInfinitelyBad) {
+                if(thatIsInfinitelyBad) {
+                    return Integer.compare(this.sourceColumnIndex, that.sourceColumnIndex);
+                } else {
+                    return 1; // that is not infinitely bad, so put it first
+                }
+            } else {
+                if(thatIsInfinitelyBad) {
+                    return -1;
+                } else {
+                    int badnessOrd = Double.compare(this.preferences.peek().badness, that.preferences.peek().badness);
+                    if(badnessOrd == 0) return Integer.compare(this.sourceColumnIndex, that.sourceColumnIndex);
+                    else return badnessOrd;
+                }
+            }
+        }
+
+        @Override public boolean equals(Object that) {
+            if(that instanceof Candidate) return compareTo((Candidate) that) == 0;
             return false;
         }
     }
@@ -232,8 +266,7 @@ public class ControlFileModel extends Observable {
             columnNames.add(column.getName());
         }
 
-        SortedMap<Integer, PriorityQueue<Guess>> allPreferences = new TreeMap<>();
-        Set<String> usedFieldNames = new HashSet<>();
+        PriorityQueue<Candidate> candidates = new PriorityQueue<>();
 
         for (int i = 0; i < csvModel.getColumnCount(); i++) {
             String csvHeader = csvModel.getColumnName(i);
@@ -250,32 +283,38 @@ public class ControlFileModel extends Observable {
                 idx += 1;
             }
 
-            allPreferences.put(i, preferences);
+            candidates.add(new Candidate(i, preferences));
         }
 
-        while(!allPreferences.isEmpty()) {
-            int bestGuess = bestGuess(allPreferences);
-            debug("Column with the least badness is ", csvModel.getColumnName(bestGuess));
-            PriorityQueue<Guess> preferences = allPreferences.remove(bestGuess);
+        Set<String> usedFieldNames = new HashSet<>();
+        while(!candidates.isEmpty()) {
+            Candidate candidate = candidates.poll();
+            debug("Leftmost csv column with the least bad preference is ", csvModel.getColumnName(candidate.sourceColumnIndex));
+            PriorityQueue<Guess> preferences = candidate.preferences;
             if(preferences.isEmpty()) {
-                debug("  It has no preference.  Bailing.");
+                debug("  It has no preferences.  Bailing.");
                 return; // we can short-circuit: all remaining guesses are infinite badness
             }
+
             Guess guess = preferences.poll();
             if(guess.badness == Double.POSITIVE_INFINITY) {
                 debug("  Its most-prefered choice is infinitely bad.  Bailing.");
                 return; // again, all further guesses are infinite
             }
-            Column col = guess.column;
-            debug("  That best matches column ", col.getName(), " (", col.getFieldName(), ")");
-            updateColumnAtPosition(col.getFieldName(), bestGuess);
-            usedFieldNames.add(col.getFieldName());
 
-            for(PriorityQueue<Guess> nextGuess : allPreferences.values()) {
-                while(!nextGuess.isEmpty() && usedFieldNames.contains(nextGuess.peek().column.getFieldName())) {
-                    nextGuess.poll();
-                }
+            if(usedFieldNames.contains(guess.column.getFieldName())) {
+                // Its best choice is something we've already
+                // selected; put the candidate back in the pool, minus
+                // that guess because mutability, and try again.
+                debug("  Its most-prefered choice (", guess.column.getFieldName(), ") has already been picked.  Removing that option and trying again.");
+                candidates.add(candidate);
+                continue;
             }
+
+            Column col = guess.column;
+            debug("  That best matches column ", col.getName(), " (", col.getFieldName(), ") with badness ", guess.badness);
+            updateColumnAtPosition(col.getFieldName(), candidate.sourceColumnIndex);
+            usedFieldNames.add(col.getFieldName());
         }
     }
 
