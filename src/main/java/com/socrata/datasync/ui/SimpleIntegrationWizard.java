@@ -631,13 +631,6 @@ public class SimpleIntegrationWizard {
 
     private void generateLoadingNotice() {
         loadingNoticePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        // URL spinnerImageURL = getClass().getResource(LOADING_SPINNER_FILE_PATH);
-        // if(spinnerImageURL != null) {
-        //     JLabel loadingImageLabel = new JLabel(new ImageIcon(spinnerImageURL));
-        //     loadingNoticePanel.add(loadingImageLabel);
-        // }
-        // JLabel loadingTextLabel = new JLabel(" Job is in progress...");
-        // loadingNoticePanel.add(loadingTextLabel);
         loadingNoticePanel.setVisible(false);
     }
 
