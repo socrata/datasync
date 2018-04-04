@@ -3,6 +3,11 @@ package com.socrata.datasync.config.userpreferences;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.socrata.datasync.job.LoadPreferencesJob;
 
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Collections;
+
 /**
  * Author: Adrian Laurenzi
  * Date: 6/13/14
@@ -14,7 +19,6 @@ public class UserPreferencesLib implements UserPreferences {
     private String domain;
     private String username;
     private String password;
-    private String appToken;
     private String adminEmail;
     private String proxyHost;
     private String proxyPort;
@@ -29,7 +33,8 @@ public class UserPreferencesLib implements UserPreferences {
     private String smtpPassword;
     private String filesizeChunkingCutoffMB;
     private String numRowsPerChunk;
-    private String portDestinationDomainAppToken;
+    private boolean useNewBackend;
+    private List<String> defaultTimeFormats;
 
     // When a file to be published is larger than this value (in MB), file is chunked
     private static final String DEFAULT_FILESIZE_CHUNK_CUTOFF_MB = "10";
@@ -47,7 +52,7 @@ public class UserPreferencesLib implements UserPreferences {
         smtpPassword = "";
         filesizeChunkingCutoffMB = DEFAULT_FILESIZE_CHUNK_CUTOFF_MB;
         numRowsPerChunk = DEFAULT_NUM_ROWS_PER_CHUNK;
-        portDestinationDomainAppToken = "";
+        defaultTimeFormats = Arrays.asList(DEFAULT_TIME_FORMATS);
     }
 
     public String getDomain() {
@@ -77,16 +82,11 @@ public class UserPreferencesLib implements UserPreferences {
 
     public UserPreferencesLib password(String password) { setPassword(password); return this; }
 
-    public String getAPIKey() { return appToken; }
-
-    public String getAppToken() {
-        return appToken;
-    }
-
+    @Deprecated
     public void setAppToken(String appToken) {
-        this.appToken = appToken;
     }
 
+    @Deprecated
     public UserPreferencesLib appToken(String appToken) { setAppToken(appToken); return this; }
 
     public String getProxyHost() { return proxyHost; }
@@ -220,20 +220,20 @@ public class UserPreferencesLib implements UserPreferences {
     public UserPreferencesLib numRowsPerChunk(String numRows) { setNumRowsPerChunk(numRows); return this; }
 
     public boolean getUseNewBackend() {
-        return false;
+        return useNewBackend;
     }
 
+    public void setUseNewBackend(boolean useNewBackend) {
+        this.useNewBackend = useNewBackend;
+    }
+
+    @Deprecated
     public void setPortDestinationDomainAppToken(String portDestinationDomainAppToken) {
-        this.portDestinationDomainAppToken = portDestinationDomainAppToken;
-    }
-
-    public String getPortDestinationDomainAppToken() {
-        return portDestinationDomainAppToken;
     }
 
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(
-                this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());
+                this.getDomain(), this.getUsername(), this.getPassword());
     }
 
     public String getHost() {
@@ -243,6 +243,14 @@ public class UserPreferencesLib implements UserPreferences {
         } else {
             return null;
         }
+    }
+
+    public List<String> getDefaultTimeFormats() {
+        return Collections.unmodifiableList(defaultTimeFormats);
+    }
+
+    public void setDefaultTimeForamts(List<String> defaultTimeFormats) {
+        this.defaultTimeFormats = new ArrayList<>(defaultTimeFormats);
     }
 
     public UserPreferencesLib load() {

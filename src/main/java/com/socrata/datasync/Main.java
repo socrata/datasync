@@ -19,7 +19,7 @@ import java.util.Arrays;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class Main {
     /**
@@ -29,7 +29,7 @@ public class Main {
     public static void main(String[] args) throws ParseException, ControlDisagreementException {
         if(args.length == 0) {
             // Open GUI (default)
-            new SimpleIntegrationWizard();
+            SimpleIntegrationWizard.get();
         } else if(args.length == 1) {
             if (args[0].equals("-?") || args[0].equals("--help")) {
                 printHelp();

@@ -1,9 +1,14 @@
 package com.socrata.datasync.config.userpreferences;
 
 import com.socrata.datasync.SocrataConnectionInfo;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
@@ -17,7 +22,6 @@ public class UserPreferencesFile implements UserPreferences {
     private String domain;
     private String username;
     private String password;
-    private String appToken;
     private String proxyHost;
     private String proxyPort;
     private String proxyUsername;
@@ -32,8 +36,7 @@ public class UserPreferencesFile implements UserPreferences {
     private String smtpPassword;
     private String filesizeChunkingCutoffMB;
     private String numRowsPerChunk;
-    private String portDestinationDomainAppToken;
-    private boolean useNewBackend;
+    private List<String> timeFormats;
 
     // Anytime a @JsonProperty is added/removed/updated in this class add 1 to this value
     private static final long fileVersionUID = 5L;
@@ -52,15 +55,6 @@ public class UserPreferencesFile implements UserPreferences {
     @JsonProperty("password")
     public String getPassword() {
         return password;
-    }
-
-    @JsonProperty("appToken")
-    public String getAppToken() {
-        return appToken;
-    }
-    // Alias for getAppToken
-    public String getAPIKey() {
-        return appToken;
     }
 
     @JsonProperty("proxyHost")
@@ -133,19 +127,17 @@ public class UserPreferencesFile implements UserPreferences {
         return numRowsPerChunk;
     }
 
-    @JsonProperty("portDestinationDomainAppToken")
-    public String getPortDestinationDomainAppToken() {
-        return portDestinationDomainAppToken;
-    }
-
-    @JsonProperty("useNewBackend")
-    public boolean getUseNewBackend() { return useNewBackend; }
-
     @JsonProperty("proxyUsername")
     public void setProxyUsername(String username) { proxyUsername = username; }
 
     @JsonProperty("proxyPassword")
     public void setProxyPassword(String password) { proxyPassword = password; }
+
+    @JsonProperty("defaultTimeFormats")
+    public List<String> getDefaultTimeFormats() {
+        if(timeFormats == null) return Collections.unmodifiableList(Arrays.asList(DEFAULT_TIME_FORMATS));
+        return Collections.unmodifiableList(timeFormats);
+    }
 
     public String getHost() {
         if (domain != null) {
@@ -158,7 +150,7 @@ public class UserPreferencesFile implements UserPreferences {
 
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(
-                this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());
+                this.getDomain(), this.getUsername(), this.getPassword());
     }
 
 }

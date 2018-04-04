@@ -2,9 +2,9 @@ package com.socrata.datasync.model;
 
 import com.socrata.datasync.config.controlfile.ControlFile;
 import junit.framework.TestCase;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 import java.io.File;

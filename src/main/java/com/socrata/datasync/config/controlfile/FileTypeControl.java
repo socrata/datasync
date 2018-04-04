@@ -1,12 +1,12 @@
 package com.socrata.datasync.config.controlfile;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import javax.xml.stream.Location;
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -34,10 +34,10 @@ public class FileTypeControl {
     public String[] fixedTimestampFormat;
     public String timezone;
     public String dropUninterpretableRows;
-    public Map<String, ColumnOverride> overrides;
-    public Map<String, LocationColumn> analyticLocations;
-    public Map<String, LocationColumn> syntheticLocations;
-    public Map<String, LocationColumn> syntheticPoints;
+    public TreeMap<String, ColumnOverride> overrides;
+    public TreeMap<String, LocationColumn> analyticLocations;
+    public TreeMap<String, LocationColumn> syntheticLocations;
+    public TreeMap<String, SyntheticPointColumn> syntheticPoints;
     public Boolean useSocrataGeocoding;
     public String action;
     public Boolean columnStatistics;
@@ -131,13 +131,13 @@ public class FileTypeControl {
 
     public FileTypeControl dropUninterpretableRows(String d) { dropUninterpretableRows = d; return this; }
 
-    public FileTypeControl overrides(Map<String, ColumnOverride> o) { overrides = o; return this; }
+    public FileTypeControl overrides(TreeMap<String, ColumnOverride> o) { overrides = o; return this; }
 
-    public FileTypeControl syntheticLocations(Map<String, LocationColumn> s) { syntheticLocations = s; return this; }
+    public FileTypeControl syntheticLocations(TreeMap<String, LocationColumn> s) { syntheticLocations = s; return this; }
 
-    public FileTypeControl analyticLocations(Map<String, LocationColumn> s) { analyticLocations = s; return this; }
+    public FileTypeControl analyticLocations(TreeMap<String, LocationColumn> s) { analyticLocations = s; return this; }
 
-    public FileTypeControl syntheticPoints(Map<String, LocationColumn> s) { syntheticPoints = s; return this; }
+    public FileTypeControl syntheticPoints(TreeMap<String, SyntheticPointColumn> s) { syntheticPoints = s; return this; }
 
     public FileTypeControl useSocrataGeocoding(boolean u) { useSocrataGeocoding = u; return this; }
 

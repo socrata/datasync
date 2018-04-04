@@ -9,17 +9,17 @@ import java.util.Map;
 
 @JsonSerialize(include= JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown=false)
-public class LocationColumn extends SyntheticColumn implements Cloneable {
+public class GeocodedPointColumn extends SyntheticPointColumn implements Cloneable {
     // all of these fields should be set to the column id of the relevant field
     public String address;
     public String city;
     public String state;
     public String zip;
-    public String latitude;
-    public String longitude;
-    public String type;
+    public String country;
+    public String type = "geocoded";
+
     @JsonIgnore
-    public static final String[] locationFieldNames = new String[] {"address", "city", "state", "zip", "latitude", "longitude"};
+    public static final String[] locationFieldNames = new String[] {"address", "city", "state", "zip", "country"};
 
     public Map<String, String> findComponentColumns() {
         Map<String,String> components = new HashMap<>();
@@ -30,8 +30,7 @@ public class LocationColumn extends SyntheticColumn implements Cloneable {
                 case "city":      fieldname = city;      break;
                 case "state":     fieldname = state;     break;
                 case "zip":       fieldname = zip;       break;
-                case "latitude":  fieldname = latitude;  break;
-                case "longitude": fieldname = longitude; break;
+                case "country":   fieldname = country;   break;
             }
             if (fieldname != null && !fieldname.isEmpty())
                 components.put(s, fieldname);
@@ -42,24 +41,17 @@ public class LocationColumn extends SyntheticColumn implements Cloneable {
 
     // Builder methods:
 
-    public LocationColumn address(String a) { address = a; return this; }
+    public GeocodedPointColumn address(String a) { address = a; return this; }
 
-    public LocationColumn city(String c) { city = c; return this; }
+    public GeocodedPointColumn city(String c) { city = c; return this; }
 
-    public LocationColumn latitude(String l) { latitude = l; return this; }
+    public GeocodedPointColumn state(String s) { state = s; return this; }
 
-    public LocationColumn longitude(String l) { longitude = l; return this; }
+    public GeocodedPointColumn zip(String z) { zip = z; return this; }
 
-    public LocationColumn state(String s) { state = s; return this; }
+    public GeocodedPointColumn country(String c) { country = c; return this; }
 
-    public LocationColumn zip(String z) { zip = z; return this; }
-
-    public LocationColumn clone() {
-        try {
-            return (LocationColumn) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new RuntimeException(e);
-        }
+    public GeocodedPointColumn clone() {
+        return (GeocodedPointColumn) super.clone();
     }
-
 }

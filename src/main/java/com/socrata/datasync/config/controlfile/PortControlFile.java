@@ -1,10 +1,17 @@
 package com.socrata.datasync.config.controlfile;
 
+import java.io.IOException;
+
 import com.socrata.datasync.Utils;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import com.socrata.datasync.PortMethod;
 
@@ -12,12 +19,31 @@ import com.socrata.datasync.PortMethod;
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonPropertyOrder(alphabetic=true)
 public class PortControlFile {
-    public String destinationDomain;
+    public String sourceDomain;
+    public String sourceDataset;
     public String destinationName;
     public CopyType copyType;
     public Boolean publish;
     public String opaque;
 
+    public static class CopyTypeDeserializer extends StdDeserializer<CopyType> {
+        public CopyTypeDeserializer() {
+            super(CopyType.class);
+        }
+
+        public CopyType deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
+            JsonNode node = jp.getCodec().readTree(jp);
+            String type = node.get("type").asText();
+            switch(type) {
+            case "data": return new CopyData();
+            case "schema": return new CopySchema();
+            case "schema_and_data": return new CopyAll();
+            default: return null;
+            }
+        }
+    }
+
+    @JsonDeserialize(using = CopyTypeDeserializer.class)
     public static interface CopyType {}
 
     @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
@@ -25,10 +51,8 @@ public class PortControlFile {
     @JsonPropertyOrder(alphabetic=true)
     public static class CopyData implements CopyType {
         public final String type;
-        public String destinationDataset;
-        public CopyData(String destinationDataset) {
+        public CopyData() {
             this.type = "data";
-            this.destinationDataset = destinationDataset;
         }
     }
 
@@ -37,10 +61,8 @@ public class PortControlFile {
     @JsonPropertyOrder(alphabetic=true)
     public static class CopySchema implements CopyType {
         public final String type;
-        public boolean toNbe;
-        public CopySchema(boolean toNbe) {
+        public CopySchema() {
             this.type = "schema";
-            this.toNbe = toNbe;
         }
     }
 
@@ -49,35 +71,33 @@ public class PortControlFile {
     @JsonPropertyOrder(alphabetic=true)
     public static class CopyAll implements CopyType {
         public final String type;
-        public boolean toNbe;
-        public CopyAll(boolean toNbe) {
+        public CopyAll() {
             this.type = "schema_and_data";
-            this.toNbe = toNbe;
         }
     }
 
     public PortControlFile() {}
 
-    public PortControlFile(String destinationDomain,
+    public PortControlFile(String sourceDomain,
+                           String sourceDataset,
                            String destinationName,
-                           String destinationDataset,
-                           boolean toNbe,
                            PortMethod copyType,
                            Boolean publish)
     {
-        this.destinationDomain = destinationDomain;
+        this.sourceDomain = sourceDomain;
+        this.sourceDataset = sourceDataset;
         this.destinationName = destinationName;
         this.publish = publish;
 
         switch(copyType) {
         case copy_data:
-            this.copyType = new CopyData(destinationDataset);
+            this.copyType = new CopyData();
             break;
         case copy_schema:
-            this.copyType = new CopySchema(toNbe);
+            this.copyType = new CopySchema();
             break;
         case copy_all:
-            this.copyType = new CopyAll(toNbe);
+            this.copyType = new CopyAll();
             break;
         }
     }

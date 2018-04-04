@@ -20,12 +20,15 @@ import com.socrata.exceptions.SodaError;
 import com.socrata.model.UpsertError;
 import com.socrata.model.UpsertResult;
 import org.apache.commons.cli.CommandLine;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import com.sun.jersey.api.client.ClientHandlerException;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import org.joda.time.LocalDateTime;
+import org.joda.time.format.ISODateTimeFormat;
+import javax.ws.rs.ProcessingException;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -75,7 +78,7 @@ public class IntegrationJob extends Job {
     private String userAgentNameSijFile = ".sij File";
 
     private ObjectMapper controlFileMapper =
-            new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+            new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     public IntegrationJob() {
         userPrefs = new UserPreferencesJava();
@@ -281,7 +284,7 @@ public class IntegrationJob extends Job {
         if (controlDeserialization.isError() && (publishViaDi2Http || publishViaFTP)) {
             runStatus = controlDeserialization;
         } else {
-            JobStatus validationStatus = IntegrationJobValidity.validateJobParams(connectionInfo, this);
+            JobStatus validationStatus = IntegrationJobValidity.validateJobParams(userPrefs, this);
             if (validationStatus.isError()) {
                 runStatus = validationStatus;
             } else {
@@ -364,8 +367,8 @@ public class IntegrationJob extends Job {
         Map<String, Object> newCols = new HashMap<>();
 
         // add standard log data
-        Date currentDateTime = new Date();
-        newCols.put("Date", currentDateTime);
+        LocalDateTime currentDateTime = new LocalDateTime();
+        newCols.put("Date", ISODateTimeFormat.dateTime().print(currentDateTime));
         newCols.put("DatasetID", job.getDatasetID());
         newCols.put("FileToPublish", job.getFileToPublish());
         if(job.getPublishMethod() != null)
@@ -401,7 +404,7 @@ public class IntegrationJob extends Job {
                 e.printStackTrace();
                 logPublishingErrorMessage = e.getMessage();
             }
-            catch (ClientHandlerException e) {
+            catch (ProcessingException e) {
                 if(e.getCause() instanceof SocketException) {
                     System.out.println("Socket exception while updating logging dataset: " + e.getCause().getMessage());
                     if(retryLimit-- > 0) {

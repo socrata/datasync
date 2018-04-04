@@ -3,8 +3,8 @@ package com.socrata.datasync.config.controlfile;
 import com.socrata.datasync.PublishMethod;
 import com.socrata.exceptions.SodaError;
 import junit.framework.TestCase;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 import java.io.File;

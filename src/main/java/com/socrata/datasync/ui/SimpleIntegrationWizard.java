@@ -14,6 +14,7 @@ import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.job.MetadataJob;
 import com.socrata.datasync.job.PortJob;
 import com.socrata.datasync.job.GISJob;
+import com.socrata.datasync.config.userpreferences.UserPreferences;
 import com.socrata.datasync.config.userpreferences.UserPreferencesJava;
 
 import java.io.File;
@@ -21,6 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SimpleIntegrationWizard {
@@ -61,7 +63,6 @@ public class SimpleIntegrationWizard {
     private static final String DOMAIN_TIP_TEXT = "The domain of the Socrata data site you wish to publish data to (e.g. https://explore.data.gov/)";
     private static final String USERNAME_TIP_TEXT = "Socrata account username (account must have Publisher or Administrator permissions)";
     private static final String PASSWORD_TIP_TEXT = "Socrata account password";
-    private static final String APP_TOKEN_TIP_TEXT = "You can create an app token free at http://dev.socrata.com/register";
     private static final String RUN_JOB_NOW_TIP_TEXT = "<html><body style='width: 300px'>" +
             "To view detailed logging information run the job by copying the" +
             " 'Command to execute with scheduler' and running it in your Terminal/Command Prompt (instead of clicking 'Run Job Now' button)</body></html>";
@@ -73,7 +74,7 @@ public class SimpleIntegrationWizard {
     private static final String SCHEDULING_GUIDE_URL = "http://socrata.github.io/datasync/resources/schedule-job.html";
     private static final String FAQ_URL = "http://socrata.github.io/datasync/resources/faq-common-problems.html";
 
-    private JTextField domainTextField, usernameTextField, apiKeyTextField;
+    private JTextField domainTextField, usernameTextField;
     private JPasswordField passwordField;
     private JTextField filesizeChunkingCutoffTextField, numRowsPerChunkTextField;
     private JTextField logDatasetIDTextField, adminEmailTextField;
@@ -82,6 +83,7 @@ public class SimpleIntegrationWizard {
     private JPasswordField smtpPasswordField;
     private JCheckBox useSSLCheckBox;
     private JCheckBox emailUponErrorCheckBox;
+    private JTextField timeFormatsTextField;
 
     /**
      * Stores a list of open JobTabs. Each JobTab object contains
@@ -99,12 +101,18 @@ public class SimpleIntegrationWizard {
     private JFrame frame;
     private JFrame prefsFrame;
     private JPanel loadingNoticePanel;
+    private JPanel progressPanel;
     private JButton runJobNowButton;
+    private JLabel loadingTextLabel = new JLabel("Processing...");
+    private JProgressBar progress = new JProgressBar(0, 100);
+    private JLabel progressText = new JLabel("");
+
+    private static SimpleIntegrationWizard instance;
 
     /*
      * Constructs the GUI and displays it on the screen.
      */
-    public SimpleIntegrationWizard() {
+    private SimpleIntegrationWizard() {
         // load user preferences (saved locally)
         userPrefs = new UserPreferencesJava();
 
@@ -144,6 +152,11 @@ public class SimpleIntegrationWizard {
         } catch (Exception e) {
             // do nothing upon failure
         }
+    }
+
+    public static SimpleIntegrationWizard get() {
+        if(instance == null) instance = new SimpleIntegrationWizard();
+        return instance;
     }
 
     private void generatePreferencesFrame() {
@@ -193,7 +206,7 @@ public class SimpleIntegrationWizard {
     private void addJobTab(Job job) throws IllegalArgumentException {
         JobTab newJobTab;
         if(job.getClass().equals(IntegrationJob.class)) {
-            newJobTab = new IntegrationJobTab((IntegrationJob) job, frame);
+            newJobTab = new IntegrationJobTab((IntegrationJob) job, frame, userPrefs);
         } else if(job.getClass().equals(PortJob.class)) {
             newJobTab = new PortJobTab((PortJob) job, frame);
         } else if(job.getClass().equals(GISJob.class)) {
@@ -264,6 +277,10 @@ public class SimpleIntegrationWizard {
 
         public RunJobWorker(JobTab jobTabToRun){
             loadingNoticePanel.setVisible(true);
+            progressPanel.setVisible(true);
+            loadingNoticePanel.add(loadingTextLabel);
+            progressPanel.add(progress);
+            progressPanel.add(progressText);
             runJobNowButton.setEnabled(false);
             this.jobTabToRun = jobTabToRun;
         }
@@ -280,6 +297,9 @@ public class SimpleIntegrationWizard {
                 e.printStackTrace();
                 jobStatus = JobStatus.PUBLISH_ERROR;
                 jobStatus.setMessage("Unexpected error: " + e);
+            } catch (Error e) {
+                e.printStackTrace();
+                throw e;
             }
             return null;
         }
@@ -288,10 +308,13 @@ public class SimpleIntegrationWizard {
         @Override
         protected void done() {
             loadingNoticePanel.setVisible(false);
+            progressPanel.setVisible(false);
             runJobNowButton.setEnabled(true);
 
             // show popup with returned status
-            if(jobStatus.isError()) {
+            if(jobStatus == null) {
+                System.out.println("null jobStatus?!");
+            } else if(jobStatus.isError()) {
                 JOptionPane.showMessageDialog(frame, "Job completed with errors: " + jobStatus.getMessage());
             } else {
                 if (jobTabToRun.getClass().equals(PortJobTab.class)) {
@@ -564,21 +587,25 @@ public class SimpleIntegrationWizard {
         jobTabsContainer.add(jobTabsPane);
         jobTabsPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 
-        JPanel jobButtonContainer = new JPanel(new GridLayout(1,2));
+        JPanel jobButtonContainer = new JPanel(new GridLayout(1,3));
         JPanel leftButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         runJobNowButton = new JButton("Run Job Now");
         runJobNowButton.addActionListener(new RunJobNowListener());
         leftButtonPanel.add(runJobNowButton);
         leftButtonPanel.add(UIUtility.generateHelpBubble(RUN_JOB_NOW_TIP_TEXT));
 
+        JPanel noticesContainer = new JPanel(new GridLayout(2, 1));
         generateLoadingNotice();
-        leftButtonPanel.add(loadingNoticePanel);
+        noticesContainer.add(loadingNoticePanel);
+        generateProgressBar();
+        noticesContainer.add(progressPanel);
 
         JPanel rightButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton saveJobButton = new JButton("Save Job");
         saveJobButton.addActionListener(new SaveJobListener());
         rightButtonPanel.add(saveJobButton);
         jobButtonContainer.add(leftButtonPanel);
+        jobButtonContainer.add(noticesContainer);
         jobButtonContainer.add(rightButtonPanel);
 
         jobButtonContainer.setPreferredSize(BUTTON_PANEL_DIMENSION);
@@ -604,14 +631,13 @@ public class SimpleIntegrationWizard {
 
     private void generateLoadingNotice() {
         loadingNoticePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        URL spinnerImageURL = getClass().getResource(LOADING_SPINNER_FILE_PATH);
-        if(spinnerImageURL != null) {
-            JLabel loadingImageLabel = new JLabel(new ImageIcon(spinnerImageURL));
-            loadingNoticePanel.add(loadingImageLabel);
-        }
-        JLabel loadingTextLabel = new JLabel(" Job is in progress...");
-        loadingNoticePanel.add(loadingTextLabel);
         loadingNoticePanel.setVisible(false);
+    }
+
+    private void generateProgressBar() {
+        progressPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+
+        progressPanel.setVisible(false);
     }
 
     private JPanel generatePreferencesPanel() {
@@ -727,6 +753,17 @@ public class SimpleIntegrationWizard {
         testSMTPSettingsButton.addActionListener(new TestSMTPSettingsListener());
         testSMTPSettingsContainer.add(testSMTPSettingsButton);
         prefsPanel.add(testSMTPSettingsContainer);
+        prefsPanel.add(new JLabel(""));
+
+        // Parsing settings
+        JLabel parsingSettingsLabel = new JLabel(" Parsing Settings");
+        parsingSettingsLabel.setFont(boldFont);
+        prefsPanel.add(parsingSettingsLabel);
+        prefsPanel.add(new JLabel(""));
+
+        prefsPanel.add(new JLabel(" Default time formats"));
+        timeFormatsTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
+        prefsPanel.add(timeFormatsTextField);
 
         JPanel prefsButtonContainer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton cancelPrefsButton = new JButton("Cancel");
@@ -766,7 +803,7 @@ public class SimpleIntegrationWizard {
         proxyPortTextField.setText(userPrefs.getProxyPort());
         proxyUsernameTextField.setText(userPrefs.getProxyUsername());
         proxyPasswordTextField.setText(userPrefs.getProxyPassword());
-
+        timeFormatsTextField.setText(Utils.commaJoin(userPrefs.getDefaultTimeFormats()));
     }
 
     private void savePreferences() {
@@ -803,6 +840,13 @@ public class SimpleIntegrationWizard {
         userPrefs.saveProxyUsername(proxyUsernameTextField.getText());
         userPrefs.saveProxyPassword(proxyPasswordTextField.getText());
 
+        String newTimeFormats = timeFormatsTextField.getText();
+        if(newTimeFormats.trim().isEmpty()) {
+            userPrefs.saveDefaultTimeFormats(Arrays.asList(UserPreferences.DEFAULT_TIME_FORMATS));
+            timeFormatsTextField.setText(Utils.commaJoin(UserPreferences.DEFAULT_TIME_FORMATS));
+        } else {
+            userPrefs.saveDefaultTimeFormats(Arrays.asList(Utils.commaSplit(newTimeFormats)));
+        }
     }
 
     private class SavePreferencesListener implements ActionListener {
@@ -860,17 +904,12 @@ public class SimpleIntegrationWizard {
                 UIUtility.generateLabelWithHelpBubble("Password", PASSWORD_TIP_TEXT));
         passwordField = new JPasswordField(DEFAULT_TEXTFIELD_COLS);
         authenticationDetailsPanel.add(passwordField);
-        authenticationDetailsPanel.add(
-                UIUtility.generateLabelWithHelpBubble("App Token", APP_TOKEN_TIP_TEXT));
-        apiKeyTextField = new JTextField(DEFAULT_TEXTFIELD_COLS);
-        authenticationDetailsPanel.add(apiKeyTextField);
         authenticationDetailsPanel.setPreferredSize(AUTH_DETAILS_DIMENSION);
 
         AuthenticationDetailsFocusListener focusListener = new AuthenticationDetailsFocusListener();
         domainTextField.addFocusListener(focusListener);
         usernameTextField.addFocusListener(focusListener);
         passwordField.addFocusListener(focusListener);
-        apiKeyTextField.addFocusListener(focusListener);
 
         return authenticationDetailsPanel;
     }
@@ -891,7 +930,6 @@ public class SimpleIntegrationWizard {
         userPrefs.saveUsername(usernameTextField.getText());
         String password = new String(passwordField.getPassword());
         userPrefs.savePassword(password);
-        userPrefs.saveAPIKey(apiKeyTextField.getText());
     }
 
     /**
@@ -901,7 +939,20 @@ public class SimpleIntegrationWizard {
         domainTextField.setText(userPrefs.getDomain());
         usernameTextField.setText(userPrefs.getUsername());
         passwordField.setText(userPrefs.getPassword());
-        apiKeyTextField.setText(userPrefs.getAPIKey());
     }
 
+    public static void updateStatus(String loadingLabel, int progressPercent, boolean showProgress, String message) {
+        if(instance != null) {
+            instance.loadingTextLabel.setText(loadingLabel);
+            instance.progress.setValue(0);
+            if(showProgress) {
+                instance.progress.setVisible(true);
+                instance.progressText.setText("");
+                instance.progress.setValue(progressPercent);
+            } else {
+                instance.progress.setVisible(false);
+                instance.progressText.setText(message);
+            }
+        }
+    }
 }

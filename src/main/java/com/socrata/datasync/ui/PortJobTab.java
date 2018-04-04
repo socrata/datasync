@@ -43,15 +43,16 @@ public class PortJobTab implements JobTab {
             "<strong>Copy schema only</strong>: copies only the metadata and columns to a new dataset<br>" +
             "<strong>Copy schema and data</strong>: makes an identical copy to a new dataset<br>" +
             "<strong>Copy data only</strong>: copies only the rows to an existing dataset</html>";
-    private final String SOURCE_SITE_TIP_TEXT = "Domain where the source dataset is located.";
+    private final String SOURCE_SITE_TIP_TEXT = "Domain where the source dataset is located.  The destination domain will be the one configured for authentication.";
     private final String SOURCE_SET_TIP_TEXT = "The xxxx-xxxx ID of the source dataset (e.g. n38h-y5wp)";
-    private final String SINK_SITE_TIP_TEXT = "Domain where the destination dataset will be [or is] located.";
     private final String SINK_SET_TIP_TEXT = "<html><body style='width: 400px'>If Port Method is '<strong>copy schema</strong>' or '<strong>copy schema and data</strong>' " +
             "this field will be populated with the xxxx-xxxx ID of the newly created dataset.<br>" +
             "If Port method is '<strong>copy data only</strong>' enter the xxxx-xxxx ID of the existing dataset you wish to copy data to (e.g. n38h-y5wp).</body></html>";
     private final String PUBLISH_METHOD_TIP_TEXT = "The method to use when publishing the data to the destination dataset.";
     private final String PUBLISH_DATASET_TIP_TEXT = "<html><body style='width: 280px'>If <strong>Yes</strong>, publish the newly created destination dataset.<br>" +
             "If <strong>No</strong>, create it as an unpublished working copy.</body></html>";
+
+    private final String NBE_TIP_TEXT = "Select the backend to create the target dataset on.";
 
     private JFrame mainFrame;
     private JPanel jobPanel;
@@ -62,7 +63,6 @@ public class PortJobTab implements JobTab {
     private JComboBox<PortMethod> portMethodComboBox;
     private JTextField sourceSiteDomainTextField;
     private JTextField sourceSetIDTextField;
-    private JTextField sinkSiteDomainTextField;
     private JTextField sinkSetIDTextField;
 
     // Need to expose more of the JComponents locally in order to toggle between PublishMethod and PublishDataset
@@ -72,10 +72,13 @@ public class PortJobTab implements JobTab {
     private JPanel publishDatasetContainerLeft;
     private JComboBox<PublishDataset> publishDatasetComboBox;
     private JPanel publishDatasetContainerRight;
+    private UserPreferences userPrefs;
 
 
     // build Container with all tab components and load data into form
     public PortJobTab(PortJob job, JFrame containingFrame) {
+        userPrefs = new UserPreferencesJava();
+
         mainFrame = containingFrame;
 
         // build tab panel form
@@ -117,16 +120,6 @@ public class PortJobTab implements JobTab {
                 JOB_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
         sourceSetIDTextFieldContainer.add(sourceSetIDTextField);
         jobPanel.add(sourceSetIDTextFieldContainer);
-
-        // Sink Site
-        jobPanel.add(UIUtility.generateLabelWithHelpBubble(
-                "Destination Domain", SINK_SITE_TIP_TEXT, HELP_ICON_TOP_PADDING));
-        JPanel sinkSiteTextFieldContainer = new JPanel(flowRight);
-        sinkSiteDomainTextField = new JTextField();
-        sinkSiteDomainTextField.setPreferredSize(new Dimension(
-                JOB_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
-        sinkSiteTextFieldContainer.add(sinkSiteDomainTextField);
-        jobPanel.add(sinkSiteTextFieldContainer);
 
         // Sink Site Dataset ID
         jobPanel.add(UIUtility.generateLabelWithHelpBubble(
@@ -196,7 +189,6 @@ public class PortJobTab implements JobTab {
             jobPanel.add(publishMethodContainerRight);
             publishMethodComboBox.setEnabled(true);
         }
-        UserPreferences userPrefs = new UserPreferencesJava();
         SocrataConnectionInfo connectionInfo = userPrefs.getConnectionInfo();
         if (job.getSourceSiteDomain().equals("https://") &&
                 !connectionInfo.getUrl().equals("https://")) {
@@ -205,12 +197,6 @@ public class PortJobTab implements JobTab {
             sourceSiteDomainTextField.setText(job.getSourceSiteDomain());
         }
         sourceSetIDTextField.setText(job.getSourceSetID());
-        if (job.getSinkSiteDomain().equals("https://") &&
-                !connectionInfo.getUrl().equals("https://")) {
-            sinkSiteDomainTextField.setText(connectionInfo.getUrl());
-        } else {
-            sinkSiteDomainTextField.setText(job.getSinkSiteDomain());
-        }
         if (job.getSinkSetID().equals("") && !sinkSetIDTextField.isEditable()){
             sinkSetIDTextField.setText(DEFAULT_DESTINATION_SET_ID);
         } else {
@@ -235,7 +221,6 @@ public class PortJobTab implements JobTab {
                 .getSelectedItem());
         jobToRun.setSourceSiteDomain(sourceSiteDomainTextField.getText());
         jobToRun.setSourceSetID(sourceSetIDTextField.getText());
-        jobToRun.setSinkSiteDomain(sinkSiteDomainTextField.getText());
         if (publishMethodComboBox.isEnabled()) {
             jobToRun.setPublishMethod((PublishMethod) publishMethodComboBox
                     .getSelectedItem());
@@ -262,7 +247,6 @@ public class PortJobTab implements JobTab {
                 .getSelectedItem());
         newPortJob.setSourceSiteDomain(sourceSiteDomainTextField.getText());
         newPortJob.setSourceSetID(sourceSetIDTextField.getText());
-        newPortJob.setSinkSiteDomain(sinkSiteDomainTextField.getText());
         newPortJob.setSinkSetID(sinkSetIDTextField.getText());
         newPortJob.setPublishMethod((PublishMethod) publishMethodComboBox
                 .getSelectedItem());
@@ -278,6 +262,7 @@ public class PortJobTab implements JobTab {
         String selectedJobFileLocation = jobFileLocation;
         if (selectedJobFileLocation.equals("")) {
             JFileChooser savedJobFileChooser = new JFileChooser();
+            savedJobFileChooser.setCurrentDirectory(new File("."));
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
                     JOB_FILE_NAME + " (*." + JOB_FILE_EXTENSION + ")",
                     JOB_FILE_EXTENSION);
@@ -319,7 +304,7 @@ public class PortJobTab implements JobTab {
     public URI getURIToSinkDataset() {
         URI sinkDatasetURI = null;
         try {
-            sinkDatasetURI = new URI("https://" + DatasetUtils.getDomainWithoutScheme(sinkSiteDomainTextField.getText()) + "/d/"
+            sinkDatasetURI = new URI(userPrefs.getDomain() + "/d/"
                     + sinkSetIDTextField.getText());
 
         } catch (URISyntaxException uriE) {

@@ -18,7 +18,10 @@ import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.UUID;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -245,5 +248,53 @@ public class Utils {
                 return headers[0].getValue();
             }
         }
+    }
+
+    public static String[] commaSplit(String s) {
+        List<String> result = new ArrayList<String>();
+        s = s.trim();
+
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < s.length(); ++i) {
+            char c = s.charAt(i);
+            if(c == '\\' && i != s.length() - 1) { // if the backslash is the last character, we'll just treat it as a literal
+                sb.append(s.charAt(++i));
+            } else if(c == ',') {
+                result.add(sb.toString().trim());
+                sb = new StringBuilder();
+            } else {
+                sb.append(c);
+            }
+        }
+        String finalString = sb.toString().trim();
+        if(!result.isEmpty() || finalString.length() != 0) {
+            result.add(finalString.trim());
+        }
+        return result.toArray(new String[result.size()]);
+    }
+
+    public static String commaJoin(String[] ss) {
+        return commaJoin(Arrays.asList(ss));
+    }
+
+    public static String commaJoin(List<String> ss) {
+        StringBuilder sb = new StringBuilder();
+        boolean didOne = false;
+        for(String s : ss) {
+            if(didOne) sb.append(", ");
+            else didOne = true;
+
+            s = s.trim();
+            if(s.contains(",") || s.contains("\\")) {
+                for(int i = 0; i < s.length(); ++i) {
+                    char c = s.charAt(i);
+                    if(c == ',' || c == '\\') sb.append('\\');
+                    sb.append(c);
+                }
+            } else {
+                sb.append(s);
+            }
+        }
+        return sb.toString();
     }
 }

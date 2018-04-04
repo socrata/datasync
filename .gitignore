@@ -19,3 +19,4 @@ common/
 _layouts/
 public/
 log.txt
+/api-key.txt

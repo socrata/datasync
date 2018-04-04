@@ -15,11 +15,12 @@ import com.socrata.model.importer.GeoDataset;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.HttpException;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -55,7 +56,7 @@ public class GISJob extends Job {
 
 
     private ObjectMapper controlFileMapper =
-        new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 
     public GISJob() {
         userPrefs = new UserPreferencesJava();
@@ -240,7 +241,7 @@ public class GISJob extends Job {
         String fileExtension = FilenameUtils.getExtension(fileToPublish);
 
         if (fileExtension.equals(GISJobValidity.ZIP_EXT)) {
-            GeoDataset dataset = DatasetUtils.getDatasetInfo(userPrefs, getDatasetID(), GeoDataset.class);
+            GeoDataset dataset = DatasetUtils.getGeoDatasetInfo(userPrefs, getDatasetID());
 
             // Get map of existing layer UIDs/names by looking at child views
             Map<String, String> existingLayers = getLayerListFromExistingDataset(userPrefs, dataset);
@@ -272,7 +273,7 @@ public class GISJob extends Job {
 
         for (String uid : existingLayersUids) {
             try {
-                Dataset child = DatasetUtils.getDatasetInfo(userPrefs, uid, Dataset.class);
+                Dataset child = DatasetUtils.getDatasetInfo(userPrefs, uid);
                 existingLayerInfo.put(child.getName(), uid);
             } catch (Exception e) {
                 // there’s no way for the client to recover,

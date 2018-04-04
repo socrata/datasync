@@ -1,9 +1,14 @@
 package com.socrata.datasync.config.userpreferences;
 
 import com.socrata.datasync.SocrataConnectionInfo;
+import com.socrata.datasync.Utils;
 
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class UserPreferencesJava implements UserPreferences {
     /**
@@ -19,7 +24,6 @@ public class UserPreferencesJava implements UserPreferences {
     private static final String DOMAIN = "domain";
     private static final String USERNAME = "username";
     private static final String PASSWORD = "password";
-    private static final String API_KEY = "api_key";
 
     private static final String PROXY_USERNAME = "proxy_username";
     private static final String PROXY_PASSWORD = "proxy_password";
@@ -45,6 +49,8 @@ public class UserPreferencesJava implements UserPreferences {
     // During chunking files are uploaded NUM_ROWS_PER_CHUNK rows per chunk
     private static final String DEFAULT_NUM_ROWS_PER_CHUNK = "10000";
 
+    private static final String TIME_FORMATS = "time_formats";
+
     private final String DEFAULT_DOMAIN = "https://";
     private final String DEFAULT_SSL_PORT = "465";
 
@@ -67,11 +73,6 @@ public class UserPreferencesJava implements UserPreferences {
 
     public void savePassword(String password) {
         saveKeyValuePair(PASSWORD, password);
-    }
-
-    // API key a.k.a. App token
-    public void saveAPIKey(String apiKey) {
-        saveKeyValuePair(API_KEY, apiKey);
     }
 
     public void saveProxyHost(String host) { saveKeyValuePair(PROXY_HOST, host); }
@@ -125,6 +126,10 @@ public class UserPreferencesJava implements UserPreferences {
         saveKeyValuePair(SMTP_PASSWORD, password);
     }
 
+    public void saveDefaultTimeFormats(List<String> defaultTimeFormats) {
+        saveKeyValuePair(TIME_FORMATS, Utils.commaJoin(defaultTimeFormats));
+    }
+
     public void setProxyUsername(String username) {};  // never save proxy credentials
 
     public void setProxyPassword(String password) {};  // never save proxy credentials
@@ -144,11 +149,6 @@ public class UserPreferencesJava implements UserPreferences {
 
     public String getPassword() {
         return userPrefs.get(PASSWORD, "");
-    }
-
-    // API key a.k.a. App token
-    public String getAPIKey() {
-        return userPrefs.get(API_KEY, "");
     }
 
     public String getProxyHost() { return userPrefs.get(PROXY_HOST, null); }
@@ -216,15 +216,6 @@ public class UserPreferencesJava implements UserPreferences {
         return "";
     }
 
-    /**
-     * This preference is for internal testing usage only (returns false
-     * because useNewBackend should only be set when DataSync is run in
-     * command-line mode).
-     */
-    public boolean getUseNewBackend() {
-        return false;
-    }
-
     public String getHost() {
         String domain = getDomain();
         if (domain != null) {
@@ -237,7 +228,11 @@ public class UserPreferencesJava implements UserPreferences {
 
     public SocrataConnectionInfo getConnectionInfo() {
         return new SocrataConnectionInfo(
-                this.getDomain(), this.getUsername(), this.getPassword(), this.getAPIKey());
+                this.getDomain(), this.getUsername(), this.getPassword());
+    }
+
+    public List<String> getDefaultTimeFormats() {
+        return Collections.unmodifiableList(Arrays.asList(Utils.commaSplit(userPrefs.get(TIME_FORMATS, Utils.commaJoin(DEFAULT_TIME_FORMATS)))));
     }
 
     @Override
@@ -245,7 +240,6 @@ public class UserPreferencesJava implements UserPreferences {
         return "domain: " + getDomain() + "\n" +
                 "username: " + getUsername() + "\n" +
                 "password: " + getPassword().replaceAll(".", "*") +"\n" +
-                "appToken: " + getAPIKey() + "\n" +
                 "proxyHost:" + getProxyHost() + "\n" +
                 "proxyPort:" + getProxyPort() + "\n" +
                 "adminEmail: " + getAdminEmail() + "\n" +
@@ -257,7 +251,8 @@ public class UserPreferencesJava implements UserPreferences {
                 "smtpUsername: " + getSmtpUsername() + "\n" +
                 "smtpPassword: " + getSmtpPassword().replaceAll(".", "*") + "\n" +
                 "filesizeChunkingCutoffMB: " + getFilesizeChunkingCutoffMB() + "\n" +
-                "numRowsPerChunk: " + getNumRowsPerChunk() + "\n";
+                "numRowsPerChunk: " + getNumRowsPerChunk() + "\n" +
+                "defaultTimeFormats: " + getDefaultTimeFormats() + "\n";
     }
 
     private void saveKeyValuePair(String key, String value) {

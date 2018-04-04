@@ -1,12 +1,12 @@
 package com.socrata.datasync.deltaimporter2;
 
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.JsonToken;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.DeserializationContext;
-import org.codehaus.jackson.map.JsonDeserializer;
-import org.codehaus.jackson.map.annotate.JsonDeserialize;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -52,7 +52,7 @@ public class DI2Error {
             if(jsonParser.getCurrentToken() != JsonToken.VALUE_STRING) throw deserializationContext.wrongTokenException(jsonParser, JsonToken.VALUE_STRING, "Expected string");
             String code = jsonParser.getText();
             ErrorType result = errorTypes.get(code);
-            if(result == null) throw deserializationContext.weirdStringException(ErrorType.class, "Unknown error code " + code);
+            if(result == null) throw deserializationContext.weirdStringException(code, ErrorType.class, "Unknown error code");
             return result;
         }
     }

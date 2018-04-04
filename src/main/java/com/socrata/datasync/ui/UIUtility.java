@@ -10,6 +10,11 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Author: Adrian Laurenzi
@@ -100,5 +105,33 @@ public class UIUtility {
         StringSelection stringSelection = new StringSelection(textToCopy);
         Clipboard clpbrd = Toolkit.getDefaultToolkit().getSystemClipboard();
         clpbrd.setContents(stringSelection, null);
+    }
+
+    public static String relativize(File base, File file) {
+        file = file.getAbsoluteFile();
+        List<String> segments = new ArrayList<>();
+
+        File pointer = file;
+        while(pointer != null && !pointer.equals(base)) {
+            segments.add(pointer.getName());
+            pointer = pointer.getParentFile();
+        }
+
+        if(pointer == null) {
+            return file.getAbsolutePath();
+        } else if(segments.isEmpty()) {
+            // we selected the current directory?  I suppose this
+            // is theoretically possible in the presence of
+            // filesystem changes during selection.
+            return file.getAbsolutePath();
+        } else {
+            Collections.reverse(segments);
+            Iterator<String> it = segments.iterator();
+            File result = new File(it.next());
+            while(it.hasNext()) {
+                result = new File(result, it.next());
+            }
+            return result.getPath();
+        }
     }
 }

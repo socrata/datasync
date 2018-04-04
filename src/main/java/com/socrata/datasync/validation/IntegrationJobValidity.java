@@ -1,6 +1,5 @@
 package com.socrata.datasync.validation;
 
-import com.socrata.api.SodaImporter;
 import com.socrata.datasync.DatasetUtils;
 import com.socrata.datasync.HttpUtility;
 import com.socrata.datasync.PublishMethod;
@@ -17,7 +16,7 @@ import com.socrata.model.importer.Dataset;
 import org.apache.commons.cli.CommandLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.entity.ContentType;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -60,8 +59,8 @@ public class IntegrationJobValidity {
     /**
      * @return an error JobStatus if any input is invalid, otherwise JobStatus.VALID
      */
-    public static JobStatus validateJobParams(SocrataConnectionInfo connectionInfo, IntegrationJob job) {
-        if(connectionInfo.getUrl().equals("") || connectionInfo.getUrl().equals("https://"))
+    public static JobStatus validateJobParams(UserPreferences userPrefs, IntegrationJob job) {
+        if(userPrefs.getConnectionInfo().getUrl().equals("") || userPrefs.getConnectionInfo().getUrl().equals("https://"))
             return JobStatus.INVALID_DOMAIN;
 
         if(!Utils.uidIsValid(job.getDatasetID()))
@@ -82,10 +81,9 @@ public class IntegrationJobValidity {
         if(!allowedFileToPublishExtensions.contains(fileExtension))
             return JobStatus.FILE_TO_PUBLISH_INVALID_TABULAR_FORMAT;
 
-        final SodaImporter importer = SodaImporter.newImporter(connectionInfo.getUrl(), connectionInfo.getUser(), connectionInfo.getPassword(), connectionInfo.getToken());
         Dataset schema;
         try {
-            schema = (Dataset) importer.loadDatasetInfo(job.getDatasetID());
+            schema = DatasetUtils.getDatasetInfo(userPrefs, job.getDatasetID());
 
             if(job.getPublishViaDi2Http() || job.getPublishViaFTP()) {
 
@@ -103,7 +101,7 @@ public class IntegrationJobValidity {
                 if (actionOkay.isError())
                     return actionOkay;
 
-                JobStatus controlOkay = checkControl(control,fileControl,schema,publishFile,connectionInfo.getUrl());
+                JobStatus controlOkay = checkControl(control,fileControl,schema,publishFile,userPrefs.getConnectionInfo().getUrl());
                 if (controlOkay.isError())
                     return controlOkay;
 
@@ -618,15 +616,18 @@ public class IntegrationJobValidity {
         }
 
 
-        Map<String,LocationColumn> syntheticColumnsMap =  fileControl.syntheticLocations;
+        Map<String,?> syntheticColumnsMap =  fileControl.syntheticLocations;
 
         if (syntheticColumnsMap != null) {
             Set<String> syntheticColumns = syntheticColumnsMap.keySet();
-            for (String synthetic : syntheticColumns) {
-                if (columnNames.contains(synthetic))
-                    columnNames.remove(synthetic);
-            }
+            columnNames.removeAll(syntheticColumnsMap.keySet());
         }
+
+        syntheticColumnsMap = fileControl.syntheticPoints;
+        if (syntheticColumnsMap != null) {
+            columnNames.removeAll(syntheticColumnsMap.keySet());
+        }
+
         if (columnNames.size() > 0 && method.equals(PublishMethod.replace)) {
             if (rowIdentifier == null) {
                 JobStatus status = JobStatus.MISSING_COLUMNS;

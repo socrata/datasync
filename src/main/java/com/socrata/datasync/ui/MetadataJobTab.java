@@ -240,6 +240,7 @@ public class MetadataJobTab implements JobTab {
         String selectedJobFileLocation = jobFileLocation;
         if(selectedJobFileLocation.equals("")) {
             JFileChooser savedJobFileChooser = new JFileChooser();
+            savedJobFileChooser.setCurrentDirectory(new File("."));
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
                     JOB_FILE_NAME + " (*." + JOB_FILE_EXTENSION + ")", JOB_FILE_EXTENSION);
             savedJobFileChooser.setFileFilter(filter);
@@ -334,7 +335,7 @@ public class MetadataJobTab implements JobTab {
         metadataJob.setDescription(descriptionTextArea.getText());
         metadataJob.setCategory(categoryTextField.getText());
         if (!StringUtils.isBlank(keywordsTextField.getText())) {
-            metadataJob.setKeywords(Arrays.asList(keywordsTextField.getText().split("\\s*,\\s*")));
+            metadataJob.setKeywords(Arrays.asList(Utils.commaSplit(keywordsTextField.getText())));
         }
         else {
             metadataJob.setKeywords(null);

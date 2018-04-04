@@ -1,5 +1,6 @@
 package com.socrata.datasync;
 
+import com.socrata.api.DatasetDestination;
 import com.socrata.api.HttpLowLevel;
 import com.socrata.api.Soda2Consumer;
 import com.socrata.api.Soda2Producer;
@@ -13,15 +14,17 @@ import com.socrata.model.importer.Column;
 import com.socrata.model.importer.Dataset;
 import com.socrata.model.importer.DatasetInfo;
 import com.socrata.model.soql.SoqlQuery;
-import com.sun.jersey.api.client.ClientResponse;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
+import javax.ws.rs.core.Response;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -36,17 +39,26 @@ public class PortUtility {
 
     public static String portSchema(SodaDdl loader, SodaDdl creator,
                                     final String sourceSetID, final String destinationDatasetTitle,
-                                    final boolean useNewBackend)
+                                    boolean actuallyCopySchema)
         throws SodaError, InterruptedException
     {
         System.out.print("Copying schema from dataset " + sourceSetID);
         Dataset sourceSet = (Dataset) loader.loadDatasetInfo(sourceSetID);
+
         if(destinationDatasetTitle != null && !destinationDatasetTitle.equals(""))
             sourceSet.setName(destinationDatasetTitle);
 
-        adaptSchemaForAggregates(sourceSet);
+        DatasetDestination destination =
+            sourceSet.isNewBackend() ? DatasetDestination.NBE
+                                     : DatasetDestination.OBE;
 
-        DatasetInfo sinkSet = creator.createDataset(sourceSet, useNewBackend);
+        if(actuallyCopySchema) {
+            adaptSchemaForAggregates(sourceSet);
+        } else {
+            sourceSet.setColumns(Collections.<Column>emptyList());
+        }
+
+        DatasetInfo sinkSet = creator.createDataset(sourceSet, destination);
 
         String sinkSetID = sinkSet.getId();
         System.out.println(" to dataset " + sinkSetID);
@@ -86,7 +98,7 @@ public class PortUtility {
         // Limit of 1000 rows per export, so page through dataset using $offset
         int offset = 0;
         int rowsUpserted = 0;
-        ClientResponse response;
+        Response response;
         ObjectMapper mapper = new ObjectMapper();
         List<Map<String, Object>> rowSet;
 
@@ -95,7 +107,7 @@ public class PortUtility {
             for(int retries = 0;; ++retries) {
                 try {
                     response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
-                    rowSet = mapper.readValue(response.getEntityInputStream(), new TypeReference<List<Map<String,Object>>>() {});
+                    rowSet = mapper.readValue(response.readEntity(InputStream.class), new TypeReference<List<Map<String,Object>>>() {});
                     break;
                 } catch(SodaError|IOException e) {
                     if(retries == retryLimit) throw e;
@@ -131,7 +143,7 @@ public class PortUtility {
         int offset = 0;
         int batchesRead = 0;
         SoqlQuery myQuery;
-        ClientResponse response;
+        Response response;
         ObjectMapper mapper = new ObjectMapper().configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         List<Map<String, Object>> rowSet;
         final File tempFile = File.createTempFile("replacement_dataset", ".json");
@@ -143,7 +155,7 @@ public class PortUtility {
             do {
                 myQuery = new SoqlQueryBuilder().setOffset(offset).build();
                 response = streamExporter.query(sourceSetID, HttpLowLevel.JSON_TYPE, myQuery);
-                rowSet = mapper.readValue(response.getEntityInputStream(),
+                rowSet = mapper.readValue(response.readEntity(InputStream.class),
                                           new TypeReference<List<Map<String, Object>>>() {
                                           }
                                           );

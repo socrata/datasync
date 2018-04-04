@@ -2,14 +2,21 @@ package com.socrata.datasync.model;
 
 import com.socrata.datasync.config.controlfile.ControlFile;
 import com.socrata.datasync.config.controlfile.LocationColumn;
+import com.socrata.datasync.config.controlfile.SyntheticPointColumn;
 import com.socrata.datasync.job.JobStatus;
 import com.socrata.datasync.validation.IntegrationJobValidity;
+import com.socrata.datasync.Utils;
 import com.socrata.model.importer.Column;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import info.debatty.java.stringsimilarity.Levenshtein;
+import info.debatty.java.stringsimilarity.WeightedLevenshtein;
+import info.debatty.java.stringsimilarity.CharacterInsDelInterface;
+import info.debatty.java.stringsimilarity.CharacterSubstitutionInterface;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,8 +49,6 @@ public class ControlFileModel extends Observable {
     private CSVModel csvModel;
     private DatasetModel datasetModel;
     private String path;
-    final String constructingFieldSeparator = ",";
-    final String deconstructingFieldSeparator = "\\s*,\\s*";
 
     public ControlFileModel (ControlFile file, DatasetModel dataset) throws IOException{
         controlFile = file;
@@ -59,6 +64,7 @@ public class ControlFileModel extends Observable {
         if (!file.getFileTypeControl().hasColumns()){
             initializeColumns();
         }
+
         // Now attempt to match those in the dataset to those in the CSV
         matchColumns();
     }
@@ -91,17 +97,239 @@ public class ControlFileModel extends Observable {
         return controlFile;
     }
 
-    private void matchColumns(){
+    private static final CharacterSubstitutionInterface insDel =
+        new CharacterSubstitutionInterface() {
+            public double cost(char c1, char c2) {
+                // Where we minify the cost of a change, we return
+                // something non-zero because we don't want to ignore
+                // it entirely, because we want to prefer solutions
+                // with a minimal number of even expected changes.
+                if(!Character.isAlphabetic(c1) && !Character.isDigit(c1) && c2 == '_') return 0.1;
+                if(Character.isUpperCase(c1) && Character.isLowerCase(c2)) return 0.1;
+                return 1.0;
+            }
+        };
+
+    private static final CharacterInsDelInterface subst =
+        new CharacterInsDelInterface() {
+            public double deletionCost(char c) {
+                if(Character.isAlphabetic(c) || Character.isDigit(c) || c == '_') {
+                    return 1.0;
+                }
+                return 0.1;
+            }
+            public double insertionCost(char c) {
+                return 1.0;
+            }
+        };
+
+    private static final WeightedLevenshtein csvToFieldName = new WeightedLevenshtein(insDel, subst);
+
+    private static final CharacterSubstitutionInterface penalizeChanges =
+        new CharacterSubstitutionInterface() {
+            public double cost(char c1, char c2) {
+                if(c1 == '_' && !Character.isAlphabetic(c2) && !Character.isDigit(c2)) return 0;
+                return 1.0;
+            }
+        };
+
+    private static final CharacterInsDelInterface penalizeDeletions =
+        new CharacterInsDelInterface() {
+            public double deletionCost(char c) {
+                return 1.0;
+            }
+            public double insertionCost(char c) {
+                return 0;
+            }
+        };
+
+    private static final WeightedLevenshtein fieldNameToCsv = new WeightedLevenshtein(penalizeChanges, penalizeDeletions);
+
+    public static double fieldNameEditDistance(String csvHeader, String fieldName) {
+        double editDistance = csvToFieldName.distance(csvHeader, fieldName);
+        // ok, if we stop and produce a solution here, we'll get
+        // badly confused if the CSV has extra columns in it
+        // (because if we encounter one such early, we'll
+        // basically pick a random existing column to pair it
+        // with).  So instead we'll look at the edit distance from
+        // dataset column to the CSV field name, heavily
+        // penalizing deletions.  If the result is a significant
+        // fraction of the size of the dataset column name, we'll
+        // consider things unmatched.
+        if(fieldNameToCsv.distance(fieldName, csvHeader) < fieldName.length() * 0.25) {
+            return editDistance;
+        } else {
+            // Nope; too many deletions / unexpected changes in the
+            // field name -> csv name direction, reject this
+            // possibility.
+            return Double.POSITIVE_INFINITY;
+        }
+    }
+
+    private static final Levenshtein csvToHumanName = new Levenshtein();
+
+    public static double humanNameEditDistance(String csvHeader, String humanName) {
+        double editDistance = csvToHumanName.distance(csvHeader, humanName);
+        if(editDistance < Math.max(csvHeader.length(), humanName.length()) * 0.25) {
+            return editDistance;
+        } else {
+            // too much change to the human name; just assume they're different
+            return Double.POSITIVE_INFINITY;
+        }
+    }
+
+    private static class Guess implements Comparable<Guess> {
+        public final Column column;
+        public final double badness;
+        public final int index;
+
+        public Guess(Column column, double badness, int index) {
+            this.column = column;
+            this.badness = badness;
+            this.index = index;
+        }
+
+        public int compareTo(Guess that) {
+            int badnessOrd = Double.compare(this.badness, that.badness);
+            if(badnessOrd == 0) return Integer.compare(this.index, that.index);
+            else return badnessOrd;
+        }
+
+        @Override public boolean equals(Object that) {
+            if(that instanceof Guess) return compareTo((Guess) that) == 0;
+            return false;
+        }
+    }
+
+    private static class Candidate implements Comparable<Candidate> {
+        public final int sourceColumnIndex;
+        public final PriorityQueue<Guess> preferences;
+
+        public Candidate(int sourceColumnIndex, PriorityQueue<Guess> preferences) {
+            this.sourceColumnIndex = sourceColumnIndex;
+            this.preferences = preferences;
+        }
+
+        public int compareTo(Candidate that) {
+            boolean thisIsInfinitelyBad = this.preferences.isEmpty() || this.preferences.peek().badness == Double.POSITIVE_INFINITY;
+            boolean thatIsInfinitelyBad = that.preferences.isEmpty() || that.preferences.peek().badness == Double.POSITIVE_INFINITY;
+
+            if(thisIsInfinitelyBad) {
+                if(thatIsInfinitelyBad) {
+                    return Integer.compare(this.sourceColumnIndex, that.sourceColumnIndex);
+                } else {
+                    return 1; // that is not infinitely bad, so put it first
+                }
+            } else {
+                if(thatIsInfinitelyBad) {
+                    return -1;
+                } else {
+                    int badnessOrd = Double.compare(this.preferences.peek().badness, that.preferences.peek().badness);
+                    if(badnessOrd == 0) return Integer.compare(this.sourceColumnIndex, that.sourceColumnIndex);
+                    else return badnessOrd;
+                }
+            }
+        }
+
+        @Override public boolean equals(Object that) {
+            if(that instanceof Candidate) return compareTo((Candidate) that) == 0;
+            return false;
+        }
+    }
+
+    private static int bestGuess(SortedMap<Integer, PriorityQueue<Guess>> allPreferences) {
+        // Returns the leftmost column with the best (== lowest)
+        // badness at the head.  Precondition: allPreferences is
+        // non-empty.
+        int best = -1;
+        double bestBadness = Double.POSITIVE_INFINITY;
+        for(Map.Entry<Integer, PriorityQueue<Guess>> ent : allPreferences.entrySet()) {
+            if(best == -1) {
+                best = ent.getKey();
+                if(ent.getValue().isEmpty()) bestBadness = Double.POSITIVE_INFINITY;
+                else bestBadness = ent.getValue().peek().badness;
+            } else if(ent.getValue().isEmpty()) {
+                // ok, we're definitely not better than our best
+                // guess.
+            } else if(ent.getValue().peek().badness < bestBadness) {
+                best = ent.getKey();
+                bestBadness = ent.getValue().peek().badness;
+            }
+            if(bestBadness == 0) return best; // short circuit: we're not going to get any better
+        }
+        return best;
+    }
+
+    static final boolean DEBUG = false;
+    private static void debug(Object... items) {
+        if(DEBUG) {
+            StringBuilder sb = new StringBuilder();
+            for(Object item : items) {
+                sb.append(item);
+            }
+            System.out.println(sb.toString());
+        }
+    }
+
+    private void matchColumns() {
+        debug("Starting match columns");
+
+        List<String> columnNames = new ArrayList<>();
+        for(Column column : datasetModel.getColumns()) {
+            columnNames.add(column.getName());
+        }
+
+        PriorityQueue<Candidate> candidates = new PriorityQueue<>();
+
         for (int i = 0; i < csvModel.getColumnCount(); i++) {
             String csvHeader = csvModel.getColumnName(i);
-            //TODO: I'm running over the dataset column list probably an unnecessary number of times.  Consider fixing later
-            Column col = datasetModel.getColumnByFieldName(csvHeader);
-            //If we can't match on field name, check for a match on the friendly name
-            if (col == null){
-                col = datasetModel.getColumnByFriendlyName(csvHeader);
+            debug("Looking at CSV column: ", csvHeader);
+
+            PriorityQueue<Guess> preferences = new PriorityQueue<>();
+            int idx = 0;
+            for(Column column : datasetModel.getColumns()) {
+                double editDistanceToName = humanNameEditDistance(csvHeader, column.getName());
+                double editDistanceToFieldName = fieldNameEditDistance(csvHeader, column.getFieldName());
+                double badness = Math.min(editDistanceToName, editDistanceToFieldName);
+                debug("  Badness to ", column.getName(), " (", column.getFieldName(), ") : ", badness);
+                preferences.add(new Guess(column, badness, idx));
+                idx += 1;
             }
-            if (col != null)
-                updateColumnAtPosition(col.getFieldName(), i);
+
+            candidates.add(new Candidate(i, preferences));
+        }
+
+        Set<String> usedFieldNames = new HashSet<>();
+        while(!candidates.isEmpty()) {
+            Candidate candidate = candidates.poll();
+            debug("Leftmost csv column with the least bad preference is ", csvModel.getColumnName(candidate.sourceColumnIndex));
+            PriorityQueue<Guess> preferences = candidate.preferences;
+            if(preferences.isEmpty()) {
+                debug("  It has no preferences.  Bailing.");
+                ignoreColumnInCSVAtPosition(candidate.sourceColumnIndex);
+                continue;
+            }
+
+            Guess guess = preferences.poll();
+            if(guess.badness == Double.POSITIVE_INFINITY) {
+                debug("  Its most-prefered choice is infinitely bad.  Bailing.");
+                ignoreColumnInCSVAtPosition(candidate.sourceColumnIndex);
+                continue;
+            }
+
+            if(usedFieldNames.contains(guess.column.getFieldName())) {
+                // Its best choice is something we've already
+                // selected; put the candidate back in the pool, minus
+                // that guess because mutability, and try again.
+                debug("  Its most-prefered choice (", guess.column.getFieldName(), ") has already been picked.  Removing that option and trying again.");
+                candidates.add(candidate);
+                continue;
+            }
+
+            Column col = guess.column;
+            debug("  That best matches column ", col.getName(), " (", col.getFieldName(), ") with badness ", guess.badness);
+            updateColumnAtPosition(col.getFieldName(), candidate.sourceColumnIndex);
+            usedFieldNames.add(col.getFieldName());
         }
     }
 
@@ -295,18 +523,8 @@ public class ControlFileModel extends Observable {
             return getColumnAtPosition(i);
     }
 
-    public String getStringFromArray(String[] array){
-        StringBuffer strbuf = new StringBuffer();
-        for (int i = 0; i < array.length; i++){
-            strbuf.append(array[i]);
-            if (i+1 != array.length)
-                strbuf.append(constructingFieldSeparator);
-        }
-         return strbuf.toString();
-    }
-
     public String getFloatingDateTime(){
-        return getStringFromArray(controlFile.getFileTypeControl().floatingTimestampFormat);
+        return Utils.commaJoin(controlFile.getFileTypeControl().floatingTimestampFormat);
     }
 
     public String getTimezone(){
@@ -314,13 +532,13 @@ public class ControlFileModel extends Observable {
      }
 
     public void setFixedDateTime(String fixed){
-        String[] newDateTime = fixed.split(deconstructingFieldSeparator);
+        String[] newDateTime = Utils.commaSplit(fixed);
         controlFile.getFileTypeControl().fixedTimestampFormat(newDateTime);
         updateListeners();
     }
 
     public void setFloatingDateTime(String floating){
-        String[] newDateTime = floating.split(deconstructingFieldSeparator);
+        String[] newDateTime = Utils.commaSplit(floating);
         controlFile.getFileTypeControl().floatingTimestampFormat(newDateTime);
         updateListeners();
     }
@@ -340,11 +558,28 @@ public class ControlFileModel extends Observable {
         if (columnsMap != null) {
             controlFile.getFileTypeControl().syntheticLocations.put(fieldName, locationField);
         } else {
-            HashMap<String, LocationColumn> map = new HashMap<>();
+            TreeMap<String, LocationColumn> map = new TreeMap<>();
             map.put(fieldName, locationField);
             controlFile.getFileTypeControl().syntheticLocations = map;
         }
 
+        syncSynth(fieldName);
+    }
+
+    public void setSyntheticPoint(String fieldName, SyntheticPointColumn locationField) {
+        Map<String, SyntheticPointColumn> columnsMap = controlFile.getFileTypeControl().syntheticPoints;
+        if (columnsMap != null) {
+            controlFile.getFileTypeControl().syntheticPoints.put(fieldName, locationField);
+        } else {
+            TreeMap<String, SyntheticPointColumn> map = new TreeMap<>();
+            map.put(fieldName, locationField);
+            controlFile.getFileTypeControl().syntheticPoints = map;
+        }
+
+        syncSynth(fieldName);
+    }
+
+    private void syncSynth(String fieldName) {
         //Reset the location column
         int locationIndex = getIndexOfColumnName(fieldName);
         if (locationIndex != -1) {
@@ -358,8 +593,15 @@ public class ControlFileModel extends Observable {
     public Map<String, LocationColumn> getSyntheticLocations(){
         Map<String, LocationColumn> locations = controlFile.getFileTypeControl().syntheticLocations;
         if (locations == null)
-            locations = new HashMap<>();
+            locations = new TreeMap<>();
         return locations;
+    }
+
+    public Map<String, SyntheticPointColumn> getSyntheticPoints() {
+        Map<String, SyntheticPointColumn> points = controlFile.getFileTypeControl().syntheticPoints;
+        if (points == null)
+            points = new TreeMap<>();
+        return points;
     }
 
     public ArrayList<Column> getUnmappedDatasetColumns(){
@@ -376,7 +618,7 @@ public class ControlFileModel extends Observable {
     }
 
     public String getControlFileContents()  {
-        ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+        ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
         try {
             return mapper.writeValueAsString(controlFile);
         } catch (IOException e) {

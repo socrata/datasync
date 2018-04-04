@@ -9,7 +9,7 @@ import com.socrata.datasync.config.userpreferences.UserPreferencesFile;
 import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.sun.jersey.api.client.ClientResponse;
-import org.codehaus.jackson.map.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;

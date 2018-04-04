@@ -17,10 +17,11 @@ import com.socrata.exceptions.LongRunningQueryException;
 import com.socrata.exceptions.SodaError;
 import com.socrata.model.importer.Dataset;
 import org.apache.http.HttpException;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -99,7 +100,9 @@ public class IntegrationJobTab implements JobTab {
     private JLabel jobTabTitleLabel = new JLabel("Untitled");
 
     private JTextField datasetIDTextField;
+    private String lastDatasetId; // used to decide when to regen the control file
     private JTextField fileToPublishTextField;
+    private String lastFileToPublish; // used to decide when to regen the control file
     private JComboBox publishMethodComboBox;
     private ButtonGroup publishMethodRadioButtonGroup;
     private JRadioButton soda2Button;
@@ -118,8 +121,12 @@ public class IntegrationJobTab implements JobTab {
 
     private boolean usingControlFile;
 
+    private UserPreferences userPrefs;
+
     // build Container with all tab components populated with given job data
-    public IntegrationJobTab(IntegrationJob job, JFrame containingFrame) {
+    public IntegrationJobTab(IntegrationJob job, JFrame containingFrame, UserPreferences userPrefs) {
+        this.userPrefs = userPrefs;
+
         mainFrame = containingFrame;
 
         // build tab panel form
@@ -133,10 +140,11 @@ public class IntegrationJobTab implements JobTab {
 
 
         loadJobDataIntoUIFields(job);
+        lastDatasetId = datasetIDTextField.getText();
+        lastFileToPublish = fileToPublishTextField.getText();
 
         if(job.getPublishMethod() == null)
             publishMethodComboBox.setSelectedItem(PublishMethod.replace);
-
     }
 
 
@@ -195,9 +203,6 @@ public class IntegrationJobTab implements JobTab {
         datasetIDTextField = new JTextField();
         datasetIDTextField.setPreferredSize(new Dimension(
                 DATASET_ID_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
-        RegenerateControlFileListener regenerateListener = new RegenerateControlFileListener();
-        datasetIDTextField.addActionListener(regenerateListener);
-        datasetIDTextField.addFocusListener(regenerateListener);
         datasetIDTextFieldContainer.add(datasetIDTextField);
         jobPanel.add(datasetIDTextFieldContainer);
     }
@@ -211,14 +216,12 @@ public class IntegrationJobTab implements JobTab {
                 JOB_FILE_TEXTFIELD_WIDTH, JOB_TEXTFIELD_HEIGHT));
         fileSelectorContainer.add(fileToPublishTextField);
         JFileChooser fileToPublishChooser = new JFileChooser();
+        fileToPublishChooser.setCurrentDirectory(new File("."));
         JButton openButton = new JButton(BROWSE_BUTTON_TEXT);
         FileToPublishSelectorListener chooserListener = new FileToPublishSelectorListener(
                 fileToPublishChooser, fileToPublishTextField);
         openButton.addActionListener(chooserListener);
         fileSelectorContainer.add(openButton);
-        RegenerateControlFileListener regenerateListener = new RegenerateControlFileListener();
-        fileToPublishTextField.addActionListener(regenerateListener);
-        fileToPublishTextField.addFocusListener(regenerateListener);
         jobPanel.add(fileSelectorContainer);
     }
 
@@ -234,7 +237,7 @@ public class IntegrationJobTab implements JobTab {
     private void loadJobDataIntoUIFields(IntegrationJob job)  {
         try {
             if (job.getControlFileContent() != null) {
-                ObjectMapper mapper = new ObjectMapper().enable(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+                ObjectMapper mapper = new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
                 ControlFile controlFile = mapper.readValue(job.getControlFileContent(), ControlFile.class);
                 //Ideally this could be saved with the control file or factored out.  However, we're stuck with this redundant call
                 // because of DI2's strict enforcement of control files and the current factoring of what CSVTableModel knows about
@@ -345,6 +348,7 @@ public class IntegrationJobTab implements JobTab {
         String selectedJobFileLocation = jobFileLocation;
         if(selectedJobFileLocation.equals("")) {
             JFileChooser savedJobFileChooser = new JFileChooser();
+            savedJobFileChooser.setCurrentDirectory(new File("."));
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
                     JOB_FILE_NAME + " (*." + JOB_FILE_EXTENSION + ")", JOB_FILE_EXTENSION);
             savedJobFileChooser.setFileFilter(filter);
@@ -394,10 +398,12 @@ public class IntegrationJobTab implements JobTab {
 
     private class FileToPublishSelectorListener implements ActionListener {
         JFileChooser fileChooser;
+        File base;
         JTextField filePathTextField;
 
         public FileToPublishSelectorListener(JFileChooser chooser, JTextField textField) {
             fileChooser = chooser;
+            base = fileChooser.getCurrentDirectory().getAbsoluteFile();
             filePathTextField = textField;
             fileChooser.setFileFilter(
                     UIUtility.getFileChooserFilter(IntegrationJobValidity.allowedFileToPublishExtensions));
@@ -407,7 +413,7 @@ public class IntegrationJobTab implements JobTab {
             int returnVal = fileChooser.showOpenDialog(mainFrame);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 File file = fileChooser.getSelectedFile();
-                filePathTextField.setText(file.getAbsolutePath());
+                filePathTextField.setText(UIUtility.relativize(base, file));
             } else {
                 // Open command cancelled by user: do nothing
             }
@@ -476,6 +482,10 @@ public class IntegrationJobTab implements JobTab {
         }
     }
 
+    private boolean isDirty() {
+        return controlFileModel == null || !datasetIDTextField.getText().equals(lastDatasetId) || !fileToPublishTextField.getText().equals(lastFileToPublish);
+    }
+
     private class EditControlFileListener implements ActionListener {
         public void actionPerformed(ActionEvent evnt) {
             String generateControlFileErrorMessage;
@@ -485,7 +495,7 @@ public class IntegrationJobTab implements JobTab {
                     JOptionPane.showMessageDialog(mainFrame, generateControlFileErrorMessage);
                 } else {
                     try {
-                        if (controlFileModel == null) {
+                        if (isDirty()) {
                             ControlFile controlFile = generateControlFile(
                                     new UserPreferencesJava(),
                                     fileToPublishTextField.getText(),
@@ -494,6 +504,8 @@ public class IntegrationJobTab implements JobTab {
                                     true);
 
                             updateControlFileModel(controlFile,datasetIDTextField.getText());
+                            lastDatasetId = datasetIDTextField.getText();
+                            lastFileToPublish = fileToPublishTextField.getText();
                         }
 
                         ControlFileEditDialog editorFrame = new ControlFileEditDialog(controlFileModel,mainFrame);
@@ -530,14 +542,14 @@ public class IntegrationJobTab implements JobTab {
         private String generateControlFileContent(UserPreferences prefs, String fileToPublish, PublishMethod publishMethod,
                                                   String datasetId, boolean containsHeaderRow) throws HttpException, URISyntaxException, InterruptedException, IOException {
             ControlFile control = generateControlFile(prefs,fileToPublish,publishMethod,datasetId,containsHeaderRow);
-            ObjectMapper mapper = new ObjectMapper().configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+            ObjectMapper mapper = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
             return mapper.writeValueAsString(control);
         }
 
         private ControlFile generateControlFile(UserPreferences prefs, String fileToPublish, PublishMethod publishMethod,
                                                 String datasetId, boolean containsHeaderRow) throws HttpException, URISyntaxException, InterruptedException, IOException {
 
-            Dataset datasetInfo = DatasetUtils.getDatasetInfo(prefs, datasetId, Dataset.class);
+            Dataset datasetInfo = DatasetUtils.getDatasetInfo(prefs, datasetId);
             boolean useGeocoding = DatasetUtils.hasLocationColumn(datasetInfo);
 
             String[] columns = null;
@@ -548,7 +560,7 @@ public class IntegrationJobTab implements JobTab {
                     columns = DatasetUtils.getFieldNamesArray(datasetInfo);
             }
 
-            return ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding, containsHeaderRow);
+            return ControlFile.generateControlFile(fileToPublish, publishMethod, columns, useGeocoding, containsHeaderRow, userPrefs.getDefaultTimeFormats());
         }
 
     }
