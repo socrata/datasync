@@ -13,7 +13,7 @@ DataSync takes a CSV or TSV file on a local machine or networked hard drive and 
 that the Socrata dataset stays up-to-date. DataSync can also publish geospatial files such as zipped shapefiles,
 geoJSON, KML, and KMZ files. DataSync jobs can be integrated into an ETL process, scheduled using a tool
 such as the Windows Task Scheduler or Cron, or used to perform updates or create new datasets in batches. DataSync
-works on any platform that runs Java version 1.7 or higher (i.e. Windows, Mac, and Linux). This simple, yet powerful
+works on any platform that runs Java version 1.8 or higher (i.e. Windows, Mac, and Linux). This simple, yet powerful
 publishing tool lets you easily update Socrata datasets programmatically and automatically (scheduled), without
 writing a single line of code.
 
