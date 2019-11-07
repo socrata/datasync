@@ -3,6 +3,7 @@ package com.socrata.datasync.config.userpreferences;
 import com.socrata.datasync.SocrataConnectionInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import java.util.List;
@@ -53,6 +54,16 @@ public class UserPreferencesFile implements UserPreferences {
     }
 
     @JsonProperty("password")
+    public String getPasswordObfuscated() {
+        return CryptoUtil.obfuscate(password);
+    }
+
+    @JsonProperty("password")
+    public void setPasswordObfuscated(String pwd) {
+        password = CryptoUtil.deobfuscate(pwd, null);
+    }
+
+    @JsonIgnore
     public String getPassword() {
         return password;
     }
@@ -73,6 +84,11 @@ public class UserPreferencesFile implements UserPreferences {
     }
 
     @JsonProperty("proxyPassword")
+    public String getProxyPasswordObfuscated() {
+        return CryptoUtil.obfuscate(proxyPassword);
+    }
+
+    @JsonIgnore
     public String getProxyPassword() {
         return proxyPassword;
     }
@@ -113,6 +129,16 @@ public class UserPreferencesFile implements UserPreferences {
     }
 
     @JsonProperty("smtpPassword")
+    public String getSmtpPasswordObfuscated() {
+        return CryptoUtil.obfuscate(smtpPassword);
+    }
+
+    @JsonProperty("smtpPassword")
+    public void setSmtpPasswordObfuscated(String pwd) {
+        smtpPassword = CryptoUtil.deobfuscate(pwd, null);
+    }
+
+    @JsonIgnore
     public String getSmtpPassword() {
         return smtpPassword;
     }
@@ -131,6 +157,9 @@ public class UserPreferencesFile implements UserPreferences {
     public void setProxyUsername(String username) { proxyUsername = username; }
 
     @JsonProperty("proxyPassword")
+    public void setProxyPasswordObfuscated(String password) { proxyPassword = CryptoUtil.deobfuscate(password, null); }
+
+    @JsonIgnore
     public void setProxyPassword(String password) { proxyPassword = password; }
 
     @JsonProperty("defaultTimeFormats")

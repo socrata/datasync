@@ -72,7 +72,7 @@ public class UserPreferencesJava implements UserPreferences {
     }
 
     public void savePassword(String password) {
-        saveKeyValuePair(PASSWORD, password);
+        saveKeyValuePair(PASSWORD, CryptoUtil.obfuscate(password));
     }
 
     public void saveProxyHost(String host) { saveKeyValuePair(PROXY_HOST, host); }
@@ -84,7 +84,7 @@ public class UserPreferencesJava implements UserPreferences {
     public void saveProxyUsername(String username) { saveKeyValuePair(PROXY_USERNAME, username); }
 
     public void saveProxyPassword(String password) {
-        saveKeyValuePair(PROXY_PASSWORD, password);
+        saveKeyValuePair(PROXY_PASSWORD, CryptoUtil.obfuscate(password));
     }
 
     public void saveAdminEmail(String adminEmail) { saveKeyValuePair(ADMIN_EMAIL, adminEmail);    }
@@ -123,7 +123,7 @@ public class UserPreferencesJava implements UserPreferences {
     }
 
     public void saveSMTPPassword(String password) {
-        saveKeyValuePair(SMTP_PASSWORD, password);
+        saveKeyValuePair(SMTP_PASSWORD, CryptoUtil.obfuscate(password));
     }
 
     public void saveDefaultTimeFormats(List<String> defaultTimeFormats) {
@@ -148,7 +148,10 @@ public class UserPreferencesJava implements UserPreferences {
     }
 
     public String getPassword() {
-        return userPrefs.get(PASSWORD, "");
+        String base = userPrefs.get(PASSWORD, "");
+        String result = CryptoUtil.deobfuscate(base, "");
+        if(base == result) savePassword(result);
+        return result;
     }
 
     public String getProxyHost() { return userPrefs.get(PROXY_HOST, null); }
@@ -162,7 +165,10 @@ public class UserPreferencesJava implements UserPreferences {
     }
 
     public String getProxyPassword() {
-        return userPrefs.get(PROXY_PASSWORD, null);
+        String base = userPrefs.get(PROXY_PASSWORD, null);
+        String result = CryptoUtil.deobfuscate(base, null);
+        if(base == result) saveProxyPassword(result);
+        return result;
     }
 
     public String getAdminEmail() {
@@ -195,7 +201,10 @@ public class UserPreferencesJava implements UserPreferences {
     }
 
     public String getSmtpPassword() {
-        return userPrefs.get(SMTP_PASSWORD, "");
+        String base = userPrefs.get(SMTP_PASSWORD, "");
+        String result = CryptoUtil.deobfuscate(base, "");
+        if(base == result) saveSMTPPassword(result);
+        return result;
     }
 
     public String getFilesizeChunkingCutoffMB() {
