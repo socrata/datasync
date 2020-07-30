@@ -52,6 +52,15 @@ public class PortUtility {
             sourceSet.isNewBackend() ? DatasetDestination.NBE
                                      : DatasetDestination.OBE;
 
+        String sourceResourceName = sourceSet.getResourceName();
+        if (sourceResourceName != null) {
+            Boolean isSameDomain = loader.getHttpLowLevel().uriBuilder().build().equals(creator.getHttpLowLevel().uriBuilder().build());
+            if (isSameDomain) {
+                // Resource name is unique in the same domain.  Hence do not copy resource name.
+                sourceSet.setResourceName(null);
+            }
+        }
+
         if(actuallyCopySchema) {
             adaptSchemaForAggregates(sourceSet);
         } else {
@@ -59,6 +68,10 @@ public class PortUtility {
         }
 
         DatasetInfo sinkSet = creator.createDataset(sourceSet, destination);
+
+        if (sourceResourceName != null && sourceSet.getResourceName() == null) {
+            sourceSet.setResourceName(sourceResourceName);
+        }
 
         String sinkSetID = sinkSet.getId();
         System.out.println(" to dataset " + sinkSetID);
