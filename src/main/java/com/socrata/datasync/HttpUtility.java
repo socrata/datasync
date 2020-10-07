@@ -110,7 +110,7 @@ public class HttpUtility {
             BROWSER_COMPATIBLE_HOSTNAME_VERIFIER
         );
 
-        httpClient = HttpClients.custom().
+        httpClient = clientBuilder.
             setSSLSocketFactory(factory).
             setRetryHandler(datasyncDefaultHandler).
             setKeepAliveStrategy(datasyncDefaultKeepAliveStrategy).
