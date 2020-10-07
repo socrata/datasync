@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>DataSync</groupId>
     <artifactId>DataSync</artifactId>
-    <version>1.7.4</version>
+    <version>1.7.5</version>
     <developers>
         <developer>
             <name>Ayn Leslie-Cook</name>
