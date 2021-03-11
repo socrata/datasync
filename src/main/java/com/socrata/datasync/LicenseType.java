@@ -1,38 +1,66 @@
 package com.socrata.datasync;
 
-public enum LicenseType {
-    no_license("-- No License --", ""), //this doesn't work, need to figure out what value is needed to remove a license.  Tried "", "''", "null"
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
-    cc0_10("Creative Commons (CC) - 1.0 Universal", "CC0_10"),
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-    cc_30_by_aus("CC - Attribution 3.0 Australia", "CC_30_BY_AUS"),
+public final class LicenseType {
+    public static final LicenseType no_license = new LicenseType("-- No License --", ""); //this doesn't work, need to figure out what value is needed to remove a license.  Tried "", "''", "null"
 
-    cc_30_by("CC - Attribution 3.0 Unported", "CC_30_BY"),
+    private static final List<LicenseType> values = loadLicenses();
+    public static List<LicenseType> values() {
+        return values;
+    }
 
-    cc_30_by_nd("CC - Attribution | No Derivative Works 3.0 Unported", "CC_30_BY_ND"),
-
-    cc_30_by_nc("CC - Attribution | Noncommercial 3.0 Unported", "CC_30_BY_NC"),
-
-    cc_30_by_nc_nd("CC - Attribution | Noncommercial | No Derivative Works 3.0 Unported", "CC_30_BY_NC_ND"),
-
-    cc_30_by_nc_sa("CC - Attribution | Noncommercial | Share Alike 3.0 Unported", "CC_30_BY_NC_SA"),
-
-    cc_30_by_sa("CC - Share Alike 3.0 Unported", "CC_30_BY_SA"),
-
-    iodl("Italian Open Data License 2.0", "IODL"),
-
-    open_database_license("Open Database License", "OPEN_DATABASE_LICENSE"),
-
-    public_domain("Public Domain", "PUBLIC_DOMAIN");
-
-
-    private String label;
-    private String value;
+    private final String label;
+    private final String value;
 
     private LicenseType(final String label, final String value) {
         this.label = label;
         this.value = value;
     }
+
+    @JsonIgnoreProperties(ignoreUnknown=true)
+    private static class License {
+        @JsonProperty String id;
+        @JsonProperty String name;
+    }
+
+    private static List<LicenseType> loadLicenses() {
+        try(InputStream is = LicenseType.class.getResourceAsStream("licenses.json")) {
+            if(is == null) throw new FileNotFoundException("licenses.json");
+            ObjectMapper mapper = new ObjectMapper();
+
+            List<LicenseType> resourceLicenses = new ArrayList<>();
+            for(License l : mapper.<List<License>>readValue(new InputStreamReader(is, StandardCharsets.UTF_8),
+                                                            new TypeReference<List<License>>() {})) {
+                resourceLicenses.add(new LicenseType(l.name, l.id));
+            }
+            resourceLicenses.sort(new Comparator<LicenseType>() {
+                    public int compare(LicenseType a, LicenseType b) {
+                        return a.getLabel().compareTo(b.getLabel());
+                    }
+                });
+            List<LicenseType> result = new ArrayList<>();
+            result.add(no_license);
+            result.addAll(resourceLicenses);
+            return Collections.unmodifiableList(result);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load licenses", e);
+        }
+    }
+
 
     public String toString() {
         return label;
