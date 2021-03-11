@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -e
+
+REALPATH="$(env script="$0" python3 -c "import os; print(os.path.realpath(os.getenv('script')))")"
+BASEDIR="$(dirname "$(dirname "$REALPATH")")"
+
+cd "$BASEDIR"
+
+curl https://opendata.socrata.com/api/licenses >src/main/resources/com/socrata/datasync/licenses.json

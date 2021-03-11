@@ -1,0 +1,139 @@
+[ {
+  "id" : "PUBLIC_DOMAIN",
+  "name" : "Public Domain"
+}, {
+  "id" : "USGOV_WORKS",
+  "name" : "Public Domain U.S. Government",
+  "termsLink" : "https://www.usa.gov/government-works"
+}, {
+  "id" : "CC_30_BY",
+  "name" : "Creative Commons Attribution 3.0 Unported",
+  "logoUrl" : "images/licenses/cc30by.png",
+  "termsLink" : "http://creativecommons.org/licenses/by/3.0/legalcode"
+}, {
+  "id" : "OGL_CANADA",
+  "name" : "Canada Open Government Licence",
+  "termsLink" : "http://open.canada.ca/en/open-government-licence-canada"
+}, {
+  "id" : "CC_40_BY_ND",
+  "name" : "Creative Commons Attribution | NoDerivatives 4.0 International License",
+  "logoUrl" : "images/licenses/cc40bynd.png",
+  "termsLink" : "http://creativecommons.org/licenses/by-nd/4.0/legalcode"
+}, {
+  "id" : "CC_30_BY_NC_ND_IGO",
+  "name" : "Creative Commons Attribution | Noncommercial | No Derivative Works 3.0 IGO",
+  "termsLink" : "https://creativecommons.org/licenses/by-nc-nd/3.0/igo/legalcode"
+}, {
+  "id" : "SEE_TERMS_OF_USE",
+  "name" : "See Terms of Use"
+}, {
+  "id" : "NIST_SRD",
+  "name" : "National Institute of Standards and Technology Licensing",
+  "termsLink" : "http://www.nist.gov/data/license.cfm"
+}, {
+  "id" : "IODL",
+  "name" : "Italian Open Data License 2.0",
+  "logoUrl" : "images/licenses/iodl.png",
+  "termsLink" : "http://www.dati.gov.it/iodl/2.0/"
+}, {
+  "id" : "NBOGL",
+  "name" : "New Brunswick Open Government Licence"
+}, {
+  "id" : "CC_30_BY_AUS",
+  "name" : "Creative Commons Attribution 3.0 Australia",
+  "logoUrl" : "images/licenses/cc30by.png",
+  "termsLink" : "http://creativecommons.org/licenses/by/3.0/au/deed.en"
+}, {
+  "id" : "PDDL",
+  "name" : "Open Data Commons Public Domain Dedication and License",
+  "termsLink" : "http://opendatacommons.org/licenses/pddl/1.0/"
+}, {
+  "id" : "OSODL",
+  "name" : "OS Open Data Licence",
+  "termsLink" : "http://www.ordnancesurvey.co.uk/docs/licences/os-opendata-licence.pdf"
+}, {
+  "id" : "UK_OGLV3.0",
+  "name" : "UK Open Government Licence v3",
+  "logoUrl" : "images/licenses/ogl.png",
+  "termsLink" : "http://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/"
+}, {
+  "id" : "CC0_10",
+  "name" : "Creative Commons 1.0 Universal (Public Domain Dedication)",
+  "logoUrl" : "images/licenses/ccZero.png",
+  "termsLink" : "http://creativecommons.org/publicdomain/zero/1.0/legalcode"
+}, {
+  "id" : "CC_30_BY_SA",
+  "name" : "Creative Commons Attribution | Share Alike 3.0 Unported",
+  "logoUrl" : "images/licenses/cc30bysa.png",
+  "termsLink" : "http://creativecommons.org/licenses/by-sa/3.0/legalcode"
+}, {
+  "id" : "CC_30_BY_ND",
+  "name" : "Creative Commons Attribution | No Derivative Works 3.0 Unported",
+  "logoUrl" : "images/licenses/cc30bynd.png",
+  "termsLink" : "http://creativecommons.org/licenses/by-nd/3.0/legalcode"
+}, {
+  "id" : "CC_30_BY_NC",
+  "name" : "Creative Commons Attribution | Noncommercial 3.0 Unported",
+  "logoUrl" : "images/licenses/cc30bync.png",
+  "termsLink" : "http://creativecommons.org/licenses/by-nc/3.0/legalcode"
+}, {
+  "id" : "CC_30_BY_NC_SA",
+  "name" : "Creative Commons Attribution | Noncommercial | Share Alike 3.0 Unported",
+  "logoUrl" : "images/licenses/cc30byncsa.png",
+  "termsLink" : "http://creativecommons.org/licenses/by-nc-sa/3.0/legalcode"
+}, {
+  "id" : "CC_30_BY_NC_ND",
+  "name" : "Creative Commons Attribution | Noncommercial | No Derivative Works 3.0 Unported",
+  "logoUrl" : "images/licenses/cc30byncnd.png",
+  "termsLink" : "http://creativecommons.org/licenses/by-nc-nd/3.0/legalcode"
+}, {
+  "id" : "CC_40_BY",
+  "name" : "Creative Commons Attribution 4.0 International",
+  "logoUrl" : "images/licenses/cc30by.png",
+  "termsLink" : "http://creativecommons.org/licenses/by/4.0/legalcode"
+}, {
+  "id" : "CC_40_BY_SA",
+  "name" : "Creative Commons Attribution | Share Alike 4.0 International",
+  "logoUrl" : "images/licenses/cc30bysa.png",
+  "termsLink" : "http://creativecommons.org/licenses/by-sa/4.0/legalcode"
+}, {
+  "id" : "ODBL",
+  "name" : "Open Data Commons Open Database License",
+  "termsLink" : "http://opendatacommons.org/licenses/odbl/1.0/"
+}, {
+  "id" : "ODC_BY",
+  "name" : "Open Data Commons Attribution License",
+  "termsLink" : "http://opendatacommons.org/licenses/by/1.0/"
+}, {
+  "id" : "OPEN_DATABASE_LICENSE",
+  "name" : "Open Database License",
+  "termsLink" : "http://opendatacommons.org/licenses/odbl/1.0/"
+}, {
+  "id" : "CC_30_BY_IGO",
+  "name" : "Creative Commons Attribution 3.0 IGO",
+  "logoUrl" : "images/licenses/cc30by.png",
+  "termsLink" : "https://creativecommons.org/licenses/by/3.0/igo/legalcode"
+}, {
+  "id" : "CC_30_BY_NZ",
+  "name" : "Creative Commons Attribution 3.0 New Zealand",
+  "logoUrl" : "images/licenses/cc30by.png",
+  "termsLink" : "https://creativecommons.org/licenses/by/3.0/nz/legalcode"
+}, {
+  "id" : "CC_30_BY_NC_NZ",
+  "name" : "Creative Commons Attribution | Noncommercial 3.0 New Zealand",
+  "logoUrl" : "images/licenses/cc30bync.png",
+  "termsLink" : "https://creativecommons.org/licenses/by-nc/3.0/nz/legalcode"
+}, {
+  "id" : "CC_30_BY_NC_SA_NZ",
+  "name" : "Creative Commons Attribution | Noncommercial | Share Alike 3.0 New Zealand",
+  "logoUrl" : "images/licenses/cc30byncsa.png",
+  "termsLink" : "https://creativecommons.org/licenses/by-nc-sa/3.0/nz/legalcode"
+}, {
+  "id" : "OGL_NOVA_SCOTIA",
+  "name" : "Nova Scotia Open Government Licence",
+  "termsLink" : "http://novascotia.ca/opendata/licence.asp"
+}, {
+  "id" : "OGL-PEI",
+  "name" : "Open Government Licence - Prince Edward Island",
+  "termsLink" : "https://www.princeedwardisland.ca/en/information/finance/open-government-licence-prince-edward-island"
+} ]
