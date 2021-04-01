@@ -116,7 +116,7 @@ public class DatasetUtils {
         String sample = util.get(absolutePath, "application/csv", handler);
         util.close();
 
-        CSVReader reader = new CSVReader(new StringReader(sample));
+        CSVReader reader = new CSVReader(new StringReader(sample), ',', '"', '\u0000');
 
         List<List<String>> results = new ArrayList<>();
 
