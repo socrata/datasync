@@ -71,6 +71,28 @@ public class IntegrationJob extends Job {
     private boolean publishViaDi2Http = false;
     private ControlFile controlFile = null;
 
+    // Ok, so this is awful.  What we're trying to do is change the
+    // eagerness of the way columns get fuzzy-matched going forward.
+    // But we don't want to change existing behavior.  So: we put a
+    // flag in the .sij file indicating it.  But that flag will take
+    // on its default value (which we want to be "true") when this
+    // object is default-constructed inside Jackson, whereupon it'll
+    // keep that value if there is no field saying to override it,
+    // which is exactly what we DON'T want to happen.
+    //
+    // So.. ugh.  We'll set this threadlock to false while we're
+    // deserializing an .sij file, so when Jackson default-constructs
+    // the object it gets set to that, and can then be overridden to
+    // true if the flag is actually present in the file.  Then, when
+    // it's saved, it'll be set to true over in the IntegrationJobTab,
+    // and the resolution will be frozen.
+    private static final ThreadLocal<Boolean> jacksonHack = new ThreadLocal<Boolean>() {
+            @Override public Boolean initialValue() {
+                return true;
+            }
+        };
+    private boolean isPostNbeification = jacksonHack.get();
+
     private String userAgent = "datasync";
 
     private String userAgentNameClient = "Client";
@@ -114,13 +136,19 @@ public class IntegrationJob extends Job {
         // first try reading the 'current' format
         ObjectMapper mapper = new ObjectMapper();
         IntegrationJob loadedJob;
+
+        boolean oldHack = jacksonHack.get();
         try {
+            jacksonHack.set(false);
             loadedJob = mapper.readValue(new File(pathToFile), IntegrationJob.class);
         } catch (IOException e) {
             // if reading new format fails...try reading old format into this object
             loadOldSijFile(pathToFile);
             return;
+        } finally {
+            jacksonHack.set(oldHack);
         }
+
         loadedJob.setPathToSavedFile(pathToFile);
         String controlPath = loadedJob.getPathToControlFile();
         String controlContent = loadedJob.getControlFileContent();
@@ -139,6 +167,7 @@ public class IntegrationJob extends Job {
         setControlFileContent(loadedJob.getControlFileContent());
         setPublishViaFTP(loadedJob.getPublishViaFTP());
         setPublishViaDi2Http(loadedJob.getPublishViaDi2Http());
+        setIsPostNbeification(loadedJob.getIsPostNbeification());
     }
 
 
@@ -216,6 +245,12 @@ public class IntegrationJob extends Job {
 
     @JsonProperty("publishViaDi2Http")
     public void setPublishViaDi2Http(boolean newPublishViaDi2Http) { publishViaDi2Http = newPublishViaDi2Http; }
+
+    @JsonProperty("isPostNbeification")
+    public boolean getIsPostNbeification() { return isPostNbeification; }
+
+    @JsonProperty("isPostNbeification")
+    public void setIsPostNbeification(boolean newIsPostNbeification) { isPostNbeification = newIsPostNbeification; }
 
     public String getDefaultJobName() { return defaultJobName; }
 
@@ -629,6 +664,7 @@ public class IntegrationJob extends Job {
                 setPublishViaFTP(false);
                 setPathToControlFile(null);
                 setControlFileContent(null);
+                setIsPostNbeification(false);
             }
             finally{
                 input.close();

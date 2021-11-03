@@ -50,7 +50,7 @@ public class ControlFileModel extends Observable {
     private DatasetModel datasetModel;
     private String path;
 
-    public ControlFileModel (ControlFile file, DatasetModel dataset) throws IOException{
+    public ControlFileModel (ControlFile file, DatasetModel dataset, boolean isPostNbeification) throws IOException{
         controlFile = file;
         if (controlFile.getFileTypeControl().hasHeaderRow)
             controlFile.getFileTypeControl().skip = 1;
@@ -63,10 +63,11 @@ public class ControlFileModel extends Observable {
         // could be duplicates, as well as empty strings.
         if (!file.getFileTypeControl().hasColumns()){
             initializeColumns();
+            // Now attempt to match those in the dataset to those in the CSV
+            matchColumns();
+        } else if(!isPostNbeification) {
+            matchColumns();
         }
-
-        // Now attempt to match those in the dataset to those in the CSV
-        matchColumns();
     }
 
     //This will be called anytime that we think the shape of the dataset has changed underneath us.
