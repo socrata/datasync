@@ -120,6 +120,7 @@ public class IntegrationJobTab implements JobTab {
     private JTextField runCommandTextField;
 
     private boolean usingControlFile;
+    private boolean jobFromPostNbeification;
 
     private UserPreferences userPrefs;
 
@@ -236,6 +237,7 @@ public class IntegrationJobTab implements JobTab {
 
     private void loadJobDataIntoUIFields(IntegrationJob job)  {
         try {
+            jobFromPostNbeification = job.getIsPostNbeification();
             if (job.getControlFileContent() != null) {
                 ObjectMapper mapper = new ObjectMapper().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
                 ControlFile controlFile = mapper.readValue(job.getControlFileContent(), ControlFile.class);
@@ -283,8 +285,8 @@ public class IntegrationJobTab implements JobTab {
 
         datasetModel = new DatasetModel(userPrefs, fourbyfour);
 
-        controlFileModel = new ControlFileModel(controlFile, datasetModel);
-
+        controlFileModel = new ControlFileModel(controlFile, datasetModel, jobFromPostNbeification);
+        jobFromPostNbeification = true;
     }
 
     private void updatePublishViaReplaceUIFields(boolean showFileInfo) {
@@ -340,6 +342,7 @@ public class IntegrationJobTab implements JobTab {
         newIntegrationJob.setPathToControlFile(controlFileModel.getPath());
         newIntegrationJob.setControlFileContent(controlFileModel.getControlFileContents());
         newIntegrationJob.setPathToSavedFile(jobFileLocation);
+        newIntegrationJob.setIsPostNbeification(true);
 
         // TODO If an existing file was selected WARN user of overwriting
         // if first time saving this job: Open dialog box to select "Save as..." location
