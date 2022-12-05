@@ -27,6 +27,7 @@ import java.util.logging.Logger;
 
 public class GISPublisher {
 
+    private static final int scanTimeoutMS = 2 * 60 * 1000; // 2 minutes
     private static final Logger logging = Logger.getLogger(GISJob.class.getName());
     private static String ticket = "";
 
@@ -37,7 +38,7 @@ public class GISPublisher {
                                        UserPreferences userPrefs) {
         try {
             URI scan_url = makeUri(connectionInfo.getUrl(), "scan", "");
-            Blueprint blueprint = postRawFile(scan_url, file, userPrefs);
+            Blueprint blueprint = postRawFile(scan_url, file, userPrefs, scanTimeoutMS);
             return replaceGeoFile(blueprint, file, userPrefs, connectionInfo, datasetID, layerMap);
         } catch (IOException e) {
             String message = e.getMessage();
@@ -205,7 +206,8 @@ public class GISPublisher {
 
     private static Blueprint postRawFile(URI uri,
                                          File file,
-                                         UserPreferences userPrefs) throws IOException {
+                                         UserPreferences userPrefs,
+                                         int timeoutMS) throws IOException {
         HttpUtility httpUtility = new HttpUtility(userPrefs, true, 3, 2);
 
         System.out.println("Posting file...");
@@ -213,7 +215,7 @@ public class GISPublisher {
             .addBinaryBody(file.getName(), file, ContentType.APPLICATION_OCTET_STREAM,file.getName())
             .build();
 
-        HttpResponse response = httpUtility.post(uri, httpEntity);
+        HttpResponse response = httpUtility.post(uri, httpEntity, timeoutMS);
         HttpEntity resEntity = response.getEntity();
         String result = EntityUtils.toString(resEntity);
         logging.log(Level.FINE, result);
