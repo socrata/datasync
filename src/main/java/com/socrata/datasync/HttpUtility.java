@@ -40,6 +40,7 @@ public class HttpUtility {
 
     private CloseableHttpClient httpClient = null;
     private RequestConfig proxyConfig = null;
+    private RequestConfig noProxyConfig = null;
     private String authHeader;
     private String appToken;
     private boolean authRequired = false;
@@ -73,12 +74,18 @@ public class HttpUtility {
             appToken = userPrefs.getConnectionInfo().getToken();
         }
         authRequired = useAuth;
+
+        noProxyConfig = RequestConfig.custom().
+            setConnectTimeout(15000). // 15s
+            setSocketTimeout(60000). // 1m
+            build();
+
         if(userPrefs != null) {
             String proxyHost = userPrefs.getProxyHost();
             String proxyPort = userPrefs.getProxyPort();
             if (canUse(proxyHost) && canUse(proxyPort)) {
                 HttpHost proxy = new HttpHost(proxyHost, Integer.valueOf(proxyPort));
-                proxyConfig = RequestConfig.custom().setProxy(proxy).build();
+                proxyConfig = RequestConfig.copy(noProxyConfig).setProxy(proxy).build();
                 if (canUse(userPrefs.getProxyUsername()) && canUse(userPrefs.getProxyPassword())) {
                     CredentialsProvider credsProvider = new BasicCredentialsProvider();
                     credsProvider.setCredentials(
@@ -88,11 +95,6 @@ public class HttpUtility {
                 }
             }
         }
-
-        RequestConfig requestConfig = RequestConfig.custom().
-            setConnectTimeout(15000). // 15s
-            setSocketTimeout(60000). // 1m
-            build();
 
         SSLContext sslContext;
         try {
@@ -114,7 +116,7 @@ public class HttpUtility {
             setSSLSocketFactory(factory).
             setRetryHandler(datasyncDefaultHandler).
             setKeepAliveStrategy(datasyncDefaultKeepAliveStrategy).
-            setDefaultRequestConfig(requestConfig).
+            setDefaultRequestConfig(noProxyConfig).
             build();
     }
 
@@ -155,18 +157,44 @@ public class HttpUtility {
      * @return the unprocessed results of the post
      */
     public CloseableHttpResponse post(URI uri, HttpEntity entity) throws IOException {
+        return doPost(uri, entity, null);
+    }
+
+    public CloseableHttpResponse post(URI uri, HttpEntity entity, int timeoutMS) throws IOException {
+        return doPost(uri, entity, timeoutMS);
+    }
+
+    private CloseableHttpResponse doPost(URI uri, HttpEntity entity, Integer timeoutMS) throws IOException {
         HttpPost httpPost = new HttpPost(uri);
         httpPost.setHeader(HttpHeaders.USER_AGENT, userAgent);
         httpPost.setHeader(entity.getContentType());
         httpPost.addHeader(datasyncVersionHeader, VersionProvider.getThisVersion());
         httpPost.setEntity(entity);
-        if (proxyConfig != null)
-            httpPost.setConfig(proxyConfig);
+
+        RequestConfig baseRequestConfig;
+
+        if (proxyConfig == null) {
+            baseRequestConfig = noProxyConfig;
+        } else {
+            baseRequestConfig = proxyConfig;
+        }
+        httpPost.setConfig(addTimeout(RequestConfig.copy(baseRequestConfig), timeoutMS).build());
+
         if (authRequired) {
             httpPost.setHeader(HttpHeaders.AUTHORIZATION, authHeader);
             httpPost.setHeader(appHeader, appToken);
         }
         return httpClient.execute(httpPost);
+    }
+
+    private static RequestConfig.Builder addTimeout(RequestConfig.Builder base, Integer timeoutMS) {
+        if(timeoutMS == null) {
+            return base;
+        } else {
+            return base.
+                setConnectTimeout(timeoutMS).
+                setSocketTimeout(timeoutMS);
+        }
     }
 
     public void close() throws IOException {
