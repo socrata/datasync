@@ -62,19 +62,18 @@ public class SMTPMailer {
 
         // Get a Properties object
         Properties props = System.getProperties();
-        props.setProperty("mail.smtps.host", userPrefs.getOutgoingMailServer());
-        props.setProperty("mail.smtp.socketFactory.fallback", "false");
-        props.setProperty("mail.smtp.port", userPrefs.getSmtpPort());
         String sslPort = userPrefs.getSslPort();
-
         boolean useSSL = !(sslPort.equals(""));
 
+        boolean hasPwd = userPrefs.getSmtpPassword() != null && !userPrefs.getSmtpPassword().isEmpty();
 
         if(useSSL) {
-
-            props.setProperty("mail.smtp.socketFactory.class", SSL_FACTORY);
-            props.setProperty("mail.smtp.socketFactory.port", sslPort);
-            props.setProperty("mail.smtps.auth", "true");
+            props.setProperty("mail.smtps.host", userPrefs.getOutgoingMailServer());
+            props.setProperty("mail.smtps.socketFactory.fallback", "false");
+            props.setProperty("mail.smtps.port", sslPort);
+            props.setProperty("mail.smtps.socketFactory.class", SSL_FACTORY);
+            props.setProperty("mail.smtps.socketFactory.port", sslPort);
+            props.setProperty("mail.smtps.auth", hasPwd ? "true" : "false");
             /*
         If set to false, the QUIT command is sent and the connection is immediately closed. If set
         to true (the default), causes the transport to wait for the response to the QUIT command.
@@ -83,8 +82,15 @@ public class SMTPMailer {
                 http://forum.java.sun.com/thread.jspa?threadID=5205249
                 smtpsend.java - demo program from javamail
         */
-            props.put("mail.smtps.quitwait", "false");
+            props.setProperty("mail.smtps.quitwait", "false");
+        } else {
+            props.setProperty("mail.smtp.host", userPrefs.getOutgoingMailServer());
+            props.setProperty("mail.smtp.socketFactory.fallback", "false");
+            props.setProperty("mail.smtp.port", userPrefs.getSmtpPort());
+            props.setProperty("mail.smtp.auth", hasPwd ? "true" : "false");
+            props.setProperty("mail.smtp.quitwait", "false");
         }
+
 
         Session session = Session.getInstance(props, null);
 
@@ -111,12 +117,14 @@ public class SMTPMailer {
         msg.setText(message, "utf-8");
         msg.setSentDate(new Date());
 
+        SMTPTransport t = (SMTPTransport)session.getTransport(useSSL ? "smtps" : "smtp");
 
-        SMTPTransport t = (SMTPTransport)session.getTransport("smtp");
-        if (useSSL)
-            t = (SMTPTransport)session.getTransport("smtps");
+        if(useSSL || hasPwd) {
+            t.connect(userPrefs.getOutgoingMailServer(), userPrefs.getSmtpUsername(), userPrefs.getSmtpPassword());
+        } else {
+            t.connect();
+        }
 
-        t.connect(userPrefs.getOutgoingMailServer(), userPrefs.getSmtpUsername(), userPrefs.getSmtpPassword());
         t.sendMessage(msg, msg.getAllRecipients());
         t.close();
     }
