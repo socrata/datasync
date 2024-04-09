@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 public class GISPublisher {
 
-    private static final int scanTimeoutMS = 2 * 60 * 1000; // 2 minutes
+    private static final int scanTimeoutMS = 5 * 60 * 1000; // 5 minutes
     private static final Logger logging = Logger.getLogger(GISJob.class.getName());
     private static String ticket = "";
 
