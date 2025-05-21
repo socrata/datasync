@@ -1,0 +1,23 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: datasync
+  description: |
+    DataSync is an executable Java application which serves as a general
+    solution to automate publishing data on the Socrata platform. It has a GUI
+    and a CLI. DataSync takes a CSV or TSV file on a local machine or
+    networked hard drive and publishes it to a Socrata dataset so that the
+    Socrata dataset stays up-to-date. DataSync can also publish geospatial
+    files such as zipped shapefiles, geoJSON, KML, and KMZ files. It is an
+    alternative to (and predecessor of) the socrata-ingress-agent and the
+    gateway plugins.
+  links:
+    - title: "Ops Doc - Delta Importer 2"
+      url: "https://socrata.atlassian.net/wiki/spaces/ONCALL/pages/2158657785/OpsDoc+-+delta-importer-2"
+  annotations:
+    github.com/project-slug: socrata/datasync
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: tool
+  owner: egress
+  lifecycle: production
