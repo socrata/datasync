@@ -107,7 +107,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
         do {
             try {
                 // get signature of previous csv/tsv file
-                pathToSignature = datasyncDir.getPathToSignature();
+                pathToSignature = null; //datasyncDir.getPathToSignature();
                 previousSignature = getPreviousSignature(pathToSignature);
 
                 final long fileSize = csvOrTsvFile.length() - bomLength;
@@ -143,7 +143,7 @@ public class DeltaImporter2Publisher implements AutoCloseable {
                 return getJobStatus(datasetId, jobId);
             } catch (CompletelyRestartJob e) {
                 retryCount += 1;
-            } catch (ParseException | NoSuchAlgorithmException | InputException | URISyntaxException |
+            } catch (NoSuchAlgorithmException | InputException | URISyntaxException |
                     SignatureException |InterruptedException | HttpException e) {
                 e.printStackTrace();
                 JobStatus jobStatus = JobStatus.PUBLISH_ERROR;
