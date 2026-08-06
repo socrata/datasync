@@ -19,5 +19,5 @@ metadata:
     backstage.io/techdocs-ref: dir:.
 spec:
   type: tool
-  owner: egress
+  owner: platform-data-services
   lifecycle: production
